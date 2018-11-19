@@ -7,6 +7,8 @@
 #define _CRTDBG_MAP_ALLOC
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
+#include "win32-layer.h"
+
 #include <winsock2.h>
 #include <windows.h>
 #include <tchar.h>
