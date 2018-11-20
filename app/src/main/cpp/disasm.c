@@ -4,7 +4,7 @@
  *   This file is part of Emu48, a ported version of x48
  *
  *   Copyright (C) 1994 Eddie C. Dost
- *   Copyright (C) 1998 Christoph Gieﬂelink
+ *   Copyright (C) 1998 Christoph Gie√üelink
  *
  */
 #include "pch.h"

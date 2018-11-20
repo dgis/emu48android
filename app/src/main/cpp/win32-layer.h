@@ -1,12 +1,13 @@
-#import <stdint.h>
-#import <pthread.h>
+#include <stdint.h>
+#include <pthread.h>
+#include <wchar.h>
 
 #ifndef __OBJC__
 typedef signed char BOOL;   // deliberately same type as defined in objc
 #endif
 #define TRUE    1
 #define FALSE   0
-#define MAX_PATH    MAXPATHLEN
+#define MAX_PATH PATH_MAX
 #define INFINITE    0
 
 typedef	unsigned long ulong;	// ushort is already in types.h
@@ -47,6 +48,7 @@ typedef struct _RECT {
 	short top;
 	short bottom;
 } RECT;
+typedef RECT *LPRECT
 typedef BYTE *LPCVOID;
 typedef struct _RGBQUAD {
 	BYTE rgbRed;
@@ -161,20 +163,8 @@ typedef struct _SYSTEM_POWER_STATUS
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-#import <stdio.h>
-#import <string.h>
+#include <stdio.h>
+#include <string.h>
 
 enum
 {
@@ -347,3 +337,73 @@ extern void Sleep(int);
 #define UNREFERENCED_PARAMETER(a)
 
 extern BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS l);
+
+
+//RC
+struct HRGN__ { int unused; };
+typedef struct HRGN__ *HRGN;
+
+#define _ASSERT(expr)
+//#define _ASSERT(expr) \
+//	(void)(                                                                                     \
+//		(!!(expr)) ||                                                                           \
+//		(1 != _CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls", NULL)) || \
+//		(_CrtDbgBreak(), 0)                                                                     \
+//	)
+
+
+// disrpl.c
+//wvsprintf(cOutput,lpFormat,arglist);
+
+//_tcschr(_T(" \t\n\r"),str->szBuffer[str->dwPos-1]) == NULL)
+//_tcschr(lpszStart,_T('\n')
+
+//lstrcmp(lpszObject,ObjDecode[i].lpszName)
+//lstrcmp(lpszObject,_T("::"))
+
+//_tcsncmp(lpszObject,_T("DIR\n"),4)
+//_tcsncmp(lpszStart,_T("ENDDIR"),lpszEnd-lpszStart)
+
+
+// file.c
+typedef struct tagPOINT
+{
+	LONG  x;
+	LONG  y;
+} POINT, *PPOINT;
+typedef struct tagWINDOWPLACEMENT {
+	UINT  length;
+	UINT  flags;
+	UINT  showCmd;
+	POINT ptMinPosition;
+	POINT ptMaxPosition;
+	RECT  rcNormalPosition;
+#ifdef _MAC
+	RECT  rcDevice;
+#endif
+} WINDOWPLACEMENT;
+typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
+
+extern BOOL WINAPI GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
+extern BOOL WINAPI SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl);
+
+#define _MAX_PATH   260 // max. length of full pathname
+#define _MAX_DRIVE  3   // max. length of drive component
+#define _MAX_DIR    256 // max. length of path component
+#define _MAX_FNAME  256 // max. length of file name component
+#define _MAX_EXT    256 // max. length of extension component
+
+typedef wchar_t WCHAR;    // wc,   16-bit UNICODE character
+typedef CONST WCHAR *LPCWSTR, *PCWSTR;
+typedef WCHAR *NWPSTR, *LPWSTR, *PWSTR;
+extern DWORD WINAPI GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart);
+extern void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext);
+#define _tsplitpath     _wsplitpath
+#define _tcschr         wcschr
+extern LPWSTR WINAPI lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength);
+extern LPWSTR WINAPI lstrcat(LPWSTR lpString1, LPCWSTR lpString2);
+#define _tmakepath      _wmakepath
+extern void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext);
+extern BOOL WINAPI GetClientRect(HWND hWnd, LPRECT lpRect);
+
+typedef char *PSZ;

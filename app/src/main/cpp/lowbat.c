@@ -3,7 +3,7 @@
  *
  *   This file is part of Emu48
  *
- *   Copyright (C) 2006 Christoph Gieﬂelink
+ *   Copyright (C) 2006 Christoph Gie√üelink
  *
  */
 #include "pch.h"

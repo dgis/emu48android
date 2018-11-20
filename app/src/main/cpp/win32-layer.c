@@ -1,6 +1,6 @@
 #include "pch.h"
-#import <mach/mach_time.h>
-#import <fcntl.h>
+#include <mach/mach_time.h>
+#include <fcntl.h>
 
 HANDLE hWnd;
 LPTSTR szTitle;
@@ -413,4 +413,26 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 {
     status->ACLineStatus = AC_LINE_ONLINE;
     return TRUE;
+}
+
+
+// file.c
+
+BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
+DWORD GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart) { return 0; }
+void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext) {}
+LPWSTR lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength) {
+    return strcpy(lpString1, lpString2);
+}
+LPWSTR lstrcat(LPWSTR lpString1, LPCWSTR lpString2) {
+    return NULL;
+}
+void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext)
+{
+}
+
+
+BOOL GetClientRect(HWND hWnd, LPRECT lpRect)
+{
+    return 0;
 }
