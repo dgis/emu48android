@@ -34,7 +34,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/engine.c
         src/main/cpp/external.c
         src/main/cpp/fetch.c
-#        src/main/cpp/files.c #TODO
+        src/main/cpp/files.c
         src/main/cpp/i28f160.c
         src/main/cpp/keyboard.c
 #        src/main/cpp/keymacro.c

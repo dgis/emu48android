@@ -95,3 +95,8 @@ VOID ResetUdp(VOID) {
 BOOL SendByteUdp(BYTE byData) {
     return FALSE;
 }
+
+// debugger.c
+LRESULT OnToolDebug(VOID) {
+    return NULL;
+}

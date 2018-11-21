@@ -482,6 +482,45 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
     return 0;
 }
 
+HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
+    //TODO
+    return NULL;
+}
+HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
+    //TODO
+    return NULL;
+}
+UINT RealizePalette(HDC hdc) {
+    //TODO
+    return 0;
+}
+/* constants for CreateDIBitmap */
+#define CBM_INIT        0x04L   /* initialize bitmap */
+/* DIB color table identifiers */
+#define DIB_RGB_COLORS      0 /* color table in RGBs */
+#define DIB_PAL_COLORS      1 /* color table in palette indices */
+HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
+    //TODO
+    return NULL;
+}
+HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
+    //TODO
+    return NULL;
+}
+BOOL DeleteObject(HGDIOBJ ho) {
+    //TODO
+    return 0;
+}
+int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage) {
+    //TODO
+    return 0;
+}
+BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom) {
+    //TODO
+    return 0;
+}
+
+
 BOOL WINAPI MessageBeep(UINT uType) {
     //TODO System beep
     return 1;

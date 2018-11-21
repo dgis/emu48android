@@ -20,9 +20,12 @@ typedef short SHORT;
 typedef uint64_t ULONGLONG;
 typedef int64_t LONGLONG;
 typedef int64_t __int64;
+typedef float FLOAT;
 
 typedef unsigned char BYTE;
 typedef BYTE byte;
+typedef unsigned short WORD;
+typedef WORD *LPWORD;
 typedef uint32_t DWORD;
 typedef DWORD *LPDWORD;
 typedef BYTE *LPBYTE;
@@ -40,6 +43,7 @@ typedef size_t SIZE_T;
 typedef /*_W64*/ unsigned long ULONG_PTR, *PULONG_PTR;
 typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 
+#define MAXLONG     0x7fffffff
 
 #define CONST const
 
@@ -48,6 +52,7 @@ typedef HANDLE HPALETTE;
 typedef HANDLE HBITMAP;
 typedef HANDLE HMENU;
 typedef HANDLE HFONT;
+typedef void * HGDIOBJ;
 
 typedef void *TIMECALLBACK ;
 #define CALLBACK
@@ -451,7 +456,20 @@ extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwSt
 extern BOOL CloseHandle(HANDLE hObject);
 
 
-
+/* constants for the biCompression field */
+#define BI_RGB        0L
+#define BI_RLE8       1L
+#define BI_RLE4       2L
+#define BI_BITFIELDS  3L
+#define BI_JPEG       4L
+#define BI_PNG        5L
+typedef struct tagBITMAPFILEHEADER {
+    WORD    bfType;
+    DWORD   bfSize;
+    WORD    bfReserved1;
+    WORD    bfReserved2;
+    DWORD   bfOffBits;
+} BITMAPFILEHEADER, FAR *LPBITMAPFILEHEADER, *PBITMAPFILEHEADER;
 typedef struct tagBITMAPINFOHEADER{
     DWORD      biSize;
     LONG       biWidth;
@@ -465,6 +483,10 @@ typedef struct tagBITMAPINFOHEADER{
     DWORD      biClrUsed;
     DWORD      biClrImportant;
 } BITMAPINFOHEADER, FAR *LPBITMAPINFOHEADER, *PBITMAPINFOHEADER;
+typedef struct tagBITMAPINFO {
+    BITMAPINFOHEADER    bmiHeader;
+    RGBQUAD             bmiColors[1];
+} BITMAPINFO, FAR *LPBITMAPINFO, *PBITMAPINFO;
 typedef struct tagPALETTEENTRY {
     BYTE        peRed;
     BYTE        peGreen;
@@ -476,11 +498,47 @@ typedef struct tagLOGPALETTE {
     WORD        palNumEntries;
     PALETTEENTRY        palPalEntry[1];
 } LOGPALETTE, *PLOGPALETTE, NEAR *NPLOGPALETTE, FAR *LPLOGPALETTE;
-HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
+extern HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
+extern HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd);
+extern UINT RealizePalette(HDC hdc);
+/* constants for CreateDIBitmap */
+#define CBM_INIT        0x04L   /* initialize bitmap */
+/* DIB color table identifiers */
+#define DIB_RGB_COLORS      0 /* color table in RGBs */
+#define DIB_PAL_COLORS      1 /* color table in palette indices */
+extern HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage);
+extern HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset);
+extern BOOL DeleteObject(HGDIOBJ ho);
+typedef struct _RGNDATAHEADER {
+    DWORD   dwSize;
+    DWORD   iType;
+    DWORD   nCount;
+    DWORD   nRgnSize;
+    RECT    rcBound;
+} RGNDATAHEADER, *PRGNDATAHEADER;
 
+typedef struct _RGNDATA {
+    RGNDATAHEADER   rdh;
+    char            Buffer[1];
+} RGNDATA, *PRGNDATA, NEAR *NPRGNDATA, FAR *LPRGNDATA;
+extern int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage);
+/* GetRegionData/ExtCreateRegion */
+#define RDH_RECTANGLES  1
+extern BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom);
 
 struct HRGN__ { int unused; };
 typedef struct HRGN__ *HRGN;
+typedef struct  tagXFORM
+{
+    FLOAT   eM11;
+    FLOAT   eM12;
+    FLOAT   eM21;
+    FLOAT   eM22;
+    FLOAT   eDx;
+    FLOAT   eDy;
+} XFORM, *PXFORM, FAR *LPXFORM;
+
+HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
 
 #define _ASSERT(expr)
 //#define _ASSERT(expr) \
