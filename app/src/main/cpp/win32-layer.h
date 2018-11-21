@@ -20,6 +20,7 @@ typedef int64_t __int64;
 typedef unsigned char BYTE;
 typedef BYTE byte;
 typedef uint32_t DWORD;
+typedef DWORD *LPDWORD;
 typedef BYTE *LPBYTE;
 typedef unsigned short WORD;
 typedef uint32_t UINT;
@@ -72,11 +73,17 @@ typedef union _LARGE_INTEGER {
 	}d;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
-typedef char *LPTSTR ;
-typedef char *LPSTR ;
-typedef char LPCSTR[255] ;
-typedef const char *LPCTSTR ;
+typedef char *LPTSTR;
+typedef char *LPSTR;
+//typedef char LPCSTR[255];
+typedef const char *LPCSTR;
+typedef const char *LPCTSTR;
+#ifdef UNICODE
+typedef wchar_t TCHAR;
+#else
 typedef char TCHAR;
+#endif // !UNICODE
+
 
 typedef pthread_mutex_t CRITICAL_SECTION;
 typedef HANDLE HINSTANCE;
@@ -340,7 +347,25 @@ extern void Sleep(int);
 extern BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS l);
 
 
-//RC
+typedef struct _SECURITY_ATTRIBUTES {
+    DWORD nLength;
+    LPVOID lpSecurityDescriptor;
+    BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)(
+        LPVOID lpThreadParameter
+);
+typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
+extern HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+extern BOOL WINAPI CloseHandle(HANDLE hObject);
+
+
+
+
+
+
+
+
 struct HRGN__ { int unused; };
 typedef struct HRGN__ *HRGN;
 
@@ -397,15 +422,57 @@ extern BOOL WINAPI SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl)
 typedef wchar_t WCHAR;    // wc,   16-bit UNICODE character
 typedef CONST WCHAR *LPCWSTR, *PCWSTR;
 typedef WCHAR *NWPSTR, *LPWSTR, *PWSTR;
-extern DWORD WINAPI GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart);
-extern void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext);
-#define _tsplitpath     _wsplitpath
-#define _tcschr         wcschr
-extern LPWSTR WINAPI lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength);
-extern LPWSTR WINAPI lstrcat(LPWSTR lpString1, LPCWSTR lpString2);
-#define _tmakepath      _wmakepath
-extern void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext);
 extern BOOL WINAPI GetClientRect(HWND hWnd, LPRECT lpRect);
 
 typedef char *PSZ;
 typedef DWORD   COLORREF;
+
+extern BOOL WINAPI MessageBeep(UINT uType);
+
+typedef HANDLE              HGLOBAL;
+#define GMEM_MOVEABLE       0x0002
+extern HGLOBAL WINAPI GlobalAlloc(UINT uFlags, SIZE_T dwBytes);
+extern LPVOID WINAPI GlobalLock (HGLOBAL hMem);
+extern BOOL WINAPI GlobalUnlock(HGLOBAL hMem);
+
+#define CF_TEXT             1
+extern BOOL WINAPI OpenClipboard(HWND hWndNewOwner);
+extern BOOL WINAPI CloseClipboard(VOID);
+extern BOOL WINAPI EmptyClipboard(VOID);
+extern HANDLE WINAPI SetClipboardData(UINT uFormat,HANDLE hMem);
+extern HGLOBAL WINAPI GlobalFree(HGLOBAL hMem);
+extern BOOL WINAPI IsClipboardFormatAvailable(UINT format);
+extern HANDLE WINAPI GetClipboardData(UINT uFormat);
+
+#ifdef UNICODE
+
+extern int WINAPI wvsprintf(LPWSTR, LPCWSTR, va_list arglist);
+extern DWORD WINAPI GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart);
+extern LPWSTR WINAPI lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength);
+extern LPWSTR WINAPI lstrcat(LPWSTR lpString1, LPCWSTR lpString2);
+
+extern void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext);
+#define _tsplitpath     _wsplitpath
+#define _tcschr         wcschr
+extern void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext);
+#define _tmakepath      _wmakepath
+extern int WINAPI lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
+#define _tcsncmp        wcsncmp
+
+#else
+
+extern int WINAPI wvsprintf(LPSTR, LPCSTR, va_list arglist);
+extern DWORD WINAPI GetFullPathName(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart);
+extern LPSTR WINAPI lstrcpyn(LPSTR lpString1, LPCSTR lpString2,int iMaxLength);
+extern LPSTR WINAPI lstrcat(LPSTR lpString1, LPCSTR lpString2);
+
+extern void __cdecl _splitpath(char const* _FullPath, char* _Drive, char* _Dir, char* _Filename, char* _Ext);
+#define _tsplitpath     _splitpath
+#define _tcschr         strchr
+extern void _makepath(char _Buffer, char const* _Drive, char const* _Dir, char const* _Filename, char const* _Ext);
+#define _tmakepath      _makepath
+extern int WINAPI lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
+#define _tcsncmp        strncmp
+
+
+#endif // !UNICODE

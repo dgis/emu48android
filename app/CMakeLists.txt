@@ -34,11 +34,11 @@ add_library( # Sets the name of the library.
         src/main/cpp/engine.c
         src/main/cpp/external.c
         src/main/cpp/fetch.c
-        src/main/cpp/files.c
+        src/main/cpp/files.c #TODO
         src/main/cpp/i28f160.c
         src/main/cpp/keyboard.c
 #        src/main/cpp/keymacro.c
-        src/main/cpp/kml.c
+        src/main/cpp/kml.c #TODO
         src/main/cpp/lodepng.c
         src/main/cpp/lowbat.c
         src/main/cpp/mops.c
@@ -48,13 +48,13 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/redeye.c
         src/main/cpp/rpl.c
 #        src/main/cpp/serial.c
-        src/main/cpp/settings.c
+        src/main/cpp/settings.c #TODO
 #        src/main/cpp/sndenum.c
 #        src/main/cpp/sound.c
         src/main/cpp/stack.c
-        src/main/cpp/symbfile.c
-        src/main/cpp/timer.c
-        src/main/cpp/udp.c
+        src/main/cpp/symbfile.c #TODO
+        src/main/cpp/timer.c #TODO
+        src/main/cpp/udp.c #TODO
 
 
         src/main/cpp/emu48-jni.c

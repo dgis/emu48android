@@ -416,17 +416,114 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 }
 
 
-// file.c
-
 BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
+
+
+HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
+    //TODO
+    return NULL;
+}
+
+BOOL WINAPI CloseHandle(HANDLE hObject) {
+    //TODO
+    // Can be a thread/event/file hande!
+    return 0;
+}
+
+BOOL WINAPI MessageBeep(UINT uType) {
+    //TODO System beep
+    return 1;
+}
+
+HGLOBAL WINAPI GlobalAlloc(UINT uFlags, SIZE_T dwBytes) {
+    //TODO
+    return NULL;
+}
+LPVOID WINAPI GlobalLock (HGLOBAL hMem) {
+    //TODO
+    return NULL;
+}
+
+BOOL WINAPI GlobalUnlock(HGLOBAL hMem) {
+    //TODO
+    return 0;
+}
+
+BOOL WINAPI OpenClipboard(HWND hWndNewOwner) {
+    //TODO
+    return 0;
+}
+BOOL WINAPI CloseClipboard(VOID) {
+    //TODO
+    return 0;
+}
+
+BOOL WINAPI EmptyClipboard(VOID) {
+    //TODO
+    return 0;
+}
+
+HANDLE WINAPI SetClipboardData(UINT uFormat,HANDLE hMem) {
+    //TODO
+    return NULL;
+}
+
+BOOL WINAPI IsClipboardFormatAvailable(UINT format) {
+    //TODO
+    return 0;
+}
+
+HANDLE WINAPI GetClipboardData(UINT uFormat) {
+    //TODO
+    return NULL;
+}
+
+HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
+    //TODO
+    return NULL;
+}
+
+
+
+#ifdef UNICODE
+
+
+int WINAPI wvsprintf(LPWSTR, LPCWSTR, va_list arglist) {
+    return vswprintf(arg1, MAX_PATH, arg2, arglist);
+}
 DWORD GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart) { return 0; }
-void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext) {}
 LPWSTR lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength) {
     return strcpy(lpString1, lpString2);
 }
 LPWSTR lstrcat(LPWSTR lpString1, LPCWSTR lpString2) {
     return NULL;
 }
+void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext) {}
+int WINAPI lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2) {
+    return wcscmp(lpString1, lpString2);
+}
+
+#else
+
+int WINAPI wvsprintf(LPSTR arg1, LPCSTR arg2, va_list arglist) {
+    return vsprintf(arg1, arg2, arglist);
+}
+DWORD GetFullPathName(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart) { return 0; }
+LPSTR lstrcpyn(LPSTR lpString1, LPCSTR lpString2,int iMaxLength) {
+    return strcpy(lpString1, lpString2);
+}
+LPSTR lstrcat(LPSTR lpString1, LPCSTR lpString2) {
+    return NULL;
+}
+void __cdecl _splitpath(char const* _FullPath, char* _Drive, char* _Dir, char* _Filename, char* _Ext) {}
+int WINAPI lstrcmp(LPCSTR lpString1, LPCSTR lpString2) {
+    return strcmp(lpString1, lpString2);
+}
+
+
+
+#endif // !UNICODE
+
 void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext)
 {
 }
