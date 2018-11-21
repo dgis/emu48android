@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <wchar.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifndef __OBJC__
 typedef signed char BOOL;   // deliberately same type as defined in objc
@@ -9,6 +11,8 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 #define FALSE   0
 #define MAX_PATH PATH_MAX
 #define INFINITE    0
+#define FAR
+#define NEAR
 
 typedef unsigned long ULONG;
 typedef	unsigned long ulong;	// ushort is already in types.h
@@ -29,7 +33,13 @@ typedef char CHAR;
 typedef void VOID;
 typedef void *LPVOID;
 typedef long LONG;
+typedef LONG *PLONG;
+typedef unsigned int UINT_PTR, *PUINT_PTR;
+typedef long LONG_PTR, *PLONG_PTR;
 typedef size_t SIZE_T;
+typedef /*_W64*/ unsigned long ULONG_PTR, *PULONG_PTR;
+typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+
 
 #define CONST const
 
@@ -43,7 +53,10 @@ typedef void *TIMECALLBACK ;
 #define CALLBACK
 typedef void(*LPTIMECALLBACK)(UINT uEventId, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2) ;
 //typedef TIMECALLBACK *LPTIMECALLBACK;
-typedef long LRESULT;
+//typedef long LRESULT;
+typedef UINT_PTR            WPARAM;
+typedef LONG_PTR            LPARAM;
+typedef LONG_PTR            LRESULT;
 typedef struct _RECT {
 	short left;
 	short right;
@@ -169,10 +182,6 @@ typedef struct _SYSTEM_POWER_STATUS
 #define __cdecl
 #define WINAPI
 
-
-
-#include <stdio.h>
-#include <string.h>
 
 enum
 {
@@ -312,8 +321,39 @@ extern void EnableWindow(ControlRef, bool enable);
 typedef FMFontFamilyCallbackFilterProcPtr FONTENUMPROC;
 extern void EnumFontFamilies(void *, void *, FONTENUMPROC, void *userdata);
 */
+typedef struct _OVERLAPPED {
+/*
+    ULONG_PTR Internal;
+    ULONG_PTR InternalHigh;
+    union {
+        struct {
+            DWORD Offset;
+            DWORD OffsetHigh;
+        } DUMMYSTRUCTNAME;
+        PVOID Pointer;
+    } DUMMYUNIONNAME;
+*/
+
+    HANDLE  hEvent;
+} OVERLAPPED, *LPOVERLAPPED;
+
+
 extern BOOL SetCurrentDirectory(LPCTSTR);	// returns NO if fails
 extern int CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile);
+extern BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
+extern DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod);
+extern DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
+extern BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
+typedef struct _SECURITY_ATTRIBUTES {
+    DWORD nLength;
+    LPVOID lpSecurityDescriptor;
+    BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+extern HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName);
+extern LPVOID MapViewOfFile(HANDLE hFileMappingObject,DWORD dwDesiredAccess, DWORD dwFileOffsetHigh,DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap);
+extern BOOL UnmapViewOfFile(LPCVOID lpBaseAddress);
+extern BOOL SetEndOfFile(HANDLE hFile);
+
 /*
 extern int ReadFile(int fd, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPVOID lpOverlapped);
 // WriteFile() writes to a temp file, then swaps that with the real file
@@ -325,6 +365,62 @@ extern long SetFilePointer(FSPtr &, long offset, void *, FilePointerType startpo
 
 extern void SetTimer(void *, TimerType, int msec, void *);
 */
+
+typedef UINT_PTR (CALLBACK *LPOFNHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
+typedef struct tagOFNA {
+    DWORD        lStructSize;
+    HWND         hwndOwner;
+    HINSTANCE    hInstance;
+    LPCSTR       lpstrFilter;
+    LPSTR        lpstrCustomFilter;
+    DWORD        nMaxCustFilter;
+    DWORD        nFilterIndex;
+    LPSTR        lpstrFile;
+    DWORD        nMaxFile;
+    LPSTR        lpstrFileTitle;
+    DWORD        nMaxFileTitle;
+    LPCSTR       lpstrInitialDir;
+    LPCSTR       lpstrTitle;
+    DWORD        Flags;
+    WORD         nFileOffset;
+    WORD         nFileExtension;
+    LPCSTR       lpstrDefExt;
+    LPARAM       lCustData;
+    LPOFNHOOKPROC lpfnHook;
+    LPCSTR       lpTemplateName;
+#ifdef _MAC
+    LPEDITMENU   lpEditInfo;
+   LPCSTR       lpstrPrompt;
+#endif
+#if (_WIN32_WINNT >= 0x0500)
+    void *        pvReserved;
+   DWORD        dwReserved;
+   DWORD        FlagsEx;
+#endif // (_WIN32_WINNT >= 0x0500)
+} OPENFILENAMEA, *LPOPENFILENAMEA;
+typedef OPENFILENAMEA OPENFILENAME;
+typedef LPOPENFILENAMEA LPOPENFILENAME;
+#define OFN_READONLY                 0x00000001
+#define OFN_OVERWRITEPROMPT          0x00000002
+#define OFN_HIDEREADONLY             0x00000004
+#define OFN_PATHMUSTEXIST            0x00000800
+#define OFN_FILEMUSTEXIST            0x00001000
+#define OFN_CREATEPROMPT             0x00002000
+#define OFN_EXPLORER                 0x00080000     // new look commdlg
+extern BOOL GetOpenFileName(LPOPENFILENAME);
+extern BOOL GetSaveFileName(LPOPENFILENAME);
+#define IMAGE_BITMAP        0
+#define IMAGE_ICON          1
+#define LR_LOADFROMFILE     0x00000010
+#define LR_DEFAULTSIZE      0x00000040
+#define LR_SHARED           0x00008000
+extern HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT fuLoad);
+
+#define WM_SETICON                      0x0080
+#define ICON_SMALL          0
+#define ICON_BIG            1
+extern LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+
 extern int MessageBox(HANDLE, LPCTSTR szMessage, LPCTSTR szTitle, int flags);
 extern BOOL QueryPerformanceFrequency(PLARGE_INTEGER l);
 extern BOOL QueryPerformanceCounter(PLARGE_INTEGER l);
@@ -335,7 +431,7 @@ extern HANDLE CreateEvent(WORD, BOOL, BOOL, WORD);
 extern void SetEvent(HANDLE);
 extern void DestroyEvent(HANDLE);
 extern BOOL ResetEvent(HANDLE);
-#define CloseEvent(h);
+//#define CloseEvent(h);
 
 #define WAIT_OBJECT_0   0
 #define WAIT_TIMEOUT    0x00000102
@@ -347,23 +443,40 @@ extern void Sleep(int);
 extern BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS l);
 
 
-typedef struct _SECURITY_ATTRIBUTES {
-    DWORD nLength;
-    LPVOID lpSecurityDescriptor;
-    BOOL bInheritHandle;
-} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
-typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)(
+typedef DWORD (*PTHREAD_START_ROUTINE)(
         LPVOID lpThreadParameter
 );
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
-extern HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
-extern BOOL WINAPI CloseHandle(HANDLE hObject);
+extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+extern BOOL CloseHandle(HANDLE hObject);
 
 
 
-
-
-
+typedef struct tagBITMAPINFOHEADER{
+    DWORD      biSize;
+    LONG       biWidth;
+    LONG       biHeight;
+    WORD       biPlanes;
+    WORD       biBitCount;
+    DWORD      biCompression;
+    DWORD      biSizeImage;
+    LONG       biXPelsPerMeter;
+    LONG       biYPelsPerMeter;
+    DWORD      biClrUsed;
+    DWORD      biClrImportant;
+} BITMAPINFOHEADER, FAR *LPBITMAPINFOHEADER, *PBITMAPINFOHEADER;
+typedef struct tagPALETTEENTRY {
+    BYTE        peRed;
+    BYTE        peGreen;
+    BYTE        peBlue;
+    BYTE        peFlags;
+} PALETTEENTRY, *PPALETTEENTRY, FAR *LPPALETTEENTRY;
+typedef struct tagLOGPALETTE {
+    WORD        palVersion;
+    WORD        palNumEntries;
+    PALETTEENTRY        palPalEntry[1];
+} LOGPALETTE, *PLOGPALETTE, NEAR *NPLOGPALETTE, FAR *LPLOGPALETTE;
+HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
 
 
 struct HRGN__ { int unused; };
@@ -410,8 +523,8 @@ typedef struct tagWINDOWPLACEMENT {
 } WINDOWPLACEMENT;
 typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
 
-extern BOOL WINAPI GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
-extern BOOL WINAPI SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl);
+extern BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
+extern BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl);
 
 #define _MAX_PATH   260 // max. length of full pathname
 #define _MAX_DRIVE  3   // max. length of drive component
@@ -422,57 +535,101 @@ extern BOOL WINAPI SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl)
 typedef wchar_t WCHAR;    // wc,   16-bit UNICODE character
 typedef CONST WCHAR *LPCWSTR, *PCWSTR;
 typedef WCHAR *NWPSTR, *LPWSTR, *PWSTR;
-extern BOOL WINAPI GetClientRect(HWND hWnd, LPRECT lpRect);
+extern BOOL GetClientRect(HWND hWnd, LPRECT lpRect);
 
 typedef char *PSZ;
 typedef DWORD   COLORREF;
 
-extern BOOL WINAPI MessageBeep(UINT uType);
+extern BOOL MessageBeep(UINT uType);
 
 typedef HANDLE              HGLOBAL;
 #define GMEM_MOVEABLE       0x0002
-extern HGLOBAL WINAPI GlobalAlloc(UINT uFlags, SIZE_T dwBytes);
-extern LPVOID WINAPI GlobalLock (HGLOBAL hMem);
-extern BOOL WINAPI GlobalUnlock(HGLOBAL hMem);
+extern HGLOBAL GlobalAlloc(UINT uFlags, SIZE_T dwBytes);
+extern LPVOID GlobalLock (HGLOBAL hMem);
+extern BOOL GlobalUnlock(HGLOBAL hMem);
 
 #define CF_TEXT             1
-extern BOOL WINAPI OpenClipboard(HWND hWndNewOwner);
-extern BOOL WINAPI CloseClipboard(VOID);
-extern BOOL WINAPI EmptyClipboard(VOID);
-extern HANDLE WINAPI SetClipboardData(UINT uFormat,HANDLE hMem);
-extern HGLOBAL WINAPI GlobalFree(HGLOBAL hMem);
-extern BOOL WINAPI IsClipboardFormatAvailable(UINT format);
-extern HANDLE WINAPI GetClipboardData(UINT uFormat);
+extern BOOL OpenClipboard(HWND hWndNewOwner);
+extern BOOL CloseClipboard(VOID);
+extern BOOL EmptyClipboard(VOID);
+extern HANDLE SetClipboardData(UINT uFormat,HANDLE hMem);
+extern HGLOBAL GlobalFree(HGLOBAL hMem);
+extern BOOL IsClipboardFormatAvailable(UINT format);
+extern HANDLE GetClipboardData(UINT uFormat);
+
+
+extern DWORD GetPrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault, LPTSTR lpReturnedString, DWORD nSize, LPCTSTR lpFileName);
+extern UINT GetPrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nDefault, LPCTSTR lpFileName);
+extern BOOL WritePrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpString, LPCTSTR lpFileName);
+
+/* flags for fuEvent parameter of timeSetEvent() function */
+#define TIME_ONESHOT    0x0000   /* program timer for single event */
+#define TIME_PERIODIC   0x0001   /* program for continuous periodic event */
+typedef UINT        MMRESULT;   /* error return code, 0 means no error */
+extern MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent);
+extern MMRESULT timeKillEvent(UINT uTimerID);
+typedef struct _SYSTEMTIME {
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
+} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+/* timer device capabilities data structure */
+typedef struct timecaps_tag {
+    UINT    wPeriodMin;     /* minimum period supported  */
+    UINT    wPeriodMax;     /* maximum period supported  */
+} TIMECAPS, *PTIMECAPS, *NPTIMECAPS, *LPTIMECAPS;
+extern MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc);
+/* timer error return values */
+#define TIMERR_NOERROR        (0)                  /* no error */
+#define TIMERR_NOCANDO        (TIMERR_BASE+1)      /* request not completed */
+#define TIMERR_STRUCT         (TIMERR_BASE+33)     /* time struct size */
+extern MMRESULT timeBeginPeriod(UINT uPeriod);
+extern MMRESULT timeEndPeriod(UINT uPeriod);
+extern VOID GetLocalTime(LPSYSTEMTIME lpSystemTime);
 
 #ifdef UNICODE
 
-extern int WINAPI wvsprintf(LPWSTR, LPCWSTR, va_list arglist);
-extern DWORD WINAPI GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart);
-extern LPWSTR WINAPI lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength);
-extern LPWSTR WINAPI lstrcat(LPWSTR lpString1, LPCWSTR lpString2);
+extern int wvsprintf(LPWSTR, LPCWSTR, va_list arglist);
+extern DWORD GetFullPathName(LPCWSTR lpFileName, DWORD nBufferLength, LPWSTR lpBuffer, LPWSTR* lpFilePart);
+extern LPWSTR lstrcpyn(LPWSTR lpString1, LPCWSTR lpString2,int iMaxLength);
+extern LPWSTR lstrcat(LPWSTR lpString1, LPCWSTR lpString2);
 
 extern void __cdecl _wsplitpath(wchar_t const* _FullPath, wchar_t* _Drive, wchar_t* _Dir, wchar_t* _Filename, wchar_t* _Ext);
 #define _tsplitpath     _wsplitpath
 #define _tcschr         wcschr
 extern void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext);
 #define _tmakepath      _wmakepath
-extern int WINAPI lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
+extern int lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
 #define _tcsncmp        wcsncmp
+
+extern int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2);
 
 #else
 
-extern int WINAPI wvsprintf(LPSTR, LPCSTR, va_list arglist);
-extern DWORD WINAPI GetFullPathName(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart);
-extern LPSTR WINAPI lstrcpyn(LPSTR lpString1, LPCSTR lpString2,int iMaxLength);
-extern LPSTR WINAPI lstrcat(LPSTR lpString1, LPCSTR lpString2);
+extern int wvsprintf(LPSTR, LPCSTR, va_list arglist);
+extern DWORD GetFullPathName(LPCSTR lpFileName, DWORD nBufferLength, LPSTR lpBuffer, LPSTR* lpFilePart);
+extern LPSTR lstrcpyn(LPSTR lpString1, LPCSTR lpString2,int iMaxLength);
+extern LPSTR lstrcat(LPSTR lpString1, LPCSTR lpString2);
 
 extern void __cdecl _splitpath(char const* _FullPath, char* _Drive, char* _Dir, char* _Filename, char* _Ext);
 #define _tsplitpath     _splitpath
 #define _tcschr         strchr
 extern void _makepath(char _Buffer, char const* _Drive, char const* _Dir, char const* _Filename, char const* _Ext);
 #define _tmakepath      _makepath
-extern int WINAPI lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
+extern int lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcsncmp        strncmp
+extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 
 
 #endif // !UNICODE
+
+
+
+#define __max(a,b) (((a) > (b)) ? (a) : (b))
+#define __min(a,b) (((a) < (b)) ? (a) : (b))
+

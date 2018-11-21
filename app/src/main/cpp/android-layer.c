@@ -86,3 +86,12 @@ HRGN             hRgn = NULL;
 //BOOL             bClientWinMove = FALSE;	// emulator window can be moved over client area
 //BOOL             bSingleInstance = FALSE;	// multiple emulator instances allowed
 
+// udp.c
+
+VOID ResetUdp(VOID) {
+    return;
+}
+
+BOOL SendByteUdp(BYTE byData) {
+    return FALSE;
+}
