@@ -9,20 +9,20 @@
 
 #include "win32-layer.h"
 
-#include <winsock2.h>
-#include <windows.h>
-#include <tchar.h>
-#include <shellapi.h>
-#include <commctrl.h>
-#include <shlobj.h>
+//#include <winsock2.h>
+//#include <windows.h>
+//#include <tchar.h>
+//#include <shellapi.h>
+//#include <commctrl.h>
+//#include <shlobj.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <stddef.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <direct.h>
-#include <conio.h>
-#include <crtdbg.h>
+//#include <direct.h>
+//#include <conio.h>
+//#include <crtdbg.h>
 
 #if !defined VERIFY
 #if defined _DEBUG

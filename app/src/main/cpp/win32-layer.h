@@ -10,6 +10,7 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 #define MAX_PATH PATH_MAX
 #define INFINITE    0
 
+typedef unsigned long ULONG;
 typedef	unsigned long ulong;	// ushort is already in types.h
 typedef short SHORT;
 typedef uint64_t ULONGLONG;
@@ -48,7 +49,7 @@ typedef struct _RECT {
 	short top;
 	short bottom;
 } RECT;
-typedef RECT *LPRECT
+typedef RECT *LPRECT;
 typedef BYTE *LPCVOID;
 typedef struct _RGBQUAD {
 	BYTE rgbRed;
@@ -407,3 +408,4 @@ extern void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _D
 extern BOOL WINAPI GetClientRect(HWND hWnd, LPRECT lpRect);
 
 typedef char *PSZ;
+typedef DWORD   COLORREF;
