@@ -19,9 +19,6 @@ add_library( # Sets the name of the library.
         # Provides a relative path to your source file(s).
         #src/main/cpp/native-lib.cpp
 
-        src/main/cpp/android-layer.c
-        src/main/cpp/win32-layer.c
-
         src/main/cpp/apple.c
 #        src/main/cpp/cursor.c
 #        src/main/cpp/ddeserv.c
@@ -38,7 +35,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/i28f160.c
         src/main/cpp/keyboard.c
 #        src/main/cpp/keymacro.c
-#        src/main/cpp/kml.c #-> To rewrite or TODO
+        src/main/cpp/kml.c #TODO
         src/main/cpp/lodepng.c
         src/main/cpp/lowbat.c
         src/main/cpp/mops.c
@@ -56,9 +53,81 @@ add_library( # Sets the name of the library.
         src/main/cpp/timer.c
 #        src/main/cpp/udp.c
 
-
+        src/main/cpp/win32-layer.c
+        src/main/cpp/android-layer.c
+        src/main/cpp/android-emu48.c # Emu48.c rewrite
         src/main/cpp/emu48-jni.c
 )
+
+#_makepath OK
+#bActFollowsMouse
+#bAlwaysDisplayLog
+#bAlwaysOnTop
+#bAutoSave
+#bAutoSaveOnExit
+#bClientWinMove
+#bGrayscale
+#bLoadObjectWarning
+#bMacroRealSpeed
+#bSaveDefConfirm
+#bShowMenu
+#bShowTitle
+#bSingleInstance
+#bStartupBackup
+#CheckBreakpoint
+#CreateBackupBreakpointList
+#csDbgLock
+#csIOLock
+#csKeyLock
+#csSlowLock
+#csT1Lock
+#csT2Lock
+#DisableDebugger
+#disassemble
+#disassembler_mode
+#disassembler_symb
+#DisplayChooseKml
+#dwMacroMinDelay
+#dwTColor
+#dwWakeupDelay
+#ExtCreateRegion
+#GetLineCounter
+#hEventShutdn
+#hOldPalette
+#hPalette
+#hThread
+#hWindowDC
+#InitKML
+#KeyMacroRecord
+#KillKML
+#lAppStart
+#lFreq
+#LoadBreakpointList
+#nArgc
+#nMacroTimeout
+#NotifyDebugger
+#OnToolMacroStop
+#ppArgv
+#RefreshDisp0
+#ReloadButtons
+#RestoreBackupBreakpointList
+#RGB
+#SaveBreakpointList
+#SetWindowPlacement
+#SetWindowTitle
+#StartDisplay
+#StopDisplay
+#szUdpServer
+#UpdateAnnunciators
+#UpdateContrast
+#UpdateDbgCycleCounter
+#UpdateDisplayPointers
+#UpdateMainDisplay
+#UpdateMenuDisplay
+#uWaveDevId
+#WriteToMainDisplay
+#WriteToMenuDisplay
+#wUdpPort
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

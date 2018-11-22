@@ -639,6 +639,10 @@ int WINAPI lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2) {
 int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2) {
     return wcscasecmp(lpString1, lpString2);
 }
+void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext)
+{
+}
+
 #else
 
 int WINAPI wvsprintf(LPSTR arg1, LPCSTR arg2, va_list arglist) {
@@ -659,13 +663,13 @@ int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2) {
     return strcasecmp(lpString1, lpString2);
 }
 
-
+void _makepath(char _Buffer, char const* _Drive, char const* _Dir, char const* _Filename, char const* _Ext)
+{
+}
 
 #endif // !UNICODE
 
-void _wmakepath(wchar_t _Buffer, wchar_t const* _Drive, wchar_t const* _Dir, wchar_t const* _Filename, wchar_t const* _Ext)
-{
-}
+
 
 
 BOOL GetClientRect(HWND hWnd, LPRECT lpRect)

@@ -32,6 +32,7 @@ typedef BYTE *LPBYTE;
 typedef unsigned short WORD;
 typedef uint32_t UINT;
 typedef int32_t INT;
+typedef int INT_PTR, *PINT_PTR;
 typedef char CHAR;
 typedef void VOID;
 typedef void *LPVOID;
@@ -650,6 +651,19 @@ extern MMRESULT timeBeginPeriod(UINT uPeriod);
 extern MMRESULT timeEndPeriod(UINT uPeriod);
 extern VOID GetLocalTime(LPSYSTEMTIME lpSystemTime);
 
+
+extern BOOL EnableWindow(HWND hWnd, BOOL bEnable);
+extern HWND GetDlgItem(HWND hDlg, int nIDDlgItem);
+extern BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString);
+extern BOOL CheckDlgButton(HWND hDlg, int nIDButton, UINT uCheck);
+extern UINT IsDlgButtonChecked(HWND hDlg, int nIDButton);
+extern BOOL EndDialog(HWND hDlg, INT_PTR nResult);
+typedef INT_PTR (CALLBACK* DLGPROC)(HWND, UINT, WPARAM, LPARAM);
+extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+#define MAKEINTRESOURCE(i) ((LPSTR)((ULONG_PTR)((WORD)(i))))
+
+
+
 #ifdef UNICODE
 
 extern int wvsprintf(LPWSTR, LPCWSTR, va_list arglist);
@@ -691,3 +705,5 @@ extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 #define __max(a,b) (((a) > (b)) ? (a) : (b))
 #define __min(a,b) (((a) < (b)) ? (a) : (b))
 
+/* device ID for wave device mapper */
+#define WAVE_MAPPER     ((UINT)-1)
