@@ -17,6 +17,7 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 typedef unsigned long ULONG;
 typedef	unsigned long ulong;	// ushort is already in types.h
 typedef short SHORT;
+typedef unsigned short USHORT;
 typedef uint64_t ULONGLONG;
 typedef int64_t LONGLONG;
 typedef int64_t __int64;
@@ -36,6 +37,7 @@ typedef int INT_PTR, *PINT_PTR;
 typedef char CHAR;
 typedef void VOID;
 typedef void *LPVOID;
+typedef void *PVOID;
 typedef long LONG;
 typedef LONG *PLONG;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
@@ -54,6 +56,9 @@ typedef HANDLE HBITMAP;
 typedef HANDLE HMENU;
 typedef HANDLE HFONT;
 typedef void * HGDIOBJ;
+
+#define MK_LBUTTON          0x0001
+
 
 typedef void *TIMECALLBACK ;
 #define CALLBACK
@@ -239,6 +244,7 @@ enum {
 	WM_COMMAND,	// respond to validation/dimming commands
 	WM_GETDLGVALUES	// read off the control settings
 };
+#define WM_SYSCOMMAND                   0x0112
 
 // Constants for the msg parameter in SendDlgItemMessage()
 enum {
@@ -422,11 +428,21 @@ extern BOOL GetSaveFileName(LPOPENFILENAME);
 #define LR_SHARED           0x00008000
 extern HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT fuLoad);
 
+#define WM_USER                         0x0400
 #define WM_SETICON                      0x0080
 #define ICON_SMALL          0
 #define ICON_BIG            1
+// message from browser
+#define BFFM_INITIALIZED        1
+#define BFFM_SELCHANGED         2
+#define BFFM_SETSTATUSTEXTA     (WM_USER + 100)
+#define BFFM_SETSELECTIONA      (WM_USER + 102)
+#define BFFM_SETSTATUSTEXT  BFFM_SETSTATUSTEXTA
+#define BFFM_SETSELECTION   BFFM_SETSELECTIONA
+#define CB_GETITEMDATA              0x0150
+#define CB_SETITEMDATA              0x0151
 extern LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-
+extern BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 extern int MessageBox(HANDLE, LPCTSTR szMessage, LPCTSTR szTitle, int flags);
 extern BOOL QueryPerformanceFrequency(PLARGE_INTEGER l);
 extern BOOL QueryPerformanceCounter(PLARGE_INTEGER l);
@@ -455,8 +471,23 @@ typedef DWORD (*PTHREAD_START_ROUTINE)(
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
 extern BOOL CloseHandle(HANDLE hObject);
+#define OBJ_BITMAP          7
+extern int GetObject(HANDLE h, int c, LPVOID pv);
+extern HGDIOBJ GetCurrentObject(HDC hdc, UINT type);
+#define HALFTONE                     4
+extern int SetStretchBltMode(HDC hdc, int mode);
+extern BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
 
-
+typedef struct tagBITMAP
+{
+    LONG        bmType;
+    LONG        bmWidth;
+    LONG        bmHeight;
+    LONG        bmWidthBytes;
+    WORD        bmPlanes;
+    WORD        bmBitsPixel;
+    LPVOID      bmBits;
+} BITMAP, *PBITMAP, NEAR *NPBITMAP, FAR *LPBITMAP;
 /* constants for the biCompression field */
 #define BI_RGB        0L
 #define BI_RLE8       1L
@@ -502,6 +533,24 @@ typedef struct tagLOGPALETTE {
 extern HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
 extern HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd);
 extern UINT RealizePalette(HDC hdc);
+extern HDC CreateCompatibleDC(HDC hdc);
+extern BOOL DeleteDC(HDC hdc);
+extern HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h);
+typedef struct tagPOINT
+{
+    LONG  x;
+    LONG  y;
+} POINT, *PPOINT, NEAR *NPPOINT, FAR *LPPOINT;
+extern BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt);
+extern BOOL LineTo(HDC hdc, int x, int y);
+#define WHITE_PEN           6
+#define BLACK_PEN           7
+extern HGDIOBJ GetStockObject(int i);
+#define SRCCOPY             (DWORD)0x00CC0020 /* dest = source                   */
+#define DSTINVERT           (DWORD)0x00550009 /* dest = (NOT dest)               */
+#define BLACKNESS           (DWORD)0x00000042 /* dest = BLACK                    */
+extern BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop);
+extern BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
 /* constants for CreateDIBitmap */
 #define CBM_INIT        0x04L   /* initialize bitmap */
 /* DIB color table identifiers */
@@ -509,6 +558,7 @@ extern UINT RealizePalette(HDC hdc);
 #define DIB_PAL_COLORS      1 /* color table in palette indices */
 extern HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage);
 extern HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset);
+extern HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy);
 extern BOOL DeleteObject(HGDIOBJ ho);
 typedef struct _RGNDATAHEADER {
     DWORD   dwSize;
@@ -538,8 +588,9 @@ typedef struct  tagXFORM
     FLOAT   eDx;
     FLOAT   eDy;
 } XFORM, *PXFORM, FAR *LPXFORM;
-
-HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
+extern int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw);
+extern HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
+extern BOOL GdiFlush(void);
 
 #define _ASSERT(expr)
 //#define _ASSERT(expr) \
@@ -564,11 +615,6 @@ HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
 
 
 // file.c
-typedef struct tagPOINT
-{
-	LONG  x;
-	LONG  y;
-} POINT, *PPOINT;
 typedef struct tagWINDOWPLACEMENT {
 	UINT  length;
 	UINT  flags;
@@ -582,8 +628,10 @@ typedef struct tagWINDOWPLACEMENT {
 } WINDOWPLACEMENT;
 typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
 
+extern BOOL DestroyWindow(HWND hWnd);
 extern BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
 extern BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl);
+extern BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase);
 
 #define _MAX_PATH   260 // max. length of full pathname
 #define _MAX_DRIVE  3   // max. length of drive component
@@ -654,6 +702,8 @@ extern VOID GetLocalTime(LPSYSTEMTIME lpSystemTime);
 
 extern BOOL EnableWindow(HWND hWnd, BOOL bEnable);
 extern HWND GetDlgItem(HWND hDlg, int nIDDlgItem);
+extern UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax);
+#define GetDlgItemText  GetDlgItemTextA
 extern BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString);
 extern BOOL CheckDlgButton(HWND hDlg, int nIDButton, UINT uCheck);
 extern UINT IsDlgButtonChecked(HWND hDlg, int nIDButton);
@@ -661,8 +711,105 @@ extern BOOL EndDialog(HWND hDlg, INT_PTR nResult);
 typedef INT_PTR (CALLBACK* DLGPROC)(HWND, UINT, WPARAM, LPARAM);
 extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
 #define MAKEINTRESOURCE(i) ((LPSTR)((ULONG_PTR)((WORD)(i))))
+typedef struct _FILETIME {
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+} FILETIME, *PFILETIME, *LPFILETIME;
+typedef struct _WIN32_FIND_DATAA {
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeHigh;
+    DWORD nFileSizeLow;
+    DWORD dwReserved0;
+    DWORD dwReserved1;
+    CHAR   cFileName[ MAX_PATH ];
+    CHAR   cAlternateFileName[ 14 ];
+#ifdef _MAC
+    DWORD dwFileType;
+    DWORD dwCreatorType;
+    WORD  wFinderFlags;
+#endif
+} WIN32_FIND_DATAA, *PWIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
+typedef WIN32_FIND_DATAA WIN32_FIND_DATA;
+extern HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData);
+#define FindFirstFile  FindFirstFileA
+extern BOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData);
+#define FindNextFile  FindNextFileA
+extern BOOL FindClose(HANDLE hFindFile);
+typedef struct _SHITEMID
+{
+    USHORT cb;
+    BYTE abID[ 1 ];
+} 	SHITEMID;
+typedef struct _ITEMIDLIST
+{
+    SHITEMID mkid;
+} 	ITEMIDLIST;
+typedef ITEMIDLIST *LPITEMIDLIST;
+typedef const ITEMIDLIST *LPCITEMIDLIST;
+#define PCIDLIST_ABSOLUTE LPCITEMIDLIST
+extern BOOL SHGetPathFromIDListA(PCIDLIST_ABSOLUTE pidl, LPSTR pszPath);
+#define SHGetPathFromIDList  SHGetPathFromIDListA
+typedef int (CALLBACK* BFFCALLBACK)(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+// Browsing for directory.
+#define BIF_RETURNONLYFSDIRS    0x00000001
+#define BIF_DONTGOBELOWDOMAIN   0x00000002
+#define BIF_STATUSTEXT          0x00000004
+typedef struct _browseinfoA {
+    HWND        hwndOwner;
+    PCIDLIST_ABSOLUTE pidlRoot;
+    LPSTR        pszDisplayName;
+    LPCSTR       lpszTitle;
+    UINT         ulFlags;
+    BFFCALLBACK  lpfn;
+    LPARAM       lParam;
+    int          iImage;
+} BROWSEINFOA, *PBROWSEINFOA, *LPBROWSEINFOA;
+#define BROWSEINFO      BROWSEINFOA
+typedef struct IMallocVtbl
+{
+    ULONG (*Release )(void * This);
+    void (*Free )(void * This, void *pv);
+} IMallocVtbl;
+typedef struct {
+    struct IMallocVtbl *lpVtbl;
+} IMalloc;
+typedef IMalloc *LPMALLOC;
+typedef long HRESULT;
+HRESULT SHGetMalloc(IMalloc **ppMalloc);   // CoGetMalloc(MEMCTX_TASK,ppMalloc)
+#define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
+#define FAILED(hr) (((HRESULT)(hr)) < 0)
+#define PIDLIST_ABSOLUTE         LPITEMIDLIST
+extern PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi);
+#define SHBrowseForFolder   SHBrowseForFolderA
+extern INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+#define DialogBoxA(hInstance, lpTemplate, hWndParent, lpDialogFunc) \
+DialogBoxParamA(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
+#define DialogBox  DialogBoxA
 
+#define LANG_NEUTRAL 0x00
+#define SUBLANG_NEUTRAL 0x00
+#define PRIMARYLANGID(lgid)    ((WORD  )(lgid) & 0x3ff)
+#define SUBLANGID(lgid)        ((WORD  )(lgid) >> 10)
 
+#define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+extern HCURSOR SetCursor(HCURSOR hCursor);
+extern int MulDiv(int nNumber, int nNumerator, int nDenominator);
+
+#define KL_NAMELENGTH 9
+extern BOOL GetKeyboardLayoutName(LPSTR pwszKLID);
+
+extern void DragAcceptFiles(HWND hWnd, BOOL fAccept);
+
+struct HDROP__{int unused;}; typedef struct HDROP__ *HDROP;
+
+typedef struct tagCOPYDATASTRUCT {
+    ULONG_PTR dwData;
+    DWORD cbData;
+    PVOID lpData;
+} COPYDATASTRUCT, *PCOPYDATASTRUCT;
 
 #ifdef UNICODE
 
@@ -680,6 +827,7 @@ extern int lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
 #define _tcsncmp        wcsncmp
 
 extern int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2);
+#define _tcstoul    wcstoul
 
 #else
 
@@ -696,6 +844,7 @@ extern void _makepath(char _Buffer, char const* _Drive, char const* _Dir, char c
 extern int lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcsncmp        strncmp
 extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
+#define _tcstoul    strtoul
 
 
 #endif // !UNICODE
@@ -704,6 +853,8 @@ extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 
 #define __max(a,b) (((a) > (b)) ? (a) : (b))
 #define __min(a,b) (((a) < (b)) ? (a) : (b))
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 
 /* device ID for wave device mapper */
 #define WAVE_MAPPER     ((UINT)-1)

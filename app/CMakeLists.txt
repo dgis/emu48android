@@ -35,7 +35,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/i28f160.c
         src/main/cpp/keyboard.c
 #        src/main/cpp/keymacro.c
-        src/main/cpp/kml.c #TODO
+        src/main/cpp/kml.c
         src/main/cpp/lodepng.c
         src/main/cpp/lowbat.c
         src/main/cpp/mops.c

@@ -468,8 +468,14 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 }
 
 
-BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
+BOOL DestroyWindow(HWND hWnd) {
+    //TODO
+    return 0;
+}
 
+BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
+BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
+BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) { return 0; }
 
 HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
     //TODO
@@ -481,7 +487,22 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
     // Can be a thread/event/file hande!
     return 0;
 }
-
+int GetObject(HANDLE h, int c, LPVOID pv) {
+    //TODO
+    return 0;
+}
+HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
+    //TODO
+    return NULL;
+}
+int SetStretchBltMode(HDC hdc, int mode) {
+    //TODO
+    return 0;
+}
+BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
+    //TODO
+    return 0;
+}
 HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
     //TODO
     return NULL;
@@ -491,6 +512,38 @@ HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
     return NULL;
 }
 UINT RealizePalette(HDC hdc) {
+    //TODO
+    return 0;
+}
+HDC CreateCompatibleDC(HDC hdc) {
+    //TODO
+    return NULL;
+}
+BOOL DeleteDC(HDC hdc) {
+    //TODO
+    return 0;
+}
+HGDIOBJ GetStockObject(int i) {
+    //TODO
+    return NULL;
+}
+HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
+    //TODO
+    return NULL;
+}
+BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt) {
+    //TODO
+    return 0;
+}
+BOOL LineTo(HDC hdc, int x, int y) {
+    //TODO
+    return 0;
+}
+BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop) {
+    //TODO
+    return 0;
+}
+BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
     //TODO
     return 0;
 }
@@ -507,6 +560,10 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     //TODO
     return NULL;
 }
+HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
+    //TODO
+    return NULL;
+}
 BOOL DeleteObject(HGDIOBJ ho) {
     //TODO
     return 0;
@@ -519,7 +576,18 @@ BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom) {
     //TODO
     return 0;
 }
-
+int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw) {
+    //TODO
+    return 0;
+}
+HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData) {
+    //TODO
+    return NULL;
+}
+BOOL GdiFlush(void) {
+    //TODO
+    return 0;
+}
 
 BOOL WINAPI MessageBeep(UINT uType) {
     //TODO System beep
@@ -615,6 +683,81 @@ MMRESULT timeEndPeriod(UINT uPeriod) {
 VOID GetLocalTime(LPSYSTEMTIME lpSystemTime) {
     //TODO
     return;
+}
+
+BOOL EnableWindow(HWND hWnd, BOOL bEnable) {
+    //TODO
+    return 0;
+}
+HWND GetDlgItem(HWND hDlg, int nIDDlgItem) {
+    //TODO
+    return NULL;
+}
+UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax) {
+    //TODO
+    return 0;
+}
+BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString) {
+    //TODO
+    return 0;
+}
+BOOL CheckDlgButton(HWND hDlg, int nIDButton, UINT uCheck) {
+    //TODO
+    return 0;
+}
+UINT IsDlgButtonChecked(HWND hDlg, int nIDButton) {
+    //TODO
+    return 0;
+}
+BOOL EndDialog(HWND hDlg, INT_PTR nResult) {
+    //TODO
+    return 0;
+}
+INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+    //TODO
+    return NULL;
+}
+HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
+    //TODO
+    return NULL;
+}
+BOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData) {
+    //TODO
+    return 0;
+}
+BOOL FindClose(HANDLE hFindFile) {
+    //TODO
+    return 0;
+}
+BOOL SHGetPathFromIDListA(PCIDLIST_ABSOLUTE pidl, LPSTR pszPath) {
+    //TODO
+    return 0;
+}
+HRESULT SHGetMalloc(IMalloc **ppMalloc) {
+    //TODO
+    return 0;
+}
+
+INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+    //TODO
+    return NULL;
+}
+HCURSOR SetCursor(HCURSOR hCursor) {
+    //TODO
+    return NULL;
+}
+int MulDiv(int nNumber, int nNumerator, int nDenominator) {
+    //TODO
+    return 0;
+}
+
+BOOL GetKeyboardLayoutName(LPSTR pwszKLID) {
+    //TODO
+    return 0;
+}
+
+void DragAcceptFiles(HWND hWnd, BOOL fAccept) {
+    //TODO
 }
 
 
