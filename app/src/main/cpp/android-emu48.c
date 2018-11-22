@@ -801,7 +801,7 @@ static LRESULT OnCreate(HWND hWindow)
 //	InitializeCriticalSection(&csRecvLock);
 //	InitializeCriticalSection(&csSlowLock);
 //	InitializeCriticalSection(&csDbgLock);
-//
+
 //	// load cursors
 //	hCursorArrow = LoadCursor(NULL,IDC_ARROW);
 //	hCursorHand  = LoadCursor(NULL,IDC_HAND);
@@ -2016,7 +2016,7 @@ LRESULT CALLBACK MainWndProc(HWND hWindow, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return NULL;
 }
 
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
+BOOL emu48Start()
 {
 //	typedef DWORD (WINAPI *LPFN_STIP)(HANDLE hThread,DWORD dwIdealProcessor);
 //
@@ -2064,12 +2064,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 //			_T("This application will now terminate."));
 //		return FALSE;
 //	}
-//
-//	// read emulator settings
-//	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
-//	ReadSettings();
-//
-//	// running an instance of me?
+
+	// read emulator settings
+	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
+	ReadSettings();
+
+	// running an instance of me?
 //	if (bSingleInstance && (hWnd = FindWindow(MAKEINTATOM(classAtom),NULL)) != NULL)
 //	{
 //		COPYDATASTRUCT sCDS;
@@ -2144,49 +2144,49 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 //	}
 //
 //	VERIFY(hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_MENU)));
-//
-//	// initialization
-//	QueryPerformanceFrequency(&lFreq);		// init high resolution counter
-//	QueryPerformanceCounter(&lAppStart);
-//
-//	szCurrentKml[0] = 0;					// no KML file selected
-//	SetSpeed(bRealSpeed);					// set speed
+
+	// initialization
+	QueryPerformanceFrequency(&lFreq);		// init high resolution counter
+	QueryPerformanceCounter(&lAppStart);
+
+	szCurrentKml[0] = 0;					// no KML file selected
+	SetSpeed(bRealSpeed);					// set speed
 //	MruInit(4);								// init MRU entries
-//
-//	// create auto event handle
-//	hEventShutdn = CreateEvent(NULL,FALSE,FALSE,NULL);
-//	if (hEventShutdn == NULL)
-//	{
-//		AbortMessage(_T("Event creation failed."));
+
+	// create auto event handle
+	hEventShutdn = CreateEvent(NULL,FALSE,FALSE,NULL);
+	if (hEventShutdn == NULL)
+	{
+		AbortMessage(_T("Event creation failed."));
 //		DestroyWindow(hWnd);
-//		return FALSE;
-//	}
-//
-//	nState     = SM_RUN;					// init state must be <> nNextState
-//	nNextState = SM_INVALID;				// go into invalid state
-//	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&WorkerThread, NULL, CREATE_SUSPENDED, &dwThreadId);
-//	if (hThread == NULL)
-//	{
-//		CloseHandle(hEventShutdn);			// close event handle
-//		AbortMessage(_T("Thread creation failed."));
+		return FALSE;
+	}
+
+	nState     = SM_RUN;					// init state must be <> nNextState
+	nNextState = SM_INVALID;				// go into invalid state
+	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&WorkerThread, NULL, CREATE_SUSPENDED, &dwThreadId);
+	if (hThread == NULL)
+	{
+		CloseHandle(hEventShutdn);			// close event handle
+		AbortMessage(_T("Thread creation failed."));
 //		DestroyWindow(hWnd);
-//		return FALSE;
-//	}
-//
-//	// SetThreadIdealProcessor() is available since Windows NT4.0
+		return FALSE;
+	}
+
+	// SetThreadIdealProcessor() is available since Windows NT4.0
 //	fnSetThreadIdealProcessor = (LPFN_STIP) GetProcAddress(GetModuleHandle(_T("kernel32")),
 //														   "SetThreadIdealProcessor");
-//
+
 //	// bind Saturn CPU emulation thread to current ideal processor
 //	dwProcessor = (fnSetThreadIdealProcessor != NULL)					// running on NT4.0 or later
 //				? fnSetThreadIdealProcessor(hThread,MAXIMUM_PROCESSORS)	// get ideal processor no.
 //				: 0;													// select 1st processor
-//
-//	// on multiprocessor machines for QueryPerformanceCounter()
+
+	// on multiprocessor machines for QueryPerformanceCounter()
 //	VERIFY(SetThreadAffinityMask(hThread,(DWORD_PTR) (1 << dwProcessor)));
-//	ResumeThread(hThread);					// start thread
-//	while (nState!=nNextState) Sleep(0);	// wait for thread initialized
-//
+	ResumeThread(hThread);					// start thread
+	while (nState!=nNextState) Sleep(0);	// wait for thread initialized
+
 //	idDdeInst = 0;							// initialize DDE server
 //	if (DdeInitialize(&idDdeInst,(PFNCALLBACK) &DdeCallback,
 //					  APPCLASS_STANDARD |
@@ -2199,7 +2199,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 //		DestroyWindow(hWnd);
 //		return FALSE;
 //	}
-//
+
 //	// init clipboard format and name service
 //	uCF_HpObj = RegisterClipboardFormat(_T(CF_HPOBJ));
 //	hszService = DdeCreateStringHandle(idDdeInst,szAppName,0);
@@ -2235,14 +2235,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 //
 //	SetWindowTitle(_T("New Document"));
 //	ShowWindow(hWnd,nCmdShow);				// show emulator menu
-//
-//	// no default document, ask for new one
-//	if (NewDocument()) SetWindowTitle(_T("Untitled"));
-//
+
+	// no default document, ask for new one
+	if (NewDocument()) SetWindowTitle(_T("Untitled"));
+
 //start:
-//	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
-//	if (pbyRom) SwitchToState(SM_RUN);
-//
+	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
+	if (pbyRom) SwitchToState(SM_RUN);
+
 //	while (GetMessage(&msg, NULL, 0, 0))
 //	{
 //		if (   !TranslateAccelerator(hWnd, hAccel, &msg)

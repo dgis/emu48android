@@ -10,6 +10,13 @@ LPTSTR szTitle;
 static HANDLE gEventId;
 
 
+DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
+    if(getcwd(lpBuffer, nBufferLength)) {
+        return nBufferLength;
+    }
+    return 0;
+}
+
 BOOL SetCurrentDirectory(LPCTSTR path)
 {
     if(path == NULL)
@@ -481,7 +488,10 @@ HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwSt
     //TODO
     return NULL;
 }
-
+DWORD ResumeThread(HANDLE hThread) {
+    //TODO
+    return 0;
+}
 BOOL WINAPI CloseHandle(HANDLE hObject) {
     //TODO
     // Can be a thread/event/file hande!

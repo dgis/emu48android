@@ -12,3 +12,9 @@ Java_com_regis_cosnier_emu48_MainActivity_stringFromJNI(
 //    return env->NewStringUTF(hello.c_str());
     return (*env)->NewStringUTF(env, "Hello from JNI !");
 }
+
+extern void emu48Start();
+
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_MainActivity_emu48Start(JNIEnv *env, jobject thisz) {
+    emu48Start();
+}

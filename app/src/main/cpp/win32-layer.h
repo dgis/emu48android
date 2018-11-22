@@ -350,6 +350,7 @@ typedef struct _OVERLAPPED {
 } OVERLAPPED, *LPOVERLAPPED;
 
 
+extern DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer);
 extern BOOL SetCurrentDirectory(LPCTSTR);	// returns NO if fails
 extern int CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile);
 extern BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
@@ -470,6 +471,7 @@ typedef DWORD (*PTHREAD_START_ROUTINE)(
 );
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+extern DWORD ResumeThread(HANDLE hThread);
 extern BOOL CloseHandle(HANDLE hObject);
 #define OBJ_BITMAP          7
 extern int GetObject(HANDLE h, int c, LPVOID pv);
