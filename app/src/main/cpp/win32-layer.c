@@ -98,8 +98,9 @@ DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveH
 }
 
 BOOL SetEndOfFile(HANDLE hFile) {
-    //TODO
-    return FALSE;
+    off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
+    int truncateResult = ftruncate(hFile->fileDescriptor, currentPosition);
+    return truncateResult == 0;
 }
 
 DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
@@ -109,6 +110,9 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
     return fileLength;
 }
 
+//** https://www.ibm.com/developerworks/systems/library/es-MigratingWin32toLinux.html
+//https://www.ibm.com/developerworks/systems/library/es-win32linux.html
+//https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
     return NULL;
 }

@@ -55,6 +55,7 @@ add_library( # Sets the name of the library.
 
         src/main/cpp/win32-layer.c
         src/main/cpp/android-layer.c
+        src/main/cpp/android-display.c # display.c rewrite
         src/main/cpp/android-emu48.c # Emu48.c rewrite
         src/main/cpp/emu48-jni.c
 )
