@@ -25,7 +25,7 @@ BOOL SetCurrentDirectory(LPCTSTR path)
     return chdir(path);
 }
 
-int CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
+HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
     int flags = O_RDWR;
     int fd = -1;
@@ -65,23 +65,48 @@ int CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPV
 //        }
 //    }
 
-    return fd;
+    HANDLE result = malloc(sizeof(_HANDLE));
+    result->handleType = HANDLE_TYPE_FILE;
+    result->fileDescriptor = fd;
+    return result;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
-    return FALSE;
-}
-
-DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) {
-    return 0;
-}
-
-DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
-    return 0;
+    DWORD readByteCount = read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
+    if(lpNumberOfBytesRead)
+        *lpNumberOfBytesRead = readByteCount;
+    return readByteCount >= 0;
 }
 
 BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) {
+    size_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
+    if(lpNumberOfBytesWritten)
+        *lpNumberOfBytesWritten = writenByteCount;
+    return writenByteCount >= 0;
+}
+
+DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) {
+    int moveMode;
+    if(dwMoveMethod == FILE_BEGIN)
+        moveMode = SEEK_SET;
+    else if(dwMoveMethod == FILE_CURRENT)
+        moveMode = SEEK_CUR;
+    else if(dwMoveMethod == FILE_END)
+        moveMode = SEEK_END;
+    int seekResult = lseek(hFile->fileDescriptor, lDistanceToMove, moveMode);
+    return seekResult < 0 ? INVALID_SET_FILE_POINTER : seekResult;
+}
+
+BOOL SetEndOfFile(HANDLE hFile) {
+    //TODO
     return FALSE;
+}
+
+DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
+    off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
+    off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END) + 1;
+    lseek(hFile->fileDescriptor, currentPosition, SEEK_SET);
+    return fileLength;
 }
 
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
@@ -96,8 +121,120 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
     return NULL;
 }
 
-BOOL SetEndOfFile(HANDLE hFile) {
+// https://github.com/NeoSmart/PEvents
+HANDLE CreateEvent(WORD attr, BOOL is_manual_reset, BOOL is_signaled, WORD name)
+{
+//    if (nil == gEventLockDict)
+//    {
+//        gEventLockDict = [[NSMutableDictionary alloc] init];
+//    }
+//    ++gEventId;
+//    NSNumber *key = [[NSNumber alloc] initWithInt: gEventId];
+//    NSConditionLock *lock = [[NSConditionLock alloc] initWithCondition: 0];
+//    [gEventLockDict setObject:lock forKey:key];
+//    [lock release];
+//    [key release];
+////    if (NULL == gEventLock)
+////    {
+////        gEventLock = [[NSConditionLock alloc] initWithCondition: 0];
+////    }
+
+    return gEventId;
+}
+
+void SetEvent(HANDLE eventId)
+{
+//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
+//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
+//    [key release];
+//    if (lock)
+//    {
+//        [lock lock];
+//        [lock unlockWithCondition: eventId];
+//    }
+}
+
+BOOL ResetEvent(HANDLE eventId)
+{
+//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
+//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
+//    [key release];
+//    if (lock)
+//    {
+//        [lock lock];
+//        [lock unlockWithCondition: 0];
+//        return TRUE;
+//    }
     return FALSE;
+}
+
+void DestroyEvent(HANDLE eventId)
+{
+//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
+//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
+//    if (lock)
+//    {
+//        [gEventLockDict removeObjectForKey: key];
+//    }
+//    [key release];
+}
+
+DWORD WaitForSingleObject(HANDLE eventId, int timeout)
+{
+    DWORD result = WAIT_OBJECT_0;
+//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
+//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
+//    [key release];
+//
+//    if (nil == lock)
+//        return WAIT_FAILED;
+//
+//    if (timeout > 0)
+//    {
+//        NSDate *timeoutDate = [[NSDate alloc] initWithTimeIntervalSinceNow: (timeout/1000.0)];
+//        if (![lock lockWhenCondition:eventId beforeDate:timeoutDate])
+//        result = WAIT_TIMEOUT;
+//        [timeoutDate release];
+//    }
+//    else
+//    {
+//        [lock lockWhenCondition: eventId];
+//        [lock unlockWithCondition: 0];
+//    }
+    return result;
+}
+
+HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
+    //TODO
+    return NULL;
+}
+
+BOOL WINAPI CloseHandle(HANDLE hObject) {
+    // Can be a thread/event/file handle!
+    switch(hObject->handleType) {
+        case HANDLE_TYPE_FILE: {
+            int closeResult = close(hObject->fileDescriptor);
+            if(closeResult >= 0) {
+                hObject->fileDescriptor = 0;
+                free(hObject);
+                return TRUE;
+            }
+            break;
+        }
+        case HANDLE_TYPE_EVENT:
+            //free(hObject);
+            return TRUE;
+        case HANDLE_TYPE_THREAD:
+            //free(hObject);
+            return TRUE;
+    }
+    return FALSE;
+}
+
+void Sleep(int ms)
+{
+//    [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: (ms / 1000.0)]];
+////    [NSThread sleepUntilDate: [NSDate dateWithTimeIntervalSinceNow: (ms / 1000.0)]];
 }
 
 /*
@@ -377,97 +514,6 @@ void LeaveCriticalSection(CRITICAL_SECTION *lock)
     pthread_mutex_unlock(lock);
 }
 
-
-// https://github.com/NeoSmart/PEvents
-HANDLE CreateEvent(WORD attr, BOOL is_manual_reset, BOOL is_signaled, WORD name)
-{
-//    if (nil == gEventLockDict)
-//    {
-//        gEventLockDict = [[NSMutableDictionary alloc] init];
-//    }
-//    ++gEventId;
-//    NSNumber *key = [[NSNumber alloc] initWithInt: gEventId];
-//    NSConditionLock *lock = [[NSConditionLock alloc] initWithCondition: 0];
-//    [gEventLockDict setObject:lock forKey:key];
-//    [lock release];
-//    [key release];
-////    if (NULL == gEventLock)
-////    {
-////        gEventLock = [[NSConditionLock alloc] initWithCondition: 0];
-////    }
-
-    return gEventId;
-}
-
-void SetEvent(HANDLE eventId)
-{
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//    if (lock)
-//    {
-//        [lock lock];
-//        [lock unlockWithCondition: eventId];
-//    }
-}
-
-BOOL ResetEvent(HANDLE eventId)
-{
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//    if (lock)
-//    {
-//        [lock lock];
-//        [lock unlockWithCondition: 0];
-//        return TRUE;
-//    }
-    return FALSE;
-}
-
-void DestroyEvent(HANDLE eventId)
-{
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    if (lock)
-//    {
-//        [gEventLockDict removeObjectForKey: key];
-//    }
-//    [key release];
-}
-
-DWORD WaitForSingleObject(HANDLE eventId, int timeout)
-{
-    DWORD result = WAIT_OBJECT_0;
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//
-//    if (nil == lock)
-//        return WAIT_FAILED;
-//
-//    if (timeout > 0)
-//    {
-//        NSDate *timeoutDate = [[NSDate alloc] initWithTimeIntervalSinceNow: (timeout/1000.0)];
-//        if (![lock lockWhenCondition:eventId beforeDate:timeoutDate])
-//        result = WAIT_TIMEOUT;
-//        [timeoutDate release];
-//    }
-//    else
-//    {
-//        [lock lockWhenCondition: eventId];
-//        [lock unlockWithCondition: 0];
-//    }
-    return result;
-}
-
-void Sleep(int ms)
-{
-//    [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: (ms / 1000.0)]];
-////    [NSThread sleepUntilDate: [NSDate dateWithTimeIntervalSinceNow: (ms / 1000.0)]];
-}
-
-
 BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 {
     status->ACLineStatus = AC_LINE_ONLINE;
@@ -484,17 +530,8 @@ BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) { return 0; }
 
-HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
-    //TODO
-    return NULL;
-}
 DWORD ResumeThread(HANDLE hThread) {
     //TODO
-    return 0;
-}
-BOOL WINAPI CloseHandle(HANDLE hObject) {
-    //TODO
-    // Can be a thread/event/file hande!
     return 0;
 }
 int GetObject(HANDLE h, int c, LPVOID pv) {

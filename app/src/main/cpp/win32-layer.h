@@ -50,7 +50,16 @@ typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 
 #define CONST const
 
-typedef int HANDLE;
+enum HANDLE_TYPE {
+    HANDLE_TYPE_FILE = 1,
+    HANDLE_TYPE_EVENT,
+    HANDLE_TYPE_THREAD,
+};
+typedef struct {
+    int handleType;
+    int fileDescriptor;
+} _HANDLE;
+typedef _HANDLE * HANDLE;
 typedef HANDLE HPALETTE;
 typedef HANDLE HBITMAP;
 typedef HANDLE HMENU;
@@ -352,7 +361,7 @@ typedef struct _OVERLAPPED {
 
 extern DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer);
 extern BOOL SetCurrentDirectory(LPCTSTR);	// returns NO if fails
-extern int CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile);
+extern HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile);
 extern BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
 extern DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod);
 extern DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
