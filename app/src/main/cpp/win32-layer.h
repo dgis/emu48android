@@ -59,6 +59,9 @@ enum HANDLE_TYPE {
 typedef struct {
     int handleType;
     int fileDescriptor;
+    size_t fileMappingSize;
+    void* fileMappingAddress;
+    pthread_t threadId;
 } _HANDLE;
 typedef _HANDLE * HANDLE;
 typedef HANDLE HPALETTE;
