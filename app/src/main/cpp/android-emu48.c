@@ -2025,7 +2025,7 @@ BOOL emu48Start()
 //	ATOM classAtom;
 //	RECT rectWindow;
 //	HACCEL hAccel;
-//	DWORD dwThreadId;
+	DWORD dwThreadId;
 //	LPFN_STIP fnSetThreadIdealProcessor;
 //	DWORD dwProcessor;
 //	HSZ hszService, hszTopic;				// variables for DDE server
@@ -2288,3 +2288,10 @@ BOOL emu48Start()
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	UNREFERENCED_PARAMETER(hPrevInst);
 }
+
+
+
+//BOOL DisplayChooseKmlEx(CHAR cType)  {
+//	lstrcpy(szCurrentKml, "hello.kml");
+//    return TRUE;
+//}

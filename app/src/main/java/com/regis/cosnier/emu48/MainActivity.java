@@ -1,5 +1,6 @@
 package com.regis.cosnier.emu48;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.support.design.widget.FloatingActionButton;
@@ -37,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = (TextView) findViewById(R.id.sample_text);
         tv.setText(stringFromJNI());
 
-        emu48Start();
+        AssetManager mgr = getResources().getAssets();
+        emu48Start(mgr);
     }
 
     @Override
@@ -68,5 +70,5 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
-    public native void emu48Start();
+    public native void emu48Start(AssetManager mgr);
 }

@@ -10,7 +10,7 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 #define TRUE    1
 #define FALSE   0
 #define MAX_PATH PATH_MAX
-#define INFINITE    0
+#define INFINITE    0xFFFFFFFF //0
 #define FAR
 #define NEAR
 
@@ -58,10 +58,19 @@ enum HANDLE_TYPE {
 };
 typedef struct {
     int handleType;
-    int fileDescriptor;
+
+	int fileDescriptor;
+	BOOL fileIsAsset;
+
     size_t fileMappingSize;
     void* fileMappingAddress;
+
     pthread_t threadId;
+
+    pthread_cond_t eventCVariable;
+    pthread_mutex_t eventMutex;
+    BOOL eventAutoReset;
+    BOOL eventState;
 } _HANDLE;
 typedef _HANDLE * HANDLE;
 typedef HANDLE HPALETTE;
@@ -463,16 +472,15 @@ extern BOOL QueryPerformanceCounter(PLARGE_INTEGER l);
 extern DWORD timeGetTime(void);
 extern void EnterCriticalSection(CRITICAL_SECTION *);
 extern void LeaveCriticalSection(CRITICAL_SECTION *);
-extern HANDLE CreateEvent(WORD, BOOL, BOOL, WORD);
-extern void SetEvent(HANDLE);
-extern void DestroyEvent(HANDLE);
-extern BOOL ResetEvent(HANDLE);
-//#define CloseEvent(h);
+extern HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name);
+extern BOOL SetEvent(HANDLE hEvent);
+extern BOOL ResetEvent(HANDLE hEvent);
 
 #define WAIT_OBJECT_0   0
 #define WAIT_TIMEOUT    0x00000102
 #define WAIT_FAILED     0xFFFFFFFF
-extern DWORD WaitForSingleObject(HANDLE, int);
+extern DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
+
 extern void Sleep(int);
 #define UNREFERENCED_PARAMETER(a)
 
@@ -483,6 +491,7 @@ typedef DWORD (*PTHREAD_START_ROUTINE)(
         LPVOID lpThreadParameter
 );
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
+#define CREATE_SUSPENDED                  0x00000004
 extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
 extern DWORD ResumeThread(HANDLE hThread);
 extern BOOL CloseHandle(HANDLE hObject);
@@ -566,6 +575,7 @@ extern HGDIOBJ GetStockObject(int i);
 #define BLACKNESS           (DWORD)0x00000042 /* dest = BLACK                    */
 extern BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop);
 extern BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
+extern UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq);
 /* constants for CreateDIBitmap */
 #define CBM_INIT        0x04L   /* initialize bitmap */
 /* DIB color table identifiers */
@@ -647,6 +657,20 @@ extern BOOL DestroyWindow(HWND hWnd);
 extern BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl);
 extern BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl);
 extern BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase);
+#define GWL_STYLE           (-16)
+extern BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu);
+extern LONG GetWindowLong(HWND hWnd, int nIndex);
+extern HMENU GetMenu(HWND hWnd);
+#define HWND_TOP        ((HWND)0)
+#define HWND_BOTTOM     ((HWND)1)
+#define HWND_TOPMOST    ((HWND)-1)
+#define HWND_NOTOPMOST  ((HWND)-2)
+#define SWP_NOSIZE          0x0001
+#define SWP_NOMOVE          0x0002
+#define SWP_NOZORDER        0x0004
+extern BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
+extern BOOL IsRectEmpty(CONST RECT *lprc);
+extern BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt);
 
 #define _MAX_PATH   260 // max. length of full pathname
 #define _MAX_DRIVE  3   // max. length of drive component

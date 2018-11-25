@@ -68,7 +68,7 @@ VOID  SoundBeep(DWORD dwFrequency, DWORD dwDuration) {
 //HPALETTE         hOldPalette = NULL;		// old palette of hWindowDC
 //DWORD            dwTColor = (DWORD) -1;		// transparency color
 //DWORD            dwTColorTol = 0;			// transparency color tolerance
-HRGN             hRgn = NULL;
+//HRGN             hRgn = NULL;
 //HCURSOR          hCursorArrow = NULL;
 //HCURSOR          hCursorHand = NULL;
 //UINT             uWaveDevId = WAVE_MAPPER;	// default audio device
@@ -88,6 +88,9 @@ HRGN             hRgn = NULL;
 
 // udp.c
 
+TCHAR szUdpServer[1024] = _T("localhost");
+WORD  wUdpPort = 5025;						// scpi-raw
+
 VOID ResetUdp(VOID) {
     return;
 }
@@ -97,6 +100,52 @@ BOOL SendByteUdp(BYTE byData) {
 }
 
 // debugger.c
-LRESULT OnToolDebug(VOID) {
-    return NULL;
+VOID UpdateDbgCycleCounter(VOID) {
+    return;
 }
+BOOL CheckBreakpoint(DWORD dwAddr, DWORD wRange, UINT nType) {
+    return 0;
+}
+VOID NotifyDebugger(INT nType) {
+    return;
+}
+VOID DisableDebugger(VOID) {
+    return;
+}
+LRESULT OnToolDebug(VOID) {
+    return 0;
+}
+VOID LoadBreakpointList(HANDLE hFile) {
+    return;
+}
+VOID SaveBreakpointList(HANDLE hFile) {
+    return;
+}
+VOID CreateBackupBreakpointList(VOID) {
+    return;
+}
+VOID RestoreBackupBreakpointList(VOID) {
+    return;
+}
+
+// Disasm.c
+BOOL disassembler_mode = HP_MNEMONICS;
+BOOL disassembler_symb = FALSE;
+DWORD disassemble(DWORD addr, LPTSTR out) {
+    return 0;
+}
+
+// Keymacro.c
+//INT     nMacroState;
+INT     nMacroTimeout;
+BOOL    bMacroRealSpeed;
+DWORD   dwMacroMinDelay;
+VOID    KeyMacroRecord(BOOL bPress, UINT out, UINT in) {
+    return;
+}
+//LRESULT OnToolMacroNew(VOID);
+//LRESULT OnToolMacroPlay(VOID);
+LRESULT OnToolMacroStop(VOID) {
+    return 0;
+}
+//LRESULT OnToolMacroSettings(VOID);

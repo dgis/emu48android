@@ -57,7 +57,7 @@
 #define GetWindowLongPtr	GetWindowLong
 #define SetClassLongPtr		SetClassLong
 #define GetClassLongPtr		GetClassLong
-typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
+//typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
 typedef ULONG  ULONG_PTR, *PULONG_PTR;
 typedef LONG   LONG_PTR,  *PLONG_PTR;
 #endif
@@ -93,3 +93,7 @@ typedef LONG   LONG_PTR,  *PLONG_PTR;
                         language='*'\"")
 #endif
 #endif
+
+
+//#define DisplayChooseKml DisplayChooseKmlEx
+//extern BOOL DisplayChooseKmlEx(CHAR cType);

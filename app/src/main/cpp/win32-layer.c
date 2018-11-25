@@ -1,15 +1,14 @@
 #include "pch.h"
-//#include <mach/mach_time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <pthread.h>
 
 HANDLE hWnd;
 LPTSTR szTitle;
 
-//static NSMutableDictionary *gEventLockDict;
-static HANDLE gEventId;
+//static HANDLE gEventId;
 
 
 DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
@@ -27,50 +26,75 @@ BOOL SetCurrentDirectory(LPCTSTR path)
     return chdir(path);
 }
 
+#include <jni.h>
+#include <asset_manager.h>
+#include <asset_manager_jni.h>
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
-    int flags = O_RDWR;
-    int fd = -1;
-    struct flock lock;
-    mode_t perm = S_IRUSR | S_IWUSR;
+    if(strncmp(lpFileName, "assets/", 7) == 0) {
+        AAssetDir* assetDir = AAssetManager_openDir(mgr, "");
+        const char* filename = (const char*)NULL;
+        while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
+            AAsset* asset = AAssetManager_open(mgr, filename, AASSET_MODE_STREAMING);
+            char buf[BUFSIZ];
+            int nb_read = 0;
+            FILE* out = fopen(filename, "w");
+            while ((nb_read = AAsset_read(asset, buf, BUFSIZ)) > 0)
+                fwrite(buf, nb_read, 1, out);
+            fclose(out);
+            AAsset_close(asset);
+        }
+        AAssetDir_close(assetDir);
+        HANDLE handle = malloc(sizeof(_HANDLE));
+        handle->handleType = HANDLE_TYPE_FILE;
+        handle->fileDescriptor = fd;
+        handle->fileIsAsset = TRUE;
+        return handle;
+    } else {
 
-    if (GENERIC_READ == dwDesiredAccess)
-        flags = O_RDONLY;
-    else
-    {
-        if (GENERIC_WRITE == dwDesiredAccess)
-            flags = O_WRONLY;
-        else if (0 != ((GENERIC_READ|GENERIC_WRITE) & dwDesiredAccess))
-            flags = O_RDWR;
+        int flags = O_RDWR;
+        int fd = -1;
+        struct flock lock;
+        mode_t perm = S_IRUSR | S_IWUSR;
 
-        if (CREATE_ALWAYS == dwCreationDisposition)
-            flags |= O_CREAT;
-    }
+        if (GENERIC_READ == dwDesiredAccess)
+            flags = O_RDONLY;
+        else {
+            if (GENERIC_WRITE == dwDesiredAccess)
+                flags = O_WRONLY;
+            else if (0 != ((GENERIC_READ | GENERIC_WRITE) & dwDesiredAccess))
+                flags = O_RDWR;
 
-    fd = open(lpFileName, flags, perm);
-    if (-1 != fd && 0 != dwShareMode)
-    {
-        // Not specifiying shared write means non-shared (exclusive) write
-        if (0 == (dwShareMode & FILE_SHARE_WRITE))
-            lock.l_type = F_WRLCK;
-        else if (0 != (dwShareMode & FILE_SHARE_READ))
-            lock.l_type = F_RDLCK;
+            if (CREATE_ALWAYS == dwCreationDisposition)
+                flags |= O_CREAT;
+        }
 
-        // Lock entire file
-        lock.l_len = lock.l_start = 0;
-        lock.l_whence = SEEK_SET;
+        fd = open(lpFileName, flags, perm);
+        if (-1 != fd && 0 != dwShareMode) {
+            // Not specifiying shared write means non-shared (exclusive) write
+            if (0 == (dwShareMode & FILE_SHARE_WRITE))
+                lock.l_type = F_WRLCK;
+            else if (0 != (dwShareMode & FILE_SHARE_READ))
+                lock.l_type = F_RDLCK;
 
-        if (-1 == fcntl(fd, F_SETLK, &lock) && (EACCES == errno || EAGAIN == errno))
-        {
-            close(fd);
-            return -1;
+            // Lock entire file
+            lock.l_len = lock.l_start = 0;
+            lock.l_whence = SEEK_SET;
+
+            if (-1 == fcntl(fd, F_SETLK, &lock) && (EACCES == errno || EAGAIN == errno)) {
+                close(fd);
+                return -1;
+            }
+        }
+        if (fd != -1) {
+            HANDLE handle = malloc(sizeof(_HANDLE));
+            handle->handleType = HANDLE_TYPE_FILE;
+            handle->fileDescriptor = fd;
+            handle->fileIsAsset = FALSE;
+            return handle;
         }
     }
-
-    HANDLE result = malloc(sizeof(_HANDLE));
-    result->handleType = HANDLE_TYPE_FILE;
-    result->fileDescriptor = fd;
-    return result;
+    return NULL;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
@@ -116,12 +140,12 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
 //https://www.ibm.com/developerworks/systems/library/es-win32linux.html
 //https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
-    HANDLE result = malloc(sizeof(_HANDLE));
-    result->handleType = HANDLE_TYPE_FILE_MAPPING;
-    result->fileDescriptor = hFile->fileDescriptor;
-    result->fileMappingSize = (dwMaximumSizeHigh << 32) & dwMaximumSizeLow;
-    result->fileMappingAddress = NULL;
-    return result;
+    HANDLE handle = malloc(sizeof(_HANDLE));
+    handle->handleType = HANDLE_TYPE_FILE_MAPPING;
+    handle->fileDescriptor = hFile->fileDescriptor;
+    handle->fileMappingSize = (dwMaximumSizeHigh << 32) & dwMaximumSizeLow;
+    handle->fileMappingAddress = NULL;
+    return handle;
 }
 
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
@@ -142,92 +166,131 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
     return result == 0;
 }
 
-// https://github.com/NeoSmart/PEvents
-HANDLE CreateEvent(WORD attr, BOOL is_manual_reset, BOOL is_signaled, WORD name)
+//https://github.com/neosmart/pevents/blob/master/src/pevents.cpp
+HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name)
 {
-//    if (nil == gEventLockDict)
-//    {
-//        gEventLockDict = [[NSMutableDictionary alloc] init];
-//    }
-//    ++gEventId;
-//    NSNumber *key = [[NSNumber alloc] initWithInt: gEventId];
-//    NSConditionLock *lock = [[NSConditionLock alloc] initWithCondition: 0];
-//    [gEventLockDict setObject:lock forKey:key];
-//    [lock release];
-//    [key release];
-////    if (NULL == gEventLock)
-////    {
-////        gEventLock = [[NSConditionLock alloc] initWithCondition: 0];
-////    }
+    HANDLE handle = malloc(sizeof(_HANDLE));
+    handle->handleType = HANDLE_TYPE_EVENT;
 
-    return gEventId;
+    int result = pthread_cond_init(&(handle->eventCVariable), 0);
+    _ASSERT(result == 0);
+
+    result = pthread_mutex_init(&(handle->eventMutex), 0);
+    _ASSERT(result == 0);
+
+    handle->eventState = FALSE;
+    handle->eventAutoReset = bManualReset ? FALSE : TRUE;
+
+    if (bInitialState)
+    {
+        result = SetEvent(handle);
+        _ASSERT(result == 0);
+    }
+
+    return handle;
 }
 
-void SetEvent(HANDLE eventId)
-{
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//    if (lock)
-//    {
-//        [lock lock];
-//        [lock unlockWithCondition: eventId];
-//    }
+BOOL SetEvent(HANDLE hEvent) {
+    int result = pthread_mutex_lock(&hEvent->eventMutex);
+    _ASSERT(result == 0);
+
+    hEvent->eventState = TRUE;
+
+    //Depending on the event type, we either trigger everyone or only one
+    if (hEvent->eventAutoReset)
+    {
+        //hEvent->eventState can be false if compiled with WFMO support
+        if (hEvent->eventState)
+        {
+            result = pthread_mutex_unlock(&hEvent->eventMutex);
+            _ASSERT(result == 0);
+            result = pthread_cond_signal(&hEvent->eventCVariable);
+            _ASSERT(result == 0);
+            return 0;
+        }
+    }
+    else
+    {
+        result = pthread_mutex_unlock(&hEvent->eventMutex);
+        _ASSERT(result == 0);
+        result = pthread_cond_broadcast(&hEvent->eventCVariable);
+        _ASSERT(result == 0);
+    }
+
+    return 0;
 }
 
-BOOL ResetEvent(HANDLE eventId)
+BOOL ResetEvent(HANDLE hEvent)
 {
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//    if (lock)
-//    {
-//        [lock lock];
-//        [lock unlockWithCondition: 0];
-//        return TRUE;
-//    }
-    return FALSE;
+    int result = pthread_mutex_lock(&hEvent->eventMutex);
+    _ASSERT(result == 0);
+
+    hEvent->eventState = FALSE;
+
+    result = pthread_mutex_unlock(&hEvent->eventMutex);
+    _ASSERT(result == 0);
+
+    return TRUE;
 }
 
-void DestroyEvent(HANDLE eventId)
+int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
 {
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    if (lock)
-//    {
-//        [gEventLockDict removeObjectForKey: key];
-//    }
-//    [key release];
-}
+    int result = 0;
+    if (!hHandle->eventState)
+    {
+        //Zero-timeout event state check optimization
+        if (milliseconds == 0)
+        {
+            return WAIT_TIMEOUT;
+        }
 
-DWORD WaitForSingleObject(HANDLE eventId, int timeout)
-{
-    DWORD result = WAIT_OBJECT_0;
-//    NSNumber *key = [[NSNumber alloc] initWithInt: eventId];
-//    NSConditionLock *lock = [gEventLockDict objectForKey: key];
-//    [key release];
-//
-//    if (nil == lock)
-//        return WAIT_FAILED;
-//
-//    if (timeout > 0)
-//    {
-//        NSDate *timeoutDate = [[NSDate alloc] initWithTimeIntervalSinceNow: (timeout/1000.0)];
-//        if (![lock lockWhenCondition:eventId beforeDate:timeoutDate])
-//        result = WAIT_TIMEOUT;
-//        [timeoutDate release];
-//    }
-//    else
-//    {
-//        [lock lockWhenCondition: eventId];
-//        [lock unlockWithCondition: 0];
-//    }
+        struct timespec ts;
+        if (milliseconds != (uint64_t) -1)
+        {
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+
+            uint64_t nanoseconds = ((uint64_t) tv.tv_sec) * 1000 * 1000 * 1000 + milliseconds * 1000 * 1000 + ((uint64_t) tv.tv_usec) * 1000;
+
+            ts.tv_sec = nanoseconds / 1000 / 1000 / 1000;
+            ts.tv_nsec = (nanoseconds - ((uint64_t) ts.tv_sec) * 1000 * 1000 * 1000);
+        }
+
+        do
+        {
+            //Regardless of whether it's an auto-reset or manual-reset event:
+            //wait to obtain the event, then lock anyone else out
+            if (milliseconds != (uint64_t) -1)
+            {
+                result = pthread_cond_timedwait(&hHandle->eventCVariable, &hHandle->eventMutex, &ts);
+            }
+            else
+            {
+                result = pthread_cond_wait(&hHandle->eventCVariable, &hHandle->eventMutex);
+            }
+        } while (result == 0 && !hHandle->eventState);
+
+        if (result == 0 && hHandle->eventAutoReset)
+        {
+            //We've only accquired the event if the wait succeeded
+            hHandle->eventState = FALSE;
+        }
+    }
+    else if (hHandle->eventAutoReset)
+    {
+        //It's an auto-reset event that's currently available;
+        //we need to stop anyone else from using it
+        result = 0;
+        hHandle->eventState = FALSE;
+    }
+    //Else we're trying to obtain a manual reset event with a signaled state;
+    //don't do anything
+
     return result;
 }
 
-#include <pthread.h>
-HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
-    pthread_t   *threadId;
+HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
+    pthread_t   threadId;
     pthread_attr_t  attr;
     pthread_attr_init(&attr);
     if(dwStackSize)
@@ -236,11 +299,11 @@ HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwSt
     //https://stackoverflow.com/questions/3140867/suspend-pthreads-without-using-condition
     //https://stackoverflow.com/questions/7953917/create-thread-in-suspended-mode-using-pthreads
     //http://man7.org/linux/man-pages/man3/pthread_create.3.html
-    int pthreadResult = pthread_create(threadId, &attr, /*(void*(*)(void*))*/lpStartAddress, lpParameter);
+    int pthreadResult = pthread_create(&threadId, &attr, /*(void*(*)(void*))*/lpStartAddress, lpParameter);
     if(pthreadResult == 0) {
         HANDLE result = malloc(sizeof(_HANDLE));
         result->handleType = HANDLE_TYPE_THREAD;
-        result->threadId = *threadId;
+        result->threadId = threadId;
         return result;
     }
     return NULL;
@@ -249,6 +312,46 @@ HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwSt
 DWORD ResumeThread(HANDLE hThread) {
     //TODO
     return 0;
+}
+
+//https://docs.microsoft.com/en-us/windows/desktop/api/synchapi/nf-synchapi-waitforsingleobject
+DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+{
+    if(hHandle->handleType == HANDLE_TYPE_THREAD) {
+        _ASSERT(dwMilliseconds == INFINITE)
+        if(dwMilliseconds == INFINITE) {
+            pthread_join(hHandle->threadId, NULL);
+        }
+        //TODO for dwMilliseconds != INFINITE
+        //https://stackoverflow.com/questions/2719580/waitforsingleobject-and-waitformultipleobjects-equivalent-in-linux
+    } else if(hHandle->handleType == HANDLE_TYPE_EVENT) {
+
+        int tempResult;
+        if (dwMilliseconds == 0)
+        {
+            tempResult = pthread_mutex_trylock(&hHandle->eventMutex);
+            if (tempResult == EBUSY)
+            {
+                return WAIT_TIMEOUT;
+            }
+        }
+        else
+        {
+            tempResult = pthread_mutex_lock(&hHandle->eventMutex);
+        }
+
+        _ASSERT(tempResult == 0);
+
+        int result = UnlockedWaitForEvent(hHandle, dwMilliseconds);
+
+        tempResult = pthread_mutex_unlock(&hHandle->eventMutex);
+        _ASSERT(tempResult == 0);
+
+        return result;
+    }
+
+    DWORD result = WAIT_OBJECT_0;
+    return result;
 }
 
 BOOL WINAPI CloseHandle(HANDLE hObject) {
@@ -275,9 +378,17 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             }
             break;
         }
-        case HANDLE_TYPE_EVENT:
-            //free(hObject);
+        case HANDLE_TYPE_EVENT: {
+            int result = 0;
+            result = pthread_cond_destroy(&hObject->eventCVariable);
+            _ASSERT(result == 0);
+            result = pthread_mutex_destroy(&hObject->eventMutex);
+            _ASSERT(result == 0);
+            hObject->eventAutoReset = FALSE;
+            hObject->eventState = FALSE;
+            free(hObject);
             return TRUE;
+        }
         case HANDLE_TYPE_THREAD:
             hObject->threadId = 0;
             free(hObject);
@@ -310,8 +421,8 @@ BOOL QueryPerformanceCounter(PLARGE_INTEGER l)
         time_t   tv_sec;        /* seconds */
         long     tv_nsec;       /* nanoseconds */
     } time;
-    int clock_gettime(CLOCK_MONOTONIC, &time);
-    l->QuadPart = time.tv_nsec;
+    int result = clock_gettime(CLOCK_MONOTONIC, &time);
+    l->QuadPart = 1e9 * time.tv_sec + time.tv_nsec;
     return TRUE;
 }
 void EnterCriticalSection(CRITICAL_SECTION *lock)
@@ -394,6 +505,10 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
     return NULL;
 }
+BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
+    //TODO
+    return NULL;
+}
 
 
 int MessageBox(HANDLE h, LPCTSTR szMessage, LPCTSTR title, int flags)
@@ -458,6 +573,12 @@ BOOL DestroyWindow(HWND hWnd) {
 BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) { return 0; }
+BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu) { return 0; }
+LONG GetWindowLong(HWND hWnd, int nIndex) { return 0; }
+HMENU GetMenu(HWND hWnd) { return NULL; }
+BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags) { return 0; }
+BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
+BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) { return 0; }
 
 int GetObject(HANDLE h, int c, LPVOID pv) {
     //TODO
@@ -516,6 +637,10 @@ BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop) {
     return 0;
 }
 BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
+    //TODO
+    return 0;
+}
+UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     //TODO
     return 0;
 }
@@ -672,9 +797,18 @@ HRESULT SHGetMalloc(IMalloc **ppMalloc) {
     //TODO
     return 0;
 }
-
+PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
+    //TODO
+    return NULL;
+}
+//extern INT_PTR CALLBACK ChooseKMLProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+#include "resource.h"
+extern TCHAR   szCurrentKml[MAX_PATH];
 INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
+    if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
+        lstrcpy(szCurrentKml, "hello.kml");
+    }
     return NULL;
 }
 HCURSOR SetCursor(HCURSOR hCursor) {
