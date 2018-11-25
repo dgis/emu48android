@@ -4,11 +4,12 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <pthread.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+#include "resource.h"
 
 HANDLE hWnd;
 LPTSTR szTitle;
-
-//static HANDLE gEventId;
 
 
 DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
@@ -26,28 +27,25 @@ BOOL SetCurrentDirectory(LPCTSTR path)
     return chdir(path);
 }
 
-#include <jni.h>
-#include <asset_manager.h>
-#include <asset_manager_jni.h>
+AAssetManager * assetManager;
+
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
     if(strncmp(lpFileName, "assets/", 7) == 0) {
-        AAssetDir* assetDir = AAssetManager_openDir(mgr, "");
-        const char* filename = (const char*)NULL;
-        while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
-            AAsset* asset = AAssetManager_open(mgr, filename, AASSET_MODE_STREAMING);
-            char buf[BUFSIZ];
-            int nb_read = 0;
-            FILE* out = fopen(filename, "w");
-            while ((nb_read = AAsset_read(asset, buf, BUFSIZ)) > 0)
-                fwrite(buf, nb_read, 1, out);
-            fclose(out);
-            AAsset_close(asset);
-        }
-        AAssetDir_close(assetDir);
+
+        AAsset* asset = AAssetManager_open(assetManager, "calculators/real48sx.kml", AASSET_MODE_STREAMING);
+        char buf[BUFSIZ];
+        int nb_read = 0;
+        nb_read = AAsset_read(asset, buf, BUFSIZ);
+        AAsset_close(asset);
+//        }
+//        AAssetDir* assetDir = AAssetManager_openDir(assetManager, "");
+//        const char* filename = (const char*)NULL;
+//        while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
+//        AAssetDir_close(assetDir);
         HANDLE handle = malloc(sizeof(_HANDLE));
         handle->handleType = HANDLE_TYPE_FILE;
-        handle->fileDescriptor = fd;
+        //handle->fileDescriptor = fd;
         handle->fileIsAsset = TRUE;
         return handle;
     } else {
@@ -779,7 +777,7 @@ INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndPare
 }
 HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
     //TODO
-    return NULL;
+    return INVALID_HANDLE_VALUE;
 }
 BOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData) {
     //TODO
@@ -801,13 +799,11 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     //TODO
     return NULL;
 }
-//extern INT_PTR CALLBACK ChooseKMLProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-#include "resource.h"
 extern TCHAR   szCurrentKml[MAX_PATH];
 INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
-        lstrcpy(szCurrentKml, "hello.kml");
+        lstrcpy(szCurrentKml, "assets/calculators/real48sx.kml");
     }
     return NULL;
 }

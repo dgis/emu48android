@@ -3,6 +3,8 @@
 //
 #include <jni.h>
 #include <stdio.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 JNIEXPORT jstring JNICALL
 Java_com_regis_cosnier_emu48_MainActivity_stringFromJNI(
@@ -14,10 +16,9 @@ Java_com_regis_cosnier_emu48_MainActivity_stringFromJNI(
 }
 
 extern void emu48Start();
-#include <asset_manager.h>
-#include <asset_manager_jni.h>
+extern AAssetManager * assetManager;
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_MainActivity_emu48Start(JNIEnv *env, jobject thisz, jobject assetManager) {
-    AAssetManager * mgr = (AAssetManager *)assetManager;
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_MainActivity_emu48Start(JNIEnv *env, jobject thisz, jobject assetMgr) {
+    assetManager = AAssetManager_fromJava(env, assetMgr);
     emu48Start();
 }
