@@ -2069,6 +2069,10 @@ BOOL emu48Start()
 	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
 	ReadSettings();
 
+    _tcscpy(szCurrentDirectory, "");
+    _tcscpy(szRomDirectory, "assets/calculators/");
+
+
 	// running an instance of me?
 //	if (bSingleInstance && (hWnd = FindWindow(MAKEINTATOM(classAtom),NULL)) != NULL)
 //	{

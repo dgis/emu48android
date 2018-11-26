@@ -7,8 +7,6 @@
 #define _CRTDBG_MAP_ALLOC
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-#include "win32-layer.h"
-
 //#include <winsock2.h>
 //#include <windows.h>
 //#include <tchar.h>
@@ -23,6 +21,14 @@
 //#include <direct.h>
 //#include <conio.h>
 //#include <crtdbg.h>
+
+#include <android/log.h>
+#define LOG_TAG "NDK_NativeEmu48"
+#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
+
+#include "win32-layer.h"
+
 
 #if !defined VERIFY
 #if defined _DEBUG

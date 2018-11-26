@@ -4,12 +4,14 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <pthread.h>
-#include <android/asset_manager.h>
-#include <android/asset_manager_jni.h>
 #include "resource.h"
 
 HANDLE hWnd;
 LPTSTR szTitle;
+LPTSTR szCurrentDirectorySet = NULL;
+const TCHAR * assetsPrefix = _T("assets/"),
+        assetsPrefixLength = 7;
+AAssetManager * assetManager;
 
 
 DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
@@ -24,30 +26,42 @@ BOOL SetCurrentDirectory(LPCTSTR path)
     if(path == NULL)
         return FALSE;
 
+    if(_tcsncmp(path, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)
+        szCurrentDirectorySet = path + assetsPrefixLength;
+    else
+        szCurrentDirectorySet = NULL;
+
     return chdir(path);
 }
 
-AAssetManager * assetManager;
-
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
-    if(strncmp(lpFileName, "assets/", 7) == 0) {
-
-        AAsset* asset = AAssetManager_open(assetManager, "calculators/real48sx.kml", AASSET_MODE_STREAMING);
-        char buf[BUFSIZ];
-        int nb_read = 0;
-        nb_read = AAsset_read(asset, buf, BUFSIZ);
-        AAsset_close(asset);
+    if(szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0) {
+        TCHAR szFileName[MAX_PATH];
+        AAsset * asset = NULL;
+        szFileName[0] = _T('\0');
+        if(szCurrentDirectorySet) {
+            _tcscpy(szFileName, szCurrentDirectorySet);
+            _tcscat(szFileName, lpFileName);
+            asset = AAssetManager_open(assetManager, szFileName, AASSET_MODE_STREAMING);
+        } else {
+            asset = AAssetManager_open(assetManager, lpFileName + assetsPrefixLength, AASSET_MODE_STREAMING);
+        }
+        if(asset) {
+            HANDLE handle = malloc(sizeof(_HANDLE));
+            handle->handleType = HANDLE_TYPE_FILE_ASSET;
+            handle->fileAsset = asset;
+//        char buf[BUFSIZ];
+//        int nb_read = 0;
+//        nb_read = AAsset_read(asset, buf, BUFSIZ);
+//        AAsset_close(asset);
 //        }
 //        AAssetDir* assetDir = AAssetManager_openDir(assetManager, "");
 //        const char* filename = (const char*)NULL;
 //        while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
 //        AAssetDir_close(assetDir);
-        HANDLE handle = malloc(sizeof(_HANDLE));
-        handle->handleType = HANDLE_TYPE_FILE;
-        //handle->fileDescriptor = fd;
-        handle->fileIsAsset = TRUE;
-        return handle;
+            return handle;
+        }
     } else {
 
         int flags = O_RDWR;
@@ -88,7 +102,6 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             HANDLE handle = malloc(sizeof(_HANDLE));
             handle->handleType = HANDLE_TYPE_FILE;
             handle->fileDescriptor = fd;
-            handle->fileIsAsset = FALSE;
             return handle;
         }
     }
@@ -96,13 +109,20 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
-    DWORD readByteCount = read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
+    DWORD readByteCount = 0;
+    if(hFile->handleType == HANDLE_TYPE_FILE) {
+        readByteCount = read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
+    } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
+        readByteCount = AAsset_read(hFile->fileAsset, lpBuffer, nNumberOfBytesToRead);
+    }
     if(lpNumberOfBytesRead)
         *lpNumberOfBytesRead = readByteCount;
     return readByteCount >= 0;
 }
 
 BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) {
+    if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
+        return FALSE;
     size_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
     if(lpNumberOfBytesWritten)
         *lpNumberOfBytesWritten = writenByteCount;
@@ -117,21 +137,34 @@ DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveH
         moveMode = SEEK_CUR;
     else if(dwMoveMethod == FILE_END)
         moveMode = SEEK_END;
-    int seekResult = lseek(hFile->fileDescriptor, lDistanceToMove, moveMode);
+    int seekResult = -1;
+    if(hFile->handleType == HANDLE_TYPE_FILE) {
+        seekResult = lseek(hFile->fileDescriptor, lDistanceToMove, moveMode);
+    } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
+        seekResult = AAsset_seek64(hFile->fileAsset, lDistanceToMove, moveMode);
+    }
     return seekResult < 0 ? INVALID_SET_FILE_POINTER : seekResult;
 }
 
 BOOL SetEndOfFile(HANDLE hFile) {
+    if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
+        return FALSE;
     off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
     int truncateResult = ftruncate(hFile->fileDescriptor, currentPosition);
     return truncateResult == 0;
 }
 
 DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
-    off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
-    off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END) + 1;
-    lseek(hFile->fileDescriptor, currentPosition, SEEK_SET);
-    return fileLength;
+    if(lpFileSizeHigh)
+        *lpFileSizeHigh = 0;
+    if(hFile->handleType == HANDLE_TYPE_FILE) {
+        off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
+        off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END) + 1;
+        lseek(hFile->fileDescriptor, currentPosition, SEEK_SET);
+        return fileLength;
+    } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
+        return AAsset_getLength64(hFile->fileAsset);
+    }
 }
 
 //** https://www.ibm.com/developerworks/systems/library/es-MigratingWin32toLinux.html
@@ -139,8 +172,13 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
 //https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
     HANDLE handle = malloc(sizeof(_HANDLE));
-    handle->handleType = HANDLE_TYPE_FILE_MAPPING;
-    handle->fileDescriptor = hFile->fileDescriptor;
+    if(hFile->handleType == HANDLE_TYPE_FILE) {
+        handle->handleType = HANDLE_TYPE_FILE_MAPPING;
+        handle->fileDescriptor = hFile->fileDescriptor;
+    } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
+        handle->handleType = HANDLE_TYPE_FILE_MAPPING_ASSET;
+        handle->fileAsset = hFile->fileAsset;
+    }
     handle->fileMappingSize = (dwMaximumSizeHigh << 32) & dwMaximumSizeLow;
     handle->fileMappingAddress = NULL;
     return handle;
@@ -148,18 +186,28 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
 
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) {
-    int prot = PROT_NONE;
-    if(dwDesiredAccess & FILE_MAP_READ)
-        prot |= PROT_READ;
-    if(dwDesiredAccess & FILE_MAP_WRITE)
-        prot |= PROT_WRITE;
-    off_t __offset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
-    hFileMappingObject->fileMappingAddress = mmap(NULL, hFileMappingObject->fileMappingSize, prot, MAP_PRIVATE, hFileMappingObject->fileDescriptor, __offset);
-    return hFileMappingObject->fileMappingAddress;
+    off_t offset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
+    if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING) {
+        int prot = PROT_NONE;
+        if (dwDesiredAccess & FILE_MAP_READ)
+            prot |= PROT_READ;
+        if (dwDesiredAccess & FILE_MAP_WRITE)
+            prot |= PROT_WRITE;
+        hFileMappingObject->fileMappingAddress = mmap(NULL, hFileMappingObject->fileMappingSize,
+                                                      prot, MAP_PRIVATE,
+                                                      hFileMappingObject->fileDescriptor, offset);
+        return hFileMappingObject->fileMappingAddress;
+    } else if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
+        if (dwDesiredAccess & FILE_MAP_WRITE)
+            return NULL;
+        return AAsset_getBuffer(hFileMappingObject->fileAsset) + offset;
+    }
+    return NULL;
 }
 
 // https://msdn.microsoft.com/en-us/library/aa366882(v=vs.85).aspx
 BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
+    //TODO for HANDLE_TYPE_FILE_MAPPING/HANDLE_TYPE_FILE_MAPPING_ASSET
     int result = munmap(lpBaseAddress, -1);
     return result == 0;
 }
@@ -756,6 +804,9 @@ UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax) {
     return 0;
 }
 BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString) {
+    if(nIDDlgItem == IDC_KMLLOG) {
+        LOGD("KML log:\r\n%s", lpString);
+    }
     //TODO
     return 0;
 }
@@ -771,10 +822,10 @@ BOOL EndDialog(HWND hDlg, INT_PTR nResult) {
     //TODO
     return 0;
 }
-INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
-    //TODO
-    return NULL;
-}
+//INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+//    //TODO
+//    return NULL;
+//}
 HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
     //TODO
     return INVALID_HANDLE_VALUE;
@@ -800,10 +851,14 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     return NULL;
 }
 extern TCHAR   szCurrentKml[MAX_PATH];
+//extern TCHAR   szLog[MAX_PATH];
 INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
         lstrcpy(szCurrentKml, "assets/calculators/real48sx.kml");
+    } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
+        //LOGD(szLog);
+        lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
     }
     return NULL;
 }

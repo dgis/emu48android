@@ -3,6 +3,7 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <string.h>
+#include <android/asset_manager.h>
 
 #ifndef __OBJC__
 typedef signed char BOOL;   // deliberately same type as defined in objc
@@ -52,7 +53,9 @@ typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 
 enum HANDLE_TYPE {
     HANDLE_TYPE_FILE = 1,
+    HANDLE_TYPE_FILE_ASSET,
     HANDLE_TYPE_FILE_MAPPING,
+    HANDLE_TYPE_FILE_MAPPING_ASSET,
     HANDLE_TYPE_EVENT,
     HANDLE_TYPE_THREAD,
 };
@@ -60,7 +63,8 @@ typedef struct {
     int handleType;
 
 	int fileDescriptor;
-	BOOL fileIsAsset;
+
+    AAsset* fileAsset;
 
     size_t fileMappingSize;
     void* fileMappingAddress;
@@ -748,7 +752,13 @@ extern BOOL CheckDlgButton(HWND hDlg, int nIDButton, UINT uCheck);
 extern UINT IsDlgButtonChecked(HWND hDlg, int nIDButton);
 extern BOOL EndDialog(HWND hDlg, INT_PTR nResult);
 typedef INT_PTR (CALLBACK* DLGPROC)(HWND, UINT, WPARAM, LPARAM);
-extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+//extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+extern INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+#define DialogBoxA(hInstance, lpTemplate, hWndParent, lpDialogFunc) \
+    DialogBoxParamA(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
+#define DialogBox  DialogBoxA
+#define DialogBoxParam  DialogBoxParamA
+
 #define MAKEINTRESOURCE(i) ((LPSTR)((ULONG_PTR)((WORD)(i))))
 typedef struct _FILETIME {
     DWORD dwLowDateTime;
@@ -823,11 +833,6 @@ HRESULT SHGetMalloc(IMalloc **ppMalloc);   // CoGetMalloc(MEMCTX_TASK,ppMalloc)
 #define PIDLIST_ABSOLUTE         LPITEMIDLIST
 extern PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi);
 #define SHBrowseForFolder   SHBrowseForFolderA
-extern INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
-#define DialogBoxA(hInstance, lpTemplate, hWndParent, lpDialogFunc) \
-DialogBoxParamA(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
-#define DialogBox  DialogBoxA
-
 #define LANG_NEUTRAL 0x00
 #define SUBLANG_NEUTRAL 0x00
 #define PRIMARYLANGID(lgid)    ((WORD  )(lgid) & 0x3ff)
@@ -867,6 +872,10 @@ extern int lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
 
 extern int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2);
 #define _tcstoul    wcstoul
+#define _tcsncmp        wcsncmp
+#define _tcslen         wcslen
+#define _tcscpy         wcscpy
+#define _tcscat         wcscat
 
 #else
 
@@ -884,6 +893,10 @@ extern int lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcsncmp        strncmp
 extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcstoul    strtoul
+#define _tcsncmp        strncmp
+#define _tcslen     strlen
+#define _tcscpy     strcpy
+#define _tcscat     strcat
 
 
 #endif // !UNICODE
