@@ -13,6 +13,9 @@ const TCHAR * assetsPrefix = _T("assets/"),
         assetsPrefixLength = 7;
 AAssetManager * assetManager;
 
+VOID OutputDebugString(LPCSTR lpOutputString) {
+    LOGD("%s", lpOutputString);
+}
 
 DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
     if(getcwd(lpBuffer, nBufferLength)) {
@@ -51,15 +54,6 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             HANDLE handle = malloc(sizeof(_HANDLE));
             handle->handleType = HANDLE_TYPE_FILE_ASSET;
             handle->fileAsset = asset;
-//        char buf[BUFSIZ];
-//        int nb_read = 0;
-//        nb_read = AAsset_read(asset, buf, BUFSIZ);
-//        AAsset_close(asset);
-//        }
-//        AAssetDir* assetDir = AAssetManager_openDir(assetManager, "");
-//        const char* filename = (const char*)NULL;
-//        while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
-//        AAssetDir_close(assetDir);
             return handle;
         }
     } else {
@@ -105,7 +99,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             return handle;
         }
     }
-    return NULL;
+    return INVALID_HANDLE_VALUE;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
@@ -407,15 +401,24 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
         case HANDLE_TYPE_FILE: {
             int closeResult = close(hObject->fileDescriptor);
             if(closeResult >= 0) {
+                hObject->handleType = HANDLE_TYPE_INVALID;
                 hObject->fileDescriptor = 0;
                 free(hObject);
                 return TRUE;
             }
             break;
         }
+        case HANDLE_TYPE_FILE_ASSET: {
+            AAsset_close(hObject->fileAsset);
+            hObject->handleType = HANDLE_TYPE_INVALID;
+            hObject->fileAsset = NULL;
+            free(hObject);
+            return TRUE;
+        }
         case HANDLE_TYPE_FILE_MAPPING: {
             int closeResult = UnmapViewOfFile(hObject->fileMappingAddress);
             if(closeResult == TRUE) {
+                hObject->handleType = HANDLE_TYPE_INVALID;
                 hObject->fileDescriptor = 0;
                 hObject->fileMappingSize = 0;
                 hObject->fileMappingAddress = NULL;
@@ -424,7 +427,16 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             }
             break;
         }
+        case HANDLE_TYPE_FILE_MAPPING_ASSET: {
+            hObject->handleType = HANDLE_TYPE_INVALID;
+            hObject->fileAsset = NULL;
+            hObject->fileMappingSize = 0;
+            hObject->fileMappingAddress = NULL;
+            free(hObject);
+            return TRUE;
+        }
         case HANDLE_TYPE_EVENT: {
+            hObject->handleType = HANDLE_TYPE_INVALID;
             int result = 0;
             result = pthread_cond_destroy(&hObject->eventCVariable);
             _ASSERT(result == 0);
@@ -436,6 +448,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             return TRUE;
         }
         case HANDLE_TYPE_THREAD:
+            hObject->handleType = HANDLE_TYPE_INVALID;
             hObject->threadId = 0;
             free(hObject);
             return TRUE;
@@ -626,6 +639,26 @@ BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy,
 BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
 BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) { return 0; }
 
+// GDI
+HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
+    switch (h->handleType) {
+        case HGDIOBJ_TYPE_PEN:
+            break;
+        case HGDIOBJ_TYPE_BRUSH:
+            break;
+        case HGDIOBJ_TYPE_FONT:
+            break;
+        case HGDIOBJ_TYPE_BITMAP:
+            hdc->selectedBitmap = h;
+            break;
+        case HGDIOBJ_TYPE_REGION:
+            break;
+        case HGDIOBJ_TYPE_PALETTE:
+            hdc->selectedPalette = h;
+            break;
+    }
+    return NULL;
+}
 int GetObject(HANDLE h, int c, LPVOID pv) {
     //TODO
     return 0;
@@ -634,41 +667,55 @@ HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
     //TODO
     return NULL;
 }
-int SetStretchBltMode(HDC hdc, int mode) {
-    //TODO
-    return 0;
-}
-BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-    //TODO
-    return 0;
-}
-HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
-    //TODO
-    return NULL;
-}
-HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
-    //TODO
-    return NULL;
-}
-UINT RealizePalette(HDC hdc) {
-    //TODO
-    return 0;
-}
-HDC CreateCompatibleDC(HDC hdc) {
-    //TODO
-    return NULL;
-}
-BOOL DeleteDC(HDC hdc) {
-    //TODO
-    return 0;
+BOOL DeleteObject(HGDIOBJ ho) {
+    switch(ho->handleType) {
+        case HGDIOBJ_TYPE_PALETTE: {
+            ho->handleType = 0;
+            ho->paletteLog = NULL;
+            free(ho);
+            return TRUE;
+        }
+        case HGDIOBJ_TYPE_BITMAP: {
+            ho->handleType = 0;
+            ho->bitmapInfoHeader = NULL;
+            ho->bitmapBits = NULL;
+            ho->bitmapInfo = NULL;
+            free(ho);
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 HGDIOBJ GetStockObject(int i) {
     //TODO
     return NULL;
 }
-HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
+HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
+    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    newHDC->handleType = HGDIOBJ_TYPE_PALETTE;
+    newHDC->paletteLog = (PLOGPALETTE)plpal; // Can be free -> we have to make a copy
+    return newHDC;
+}
+HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
+    hdc->selectedPalette = hPal;
+    return hPal;
+}
+UINT RealizePalette(HDC hdc) {
     //TODO
-    return NULL;
+    return 0;
+}
+
+// DC
+
+HDC CreateCompatibleDC(HDC hdc) {
+    HDC newHDC = (HDC)malloc(sizeof(struct _HDC));
+    newHDC->handleType = HDC_TYPE_DC;
+    newHDC->hdcCompatible = hdc;
+    return newHDC;
+}
+BOOL DeleteDC(HDC hdc) {
+    //TODO
+    return 0;
 }
 BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt) {
     //TODO
@@ -686,6 +733,14 @@ BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, D
     //TODO
     return 0;
 }
+int SetStretchBltMode(HDC hdc, int mode) {
+    //TODO
+    return 0;
+}
+BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
+    //TODO
+    return 0;
+}
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     //TODO
     return 0;
@@ -696,20 +751,27 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
 #define DIB_RGB_COLORS      0 /* color table in RGBs */
 #define DIB_PAL_COLORS      1 /* color table in palette indices */
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
-    //TODO
-    return NULL;
+    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
+    newHDC->bitmapInfo = pbmi;
+    newHDC->bitmapInfoHeader = pbmih;
+    newHDC->bitmapBits = pjBits;
+    return newHDC;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
-    //TODO
-    return NULL;
+    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
+    newHDC->bitmapInfo = pbmi;
+    newHDC->bitmapInfoHeader = pbmi;
+    // For DIB_RGB_COLORS only
+    int size = pbmi->bmiHeader.biWidth * abs(pbmi->bmiHeader.biHeight) * 4; //(pbmi->bmiHeader.biBitCount >> 3);
+    newHDC->bitmapBits = malloc(size); //pbmi->bmiHeader.biSizeImage);
+    *ppvBits = newHDC->bitmapBits;
+    return newHDC;
 }
 HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
     //TODO
     return NULL;
-}
-BOOL DeleteObject(HGDIOBJ ho) {
-    //TODO
-    return 0;
 }
 int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage) {
     //TODO
@@ -787,7 +849,21 @@ MMRESULT timeEndPeriod(UINT uPeriod) {
     return 0; //No error
 }
 VOID GetLocalTime(LPSYSTEMTIME lpSystemTime) {
-    //TODO
+    if(lpSystemTime) {
+        struct timespec ts = {0, 0};
+        struct tm tm = {};
+        clock_gettime(CLOCK_REALTIME, &ts);
+        time_t tim = ts.tv_sec;
+        localtime_r(&tim, &tm);
+        lpSystemTime->wYear = 1900 + tm.tm_year;
+        lpSystemTime->wMonth = 1 + tm.tm_mon;
+        lpSystemTime->wDayOfWeek = tm.tm_wday;
+        lpSystemTime->wDay = tm.tm_mday;
+        lpSystemTime->wHour = tm.tm_hour;
+        lpSystemTime->wMinute = tm.tm_min;
+        lpSystemTime->wSecond = tm.tm_sec;
+        lpSystemTime->wMilliseconds = ts.tv_nsec / 1e6;
+    }
     return;
 }
 
@@ -855,7 +931,7 @@ extern TCHAR   szCurrentKml[MAX_PATH];
 INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
-        lstrcpy(szCurrentKml, "assets/calculators/real48sx.kml");
+        lstrcpy(szCurrentKml, "real48sx.kml");
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
         //LOGD(szLog);
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);

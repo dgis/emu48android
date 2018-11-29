@@ -2070,8 +2070,9 @@ BOOL emu48Start()
 	ReadSettings();
 
     _tcscpy(szCurrentDirectory, "");
+    _tcscpy(szEmuDirectory, "assets/calculators/");
     _tcscpy(szRomDirectory, "assets/calculators/");
-
+    _tcscpy(szPort2Filename, "");
 
 	// running an instance of me?
 //	if (bSingleInstance && (hWnd = FindWindow(MAKEINTATOM(classAtom),NULL)) != NULL)
@@ -2148,6 +2149,8 @@ BOOL emu48Start()
 //	}
 //
 //	VERIFY(hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_MENU)));
+
+    hWindowDC = CreateCompatibleDC(NULL);
 
 	// initialization
 	QueryPerformanceFrequency(&lFreq);		// init high resolution counter

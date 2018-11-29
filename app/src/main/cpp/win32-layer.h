@@ -51,8 +51,18 @@ typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 
 #define CONST const
 
+#define _ASSERT(expr)
+//#define _ASSERT(expr) \
+//	(void)(                                                                                     \
+//		(!!(expr)) ||                                                                           \
+//		(1 != _CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls", NULL)) || \
+//		(_CrtDbgBreak(), 0)                                                                     \
+//	)
+
+
 enum HANDLE_TYPE {
-    HANDLE_TYPE_FILE = 1,
+	HANDLE_TYPE_INVALID = 0,
+	HANDLE_TYPE_FILE,
     HANDLE_TYPE_FILE_ASSET,
     HANDLE_TYPE_FILE_MAPPING,
     HANDLE_TYPE_FILE_MAPPING_ASSET,
@@ -60,7 +70,7 @@ enum HANDLE_TYPE {
     HANDLE_TYPE_THREAD,
 };
 typedef struct {
-    int handleType;
+    enum HANDLE_TYPE handleType;
 
 	int fileDescriptor;
 
@@ -77,11 +87,8 @@ typedef struct {
     BOOL eventState;
 } _HANDLE;
 typedef _HANDLE * HANDLE;
-typedef HANDLE HPALETTE;
-typedef HANDLE HBITMAP;
+
 typedef HANDLE HMENU;
-typedef HANDLE HFONT;
-typedef void * HGDIOBJ;
 
 #define MK_LBUTTON          0x0001
 
@@ -139,7 +146,7 @@ typedef pthread_mutex_t CRITICAL_SECTION;
 typedef HANDLE HINSTANCE;
 typedef HANDLE HWND;
 typedef void WNDCLASS;
-typedef HANDLE HDC;
+
 typedef HANDLE HCURSOR;
 
 struct FILETIME {
@@ -231,11 +238,9 @@ enum
 	FILE_FLAG_OVERLAPPED  = 2,
 	FILE_FLAG_SEQUENTIAL_SCAN = 4,
 	PAGE_READONLY,
-	FILE_MAP_READ,
 	CREATE_ALWAYS,
 	PAGE_READWRITE,
 	PAGE_WRITECOPY,
-	FILE_MAP_WRITE,
 	FILE_MAP_COPY,
 
 	//errors
@@ -243,6 +248,8 @@ enum
 	ERROR_ALREADY_EXISTS = 1
 };
 
+#define FILE_MAP_WRITE            0x0002
+#define FILE_MAP_READ             0x0004
 
 enum MsgBoxFlagType {
 	IDOK     = 0,
@@ -332,33 +339,7 @@ enum {
 #define ZeroMemory(p,s)     memset(p,0,s)
 #define FillMemory(p,n,v)   memset(p,v,n*sizeof(*(p)))
 #define CopyMemory(d,src,s) memcpy(d,src,s)
-//inline unsigned char HIBYTE(int i) { return i>>8; }
-//inline unsigned char LOBYTE(int i) { return i; }
-//inline BOOL _istdigit(unichar c) { return (c>='0' && c<='9'); }
-/*
-extern RGBColor RGB(int r, int g, int b);
-inline ControlRef GetDlgItem(WindowRef window, SInt32 control_code)
-{
-  ControlRef control;
-  ControlID	control_id = { app_signature, control_code };
-  FailOSErr(GetControlByID(window, &control_id, &control));
-  return control;
-}
-// For radio groups, 1=first choice, 2=second, etc
-extern void CheckDlgButton(WindowRef, SInt32 control_code, SInt32 value);
-extern void SetDlgItemInt(WindowRef, SInt32 control_code, int value, bool);
-extern void SetDlgItemText(WindowRef, SInt32 control_code, CFStringRef);
-// Use this to fiddle with dropdown menus (pass a CB_ constant for msg)
-// Indexes are zero-based. Also handles WMU_SETWINDOWVALUE
-extern int SendDlgItemMessage(WindowRef, SInt32 control_code, int msg, int p1, void *p2);
-// For checkboxes, result will be zero or one (can cast directly to bool)
-extern SInt32 IsDlgButtonChecked(WindowRef, SInt32 control_code);
-// Despite its name, this dims/undims controls
-extern void EnableWindow(ControlRef, bool enable);
-// Used to fill in font dropdown menus
-typedef FMFontFamilyCallbackFilterProcPtr FONTENUMPROC;
-extern void EnumFontFamilies(void *, void *, FONTENUMPROC, void *userdata);
-*/
+
 typedef struct _OVERLAPPED {
 /*
     ULONG_PTR Internal;
@@ -376,6 +357,8 @@ typedef struct _OVERLAPPED {
 } OVERLAPPED, *LPOVERLAPPED;
 
 
+extern VOID OutputDebugString(LPCSTR lpOutputString);
+
 extern DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer);
 extern BOOL SetCurrentDirectory(LPCTSTR);	// returns NO if fails
 extern HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile);
@@ -392,18 +375,6 @@ extern HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappin
 extern LPVOID MapViewOfFile(HANDLE hFileMappingObject,DWORD dwDesiredAccess, DWORD dwFileOffsetHigh,DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap);
 extern BOOL UnmapViewOfFile(LPCVOID lpBaseAddress);
 extern BOOL SetEndOfFile(HANDLE hFile);
-
-/*
-extern int ReadFile(int fd, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPVOID lpOverlapped);
-// WriteFile() writes to a temp file, then swaps that with the real file
-extern OSErr WriteFile(FSPtr &, void *buf, SInt64 size, void *, void *);
-extern UInt64 GetFileSize(FSPtr &, void *);
-// Do a strcmp-like comparison between 64-bit times
-extern int CompareFileTime(FILETIME *, FILETIME *);
-extern long SetFilePointer(FSPtr &, long offset, void *, FilePointerType startpoint);
-
-extern void SetTimer(void *, TimerType, int msec, void *);
-*/
 
 typedef UINT_PTR (CALLBACK *LPOFNHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef struct tagOFNA {
@@ -474,11 +445,6 @@ extern int MessageBox(HANDLE, LPCTSTR szMessage, LPCTSTR szTitle, int flags);
 extern BOOL QueryPerformanceFrequency(PLARGE_INTEGER l);
 extern BOOL QueryPerformanceCounter(PLARGE_INTEGER l);
 extern DWORD timeGetTime(void);
-extern void EnterCriticalSection(CRITICAL_SECTION *);
-extern void LeaveCriticalSection(CRITICAL_SECTION *);
-extern HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name);
-extern BOOL SetEvent(HANDLE hEvent);
-extern BOOL ResetEvent(HANDLE hEvent);
 
 #define WAIT_OBJECT_0   0
 #define WAIT_TIMEOUT    0x00000102
@@ -490,6 +456,13 @@ extern void Sleep(int);
 
 extern BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS l);
 
+// Event
+
+extern HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name);
+extern BOOL SetEvent(HANDLE hEvent);
+extern BOOL ResetEvent(HANDLE hEvent);
+
+// Thread
 
 typedef DWORD (*PTHREAD_START_ROUTINE)(
         LPVOID lpThreadParameter
@@ -499,14 +472,12 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
 extern DWORD ResumeThread(HANDLE hThread);
 extern BOOL CloseHandle(HANDLE hObject);
-#define OBJ_BITMAP          7
-extern int GetObject(HANDLE h, int c, LPVOID pv);
-extern HGDIOBJ GetCurrentObject(HDC hdc, UINT type);
-#define HALFTONE                     4
-extern int SetStretchBltMode(HDC hdc, int mode);
-extern BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
 
-typedef struct tagBITMAP
+extern void EnterCriticalSection(CRITICAL_SECTION *);
+extern void LeaveCriticalSection(CRITICAL_SECTION *);
+
+// GDI
+typedef struct __attribute__((packed)) tagBITMAP
 {
     LONG        bmType;
     LONG        bmWidth;
@@ -523,14 +494,14 @@ typedef struct tagBITMAP
 #define BI_BITFIELDS  3L
 #define BI_JPEG       4L
 #define BI_PNG        5L
-typedef struct tagBITMAPFILEHEADER {
+typedef struct __attribute__((packed)) tagBITMAPFILEHEADER {
     WORD    bfType;
     DWORD   bfSize;
     WORD    bfReserved1;
     WORD    bfReserved2;
     DWORD   bfOffBits;
 } BITMAPFILEHEADER, FAR *LPBITMAPFILEHEADER, *PBITMAPFILEHEADER;
-typedef struct tagBITMAPINFOHEADER{
+typedef struct __attribute__((packed)) tagBITMAPINFOHEADER{
     DWORD      biSize;
     LONG       biWidth;
     LONG       biHeight;
@@ -543,27 +514,77 @@ typedef struct tagBITMAPINFOHEADER{
     DWORD      biClrUsed;
     DWORD      biClrImportant;
 } BITMAPINFOHEADER, FAR *LPBITMAPINFOHEADER, *PBITMAPINFOHEADER;
-typedef struct tagBITMAPINFO {
+typedef struct __attribute__((packed)) tagBITMAPINFO {
     BITMAPINFOHEADER    bmiHeader;
     RGBQUAD             bmiColors[1];
 } BITMAPINFO, FAR *LPBITMAPINFO, *PBITMAPINFO;
-typedef struct tagPALETTEENTRY {
+typedef struct __attribute__((packed)) tagPALETTEENTRY {
     BYTE        peRed;
     BYTE        peGreen;
     BYTE        peBlue;
     BYTE        peFlags;
 } PALETTEENTRY, *PPALETTEENTRY, FAR *LPPALETTEENTRY;
-typedef struct tagLOGPALETTE {
+typedef struct __attribute__((packed)) tagLOGPALETTE {
     WORD        palVersion;
     WORD        palNumEntries;
     PALETTEENTRY        palPalEntry[1];
 } LOGPALETTE, *PLOGPALETTE, NEAR *NPLOGPALETTE, FAR *LPLOGPALETTE;
+enum HGDIOBJ_TYPE {
+	HGDIOBJ_TYPE_INVALID = 0,
+	HGDIOBJ_TYPE_PEN,
+	HGDIOBJ_TYPE_BRUSH,
+	HGDIOBJ_TYPE_FONT,
+	HGDIOBJ_TYPE_BITMAP,
+	HGDIOBJ_TYPE_REGION,
+	HGDIOBJ_TYPE_PALETTE
+};
+typedef struct {
+	enum HGDIOBJ_TYPE handleType;
+
+	// HGDIOBJ_TYPE_PALETTE
+	PLOGPALETTE paletteLog;
+
+	// HGDIOBJ_TYPE_BITMAP
+	CONST BITMAPINFO *bitmapInfo;
+	CONST BITMAPINFOHEADER * bitmapInfoHeader;
+	CONST VOID *bitmapBits;
+} _HGDIOBJ;
+typedef _HGDIOBJ * HGDIOBJ;
+//typedef void * HGDIOBJ;
+typedef HGDIOBJ HPALETTE;
+typedef HGDIOBJ HBITMAP;
+typedef HGDIOBJ HFONT;
+
+extern int GetObject(HANDLE h, int c, LPVOID pv);
+extern BOOL DeleteObject(HGDIOBJ ho);
+
+#define OBJ_BITMAP          7
+
+#define WHITE_PEN           6
+#define BLACK_PEN           7
+extern HGDIOBJ GetStockObject(int i);
 extern HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
-extern HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd);
-extern UINT RealizePalette(HDC hdc);
+
+// DC
+
+enum HDC_TYPE {
+	HDC_TYPE_DC = 1,
+	HDC_TYPE_FILE_ASSET
+};
+struct _HDC;
+typedef struct _HDC * HDC;
+struct _HDC{
+	enum HDC_TYPE handleType;
+	HDC hdcCompatible;
+	HBITMAP selectedBitmap;
+	HPALETTE selectedPalette;
+};
+//typedef HANDLE HDC;
+
 extern HDC CreateCompatibleDC(HDC hdc);
 extern BOOL DeleteDC(HDC hdc);
 extern HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h);
+extern HGDIOBJ GetCurrentObject(HDC hdc, UINT type);
 typedef struct tagPOINT
 {
     LONG  x;
@@ -571,14 +592,14 @@ typedef struct tagPOINT
 } POINT, *PPOINT, NEAR *NPPOINT, FAR *LPPOINT;
 extern BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt);
 extern BOOL LineTo(HDC hdc, int x, int y);
-#define WHITE_PEN           6
-#define BLACK_PEN           7
-extern HGDIOBJ GetStockObject(int i);
 #define SRCCOPY             (DWORD)0x00CC0020 /* dest = source                   */
 #define DSTINVERT           (DWORD)0x00550009 /* dest = (NOT dest)               */
 #define BLACKNESS           (DWORD)0x00000042 /* dest = BLACK                    */
 extern BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop);
 extern BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
+#define HALFTONE                     4
+extern int SetStretchBltMode(HDC hdc, int mode);
+extern BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
 extern UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq);
 /* constants for CreateDIBitmap */
 #define CBM_INIT        0x04L   /* initialize bitmap */
@@ -588,7 +609,6 @@ extern UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD
 extern HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage);
 extern HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset);
 extern HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy);
-extern BOOL DeleteObject(HGDIOBJ ho);
 typedef struct _RGNDATAHEADER {
     DWORD   dwSize;
     DWORD   iType;
@@ -602,6 +622,8 @@ typedef struct _RGNDATA {
     char            Buffer[1];
 } RGNDATA, *PRGNDATA, NEAR *NPRGNDATA, FAR *LPRGNDATA;
 extern int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage);
+extern HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd);
+extern UINT RealizePalette(HDC hdc);
 /* GetRegionData/ExtCreateRegion */
 #define RDH_RECTANGLES  1
 extern BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom);
@@ -621,13 +643,8 @@ extern int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw);
 extern HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
 extern BOOL GdiFlush(void);
 
-#define _ASSERT(expr)
-//#define _ASSERT(expr) \
-//	(void)(                                                                                     \
-//		(!!(expr)) ||                                                                           \
-//		(1 != _CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls", NULL)) || \
-//		(_CrtDbgBreak(), 0)                                                                     \
-//	)
+// Window
+
 
 
 // disrpl.c
