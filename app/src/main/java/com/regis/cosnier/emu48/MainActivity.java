@@ -1,7 +1,10 @@
 package com.regis.cosnier.emu48;
 
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.widget.TextView;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +15,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Bitmap bitmapMainScreen;
+    MainScreenView mainScreenView;
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -39,7 +45,13 @@ public class MainActivity extends AppCompatActivity {
         tv.setText(stringFromJNI());
 
         AssetManager mgr = getResources().getAssets();
-        emu48Start(mgr);
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
+        emu48Start(mgr, bitmapMainScreen);
+
+        mainScreenView = new MainScreenView(this); //, currentProject);
     }
 
     @Override
@@ -70,5 +82,5 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
-    public native void emu48Start(AssetManager mgr);
+    public native void emu48Start(AssetManager mgr, Bitmap bitmapMainScreen);
 }
