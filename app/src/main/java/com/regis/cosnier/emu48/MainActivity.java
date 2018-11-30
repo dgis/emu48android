@@ -2,10 +2,9 @@ package com.regis.cosnier.emu48;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.widget.TextView;
+import android.view.ViewGroup;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,13 +15,7 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Bitmap bitmapMainScreen;
-    MainScreenView mainScreenView;
-
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+    private MainScreenView mainScreenView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,18 +33,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
-
-        AssetManager mgr = getResources().getAssets();
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
-        emu48Start(mgr, bitmapMainScreen);
-
         mainScreenView = new MainScreenView(this); //, currentProject);
+        ViewGroup mainScreenContainer = (ViewGroup)findViewById(R.id.main_screen_container);
+        mainScreenContainer.addView(mainScreenView, 0);
     }
 
     @Override
@@ -76,11 +60,11 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
+    @Override
+    protected void onDestroy() {
 
-    public native void emu48Start(AssetManager mgr, Bitmap bitmapMainScreen);
+        NativeLib.stop();
+
+        super.onDestroy();
+    }
 }

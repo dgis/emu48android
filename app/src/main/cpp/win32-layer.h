@@ -1,8 +1,12 @@
+#pragma once
+
 #include <stdint.h>
 #include <pthread.h>
 #include <wchar.h>
 #include <stdio.h>
 #include <string.h>
+#include <jni.h>
+#include <android/bitmap.h>
 #include <android/asset_manager.h>
 
 #ifndef __OBJC__
@@ -31,7 +35,7 @@ typedef WORD *LPWORD;
 typedef uint32_t DWORD;
 typedef DWORD *LPDWORD;
 typedef BYTE *LPBYTE;
-typedef unsigned short WORD;
+typedef uint16_t WORD;
 typedef uint32_t UINT;
 typedef int32_t INT;
 typedef int INT_PTR, *PINT_PTR;
@@ -39,10 +43,12 @@ typedef char CHAR;
 typedef void VOID;
 typedef void *LPVOID;
 typedef void *PVOID;
-typedef long LONG;
+//typedef long LONG;
+typedef int32_t LONG;
 typedef LONG *PLONG;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
-typedef long LONG_PTR, *PLONG_PTR;
+//typedef long LONG_PTR, *PLONG_PTR;
+typedef LONG   LONG_PTR,  *PLONG_PTR;
 typedef size_t SIZE_T;
 typedef /*_W64*/ unsigned long ULONG_PTR, *PULONG_PTR;
 typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;

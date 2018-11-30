@@ -1,11 +1,15 @@
 package com.regis.cosnier.emu48;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.v4.view.ViewCompat;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -16,26 +20,29 @@ import android.view.View;
 import android.widget.OverScroller;
 
 public class MainScreenView extends SurfaceView {
+
     protected static final String TAG = "MainScreenView";
+    private Bitmap bitmapMainScreen;
 
     public MainScreenView(Context context) {
         super(context);
 
-        //commonInitialize(context, new Project());
+        AssetManager mgr = getResources().getAssets();
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
+        NativeLib.start(mgr, bitmapMainScreen, this);
+
+        commonInitialize(context);
     }
 
-//    public MainScreenView(Context context, final Project currentProject) {
-//        super(context);
-//
-//        commonInitialize(context, currentProject);
-//    }
-
-//    /**
-//     * Common initialize method.
-//     * @param context The activity context.
-//     * @param currentProject The current project.
-//     */
-//    private void commonInitialize(Context context, final Project currentProject) {
+    /**
+     * Common initialize method.
+     * @param context The activity context.
+     * @param currentProject The current project.
+     */
+    private void commonInitialize(Context context) {
 //        //this.mContext = context;
 //        this.currentProject = currentProject;
 //
@@ -86,10 +93,10 @@ public class MainScreenView extends SurfaceView {
 //        this.setFocusable(true);
 //        this.setFocusableInTouchMode(true);
 //
-//        // This call is necessary, or else the
-//        // draw method will not be called.
-//        setWillNotDraw(false);
-//    }
+        // This call is necessary, or else the
+        // draw method will not be called.
+        setWillNotDraw(false);
+    }
 
 //
 //    @SuppressLint("ClickableViewAccessibility")
@@ -189,8 +196,7 @@ public class MainScreenView extends SurfaceView {
     protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
         super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
 
-//        mViewBounds.set(0.0f, 0.0f, viewWidth, viewHeight);
-//        resetViewport((float)viewWidth, (float)viewHeight);
+        NativeLib.resize(viewWidth, viewHeight);
     }
 
     @Override
@@ -198,7 +204,7 @@ public class MainScreenView extends SurfaceView {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
 
 //        //renderPlasma(mBitmap, System.currentTimeMillis() - mStartTime);
-//        canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
+        canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
 
 //        Paint paint = mVectorsCanvasRenderer.getPaint();
 //
@@ -254,6 +260,11 @@ public class MainScreenView extends SurfaceView {
 //                    mRectScaleImage.top + scale * (mViewBounds.height() - currentProject.viewPanOffsetY) / currentProject.viewScaleFactor
 //            );
 //            canvas.drawRect(mRectScaleView, paint);
-        }
+//        }
+    }
+
+    void updateCallback() {
+        //invalidate();
+        postInvalidate();
     }
 }

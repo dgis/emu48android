@@ -5,6 +5,10 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include "resource.h"
+#include "win32-layer.h"
+
+extern JavaVM *java_machine;
+extern jobject bitmapMainScreen;
 
 HANDLE hWnd;
 LPTSTR szTitle;
@@ -730,7 +734,7 @@ BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop) {
     return 0;
 }
 BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
-    //TODO
+    mainViewUpdateCallback();
     return 0;
 }
 int SetStretchBltMode(HDC hdc, int mode) {
@@ -738,18 +742,74 @@ int SetStretchBltMode(HDC hdc, int mode) {
     return 0;
 }
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-    //TODO
+
+    if(hdcDest->hdcCompatible == NULL && hdcSrc->selectedBitmap) {
+        // We update the main window
+        JNIEnv * jniEnv;
+        jint ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+
+        AndroidBitmapInfo androidBitmapInfo;
+        if ((ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo)) < 0) {
+            LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        }
+
+        void * pixelsDestination;
+        if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
+            LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        }
+
+        HBITMAP hBitmap = hdcSrc->selectedBitmap;
+
+        //void * pixelsSource = hBitmap->bitmapInfo->bmiColors;
+        void * pixelsSource = hBitmap->bitmapBits;
+
+        int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
+        int sourceHeight = abs(hBitmap->bitmapInfoHeader->biHeight);
+        int destinationWidth = androidBitmapInfo.width;
+        int destinationHeight = androidBitmapInfo.height;
+
+        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
+        float src_dx = wDest / wSrc;
+        float src_dy = hDest / hSrc;
+        float src_maxx = xSrc + wSrc;
+        float src_maxy = ySrc + hSrc;
+        float dst_maxx = xDest + wDest;
+        float dst_maxy = yDest + hDest;
+        float src_cury = ySrc;
+
+        float sourceStride = sourceWidth * 4;
+        float destinationStride = androidBitmapInfo.stride;
+
+        for (float y = yDest; y < dst_maxy; y++)
+        {
+            float src_curx = xSrc;
+            for (float x = xDest; x < dst_maxx; x++)
+            {
+                // Point sampling - you can also impl as bilinear or other
+                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
+
+                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
+                BYTE * sourcePixel = pixelsSource + (int)(4.0 * src_curx + sourceStride * src_cury);
+                memcpy(destinationPixel, sourcePixel, 4);
+
+                src_curx += src_dx;
+            }
+
+            src_cury += src_dy;
+        }
+
+        AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
+
+        ret = (*java_machine)->DetachCurrentThread(java_machine);
+
+        mainViewUpdateCallback();
+    }
     return 0;
 }
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     //TODO
     return 0;
 }
-/* constants for CreateDIBitmap */
-#define CBM_INIT        0x04L   /* initialize bitmap */
-/* DIB color table identifiers */
-#define DIB_RGB_COLORS      0 /* color table in RGBs */
-#define DIB_PAL_COLORS      1 /* color table in palette indices */
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
     HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
