@@ -12,6 +12,7 @@
 #include "io.h"
 #include "kml.h"
 #include "debugger.h"
+#include "win32-layer.h"
 
 #define VERSION   "1.59+"
 
@@ -859,54 +860,54 @@ static LRESULT OnDestroy(HWND hWindow)
 //
 static LRESULT OnPaint(HWND hWindow)
 {
-//	PAINTSTRUCT Paint;
-//	HDC hPaintDC;
-//
-//	UpdateWindowBars();						// update visibility of title and menu bar
-//
-//	hPaintDC = BeginPaint(hWindow, &Paint);
-//	if (hMainDC != NULL)
-//	{
-//		RECT rcMainPaint = Paint.rcPaint;
-//		rcMainPaint.left   += nBackgroundX;	// coordinates in source bitmap
-//		rcMainPaint.top    += nBackgroundY;
-//		rcMainPaint.right  += nBackgroundX;
-//		rcMainPaint.bottom += nBackgroundY;
-//
-//		EnterCriticalSection(&csGDILock);	// solving NT GDI problems
-//		{
-//			UINT nLines = MAINSCREENHEIGHT;
-//
-//			// redraw background bitmap
-//			BitBlt(hPaintDC, Paint.rcPaint.left, Paint.rcPaint.top,
-//				   Paint.rcPaint.right-Paint.rcPaint.left, Paint.rcPaint.bottom-Paint.rcPaint.top,
-//				   hMainDC, rcMainPaint.left, rcMainPaint.top, SRCCOPY);
-//
-//			// CdB for HP: add apples display stuff
-//			SetWindowOrgEx(hPaintDC, nBackgroundX, nBackgroundY, NULL);
-//
-//			// redraw header display area
-//			StretchBlt(hPaintDC, nLcdX, nLcdY,
-//					   131*nLcdZoom*nGdiXZoom, Chipset.d0size*nLcdZoom*nGdiYZoom,
-//					   hLcdDC, Chipset.d0offset, 0,
-//					   131, Chipset.d0size, SRCCOPY);
-//			// redraw main display area
-//			StretchBlt(hPaintDC, nLcdX, nLcdY+Chipset.d0size*nLcdZoom*nGdiYZoom,
-//					   131*nLcdZoom*nGdiXZoom, nLines*nLcdZoom*nGdiYZoom,
-//					   hLcdDC, Chipset.boffset, Chipset.d0size,
-//					   131, nLines, SRCCOPY);
-//			// redraw menu display area
-//			StretchBlt(hPaintDC, nLcdX, nLcdY+(nLines+Chipset.d0size)*nLcdZoom*nGdiYZoom,
-//					   131*nLcdZoom*nGdiXZoom, MENUHEIGHT*nLcdZoom*nGdiYZoom,
-//					   hLcdDC, 0, (nLines+Chipset.d0size),
-//					   131, MENUHEIGHT, SRCCOPY);
-//			GdiFlush();
-//		}
-//		LeaveCriticalSection(&csGDILock);
-//		UpdateAnnunciators();
-//		RefreshButtons(&rcMainPaint);
-//	}
-//	EndPaint(hWindow, &Paint);
+	PAINTSTRUCT Paint;
+	HDC hPaintDC;
+
+	UpdateWindowBars();						// update visibility of title and menu bar
+
+	hPaintDC = BeginPaint(hWindow, &Paint);
+	if (hMainDC != NULL)
+	{
+		RECT rcMainPaint = Paint.rcPaint;
+		rcMainPaint.left   += nBackgroundX;	// coordinates in source bitmap
+		rcMainPaint.top    += nBackgroundY;
+		rcMainPaint.right  += nBackgroundX;
+		rcMainPaint.bottom += nBackgroundY;
+
+		EnterCriticalSection(&csGDILock);	// solving NT GDI problems
+		{
+			UINT nLines = MAINSCREENHEIGHT;
+
+			// redraw background bitmap
+			BitBlt(hPaintDC, Paint.rcPaint.left, Paint.rcPaint.top,
+				   Paint.rcPaint.right-Paint.rcPaint.left, Paint.rcPaint.bottom-Paint.rcPaint.top,
+				   hMainDC, rcMainPaint.left, rcMainPaint.top, SRCCOPY);
+
+			// CdB for HP: add apples display stuff
+			SetWindowOrgEx(hPaintDC, nBackgroundX, nBackgroundY, NULL);
+
+			// redraw header display area
+			StretchBlt(hPaintDC, nLcdX, nLcdY,
+					   131*nLcdZoom*nGdiXZoom, Chipset.d0size*nLcdZoom*nGdiYZoom,
+					   hLcdDC, Chipset.d0offset, 0,
+					   131, Chipset.d0size, SRCCOPY);
+			// redraw main display area
+			StretchBlt(hPaintDC, nLcdX, nLcdY+Chipset.d0size*nLcdZoom*nGdiYZoom,
+					   131*nLcdZoom*nGdiXZoom, nLines*nLcdZoom*nGdiYZoom,
+					   hLcdDC, Chipset.boffset, Chipset.d0size,
+					   131, nLines, SRCCOPY);
+			// redraw menu display area
+			StretchBlt(hPaintDC, nLcdX, nLcdY+(nLines+Chipset.d0size)*nLcdZoom*nGdiYZoom,
+					   131*nLcdZoom*nGdiXZoom, MENUHEIGHT*nLcdZoom*nGdiYZoom,
+					   hLcdDC, 0, (nLines+Chipset.d0size),
+					   131, MENUHEIGHT, SRCCOPY);
+			GdiFlush();
+		}
+		LeaveCriticalSection(&csGDILock);
+		UpdateAnnunciators();
+		RefreshButtons(&rcMainPaint);
+	}
+	EndPaint(hWindow, &Paint);
 	return 0;
 }
 
@@ -2246,6 +2247,8 @@ BOOL emu48Start()
 	// no default document, ask for new one
 	if (NewDocument()) SetWindowTitle(_T("Untitled"));
 
+	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
+    OnPaint(NULL);
 //start:
 	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
 	if (pbyRom) SwitchToState(SM_RUN);
@@ -2302,3 +2305,24 @@ BOOL emu48Start()
 //	lstrcpy(szCurrentKml, "hello.kml");
 //    return TRUE;
 //}
+
+void draw() {
+    OnPaint(NULL);
+}
+
+INT nMacroState = MACRO_OFF;
+
+void buttonDown(int x, int y) {
+    OnLButtonDown(0, x, y);
+}
+
+void buttonUp(int x, int y) {
+    OnLButtonUp(0, x, y);
+}
+
+void keyDown(int virtKey) {
+    OnKeyDown(virtKey, 0);
+}
+void keyUp(int virtKey) {
+    OnKeyUp(virtKey, 0);
+}

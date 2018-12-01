@@ -19,16 +19,28 @@ extern void emu48Start();
 extern AAssetManager * assetManager;
 static jobject viewToUpdate = NULL;
 jobject bitmapMainScreen;
+AndroidBitmapInfo androidBitmapInfo;
 
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 void mainViewUpdateCallback() {
     if (viewToUpdate) {
-        JNIEnv *jni;
-        jint result = (*java_machine)->AttachCurrentThread(java_machine, &jni, NULL);
-        jclass viewToUpdateClass = (*jni)->GetObjectClass(jni, viewToUpdate);
-        jmethodID midStr = (*jni)->GetMethodID(jni, viewToUpdateClass, "updateCallback", "()V");
-        (*jni)->CallVoidMethod(jni, viewToUpdate, midStr);
-        result = (*java_machine)->DetachCurrentThread(java_machine);
+        JNIEnv * jniEnv;
+        jint ret;
+        BOOL needDetach = FALSE;
+        ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
+        if (ret == JNI_EDETACHED) {
+            // GetEnv: not attached
+            ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+            if (ret == JNI_OK) {
+                needDetach = TRUE;
+            }
+        }
+
+        jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
+        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "()V");
+        (*jniEnv)->CallVoidMethod(jniEnv, viewToUpdate, midStr);
+//        if(needDetach)
+//            ret = (*java_machine)->DetachCurrentThread(java_machine);
     }
 }
 
@@ -37,6 +49,11 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
 
     viewToUpdate = (*env)->NewGlobalRef(env, view);
     bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
+
+    int ret = AndroidBitmap_getInfo(env, bitmapMainScreen, &androidBitmapInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+    }
 
     assetManager = AAssetManager_fromJava(env, assetMgr);
     emu48Start();
@@ -58,3 +75,30 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
 
 }
+
+extern void draw();
+extern void buttonDown(int x, int y);
+extern void buttonUp(int x, int y);
+extern void keyDown(int virtKey);
+extern void keyUp(int virtKey);
+
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_draw(JNIEnv *env, jobject thisz) {
+    draw();
+}
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_buttonDown(JNIEnv *env, jobject thisz, jint x, jint y) {
+    buttonDown(x, y);
+}
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_buttonUp(JNIEnv *env, jobject thisz, jint x, jint y) {
+    buttonUp(x, y);
+}
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyDown(JNIEnv *env, jobject thisz, jint virtKey) {
+    keyDown(virtKey);
+}
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env, jobject thisz, jint virtKey) {
+    keyUp(virtKey);
+}
+
+//p Read5(0x7050E)
+//   -> $1 = 461076
+//p Read5(0x70914)
+//   -> 31 ?

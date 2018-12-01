@@ -4,11 +4,15 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <pthread.h>
+#include <android/bitmap.h>
 #include "resource.h"
 #include "win32-layer.h"
 
 extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
+extern AndroidBitmapInfo androidBitmapInfo;
+extern UINT nBackgroundW;
+extern UINT nBackgroundH;
 
 HANDLE hWnd;
 LPTSTR szTitle;
@@ -16,6 +20,7 @@ LPTSTR szCurrentDirectorySet = NULL;
 const TCHAR * assetsPrefix = _T("assets/"),
         assetsPrefixLength = 7;
 AAssetManager * assetManager;
+static HDC mainPaintDC = NULL;
 
 VOID OutputDebugString(LPCSTR lpOutputString) {
     LOGD("%s", lpOutputString);
@@ -56,6 +61,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
         if(asset) {
             HANDLE handle = malloc(sizeof(_HANDLE));
+            memset(handle, 0, sizeof(_HANDLE));
             handle->handleType = HANDLE_TYPE_FILE_ASSET;
             handle->fileAsset = asset;
             return handle;
@@ -98,6 +104,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
         if (fd != -1) {
             HANDLE handle = malloc(sizeof(_HANDLE));
+            memset(handle, 0, sizeof(_HANDLE));
             handle->handleType = HANDLE_TYPE_FILE;
             handle->fileDescriptor = fd;
             return handle;
@@ -170,6 +177,7 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
 //https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
     HANDLE handle = malloc(sizeof(_HANDLE));
+    memset(handle, 0, sizeof(_HANDLE));
     if(hFile->handleType == HANDLE_TYPE_FILE) {
         handle->handleType = HANDLE_TYPE_FILE_MAPPING;
         handle->fileDescriptor = hFile->fileDescriptor;
@@ -214,6 +222,7 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
 HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name)
 {
     HANDLE handle = malloc(sizeof(_HANDLE));
+    memset(handle, 0, sizeof(_HANDLE));
     handle->handleType = HANDLE_TYPE_EVENT;
 
     int result = pthread_cond_init(&(handle->eventCVariable), 0);
@@ -345,10 +354,11 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
     //http://man7.org/linux/man-pages/man3/pthread_create.3.html
     int pthreadResult = pthread_create(&threadId, &attr, /*(void*(*)(void*))*/lpStartAddress, lpParameter);
     if(pthreadResult == 0) {
-        HANDLE result = malloc(sizeof(_HANDLE));
-        result->handleType = HANDLE_TYPE_THREAD;
-        result->threadId = threadId;
-        return result;
+        HANDLE handle = malloc(sizeof(_HANDLE));
+        memset(handle, 0, sizeof(_HANDLE));
+        handle->handleType = HANDLE_TYPE_THREAD;
+        handle->threadId = threadId;
+        return handle;
     }
     return NULL;
 }
@@ -654,12 +664,12 @@ HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
             break;
         case HGDIOBJ_TYPE_BITMAP:
             hdc->selectedBitmap = h;
-            break;
+            return h;
         case HGDIOBJ_TYPE_REGION:
             break;
         case HGDIOBJ_TYPE_PALETTE:
             hdc->selectedPalette = h;
-            break;
+            return h;
     }
     return NULL;
 }
@@ -695,10 +705,11 @@ HGDIOBJ GetStockObject(int i) {
     return NULL;
 }
 HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
-    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
-    newHDC->handleType = HGDIOBJ_TYPE_PALETTE;
-    newHDC->paletteLog = (PLOGPALETTE)plpal; // Can be free -> we have to make a copy
-    return newHDC;
+    HGDIOBJ handle = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(handle, 0, sizeof(_HGDIOBJ));
+    handle->handleType = HGDIOBJ_TYPE_PALETTE;
+    handle->paletteLog = (PLOGPALETTE)plpal; // Can be free -> we have to make a copy
+    return handle;
 }
 HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
     hdc->selectedPalette = hPal;
@@ -712,14 +723,16 @@ UINT RealizePalette(HDC hdc) {
 // DC
 
 HDC CreateCompatibleDC(HDC hdc) {
-    HDC newHDC = (HDC)malloc(sizeof(struct _HDC));
-    newHDC->handleType = HDC_TYPE_DC;
-    newHDC->hdcCompatible = hdc;
-    return newHDC;
+    HDC handle = (HDC)malloc(sizeof(struct _HDC));
+    memset(handle, 0, sizeof(struct _HDC));
+    handle->handleType = HDC_TYPE_DC;
+    handle->hdcCompatible = hdc;
+    return handle;
 }
 BOOL DeleteDC(HDC hdc) {
-    //TODO
-    return 0;
+    memset(hdc, 0, sizeof(struct _HDC));
+    free(hdc);
+    return TRUE;
 }
 BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt) {
     //TODO
@@ -734,8 +747,13 @@ BOOL PatBlt(HDC hdc, int x, int y, int w, int h, DWORD rop) {
     return 0;
 }
 BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
-    mainViewUpdateCallback();
-    return 0;
+    if(hdcSrc && hdcSrc->selectedBitmap) {
+        HBITMAP hBitmap = hdcSrc->selectedBitmap;
+        int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
+        int sourceHeight = abs(hBitmap->bitmapInfoHeader->biHeight);
+        return StretchBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1, min(cx, sourceWidth), min(cy, sourceHeight), rop);
+    }
+    return FALSE;
 }
 int SetStretchBltMode(HDC hdc, int mode) {
     //TODO
@@ -743,14 +761,19 @@ int SetStretchBltMode(HDC hdc, int mode) {
 }
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
 
-    if(hdcDest->hdcCompatible == NULL && hdcSrc->selectedBitmap) {
+    if(hdcDest->hdcCompatible == NULL && hdcSrc->selectedBitmap && hDest && hSrc) {
         // We update the main window
-        JNIEnv * jniEnv;
-        jint ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
 
-        AndroidBitmapInfo androidBitmapInfo;
-        if ((ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo)) < 0) {
-            LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        JNIEnv * jniEnv;
+        jint ret;
+        BOOL needDetach = FALSE;
+        ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
+        if (ret == JNI_EDETACHED) {
+            // GetEnv: not attached
+            ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+            if (ret == JNI_OK) {
+                needDetach = TRUE;
+            }
         }
 
         void * pixelsDestination;
@@ -760,7 +783,6 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         HBITMAP hBitmap = hdcSrc->selectedBitmap;
 
-        //void * pixelsSource = hBitmap->bitmapInfo->bmiColors;
         void * pixelsSource = hBitmap->bitmapBits;
 
         int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
@@ -777,8 +799,10 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float dst_maxy = yDest + hDest;
         float src_cury = ySrc;
 
-        float sourceStride = sourceWidth * 4;
-        float destinationStride = androidBitmapInfo.stride;
+        int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
+        float sourceStride = sourceWidth * sourceBytes;
+        float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
+        LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
         for (float y = yDest; y < dst_maxy; y++)
         {
@@ -789,8 +813,28 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                 //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
 
                 BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
-                BYTE * sourcePixel = pixelsSource + (int)(4.0 * src_curx + sourceStride * src_cury);
-                memcpy(destinationPixel, sourcePixel, 4);
+                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * src_curx + sourceStride * src_cury);
+
+                // -> ARGB_8888
+                switch (sourceBytes) {
+                    case 1:
+                        destinationPixel[0] = sourcePixel[0];
+                        destinationPixel[1] = sourcePixel[0];
+                        destinationPixel[2] = sourcePixel[0];
+                        destinationPixel[3] = 255;
+                        break;
+                    case 3:
+                        destinationPixel[0] = sourcePixel[0];
+                        destinationPixel[1] = sourcePixel[1];
+                        destinationPixel[2] = sourcePixel[2];
+                        destinationPixel[3] = 255;
+                        break;
+                    case 4:
+                        memcpy(destinationPixel, sourcePixel, sourceBytes);
+                        break;
+                    default:
+                        break;
+                }
 
                 src_curx += src_dx;
             }
@@ -800,11 +844,13 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
 
-        ret = (*java_machine)->DetachCurrentThread(java_machine);
+//        if(needDetach)
+//            ret = (*java_machine)->DetachCurrentThread(java_machine);
 
         mainViewUpdateCallback();
+        return TRUE;
     }
-    return 0;
+    return FALSE;
 }
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     //TODO
@@ -812,14 +858,32 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
 }
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
     HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHDC, 0, sizeof(_HGDIOBJ));
     newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
-    newHDC->bitmapInfo = pbmi;
-    newHDC->bitmapInfoHeader = pbmih;
-    newHDC->bitmapBits = pjBits;
+    BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
+    memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
+    newHDC->bitmapInfo = newBitmapInfo;
+    newHDC->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
+    size_t stride = (size_t)(newBitmapInfo->bmiHeader.biWidth * (newBitmapInfo->bmiHeader.biBitCount >> 3));
+    size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
+                    newBitmapInfo->bmiHeader.biSizeImage :
+                    newBitmapInfo->bmiHeader.biHeight * stride;
+    VOID * bitmapBits = malloc(size);
+    //memcpy(bitmapBits, pjBits, size);
+    // Switch Y
+    VOID * bitmapBitsSource = (VOID *)pjBits;
+    VOID * bitmapBitsDestination = bitmapBits + (newBitmapInfo->bmiHeader.biHeight - 1) * stride;
+    for(int y = 0; y < newBitmapInfo->bmiHeader.biHeight; y++) {
+        memcpy(bitmapBitsDestination, bitmapBitsSource, stride);
+        bitmapBitsSource += stride;
+        bitmapBitsDestination -= stride;
+    }
+    newHDC->bitmapBits = bitmapBits;
     return newHDC;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
     HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHDC, 0, sizeof(_HGDIOBJ));
     newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
     newHDC->bitmapInfo = pbmi;
     newHDC->bitmapInfoHeader = pbmi;
@@ -850,9 +914,27 @@ HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData) {
     return NULL;
 }
 BOOL GdiFlush(void) {
+    //mainViewUpdateCallback();
+    return 0;
+}
+HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
+    if(!mainPaintDC)
+        mainPaintDC = CreateCompatibleDC(NULL);
+    if(lpPaint) {
+        memset(lpPaint, 0, sizeof(PAINTSTRUCT));
+        lpPaint->fErase = TRUE;
+        lpPaint->hdc = mainPaintDC;
+        lpPaint->rcPaint.right = nBackgroundW; //androidBitmapInfo.width; // - 1;
+        lpPaint->rcPaint.bottom = nBackgroundH; //androidBitmapInfo.height; // - 1;
+    }
+    return mainPaintDC;
+}
+BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     //TODO
     return 0;
 }
+
+// Window
 
 BOOL WINAPI MessageBeep(UINT uType) {
     //TODO System beep

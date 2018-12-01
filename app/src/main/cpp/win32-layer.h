@@ -574,8 +574,8 @@ extern HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
 // DC
 
 enum HDC_TYPE {
-	HDC_TYPE_DC = 1,
-	HDC_TYPE_FILE_ASSET
+    HDC_TYPE_INVALID = 0,
+    HDC_TYPE_DC
 };
 struct _HDC;
 typedef struct _HDC * HDC;
@@ -622,7 +622,6 @@ typedef struct _RGNDATAHEADER {
     DWORD   nRgnSize;
     RECT    rcBound;
 } RGNDATAHEADER, *PRGNDATAHEADER;
-
 typedef struct _RGNDATA {
     RGNDATAHEADER   rdh;
     char            Buffer[1];
@@ -648,6 +647,17 @@ typedef struct  tagXFORM
 extern int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw);
 extern HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData);
 extern BOOL GdiFlush(void);
+typedef struct tagPAINTSTRUCT {
+    HDC         hdc;
+    BOOL        fErase;
+    RECT        rcPaint;
+    BOOL        fRestore;
+    BOOL        fIncUpdate;
+    BYTE        rgbReserved[32];
+} PAINTSTRUCT, *PPAINTSTRUCT, *NPPAINTSTRUCT, *LPPAINTSTRUCT;
+extern HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
+extern BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+
 
 // Window
 
