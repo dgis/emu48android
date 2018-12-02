@@ -472,9 +472,11 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
 
 void Sleep(int ms)
 {
-    struct timespec timeOut,remains;
-    timeOut.tv_sec = 0;
-    timeOut.tv_nsec = ms * 1000000; /* 50 milliseconds */
+    time_t seconds = ms / 1000;
+    long milliseconds = ms - 1000 * seconds;
+    struct timespec timeOut, remains;
+    timeOut.tv_sec = seconds;
+    timeOut.tv_nsec = milliseconds * 1000000; /* 50 milliseconds */
     nanosleep(&timeOut, &remains);
 }
 
@@ -495,7 +497,7 @@ BOOL QueryPerformanceCounter(PLARGE_INTEGER l)
         long     tv_nsec;       /* nanoseconds */
     } time;
     int result = clock_gettime(CLOCK_MONOTONIC, &time);
-    l->QuadPart = 1e9 * time.tv_sec + time.tv_nsec;
+    l->QuadPart = (1e9 * time.tv_sec + time.tv_nsec) / 1000;
     return TRUE;
 }
 void EnterCriticalSection(CRITICAL_SECTION *lock)
@@ -970,16 +972,77 @@ HANDLE WINAPI GetClipboardData(UINT uFormat) {
     return NULL;
 }
 
+struct timerEvent {
+    BOOL valid;
+    int timerId;
+    LPTIMECALLBACK fptc;
+    DWORD_PTR dwUser;
+    timer_t timer;
+};
+
+#define MAX_TIMER 10
+struct timerEvent timerEvents[MAX_TIMER];
+
+void win32Init() {
+    for (int i = 0; i < MAX_TIMER; ++i) {
+        timerEvents[i].valid = FALSE;
+    }
+}
+
+void timerCallback(int timerId) {
+    if(timerId >= 0 && timerId < MAX_TIMER && timerEvents[timerId].valid) {
+        timerEvents[timerId].fptc(timerId + 1, 0, timerEvents[timerId].dwUser, 0, 0);
+    }
+}
+
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
-    //TODO
-    return 0; //No error
+
+    // Find a timer id
+    int timerId = -1;
+    for (int i = 0; i < MAX_TIMER; ++i) {
+        if(!timerEvents[i].valid) {
+            timerId = i;
+            break;
+        }
+    }
+    timerEvents[timerId].timerId = timerId;
+    timerEvents[timerId].fptc = fptc;
+    timerEvents[timerId].dwUser = dwUser;
+
+
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_notify_function = timerCallback; //this function will be called when timer expires
+    sev.sigev_value.sival_int = timerEvents[timerId].timerId;//this argument will be passed to cbf
+    sev.sigev_notify_attributes = NULL;
+    timer_t * timer = &(timerEvents[timerId].timer);
+    //if (timer_create(CLOCK_REALTIME, &sev, &timer) == -1)
+    if (timer_create(CLOCK_REALTIME, &sev, timer) == -1)
+        return NULL;
+
+    long long freq_nanosecs = uDelay * 1000000;
+    struct itimerspec its;
+    its.it_value.tv_sec = freq_nanosecs / 1000000000;
+    its.it_value.tv_nsec = freq_nanosecs % 1000000000;
+    its.it_interval.tv_sec = its.it_value.tv_sec;
+    its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    if (timer_settime(timerEvents[timerId].timer, 0, &its, NULL) == -1) {
+        timer_delete(timerEvents[timerId].timer);
+        return NULL;
+    }
+    timerEvents[timerId].valid = TRUE;
+    return timerId + 1; //No error
 }
 MMRESULT timeKillEvent(UINT uTimerID) {
-    //TODO
+    timer_delete(timerEvents[uTimerID - 1].timer);
+    timerEvents[uTimerID - 1].valid = FALSE;
     return 0; //No error
 }
 MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc) {
-    //TODO
+    if(ptc) {
+        ptc->wPeriodMin = 1; // ms
+        ptc->wPeriodMax = 1000000; // ms -> 1000s
+    }
     return 0; //No error
 }
 MMRESULT timeBeginPeriod(UINT uPeriod) {

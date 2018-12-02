@@ -9,17 +9,27 @@
 
 #include "pch.h"
 
-JavaVM *java_machine;
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    java_machine = vm;
-    return JNI_VERSION_1_6;
-}
-
 extern void emu48Start();
 extern AAssetManager * assetManager;
 static jobject viewToUpdate = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
+
+extern void win32Init();
+
+extern void draw();
+extern void buttonDown(int x, int y);
+extern void buttonUp(int x, int y);
+extern void keyDown(int virtKey);
+extern void keyUp(int virtKey);
+
+
+JavaVM *java_machine;
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    java_machine = vm;
+    win32Init();
+    return JNI_VERSION_1_6;
+}
 
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 void mainViewUpdateCallback() {
@@ -75,12 +85,6 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
 
 }
-
-extern void draw();
-extern void buttonDown(int x, int y);
-extern void buttonUp(int x, int y);
-extern void keyDown(int virtKey);
-extern void keyUp(int virtKey);
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_draw(JNIEnv *env, jobject thisz) {
     draw();

@@ -2154,8 +2154,12 @@ BOOL emu48Start()
     hWindowDC = CreateCompatibleDC(NULL);
 
 	// initialization
+    LARGE_INTEGER    lAppStart2;					// high performance counter value at Appl. start
+
 	QueryPerformanceFrequency(&lFreq);		// init high resolution counter
-	QueryPerformanceCounter(&lAppStart);
+    QueryPerformanceCounter(&lAppStart);
+    Sleep(1000);
+    QueryPerformanceCounter(&lAppStart2);
 
 	szCurrentKml[0] = 0;					// no KML file selected
 	SetSpeed(bRealSpeed);					// set speed
