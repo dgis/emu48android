@@ -687,6 +687,8 @@ BOOL DeleteObject(HGDIOBJ ho) {
     switch(ho->handleType) {
         case HGDIOBJ_TYPE_PALETTE: {
             ho->handleType = 0;
+            if(ho->paletteLog)
+                free(ho->paletteLog);
             ho->paletteLog = NULL;
             free(ho);
             return TRUE;
@@ -710,7 +712,11 @@ HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
     HGDIOBJ handle = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(handle, 0, sizeof(_HGDIOBJ));
     handle->handleType = HGDIOBJ_TYPE_PALETTE;
-    handle->paletteLog = (PLOGPALETTE)plpal; // Can be free -> we have to make a copy
+    if(plpal && plpal->palNumEntries >= 0 && plpal->palNumEntries <= 256) {
+        size_t structSize = sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * (size_t)(plpal->palNumEntries - 1);
+        handle->paletteLog = malloc(structSize);
+        memcpy(handle->paletteLog, plpal, structSize);
+    }
     return handle;
 }
 HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
@@ -806,6 +812,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
         LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
+        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
+                hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+
         for (float y = yDest; y < dst_maxy; y++)
         {
             float src_curx = xSrc;
@@ -820,10 +829,18 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                 // -> ARGB_8888
                 switch (sourceBytes) {
                     case 1:
-                        destinationPixel[0] = sourcePixel[0];
-                        destinationPixel[1] = sourcePixel[0];
-                        destinationPixel[2] = sourcePixel[0];
-                        destinationPixel[3] = 255;
+                        if(palPalEntry) {
+                            BYTE colorIndex = sourcePixel[0];
+                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[3] = 255;
+                        } else {
+                            destinationPixel[0] = sourcePixel[0];
+                            destinationPixel[1] = sourcePixel[0];
+                            destinationPixel[2] = sourcePixel[0];
+                            destinationPixel[3] = 255;
+                        }
                         break;
                     case 3:
                         destinationPixel[0] = sourcePixel[0];
@@ -855,7 +872,17 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
     return FALSE;
 }
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
-    //TODO
+    if(prgbq
+        && hdc && hdc->selectedPalette && hdc->selectedPalette->paletteLog && hdc->selectedPalette->paletteLog->palPalEntry
+        && hdc->selectedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->selectedPalette->paletteLog->palNumEntries) {
+        PALETTEENTRY * palPalEntry = hdc->selectedPalette->paletteLog->palPalEntry;
+        for (int i = iStart, j = 0; i < cEntries; i++, j++) {
+            palPalEntry[i].peRed = prgbq[j].rgbRed;
+            palPalEntry[i].peGreen = prgbq[j].rgbGreen;
+            palPalEntry[i].peBlue = prgbq[j].rgbBlue;
+            palPalEntry[i].peFlags = 0;
+        }
+    }
     return 0;
 }
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {

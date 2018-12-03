@@ -573,6 +573,11 @@ extern HPALETTE CreatePalette(CONST LOGPALETTE * plpal);
 
 // DC
 
+enum DC_TYPE {
+    DC_TYPE_INVALID = 0,
+    DC_TYPE_MEMORY,
+    DC_TYPE_DISPLAY
+};
 enum HDC_TYPE {
     HDC_TYPE_INVALID = 0,
     HDC_TYPE_DC
@@ -582,6 +587,7 @@ typedef struct _HDC * HDC;
 struct _HDC{
 	enum HDC_TYPE handleType;
 	HDC hdcCompatible;
+    enum DC_TYPE dcType;
 	HBITMAP selectedBitmap;
 	HPALETTE selectedPalette;
 };

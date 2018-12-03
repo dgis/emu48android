@@ -157,6 +157,16 @@ public class MainScreenView extends SurfaceView {
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_7, 0x67); // VK_NUMPAD7
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_8, 0x68); // VK_NUMPAD8
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_9, 0x69); // VK_NUMPAD9
+        vkmap.put(KeyEvent.KEYCODE_0, 0x60); // VK_NUMPAD0
+        vkmap.put(KeyEvent.KEYCODE_1, 0x61); // VK_NUMPAD1
+        vkmap.put(KeyEvent.KEYCODE_2, 0x62); // VK_NUMPAD2
+        vkmap.put(KeyEvent.KEYCODE_3, 0x63); // VK_NUMPAD3
+        vkmap.put(KeyEvent.KEYCODE_4, 0x64); // VK_NUMPAD4
+        vkmap.put(KeyEvent.KEYCODE_5, 0x65); // VK_NUMPAD5
+        vkmap.put(KeyEvent.KEYCODE_6, 0x66); // VK_NUMPAD6
+        vkmap.put(KeyEvent.KEYCODE_7, 0x67); // VK_NUMPAD7
+        vkmap.put(KeyEvent.KEYCODE_8, 0x68); // VK_NUMPAD8
+        vkmap.put(KeyEvent.KEYCODE_9, 0x69); // VK_NUMPAD9
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_MULTIPLY, 0x6A); // VK_MULTIPLY
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_ADD, 0x6B); // VK_ADD
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_SUBTRACT, 0x6D); // VK_SUBTRACT
