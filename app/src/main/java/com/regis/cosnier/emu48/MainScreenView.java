@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.support.v4.view.ViewCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -28,6 +29,7 @@ public class MainScreenView extends SurfaceView {
     protected static final String TAG = "MainScreenView";
     private Bitmap bitmapMainScreen;
     private HashMap<Integer, Integer> vkmap;
+    private float screenScale = 3.0f;
 
     public MainScreenView(Context context) {
         super(context);
@@ -39,60 +41,6 @@ public class MainScreenView extends SurfaceView {
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.LTGRAY);
         NativeLib.start(mgr, bitmapMainScreen, this);
-
-        commonInitialize(context);
-    }
-
-    /**
-     * Common initialize method.
-     * @param context The activity context.
-     */
-    private void commonInitialize(Context context) {
-        //this.mContext = context;
-
-//        // Prevent the out of memory in OpenGL with Tegra 2 devices
-//        //if(!Utils.hasHighMemory(context))
-//        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-//        //mAntiAliased = Utils.hasHighMemory(context);
-//        mScreenDensity = getResources().getDisplayMetrics().density;
-//
-//        mVectorsCanvasRenderer = new VectorsCanvasRenderer();
-//        mVectorsCanvasRenderer.setStrokeColor(0xff000000); // Black
-//        Paint paint = mVectorsCanvasRenderer.getPaint();
-//        paint.setColor(Color.BLACK);
-//        paint.setStyle(Paint.Style.STROKE);
-//        paint.setStrokeWidth(1.0f * mScreenDensity);
-//        paint.setAntiAlias(mAntiAliased);
-
-//        mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-//
-//            @Override
-//            public boolean onDoubleTap(MotionEvent e) {
-//                float scaleFactorPrevious = currentProject.viewScaleFactor;
-//                currentProject.viewScaleFactor *= 2f;
-//                if(currentProject.viewScaleFactor > mScaleFactorMax)
-//                    currentProject.viewScaleFactor = mScaleFactorMin;
-//                else {
-//                    constrainScale();
-//                    scaleWithFocus(e.getX(), e.getY(), scaleFactorPrevious);
-//                }
-//                constrainPan();
-//                invalidate();
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onDown(MotionEvent e) {
-//                //Log.d(TAG, "GestureDetector.onDown()");
-//                if(!mOverScroller.isFinished()) {
-//                    mOverScroller.forceFinished(true);
-//                    //ViewCompat.postInvalidateOnAnimation(CanvasView.this);
-//                    //invalidate();
-//                }
-//                return true;
-//            }
-//
-//        });
 
         vkmap = new HashMap<Integer, Integer>();
         vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
@@ -188,7 +136,6 @@ public class MainScreenView extends SurfaceView {
         setWillNotDraw(false);
     }
 
-
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
         // Let the ScaleGestureDetector inspect all events.
@@ -202,12 +149,12 @@ public class MainScreenView extends SurfaceView {
             switch (action) {
 			case MotionEvent.ACTION_DOWN:
                 //Log.d(TAG, "ACTION_DOWN count: " + touchCount + ", PanPrevious: " + mPanPrevious.toString());
-                NativeLib.buttonDown((int)event.getX(0), (int)event.getY(0));
+                NativeLib.buttonDown((int)(event.getX(0) / screenScale), (int)(event.getY(0) / screenScale));
 				break;
 //			case MotionEvent.ACTION_MOVE:
 //				break;
             case MotionEvent.ACTION_UP:
-                NativeLib.buttonUp((int)event.getX(0), (int)event.getY(0));
+                NativeLib.buttonUp((int)(event.getX(0) / screenScale), (int)(event.getY(0) / screenScale));
                 break;
 //			case MotionEvent.ACTION_CANCEL:
 //				break;
@@ -270,7 +217,11 @@ public class MainScreenView extends SurfaceView {
     protected void onDraw(Canvas canvas) {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
         //NativeLib.draw();
+        canvas.save();
+        //canvas.translate(mViewPanOffsetX, mViewPanOffsetY);
+        canvas.scale(screenScale, screenScale);
         canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
+        canvas.restore();
     }
 
     void updateCallback() {

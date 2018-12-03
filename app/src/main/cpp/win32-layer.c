@@ -21,6 +21,22 @@ const TCHAR * assetsPrefix = _T("assets/"),
         assetsPrefixLength = 7;
 AAssetManager * assetManager;
 static HDC mainPaintDC = NULL;
+struct timerEvent {
+    BOOL valid;
+    int timerId;
+    LPTIMECALLBACK fptc;
+    DWORD_PTR dwUser;
+    timer_t timer;
+};
+
+#define MAX_TIMER 10
+struct timerEvent timerEvents[MAX_TIMER];
+
+void win32Init() {
+    for (int i = 0; i < MAX_TIMER; ++i) {
+        timerEvents[i].valid = FALSE;
+    }
+}
 
 VOID OutputDebugString(LPCSTR lpOutputString) {
     LOGD("%s", lpOutputString);
@@ -799,8 +815,10 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int destinationHeight = androidBitmapInfo.height;
 
         //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
-        float src_dx = wDest / wSrc;
-        float src_dy = hDest / hSrc;
+//        float src_dx = wDest / wSrc;
+//        float src_dy = hDest / hSrc;
+        float src_dx = (float)wSrc / (float)wDest;
+        float src_dy = (float)hSrc / (float)hDest;
         float src_maxx = xSrc + wSrc;
         float src_maxy = ySrc + hSrc;
         float dst_maxx = xDest + wDest;
@@ -824,7 +842,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                 //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
 
                 BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
-                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * src_curx + sourceStride * src_cury);
+                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
 
                 // -> ARGB_8888
                 switch (sourceBytes) {
@@ -997,23 +1015,6 @@ BOOL WINAPI IsClipboardFormatAvailable(UINT format) {
 HANDLE WINAPI GetClipboardData(UINT uFormat) {
     //TODO
     return NULL;
-}
-
-struct timerEvent {
-    BOOL valid;
-    int timerId;
-    LPTIMECALLBACK fptc;
-    DWORD_PTR dwUser;
-    timer_t timer;
-};
-
-#define MAX_TIMER 10
-struct timerEvent timerEvents[MAX_TIMER];
-
-void win32Init() {
-    for (int i = 0; i < MAX_TIMER; ++i) {
-        timerEvents[i].valid = FALSE;
-    }
 }
 
 void timerCallback(int timerId) {
