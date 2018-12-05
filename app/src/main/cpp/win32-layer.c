@@ -828,7 +828,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
         float sourceStride = sourceWidth * sourceBytes;
         float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
-        LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
         PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
                 hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
@@ -884,7 +884,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 //        if(needDetach)
 //            ret = (*java_machine)->DetachCurrentThread(java_machine);
 
-        mainViewUpdateCallback();
+        //mainViewUpdateCallback();
         return TRUE;
     }
     return FALSE;
@@ -961,7 +961,7 @@ HRGN ExtCreateRegion(CONST XFORM * lpx, DWORD nCount, CONST RGNDATA * lpData) {
     return NULL;
 }
 BOOL GdiFlush(void) {
-    //mainViewUpdateCallback();
+    mainViewUpdateCallback();
     return 0;
 }
 HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
@@ -977,7 +977,7 @@ HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
     return mainPaintDC;
 }
 BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
-    //TODO
+    mainViewUpdateCallback();
     return 0;
 }
 

@@ -191,7 +191,7 @@ public class MainScreenView extends SurfaceView {
         if(windowsKeycode != null)
             NativeLib.keyDown(windowsKeycode.intValue());
         else
-            Log.e(TAG, String.format("windowsKeycode: %d", windowsKeycode.intValue()));
+            Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         return super.onKeyDown(keyCode, event);
     }
 
@@ -202,7 +202,7 @@ public class MainScreenView extends SurfaceView {
         if(windowsKeycode != null)
             NativeLib.keyUp(windowsKeycode.intValue());
         else
-            Log.e(TAG, String.format("windowsKeycode: %d", windowsKeycode.intValue()));
+            Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         return super.onKeyUp(keyCode, event);
     }
 
@@ -225,6 +225,6 @@ public class MainScreenView extends SurfaceView {
     }
 
     void updateCallback() {
-        //postInvalidate();
+        postInvalidate();
     }
 }

@@ -25,7 +25,7 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/debugger.c
 #        src/main/cpp/disasm.c
         src/main/cpp/dismem.c
-#        src/main/cpp/display.c #-> To rewrite
+        src/main/cpp/display.c
         src/main/cpp/disrpl.c
 #        src/main/cpp/Emu48.c #-> To rewrite
         src/main/cpp/engine.c
@@ -47,7 +47,7 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/serial.c
         src/main/cpp/settings.c
 #        src/main/cpp/sndenum.c
-#        src/main/cpp/sound.c
+#        src/main/cpp/sound.c # -> To rewrite
         src/main/cpp/stack.c
         src/main/cpp/symbfile.c
         src/main/cpp/timer.c
@@ -55,7 +55,6 @@ add_library( # Sets the name of the library.
 
         src/main/cpp/win32-layer.c
         src/main/cpp/android-layer.c
-        src/main/cpp/android-display.c # display.c rewrite
         src/main/cpp/android-emu48.c # Emu48.c rewrite
         src/main/cpp/emu48-jni.c
 )
