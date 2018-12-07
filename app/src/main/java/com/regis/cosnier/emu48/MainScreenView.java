@@ -29,7 +29,9 @@ public class MainScreenView extends SurfaceView {
     protected static final String TAG = "MainScreenView";
     private Bitmap bitmapMainScreen;
     private HashMap<Integer, Integer> vkmap;
-    private float screenScale = 3.0f;
+    private float screenScale = 1.0f;
+    private float screenOffsetX = 0.0f;
+    private float screenOffsetY= 0.0f;
 
     public MainScreenView(Context context) {
         super(context);
@@ -149,12 +151,12 @@ public class MainScreenView extends SurfaceView {
             switch (action) {
 			case MotionEvent.ACTION_DOWN:
                 //Log.d(TAG, "ACTION_DOWN count: " + touchCount + ", PanPrevious: " + mPanPrevious.toString());
-                NativeLib.buttonDown((int)(event.getX(0) / screenScale), (int)(event.getY(0) / screenScale));
+                NativeLib.buttonDown((int)((event.getX(0) - screenOffsetX) / screenScale), (int)((event.getY(0) - screenOffsetY) / screenScale));
 				break;
 //			case MotionEvent.ACTION_MOVE:
 //				break;
             case MotionEvent.ACTION_UP:
-                NativeLib.buttonUp((int)(event.getX(0) / screenScale), (int)(event.getY(0) / screenScale));
+                NativeLib.buttonUp((int)((event.getX(0) - screenOffsetX) / screenScale), (int)((event.getY(0) - screenOffsetY) / screenScale));
                 break;
 //			case MotionEvent.ACTION_CANCEL:
 //				break;
@@ -210,6 +212,29 @@ public class MainScreenView extends SurfaceView {
     protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
         super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
 
+        float imageSizeX = bitmapMainScreen.getWidth();
+        float imageSizeY = bitmapMainScreen.getHeight();
+
+        if(imageSizeX > 0 && imageSizeY > 0 && viewWidth > 0.0f && viewHeight > 0.0f) {
+            // Find the scale factor and the translate offset to fit and to center the vectors in the view bounds.
+            float translateX, translateY, scale;
+            float viewRatio = (float)viewHeight / (float)viewWidth;
+            float imageRatio = imageSizeY / imageSizeX;
+            if(viewRatio > imageRatio) {
+                scale = viewWidth / imageSizeX;
+                translateX = 0.0f;
+                translateY = (viewHeight - scale * imageSizeY) / 2.0f;
+            } else {
+                scale = viewHeight / imageSizeY;
+                translateX = (viewWidth - scale * imageSizeX) / 2.0f;
+                translateY = 0.0f;
+            }
+
+            screenScale = scale;
+            screenOffsetX = translateX;
+            screenOffsetY = translateY;
+        }
+
         NativeLib.resize(viewWidth, viewHeight);
     }
 
@@ -218,13 +243,26 @@ public class MainScreenView extends SurfaceView {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
         //NativeLib.draw();
         canvas.save();
-        //canvas.translate(mViewPanOffsetX, mViewPanOffsetY);
+        canvas.translate(screenOffsetX, screenOffsetY);
         canvas.scale(screenScale, screenScale);
         canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
         canvas.restore();
     }
 
-    void updateCallback() {
-        postInvalidate();
+    final int CALLBACK_TYPE_INVALIDATE = 0;
+    final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
+
+    int updateCallback(int type, int param1, int param2) {
+        switch (type) {
+            case CALLBACK_TYPE_INVALIDATE:
+                postInvalidate();
+                break;
+            case CALLBACK_TYPE_WINDOW_RESIZE:
+                // New Bitmap size
+                bitmapMainScreen.reconfigure(/* x */ param1, /* y */ param2, Bitmap.Config.ARGB_8888);
+                bitmapMainScreen.eraseColor(Color.LTGRAY);
+                break;
+        }
+        return -1;
     }
 }

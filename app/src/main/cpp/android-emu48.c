@@ -2251,6 +2251,9 @@ BOOL emu48Start()
 	// no default document, ask for new one
 	if (NewDocument()) SetWindowTitle(_T("Untitled"));
 
+    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+
+
 	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
     OnPaint(NULL);
 //start:
@@ -2313,8 +2316,6 @@ BOOL emu48Start()
 void draw() {
     OnPaint(NULL);
 }
-
-INT nMacroState = MACRO_OFF;
 
 void buttonDown(int x, int y) {
     OnLButtonDown(0, x, y);

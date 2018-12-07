@@ -332,6 +332,7 @@ enum {
 
 #define TEXT(x)	@x
 #define LOWORD(x)	x
+#define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
 
 #define HIBYTE(i)   ((i)>>8)
 #define LOBYTE(i)   (i)
@@ -445,6 +446,11 @@ extern HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy,
 #define BFFM_SETSELECTION   BFFM_SETSELECTIONA
 #define CB_GETITEMDATA              0x0150
 #define CB_SETITEMDATA              0x0151
+#define TBM_GETPOS              (WM_USER)
+#define TBM_SETPOS              (WM_USER+5)
+#define TBM_SETRANGE            (WM_USER+6)
+#define TBM_SETTICFREQ          (WM_USER+20)
+#define BST_CHECKED        0x0001
 extern LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 extern BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 extern int MessageBox(HANDLE, LPCTSTR szMessage, LPCTSTR szTitle, int flags);
@@ -780,13 +786,14 @@ extern MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc);
 extern MMRESULT timeBeginPeriod(UINT uPeriod);
 extern MMRESULT timeEndPeriod(UINT uPeriod);
 extern VOID GetLocalTime(LPSYSTEMTIME lpSystemTime);
-
+extern WORD GetTickCount(VOID);
 
 extern BOOL EnableWindow(HWND hWnd, BOOL bEnable);
 extern HWND GetDlgItem(HWND hDlg, int nIDDlgItem);
 extern UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax);
 #define GetDlgItemText  GetDlgItemTextA
 extern BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString);
+extern LRESULT SendDlgItemMessage(HWND hDlg, int nIDDlgItem, UINT Msg, WPARAM wParam, LPARAM lParam);
 extern BOOL CheckDlgButton(HWND hDlg, int nIDButton, UINT uCheck);
 extern UINT IsDlgButtonChecked(HWND hDlg, int nIDButton);
 extern BOOL EndDialog(HWND hDlg, INT_PTR nResult);

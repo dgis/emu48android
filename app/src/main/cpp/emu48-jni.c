@@ -31,8 +31,28 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 
-// https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
+enum CALLBACK_TYPE {
+    CALLBACK_TYPE_INVALIDATE = 0,
+    CALLBACK_TYPE_WINDOW_RESIZE = 1
+};
+
 void mainViewUpdateCallback() {
+    mainViewCallback(CALLBACK_TYPE_INVALIDATE, 0, 0);
+}
+
+void mainViewResizeCallback(int x, int y) {
+    mainViewCallback(CALLBACK_TYPE_WINDOW_RESIZE, x, y);
+
+    JNIEnv * jniEnv;
+    int ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
+    ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+    }
+}
+
+// https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
+int mainViewCallback(int type, int param1, int param2) {
     if (viewToUpdate) {
         JNIEnv * jniEnv;
         jint ret;
@@ -47,10 +67,12 @@ void mainViewUpdateCallback() {
         }
 
         jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
-        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "()V");
-        (*jniEnv)->CallVoidMethod(jniEnv, viewToUpdate, midStr);
+        //jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "()V");
+        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(III)I");
+        int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2);
 //        if(needDetach)
 //            ret = (*java_machine)->DetachCurrentThread(java_machine);
+        return result;
     }
 }
 

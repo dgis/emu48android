@@ -661,7 +661,13 @@ BOOL DestroyWindow(HWND hWnd) {
     return 0;
 }
 
-BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) { return 0; }
+BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
+    if(lpwndpl) {
+        lpwndpl->rcNormalPosition.left = 0;
+        lpwndpl->rcNormalPosition.top = 0;
+    }
+    return TRUE;
+}
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) { return 0; }
 BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu) { return 0; }
@@ -1099,6 +1105,11 @@ VOID GetLocalTime(LPSYSTEMTIME lpSystemTime) {
     }
     return;
 }
+WORD GetTickCount(VOID) {
+    //TODO
+    return 0;
+}
+
 
 BOOL EnableWindow(HWND hWnd, BOOL bEnable) {
     //TODO
@@ -1116,6 +1127,10 @@ BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString) {
     if(nIDDlgItem == IDC_KMLLOG) {
         LOGD("KML log:\r\n%s", lpString);
     }
+    //TODO
+    return 0;
+}
+LRESULT SendDlgItemMessage(HWND hDlg, int nIDDlgItem, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
     return 0;
 }

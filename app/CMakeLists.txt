@@ -23,7 +23,7 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/cursor.c
 #        src/main/cpp/ddeserv.c
 #        src/main/cpp/debugger.c
-#        src/main/cpp/disasm.c
+        src/main/cpp/disasm.c
         src/main/cpp/dismem.c
         src/main/cpp/display.c
         src/main/cpp/disrpl.c
@@ -34,7 +34,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/files.c
         src/main/cpp/i28f160.c
         src/main/cpp/keyboard.c
-#        src/main/cpp/keymacro.c
+        src/main/cpp/keymacro.c
         src/main/cpp/kml.c
         src/main/cpp/lodepng.c
         src/main/cpp/lowbat.c
