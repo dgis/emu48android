@@ -7,22 +7,15 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.support.v4.view.ViewCompat;
+
+import androidx.core.view.ViewCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.OverScroller;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class MainScreenView extends SurfaceView {
 
@@ -140,33 +133,29 @@ public class MainScreenView extends SurfaceView {
 
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
-        // Let the ScaleGestureDetector inspect all events.
-//        boolean retValScaleDetector = mScaleDetector.onTouchEvent(event);
-//        boolean retValGestureDetector = mGestureDetector.onTouchEvent(event);
-        boolean retVal = false; //retValGestureDetector || retValScaleDetector;
-
         int touchCount = event.getPointerCount();
-        if(touchCount == 1) {
-            int action = event.getAction();
-            switch (action) {
-			case MotionEvent.ACTION_DOWN:
-                //Log.d(TAG, "ACTION_DOWN count: " + touchCount + ", PanPrevious: " + mPanPrevious.toString());
-                NativeLib.buttonDown((int)((event.getX(0) - screenOffsetX) / screenScale), (int)((event.getY(0) - screenOffsetY) / screenScale));
-				break;
+        int actionIndex = event.getActionIndex();
+        int action = event.getActionMasked();
+        switch (action) {
+        case MotionEvent.ACTION_DOWN:
+        case MotionEvent.ACTION_POINTER_DOWN:
+            //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
+            NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScale), (int)((event.getY(actionIndex) - screenOffsetY) / screenScale));
+            break;
 //			case MotionEvent.ACTION_MOVE:
 //				break;
-            case MotionEvent.ACTION_UP:
-                NativeLib.buttonUp((int)((event.getX(0) - screenOffsetX) / screenScale), (int)((event.getY(0) - screenOffsetY) / screenScale));
-                break;
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_POINTER_UP:
+            //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
+            NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScale), (int)((event.getY(actionIndex) - screenOffsetY) / screenScale));
+            break;
 //			case MotionEvent.ACTION_CANCEL:
 //				break;
 //			case MotionEvent.ACTION_OUTSIDE:
 //				break;
-                default:
-            }
-            return true;
+            default:
         }
-        return retVal || super.onTouchEvent(event);
+        return true;
     }
 
 //    @Override
@@ -216,7 +205,7 @@ public class MainScreenView extends SurfaceView {
         float imageSizeY = bitmapMainScreen.getHeight();
 
         if(imageSizeX > 0 && imageSizeY > 0 && viewWidth > 0.0f && viewHeight > 0.0f) {
-            // Find the scale factor and the translate offset to fit and to center the vectors in the view bounds.
+            // Find the scale factor and the translate offset to fit and to center the image in the view bounds.
             float translateX, translateY, scale;
             float viewRatio = (float)viewHeight / (float)viewWidth;
             float imageRatio = imageSizeY / imageSizeX;
@@ -235,13 +224,12 @@ public class MainScreenView extends SurfaceView {
             screenOffsetY = translateY;
         }
 
-        NativeLib.resize(viewWidth, viewHeight);
+        //NativeLib.resize(viewWidth, viewHeight);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
-        //NativeLib.draw();
         canvas.save();
         canvas.translate(screenOffsetX, screenOffsetY);
         canvas.scale(screenScale, screenScale);

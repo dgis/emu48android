@@ -821,8 +821,6 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int destinationHeight = androidBitmapInfo.height;
 
         //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
-//        float src_dx = wDest / wSrc;
-//        float src_dy = hDest / hSrc;
         float src_dx = (float)wSrc / (float)wDest;
         float src_dy = (float)hSrc / (float)hDest;
         float src_maxx = xSrc + wSrc;
@@ -855,9 +853,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                     case 1:
                         if(palPalEntry) {
                             BYTE colorIndex = sourcePixel[0];
-                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
                             destinationPixel[3] = 255;
                         } else {
                             destinationPixel[0] = sourcePixel[0];
@@ -867,9 +865,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         }
                         break;
                     case 3:
-                        destinationPixel[0] = sourcePixel[0];
+                        destinationPixel[0] = sourcePixel[2];
                         destinationPixel[1] = sourcePixel[1];
-                        destinationPixel[2] = sourcePixel[2];
+                        destinationPixel[2] = sourcePixel[0];
                         destinationPixel[3] = 255;
                         break;
                     case 4:

@@ -2,7 +2,7 @@
 //	PCH.H
 //
 
-#define DEBUG_DISPLAY 1
+//#define DEBUG_DISPLAY 1
 
 #define _WIN32_IE 0x0200
 #define _CRT_SECURE_NO_DEPRECATE
