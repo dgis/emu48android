@@ -2,6 +2,7 @@ package com.regis.cosnier.emu48;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -50,8 +51,23 @@ public class MainActivity extends AppCompatActivity
 
 
 
-        mainScreenView = new MainScreenView(this); //, currentProject);
         ViewGroup mainScreenContainer = (ViewGroup)findViewById(R.id.main_screen_container);
+        mainScreenView = new MainScreenView(this); //, currentProject);
+        mainScreenView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN){
+                    if(motionEvent.getY() < 0.3f * mainScreenView.getHeight()) {
+                        if(toolbar.getVisibility() == View.GONE)
+                            toolbar.setVisibility(View.VISIBLE);
+                        else
+                            toolbar.setVisibility(View.GONE);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
         mainScreenContainer.addView(mainScreenView, 0);
     }
 
@@ -94,23 +110,98 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.nav_new) {
+            OnFileNew();
+        } else if (id == R.id.nav_open) {
+            OnFileOpen();
+        } else if (id == R.id.nav_save) {
+            OnFileSave();
+        } else if (id == R.id.nav_save_as) {
+            OnFileSaveAs();
+        } else if (id == R.id.nav_close) {
+            OnFileClose();
+        } else if (id == R.id.nav_load_object) {
+            OnObjectLoad();
+        } else if (id == R.id.nav_save_object) {
+            OnObjectSave();
+        } else if (id == R.id.nav_copy_screen) {
+            OnViewCopy();
+        } else if (id == R.id.nav_copy_stack) {
+            OnStackCopy();
+        } else if (id == R.id.nav_paste_stack) {
+            OnStackPaste();
+        } else if (id == R.id.nav_reset_calculator) {
+            OnViewReset();
+        } else if (id == R.id.nav_backup_save) {
+            OnBackupSave();
+        } else if (id == R.id.nav_backup_restore) {
+            OnBackupRestore();
+        } else if (id == R.id.nav_backup_delete) {
+            OnBackupDelete();
+        } else if (id == R.id.nav_change_kml_script) {
+            OnViewScript();
+        } else if (id == R.id.nav_help) {
+            OnTopics();
+        } else if (id == R.id.nav_about) {
+            OnAbout();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void OnFileNew() {
+
+    }
+
+    private void OnFileOpen() {
+
+    }
+    private void OnFileSave() {
+
+    }
+    private void OnFileSaveAs() {
+
+    }
+    private void OnFileClose() {
+
+    }
+    private void OnObjectLoad() {
+
+    }
+    private void OnObjectSave() {
+
+    }
+    private void OnViewCopy() {
+
+    }
+    private void OnStackCopy() {
+
+    }
+    private void OnStackPaste() {
+
+    }
+    private void OnViewReset() {
+
+    }
+    private void OnBackupSave() {
+
+    }
+    private void OnBackupRestore() {
+
+    }
+    private void OnBackupDelete() {
+
+    }
+    private void OnViewScript() {
+
+    }
+    private void OnTopics() {
+
+    }
+    private void OnAbout() {
+
     }
 
     @Override

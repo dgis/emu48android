@@ -7,4 +7,9 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
+    <string name="nav_new">New...</string>
+    <string name="nav_open">Open...</string>
+    <string name="nav_save">Save</string>
+    <string name="nav_save_as">SaveAs...</string>
+    <string name="nav_close">Close</string>
 </resources>

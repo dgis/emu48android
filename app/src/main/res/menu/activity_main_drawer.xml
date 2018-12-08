@@ -5,34 +5,85 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/nav_new"
             android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:title="@string/nav_new" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_open"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:title="@string/nav_open" />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_save"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:title="@string/nav_save" />
         <item
-            android:id="@+id/nav_manage"
+            android:id="@+id/nav_save_as"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:title="@string/nav_save_as" />
+        <item
+            android:id="@+id/nav_close"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/nav_close" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Edit">
         <menu>
             <item
-                android:id="@+id/nav_share"
+                android:id="@+id/nav_load_object"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Load Object..." />
             <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:id="@+id/nav_save_object"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Save Object..." />
+            <item
+                android:id="@+id/nav_copy_screen"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Copy Screen" />
+            <item
+                android:id="@+id/nav_copy_stack"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Copy Stack" />
+            <item
+                android:id="@+id/nav_paste_stack"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Paste Stack" />
+            <item
+                android:id="@+id/nav_reset_calculator"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Reset Calculator" />
+            <item
+                android:id="@+id/nav_backup_save"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Save Backup" />
+            <item
+                android:id="@+id/nav_backup_restore"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Restore Backup" />
+            <item
+                android:id="@+id/nav_backup_delete"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Delete Backup" />
         </menu>
     </item>
-
+    <item android:title="View">
+        <menu>
+            <item
+                android:id="@+id/nav_change_kml_script"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Change KML Script..." />
+        </menu>
+    </item>
+    <item android:title="Help">
+        <menu>
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Help" />
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_menu_share"
+                android:title="About Emu48..." />
+        </menu>
+    </item>
 </menu>
