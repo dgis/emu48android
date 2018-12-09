@@ -239,8 +239,10 @@ public class MainScreenView extends SurfaceView {
 
     final int CALLBACK_TYPE_INVALIDATE = 0;
     final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
+    final int CALLBACK_TYPE_GETOPENFILENAME = 2;
+    final int CALLBACK_TYPE_GETSAVEFILENAME = 3;
 
-    int updateCallback(int type, int param1, int param2) {
+    int updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case CALLBACK_TYPE_INVALIDATE:
                 postInvalidate();
@@ -249,6 +251,10 @@ public class MainScreenView extends SurfaceView {
                 // New Bitmap size
                 bitmapMainScreen.reconfigure(/* x */ param1, /* y */ param2, Bitmap.Config.ARGB_8888);
                 bitmapMainScreen.eraseColor(Color.LTGRAY);
+                break;
+            case CALLBACK_TYPE_GETOPENFILENAME:
+                break;
+            case CALLBACK_TYPE_GETSAVEFILENAME:
                 break;
         }
         return -1;

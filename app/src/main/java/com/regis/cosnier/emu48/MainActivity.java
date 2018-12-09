@@ -152,56 +152,67 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void OnFileNew() {
+        NativeLib.onFileNew();
 
     }
 
     private void OnFileOpen() {
+        NativeLib.onFileOpen();
 
     }
     private void OnFileSave() {
-
+        NativeLib.onFileSave();
     }
     private void OnFileSaveAs() {
+        NativeLib.onFileSaveAs();
 
     }
     private void OnFileClose() {
+        NativeLib.onFileClose();
 
     }
     private void OnObjectLoad() {
+        NativeLib.onObjectLoad();
 
     }
     private void OnObjectSave() {
+        NativeLib.onObjectSave();
 
     }
     private void OnViewCopy() {
+        NativeLib.onViewCopy();
 
     }
     private void OnStackCopy() {
+        NativeLib.onStackCopy();
 
     }
     private void OnStackPaste() {
+        NativeLib.onStackPaste();
 
     }
     private void OnViewReset() {
+        NativeLib.onViewReset();
 
     }
     private void OnBackupSave() {
+        NativeLib.onBackupSave();
 
     }
     private void OnBackupRestore() {
+        NativeLib.onBackupRestore();
 
     }
     private void OnBackupDelete() {
+        NativeLib.onBackupDelete();
 
     }
     private void OnViewScript() {
-
+        //NativeLib.onViewScript();
     }
     private void OnTopics() {
-
     }
     private void OnAbout() {
-
     }
 
     @Override

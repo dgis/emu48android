@@ -20,7 +20,7 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 #define NEAR
 
 typedef unsigned long ULONG;
-typedef	unsigned long ulong;	// ushort is already in types.h
+//typedef	unsigned long ulong;	// ushort is already in types.h
 typedef short SHORT;
 typedef unsigned short USHORT;
 typedef uint64_t ULONGLONG;
@@ -709,7 +709,23 @@ extern BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase);
 #define GWL_STYLE           (-16)
 extern BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu);
 extern LONG GetWindowLong(HWND hWnd, int nIndex);
+#define MF_BYCOMMAND        0x00000000L
+#define MF_BYPOSITION       0x00000400L
+#define MF_SEPARATOR        0x00000800L
+#define MF_ENABLED          0x00000000L
+#define MF_GRAYED           0x00000001L
+#define MF_DISABLED         0x00000002L
+#define MF_UNCHECKED        0x00000000L
+#define MF_CHECKED          0x00000008L
+#define MF_STRING           0x00000000L
 extern HMENU GetMenu(HWND hWnd);
+extern int GetMenuItemCount(HMENU hMenu);
+extern UINT GetMenuItemID(HMENU hMenu, int nPos);
+extern HMENU GetSubMenu(HMENU hMenu, int nPos);
+extern int GetMenuString(HMENU hMenu, UINT uIDItem, LPTSTR lpString,int cchMax, UINT flags);
+extern BOOL DeleteMenu(HMENU hMenu, UINT uPosition, UINT uFlags);
+extern BOOL InsertMenu(HMENU hMenu, UINT uPosition, UINT uFlags, UINT_PTR uIDNewItem, LPCTSTR lpNewItem);
+
 #define HWND_TOP        ((HWND)0)
 #define HWND_BOTTOM     ((HWND)1)
 #define HWND_TOPMOST    ((HWND)-1)

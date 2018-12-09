@@ -1,90 +1,5 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:asp="http://schemas.android.com/apk/res-auto">
-
-
-    <!--
-    IDD_SET_GENERAL DIALOG DISCARDABLE  0, 0, 251, 134
-    STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
-    CAPTION "General"
-    FONT 8, "MS Sans Serif"
-    BEGIN
-    CONTROL         "Authentic Calculator Speed",IDC_REALSPEED,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,17,133,10
-    CONTROL         "Enable Virtual LCD Delay",IDC_GRAYSCALE,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,28,133,10
-    CONTROL         "Always On Top",IDC_ALWAYSONTOP,"Button",BS_AUTOCHECKBOX |
-    WS_TABSTOP,14,40,133,10
-    CONTROL         "Activation Follows Mouse",IDC_ACTFOLLOWSMOUSE,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,52,133,10
-    CONTROL         "Single Instance",IDC_SINGLEINSTANCE,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,64,133,10
-    CONTROL         "Automatically Save Files",IDC_AUTOSAVE,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,76,133,10
-    CONTROL         "Automatically Save Files On Exit",IDC_AUTOSAVEONEXIT,
-    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,88,133,10
-    CONTROL         "Show Load Object Warning",IDC_OBJECTLOADWARNING,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,100,133,10
-    CONTROL         "Always Show KML Compilation Result",IDC_ALWAYSDISPLOG,
-    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,112,133,10
-    GROUPBOX        "General",IDC_STATIC,7,7,148,120
-    CONTROL         "Show Title",IDC_SHOWTITLE,"Button",BS_AUTOCHECKBOX |
-    WS_TABSTOP,168,17,69,10
-    CONTROL         "Show Menu",IDC_SHOWMENU,"Button",BS_AUTOCHECKBOX |
-    WS_TABSTOP,168,28,69,10
-    GROUPBOX        "Style",IDC_STATIC,161,7,83,70
-    CONTROL         "HP Mnemonics",IDC_DISASM_HP,"Button",BS_AUTORADIOBUTTON |
-    WS_GROUP | WS_TABSTOP,168,94,69,11
-    CONTROL         "Class Mnemonics",IDC_DISASM_CLASS,"Button",
-    BS_AUTORADIOBUTTON,168,108,69,11
-    GROUPBOX        "Disassembler",IDC_STATIC,161,80,83,47
-    END
-
-    IDD_SET_MEMORY DIALOG DISCARDABLE  0, 0, 251, 134
-    STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
-    CAPTION "Memory"
-    FONT 8, "MS Sans Serif"
-    BEGIN
-    CONTROL         "Port 1 is Plugged",IDC_PORT1EN,"Button",BS_AUTOCHECKBOX |
-    WS_TABSTOP,14,20,67,10
-    CONTROL         "Port 1 is Writeable",IDC_PORT1WR,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,124,20,69,10
-    CONTROL         "Port 2 is Shared",IDC_PORT2ISSHARED,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,14,32,65,10
-    CONTROL         "Port 2 is Writeable",IDC_PORT2WR,"Button",
-    BS_AUTOCHECKBOX | WS_TABSTOP,124,32,69,10
-    LTEXT           "Port 2 File :",IDC_STATIC,14,47,37,8
-    EDITTEXT        IDC_PORT2,52,45,175,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_PORT2LOAD,227,45,10,12
-    GROUPBOX        "Memory Cards",IDC_STATIC,7,7,237,58
-    END
-
-    IDD_SET_PERIPHERAL DIALOG DISCARDABLE  0, 0, 251, 134
-    STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
-    CAPTION "Peripheral"
-    FONT 8, "MS Sans Serif"
-    BEGIN
-    LTEXT           "Volume",IDC_STATIC,14,21,24,8
-    CONTROL         "Slider1",IDC_SOUND_SLIDER,"msctls_trackbar32",
-    TBS_AUTOTICKS | WS_TABSTOP,44,16,193,18
-    LTEXT           "Device",IDC_STATIC,13,42,24,8
-    COMBOBOX        IDC_SOUND_DEVICE,44,40,193,87,CBS_DROPDOWNLIST |
-    WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Sound",IDC_STATIC,7,7,237,54
-    LTEXT           "IP Address:",IDC_STATIC,14,81,37,8
-    LTEXT           "Port:",IDC_STATIC,119,81,16,8
-    EDITTEXT        IDC_IR_ADDR,14,91,101,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_IR_PORT,119,91,28,12,ES_NUMBER
-    GROUPBOX        "Infrared Printer",IDC_STATIC,7,64,147,50
-    LTEXT           "Wire:",IDC_STATIC,168,79,17,8
-    COMBOBOX        IDC_WIRE,189,77,48,42,CBS_DROPDOWNLIST | WS_VSCROLL |
-    WS_TABSTOP
-    LTEXT           "IR:",IDC_STATIC,168,95,9,8
-    COMBOBOX        IDC_IR,189,93,48,43,CBS_DROPDOWNLIST | WS_VSCROLL |
-    WS_TABSTOP
-    GROUPBOX        "Serial Ports",IDC_STATIC,161,64,83,50
-    END
-    -->
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!--<ListPreference-->
         <!--android:key="settings_input"-->
@@ -144,19 +59,14 @@
         <!--android:max="1000"-->
         <!--/>-->
 
-    <SwitchPreference
-        android:key="settings_frequency_logarithmic_scale"
-        android:title="settings_frequency_logarithmic_scale_title"
-        android:defaultValue="true" />
-
-    <com.regis.cosnier.emu48.SeekBarPreference
-        android:key="settings_tempo"
-        android:title="settings_tempo_title"
-        android:dialogMessage="settings_tempo_title"
-        android:defaultValue="96"
-        app:min="20"
-        android:max="200"
-        />
+    <!--<com.regis.cosnier.emu48.SeekBarPreference-->
+        <!--android:key="settings_tempo"-->
+        <!--android:title="settings_tempo_title"-->
+        <!--android:dialogMessage="settings_tempo_title"-->
+        <!--android:defaultValue="96"-->
+        <!--app:min="20"-->
+        <!--android:max="200"-->
+        <!--/>-->
 
     <!--<com.regis.cosnier.emu48.SeekBarPreference-->
         <!--android:key="settings_intensity_minimum"-->
@@ -175,5 +85,94 @@
         <!--app:min="-60"-->
         <!--android:max="60"-->
         <!--/>-->
+    <!-- General -->
+        <PreferenceCategory app:title="General">
+            <SwitchPreference
+                android:key="settings_realspeed"
+                android:title="Authentic Calculator Speed"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_grayscale"
+                android:title="Enable Virtual LCD Delay"
+                android:defaultValue="false" />
+            <!--<SwitchPreference-->
+                <!--android:key="settings_alwaysontop"-->
+                <!--android:title="Always On Top"-->
+                <!--android:defaultValue="false" />-->
+            <!--<SwitchPreference-->
+                <!--android:key="settings_actfollowsmouse"-->
+                <!--android:title="Activation Follows Mouse"-->
+                <!--android:defaultValue="false" />-->
+            <!--<SwitchPreference-->
+                <!--android:key="settings_singleinstance"-->
+                <!--android:title="Single Instance"-->
+                <!--android:defaultValue="false" />-->
+            <SwitchPreference
+                android:key="settings_autosave"
+                android:title="Automatically Save Files"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_autosaveonexit"
+                android:title="Automatically Save Files On Exit"
+                android:defaultValue="true" />
+            <SwitchPreference
+                android:key="settings_objectloadwarning"
+                android:title="Show Load Object Warning"
+                android:defaultValue="true" />
+            <SwitchPreference
+                android:key="settings_alwaysdisplog"
+                android:title="Always Show KML Compilation Result"
+                android:defaultValue="false" />
+        </PreferenceCategory>
+        <!--<PreferenceCategory app:title="Style">
+            "Show Title",IDC_SHOWTITLE
+            "Show Menu",IDC_SHOWMENU
+        </PreferenceCategory>-->
+        <!--<PreferenceCategory app:title="Disassembler">
+            "HP Mnemonics",IDC_DISASM_HP
+            "Class Mnemonics",IDC_DISASM_CLASS
+        </PreferenceCategory>-->
+
+    <!-- Memory -->
+        <PreferenceCategory app:title="Memory Cards">
+            <SwitchPreference
+                android:key="settings_port1en"
+                android:title="Port 1 is Plugged"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_port1wr"
+                android:title="Port 1 is Writeable"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_port2isshared"
+                android:title="Port 2 is Shared"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_port2wr"
+                android:title="Port 2 is Writeable"
+                android:defaultValue="false" />
+            <!--"Port 2 File :",IDC_STATIC,14,47,37,8-->
+            <!--"...",IDC_PORT2LOAD,227,45,10,12-->
+        </PreferenceCategory>
+
+    <!-- Peripheral -->
+        <!--<PreferenceCategory app:title="Sound">-->
+            <!--"Volume",IDC_STATIC,14,21,24,8-->
+            <!--"Slider1",IDC_SOUND_SLIDER,"msctls_trackbar32",-->
+            <!--"Device",IDC_STATIC,13,42,24,8-->
+            <!--COMBOBOX        IDC_SOUND_DEVICE,44,40,193,87,CBS_DROPDOWNLIST |-->
+        <!--</PreferenceCategory>-->
+        <!--<PreferenceCategory app:title="Infrared Printer">
+            "IP Address:",IDC_STATIC
+            "Port:",IDC_STATIC
+            IDC_IR_ADDR
+            IDC_IR_PORT
+        </PreferenceCategory>-->
+        <!--<PreferenceCategory app:title="Serial Ports">
+            "Wire:",IDC_STATIC
+            COMBOBOX        IDC_WIRE
+            "IR:",IDC_STATIC
+            COMBOBOX        IDC_IR
+        </PreferenceCategory>-->
 
 </PreferenceScreen>

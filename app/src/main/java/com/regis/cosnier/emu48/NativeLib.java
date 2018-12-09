@@ -18,4 +18,19 @@ public class NativeLib {
     public static native void buttonUp(int x, int y);
     public static native void keyDown(int virtKey);
     public static native void keyUp(int virtKey);
+
+    public static native void onFileNew();
+    public static native void onFileOpen();
+    public static native void onFileSave();
+    public static native void onFileSaveAs();
+    public static native void onFileClose();
+    public static native void onObjectLoad();
+    public static native void onObjectSave();
+    public static native void onViewCopy();
+    public static native void onStackCopy();
+    public static native void onStackPaste();
+    public static native void onViewReset();
+    public static native void onBackupSave();
+    public static native void onBackupRestore();
+    public static native void onBackupDelete();
 }

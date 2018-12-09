@@ -579,12 +579,10 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
 }
 
 BOOL GetOpenFileName(LPOPENFILENAME openFilename) {
-    //TODO
-    return FALSE;
+    return mainViewGetOpenFileNameCallback(openFilename);
 }
 BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
-    //TODO
-    return FALSE;
+    return mainViewGetSaveFileNameCallback(openFilename);
 }
 
 HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT fuLoad) {
@@ -673,6 +671,13 @@ BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) { return 0; }
 BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu) { return 0; }
 LONG GetWindowLong(HWND hWnd, int nIndex) { return 0; }
 HMENU GetMenu(HWND hWnd) { return NULL; }
+int GetMenuItemCount(HMENU hMenu) { return 0; }
+UINT GetMenuItemID(HMENU hMenu, int nPos) { return 0; }
+HMENU GetSubMenu(HMENU hMenu, int nPos) { return NULL; }
+int GetMenuString(HMENU hMenu, UINT uIDItem, LPTSTR lpString,int cchMax, UINT flags) { return 0; }
+BOOL DeleteMenu(HMENU hMenu, UINT uPosition, UINT uFlags) { return FALSE; }
+BOOL InsertMenu(HMENU hMenu, UINT uPosition, UINT uFlags, UINT_PTR uIDNewItem, LPCTSTR lpNewItem) { return FALSE; }
+
 BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags) { return 0; }
 BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
 BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) { return 0; }

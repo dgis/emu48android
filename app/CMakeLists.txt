@@ -39,7 +39,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/lodepng.c
         src/main/cpp/lowbat.c
         src/main/cpp/mops.c
-#        src/main/cpp/mru.c
+        src/main/cpp/mru.c
         src/main/cpp/opcodes.c
         src/main/cpp/pch.c
 #        src/main/cpp/redeye.c

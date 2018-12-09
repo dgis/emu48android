@@ -24,13 +24,15 @@
 //#include <conio.h>
 //#include <crtdbg.h>
 
+#include "win32-layer.h"
 #include <android/log.h>
 #define LOG_TAG "NDK_NativeEmu48"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 extern void mainViewUpdateCallback();
 extern void mainViewResizeCallback(int x, int y);
-#include "win32-layer.h"
+extern int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn);
+extern int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn);
 
 
 #if !defined VERIFY

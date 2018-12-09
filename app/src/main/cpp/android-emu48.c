@@ -749,31 +749,31 @@ static INT_PTR CALLBACK SettingsPeripheralProc(HWND hDlg, UINT uMsg, WPARAM wPar
 //
 static UINT SaveChanges(BOOL bAuto)
 {
-//	UINT uReply;
-//
-//	if (bDocumentAvail == FALSE) return IDNO;
-//
-//	if (bAuto)
-//		uReply = IDYES;
-//	else
-//	{
-//		UINT uStyle = bSaveDefConfirm ? 0 : MB_DEFBUTTON2;
-//		uReply = YesNoCancelMessage(_T("Do you want to save changes?"),uStyle);
-//	}
-//
-//	if (uReply != IDYES) return uReply;
-//
-//	if (szCurrentFilename[0] == 0)
-//	{ // Save As...
-//		if (GetSaveAsFilename())
-//		{
-//			if (SaveDocumentAs(szBufferFilename))
-//				return IDYES;
-//			else
-//				return IDCANCEL;
-//		}
-//		return IDNO;
-//	}
+	UINT uReply;
+
+	if (bDocumentAvail == FALSE) return IDNO;
+
+	if (bAuto)
+		uReply = IDYES;
+	else
+	{
+		UINT uStyle = bSaveDefConfirm ? 0 : MB_DEFBUTTON2;
+		uReply = YesNoCancelMessage(_T("Do you want to save changes?"),uStyle);
+	}
+
+	if (uReply != IDYES) return uReply;
+
+	if (szCurrentFilename[0] == 0)
+	{ // Save As...
+		if (GetSaveAsFilename())
+		{
+			if (SaveDocumentAs(szBufferFilename))
+				return IDYES;
+			else
+				return IDCANCEL;
+		}
+		return IDNO;
+	}
 
 	SaveDocument();
 	return IDYES;
@@ -1016,7 +1016,7 @@ static LRESULT OnDropFiles(HDROP hFilesInfo)
 //
 // ID_FILE_NEW
 //
-static LRESULT OnFileNew(VOID)
+/*static*/ LRESULT OnFileNew(VOID)
 {
 	if (bDocumentAvail)
 	{
@@ -1033,7 +1033,7 @@ cancel:
 //
 // ID_FILE_OPEN
 //
-static LRESULT OnFileOpen(VOID)
+/*static*/ LRESULT OnFileOpen(VOID)
 {
 	if (bDocumentAvail)
 	{
@@ -1084,7 +1084,7 @@ cancel:
 //
 // ID_FILE_SAVE
 //
-static LRESULT OnFileSave(VOID)
+/*static*/ LRESULT OnFileSave(VOID)
 {
 	if (bDocumentAvail)
 	{
@@ -1098,7 +1098,7 @@ static LRESULT OnFileSave(VOID)
 //
 // ID_FILE_SAVEAS
 //
-static LRESULT OnFileSaveAs(VOID)
+/*static*/ LRESULT OnFileSaveAs(VOID)
 {
 	if (bDocumentAvail)
 	{
@@ -1116,7 +1116,7 @@ static LRESULT OnFileSaveAs(VOID)
 //
 // ID_FILE_CLOSE
 //
-static LRESULT OnFileClose(VOID)
+/*static*/ LRESULT OnFileClose(VOID)
 {
 	if (bDocumentAvail)
 	{
@@ -1139,7 +1139,7 @@ static LRESULT OnFileClose(VOID)
 //
 // WM_SYS_CLOSE
 //
-static LRESULT OnFileExit(VOID)
+/*static*/ LRESULT OnFileExit(VOID)
 {
 	SwitchToState(SM_INVALID);				// hold emulation thread
 	if (SaveChanges(bAutoSaveOnExit) == IDCANCEL)
@@ -1154,7 +1154,7 @@ static LRESULT OnFileExit(VOID)
 //
 // ID_VIEW_COPY
 //
-static LRESULT OnViewCopy(VOID)
+/*static*/ LRESULT OnViewCopy(VOID)
 {
 //	if (OpenClipboard(hWnd))
 //	{
@@ -1273,7 +1273,7 @@ static LRESULT OnViewCopy(VOID)
 //
 // ID_VIEW_RESET
 //
-static LRESULT OnViewReset(VOID)
+/*static*/ LRESULT OnViewReset(VOID)
 {
 	if (nState != SM_RUN) return 0;
 	if (YesNoMessage(_T("Are you sure you want to press the Reset Button?"))==IDYES)
@@ -1370,7 +1370,7 @@ static LRESULT OnViewSettings(VOID)
 //
 // ID_VIEW_SCRIPT
 //
-static LRESULT OnViewScript(VOID)
+/*static*/ LRESULT OnViewScript(VOID)
 {
 //	TCHAR szKmlFile[MAX_PATH];
 //	BOOL  bKMLChanged,bSucc;
@@ -1441,7 +1441,7 @@ static LRESULT OnViewScript(VOID)
 //
 // ID_BACKUP_SAVE
 //
-static LRESULT OnBackupSave(VOID)
+/*static*/ LRESULT OnBackupSave(VOID)
 {
 	UINT nOldState;
 	if (pbyRom == NULL) return 0;
@@ -1454,7 +1454,7 @@ static LRESULT OnBackupSave(VOID)
 //
 // ID_BACKUP_RESTORE
 //
-static LRESULT OnBackupRestore(VOID)
+/*static*/ LRESULT OnBackupRestore(VOID)
 {
 	SwitchToState(SM_INVALID);
 	RestoreBackup();
@@ -1465,7 +1465,7 @@ static LRESULT OnBackupRestore(VOID)
 //
 // ID_BACKUP_DELETE
 //
-static LRESULT OnBackupDelete(VOID)
+/*static*/ LRESULT OnBackupDelete(VOID)
 {
 	ResetBackup();
 	return 0;
@@ -1474,7 +1474,7 @@ static LRESULT OnBackupDelete(VOID)
 //
 // ID_OBJECT_LOAD
 //
-static LRESULT OnObjectLoad(VOID)
+/*static*/ LRESULT OnObjectLoad(VOID)
 {
 	SuspendDebugger();						// suspend debugger
 	bDbgAutoStateCtrl = FALSE;				// disable automatic debugger state control
@@ -1553,7 +1553,7 @@ cancel:
 //
 // ID_OBJECT_SAVE
 //
-static LRESULT OnObjectSave(VOID)
+/*static*/ LRESULT OnObjectSave(VOID)
 {
 	if (nState != SM_RUN)
 	{

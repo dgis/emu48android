@@ -109,6 +109,26 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sharedPreferences.getInt(preference.getKey(), 0));
     }
 
+    /**
+     * Binds a preference's summary to its value. More specifically, when the
+     * preference's value is changed, its summary (line of text below the
+     * preference title) is updated to reflect the value. The summary is also
+     * immediately updated upon calling this method. The exact display format is
+     * dependent on the type of preference.
+     *
+     * @see #sBindPreferenceSummaryToValueListener
+     */
+    private static void bindPreferenceSummaryToBoolValue(Preference preference) {
+        // Set the listener to watch for value changes.
+        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(preference.getContext());
+
+        // Trigger the listener immediately with the preference's
+        // current value.
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sharedPreferences.getBoolean(preference.getKey(), false));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -182,12 +202,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // guidelines.
 //            bindPreferenceSummaryToStringValue(findPreference("settings_input"));
 //            bindPreferenceSummaryToIntValue(findPreference("settings_audio_input"));
-//            bindPreferenceSummaryToStringValue(findPreference("settings_sample_rate"));
-//            bindPreferenceSummaryToStringValue(findPreference("settings_fft_size"));
-//            bindPreferenceSummaryToIntValue(findPreference("settings_volume_scale"));
-            bindPreferenceSummaryToIntValue(findPreference("settings_tempo"));
-//            bindPreferenceSummaryToIntValue(findPreference("settings_intensity_minimum"));
-//            bindPreferenceSummaryToIntValue(findPreference("settings_translation"));
+
+            bindPreferenceSummaryToBoolValue(findPreference("settings_realspeed"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_grayscale"));
+//            bindPreferenceSummaryToBoolValue(findPreference("settings_alwaysontop"));
+//            bindPreferenceSummaryToBoolValue(findPreference("settings_actfollowsmouse"));
+//            bindPreferenceSummaryToBoolValue(findPreference("settings_singleinstance"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_autosave"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_autosaveonexit"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_objectloadwarning"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_alwaysdisplog"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_port1en"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_port1wr"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_port2isshared"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_port2wr"));
+
         }
 
         @Override
