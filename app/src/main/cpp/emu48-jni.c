@@ -8,6 +8,7 @@
 #include <android/bitmap.h>
 
 #include "core/pch.h"
+#include "core/Emu48.h"
 
 extern void emu48Start();
 extern AAssetManager * assetManager;
@@ -23,16 +24,16 @@ extern void buttonUp(int x, int y);
 extern void keyDown(int virtKey);
 extern void keyUp(int virtKey);
 
-extern void OnFileNew();
-extern void OnFileOpen();
-extern void OnFileSave();
-extern void OnFileSaveAs();
-extern void OnFileClose();
+//extern void OnFileNew();
+//extern void OnFileOpen();
+//extern void OnFileSave();
+//extern void OnFileSaveAs();
+//extern void OnFileClose();
 extern void OnObjectLoad();
 extern void OnObjectSave();
 extern void OnViewCopy();
-extern void OnStackCopy();
-extern void OnStackPaste();
+//extern void OnStackCopy();
+//extern void OnStackPaste();
 extern void OnViewReset();
 extern void OnBackupSave();
 extern void OnBackupRestore();
@@ -204,21 +205,89 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env,
     keyUp(virtKey);
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz) {
-    OnFileNew();
+
+
+JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
+    jstring result = (*env)->NewStringUTF(env, szBufferFilename);
+    return result;
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz) {
-    OnFileOpen();
+//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
+//    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
+//    _tcscpy(szBufferFilename, newFilenameUTF8);
+//    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
+//}
+
+
+
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz) {
+    //OnFileNew();
+    if (bDocumentAvail)
+    {
+        SwitchToState(SM_INVALID);
+        if(bAutoSave) {
+            SaveDocument();
+        }
+    }
+    if (NewDocument()) SetWindowTitle(_T("Untitled"));
+
+    if (pbyRom) SwitchToState(SM_RUN);
+}
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring filename) {
+    //OnFileOpen();
+    if (bDocumentAvail)
+    {
+        SwitchToState(SM_INVALID);
+        if(bAutoSave) {
+            SaveDocument();
+        }
+    }
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
+    _tcscpy(szBufferFilename, filenameUTF8);
+    if (OpenDocument(szBufferFilename))
+        MruAdd(szBufferFilename);
+    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+
+    if (pbyRom) SwitchToState(SM_RUN);
 }
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
-    OnFileSave();
+    // szBufferFilename must be set before calling that!!!
+    //OnFileSave();
+    if (bDocumentAvail)
+    {
+        SwitchToState(SM_INVALID);
+        SaveDocument();
+        SwitchToState(SM_RUN);
+    }
+
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz) {
-    OnFileSaveAs();
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newFilename) {
+    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
+
+    if (bDocumentAvail)
+    {
+        SwitchToState(SM_INVALID);
+        _tcscpy(szBufferFilename, newFilenameUTF8);
+        if (SaveDocumentAs(szBufferFilename))
+            MruAdd(szCurrentFilename);
+        else {
+            // ERROR !!!!!!!!!
+        }
+        SwitchToState(SM_RUN);
+    }
+
+    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
-    OnFileClose();
+    //OnFileClose();
+    if (bDocumentAvail)
+    {
+        SwitchToState(SM_INVALID);
+        if(bAutoSave)
+            SaveDocument();
+        ResetDocument();
+        SetWindowTitle(NULL);
+    }
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz) {

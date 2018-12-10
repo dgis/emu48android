@@ -19,10 +19,13 @@ public class NativeLib {
     public static native void keyDown(int virtKey);
     public static native void keyUp(int virtKey);
 
+
+    public static native String getCurrentFilename();
+
     public static native void onFileNew();
-    public static native void onFileOpen();
+    public static native void onFileOpen(String filename);
     public static native void onFileSave();
-    public static native void onFileSaveAs();
+    public static native void onFileSaveAs(String newFilename);
     public static native void onFileClose();
     public static native void onObjectLoad();
     public static native void onObjectSave();

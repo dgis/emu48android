@@ -165,16 +165,28 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public static int INTENT_GETOPENFILENAME = 1;
+    public static int INTENT_GETSAVEFILENAME = 2;
+
     private void OnFileOpen() {
-        NativeLib.onFileOpen();
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48"); //not needed, but maybe usefull
+        startActivityForResult(intent, INTENT_GETOPENFILENAME);
 
     }
     private void OnFileSave() {
         NativeLib.onFileSave();
     }
     private void OnFileSaveAs() {
-        NativeLib.onFileSaveAs();
-
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48"); //not needed, but maybe usefull
+        startActivityForResult(intent, INTENT_GETSAVEFILENAME);
     }
     private void OnFileClose() {
         NativeLib.onFileClose();
@@ -234,21 +246,40 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == MainScreenView.INTENT_GETSAVEFILENAME && resultCode == Activity.RESULT_OK) {
-            Uri uri = data.getData();
+        if(resultCode == Activity.RESULT_OK) {
 
-            //just as an example, I am writing a String to the Uri I received from the user:
-            Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
+            if(requestCode == INTENT_GETOPENFILENAME) {
+                Uri uri = data.getData();
 
-//            try {
-//                OutputStream output = getContentResolver().openOutputStream(uri);
-//
-//                output.write(SOME_CONTENT.getBytes());
-//                output.close();
-//            }
-//            catch(IOException e) {
-//                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-//            }
+                //just as an example, I am writing a String to the Uri I received from the user:
+                Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + uri.toString());
+                NativeLib.onFileOpen(uri.toString());
+
+                //            try {
+                //                OutputStream output = getContentResolver().openOutputStream(uri);
+                //
+                //                output.write(SOME_CONTENT.getBytes());
+                //                output.close();
+                //            }
+                //            catch(IOException e) {
+                //                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+                //            }
+            } else if(requestCode == INTENT_GETSAVEFILENAME) {
+                Uri uri = data.getData();
+
+                //just as an example, I am writing a String to the Uri I received from the user:
+                Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
+                NativeLib.onFileSaveAs(uri.toString());
+                //            try {
+                //                OutputStream output = getContentResolver().openOutputStream(uri);
+                //
+                //                output.write(SOME_CONTENT.getBytes());
+                //                output.close();
+                //            }
+                //            catch(IOException e) {
+                //                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+                //            }
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
