@@ -1,13 +1,17 @@
 package com.regis.cosnier.emu48;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -17,11 +21,16 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int INTENT_SETTINGS = 1;
+    private static final String TAG = "MainActivity";
     private MainScreenView mainScreenView;
 
     @Override
@@ -221,5 +230,26 @@ public class MainActivity extends AppCompatActivity
         NativeLib.stop();
 
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode == MainScreenView.INTENT_GETSAVEFILENAME && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+
+            //just as an example, I am writing a String to the Uri I received from the user:
+            Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
+
+//            try {
+//                OutputStream output = getContentResolver().openOutputStream(uri);
+//
+//                output.write(SOME_CONTENT.getBytes());
+//                output.close();
+//            }
+//            catch(IOException e) {
+//                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+//            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

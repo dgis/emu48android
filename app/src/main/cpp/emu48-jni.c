@@ -69,17 +69,32 @@ void mainViewResizeCallback(int x, int y) {
     }
 }
 
-void fillNullCharacter(const OPENFILENAME *ofn) {
-    TCHAR * pos = ofn->lpstrFilter;
+TCHAR * fillNullCharacter(TCHAR * fileFilter) {
+    TCHAR * pos = fileFilter;
+    int length = 0;
     if(pos) {
-        for (;;) {
+        for (;; pos++, length++) {
             if (*pos == 0) {
-                *pos = _T("|");
-                if (*(pos + 1) = 0)
+                if (*(pos + 1) == 0)
                     break;
             }
         }
+        TCHAR * newFileFilter = malloc(length + 1);
+        TCHAR * newPos = newFileFilter;
+        pos = fileFilter;
+        for (;; pos++, newPos++) {
+            if (*pos == 0) {
+                *newPos = _T('|');
+                if (*(pos + 1) == 0) {
+                    *(newPos + 1) = 0;
+                    break;
+                }
+            } else
+                *newPos = *pos;
+        }
+        return newFileFilter;
     }
+    return NULL;
 }
 
 int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn) {
@@ -101,13 +116,15 @@ int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn) {
 //
 //    ofn->nMaxFile = ARRAYSIZEOF(szBuffer);
 //    ofn->lpstrFile = szBuffer;
-    fillNullCharacter(ofn);
-    mainViewCallback(CALLBACK_TYPE_GETOPENFILENAME, ofn->nFilterIndex, ofn->Flags, ofn->lpstrFilter, ofn->lpstrDefExt);
+    TCHAR * lpstrFilter = fillNullCharacter(ofn->lpstrFilter);
+    mainViewCallback(CALLBACK_TYPE_GETOPENFILENAME, ofn->nFilterIndex, ofn->Flags, lpstrFilter, ofn->lpstrDefExt);
+    free(lpstrFilter);
 }
 
 int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn) {
-    fillNullCharacter(ofn);
-    mainViewCallback(CALLBACK_TYPE_GETSAVEFILENAME, ofn->nFilterIndex, ofn->Flags, ofn->lpstrFilter, ofn->lpstrDefExt);
+    TCHAR * lpstrFilter = fillNullCharacter(ofn->lpstrFilter);
+    mainViewCallback(CALLBACK_TYPE_GETSAVEFILENAME, ofn->nFilterIndex, ofn->Flags, lpstrFilter, ofn->lpstrDefExt);
+    free(lpstrFilter);
 }
 
 
@@ -129,7 +146,10 @@ int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, con
         jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
         //jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "()V");
         jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
-        int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, param3, param4);
+        jstring utfParam3 = (*jniEnv)->NewStringUTF(jniEnv, param3);
+        jstring utfParam4 = (*jniEnv)->NewStringUTF(jniEnv, param4);
+        int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
+
 //        if(needDetach)
 //            ret = (*java_machine)->DetachCurrentThread(java_machine);
         return result;
