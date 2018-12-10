@@ -1,11 +1,11 @@
-#include "pch.h"
+#include "core/pch.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
 #include <pthread.h>
 #include <android/bitmap.h>
-#include "resource.h"
+#include "core/resource.h"
 #include "win32-layer.h"
 
 extern JavaVM *java_machine;

@@ -3,6 +3,7 @@ package com.regis.cosnier.emu48;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -242,6 +243,7 @@ public class MainScreenView extends SurfaceView {
     final int CALLBACK_TYPE_GETOPENFILENAME = 2;
     final int CALLBACK_TYPE_GETSAVEFILENAME = 3;
 
+    final int INTENT_GETSAVEFILENAME = 1;
     int updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case CALLBACK_TYPE_INVALIDATE:
@@ -255,6 +257,11 @@ public class MainScreenView extends SurfaceView {
             case CALLBACK_TYPE_GETOPENFILENAME:
                 break;
             case CALLBACK_TYPE_GETSAVEFILENAME:
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
+                intent.putExtra(Intent.EXTRA_TITLE, "YOUR FILENAME"); //not needed, but maybe usefull
+                ((Activity)getContext()).startActivityForResult(intent, INTENT_GETSAVEFILENAME);
                 break;
         }
         return -1;

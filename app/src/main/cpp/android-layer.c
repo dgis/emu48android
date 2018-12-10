@@ -1,5 +1,5 @@
-#include "pch.h"
-#include "Emu48.h"
+#include "core/pch.h"
+#include "core/Emu48.h"
 
 // Redeye.c
 VOID IrPrinter(BYTE c) {

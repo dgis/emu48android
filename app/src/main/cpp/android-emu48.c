@@ -6,12 +6,12 @@
  *   Copyright (C) 1995 Sebastien Carlier
  *
  */
-#include "pch.h"
-#include "resource.h"
-#include "Emu48.h"
-#include "io.h"
-#include "kml.h"
-#include "debugger.h"
+#include "core/pch.h"
+#include "core/resource.h"
+#include "core/Emu48.h"
+#include "core/io.h"
+#include "core/kml.h"
+#include "core/debugger.h"
 #include "win32-layer.h"
 
 #define VERSION   "1.59+"

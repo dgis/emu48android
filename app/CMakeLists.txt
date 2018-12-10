@@ -17,41 +17,40 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        #src/main/cpp/native-lib.cpp
 
-        src/main/cpp/apple.c
-#        src/main/cpp/cursor.c
-#        src/main/cpp/ddeserv.c
-#        src/main/cpp/debugger.c
-        src/main/cpp/disasm.c
-        src/main/cpp/dismem.c
-        src/main/cpp/display.c
-        src/main/cpp/disrpl.c
-#        src/main/cpp/Emu48.c #-> To rewrite
-        src/main/cpp/engine.c
-        src/main/cpp/external.c
-        src/main/cpp/fetch.c
-        src/main/cpp/files.c
-        src/main/cpp/i28f160.c
-        src/main/cpp/keyboard.c
-        src/main/cpp/keymacro.c
-        src/main/cpp/kml.c
-        src/main/cpp/lodepng.c
-        src/main/cpp/lowbat.c
-        src/main/cpp/mops.c
-        src/main/cpp/mru.c
-        src/main/cpp/opcodes.c
-        src/main/cpp/pch.c
-#        src/main/cpp/redeye.c
-        src/main/cpp/rpl.c
-#        src/main/cpp/serial.c
-        src/main/cpp/settings.c
-#        src/main/cpp/sndenum.c
-#        src/main/cpp/sound.c # -> To rewrite
-        src/main/cpp/stack.c
-        src/main/cpp/symbfile.c
-        src/main/cpp/timer.c
-#        src/main/cpp/udp.c
+        src/main/cpp/core/apple.c
+#        src/main/cpp/core/cursor.c
+#        src/main/cpp/core/ddeserv.c
+#        src/main/cpp/core/debugger.c
+        src/main/cpp/core/disasm.c
+        src/main/cpp/core/dismem.c
+        src/main/cpp/core/display.c
+        src/main/cpp/core/disrpl.c
+#        src/main/cpp/core/Emu48.c #-> To rewrite
+        src/main/cpp/core/engine.c
+        src/main/cpp/core/external.c
+        src/main/cpp/core/fetch.c
+        src/main/cpp/core/files.c
+        src/main/cpp/core/i28f160.c
+        src/main/cpp/core/keyboard.c
+        src/main/cpp/core/keymacro.c
+        src/main/cpp/core/kml.c
+        src/main/cpp/core/lodepng.c
+        src/main/cpp/core/lowbat.c
+        src/main/cpp/core/mops.c
+        src/main/cpp/core/mru.c
+        src/main/cpp/core/opcodes.c
+        src/main/cpp/core/pch.c
+#        src/main/cpp/core/redeye.c
+        src/main/cpp/core/rpl.c
+#        src/main/cpp/core/serial.c
+        src/main/cpp/core/settings.c
+#        src/main/cpp/core/sndenum.c
+#        src/main/cpp/core/sound.c # -> To rewrite
+        src/main/cpp/core/stack.c
+        src/main/cpp/core/symbfile.c
+        src/main/cpp/core/timer.c
+#        src/main/cpp/core/udp.c
 
         src/main/cpp/win32-layer.c
         src/main/cpp/android-layer.c

@@ -7,7 +7,7 @@
 #include <android/asset_manager_jni.h>
 #include <android/bitmap.h>
 
-#include "pch.h"
+#include "core/pch.h"
 
 extern void emu48Start();
 extern AAssetManager * assetManager;

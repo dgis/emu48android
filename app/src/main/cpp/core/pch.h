@@ -24,7 +24,7 @@
 //#include <conio.h>
 //#include <crtdbg.h>
 
-#include "win32-layer.h"
+#include "../win32-layer.h"
 #include <android/log.h>
 #define LOG_TAG "NDK_NativeEmu48"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
