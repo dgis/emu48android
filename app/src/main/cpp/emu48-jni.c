@@ -13,6 +13,7 @@
 extern void emu48Start();
 extern AAssetManager * assetManager;
 static jobject viewToUpdate = NULL;
+static jobject mainActivity = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
 
@@ -40,12 +41,28 @@ extern void OnBackupRestore();
 extern void OnBackupDelete();
 
 
+JNIEnv *getJNIEnvironment();
 
 JavaVM *java_machine;
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     java_machine = vm;
     win32Init();
     return JNI_VERSION_1_6;
+}
+
+JNIEnv *getJNIEnvironment() {
+    JNIEnv * jniEnv;
+    jint ret;
+    BOOL needDetach = FALSE;
+    ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
+    if (ret == JNI_EDETACHED) {
+        // GetEnv: not attached
+        ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+        if (ret == JNI_OK) {
+            needDetach = TRUE;
+        }
+    }
+    return jniEnv;
 }
 
 enum CALLBACK_TYPE {
@@ -132,36 +149,33 @@ int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn) {
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, const TCHAR * param4) {
     if (viewToUpdate) {
-        JNIEnv * jniEnv;
-        jint ret;
-        BOOL needDetach = FALSE;
-        ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
-        if (ret == JNI_EDETACHED) {
-            // GetEnv: not attached
-            ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
-            if (ret == JNI_OK) {
-                needDetach = TRUE;
-            }
-        }
-
+        JNIEnv *jniEnv = getJNIEnvironment();
         jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
-        //jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "()V");
         jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
         jstring utfParam3 = (*jniEnv)->NewStringUTF(jniEnv, param3);
         jstring utfParam4 = (*jniEnv)->NewStringUTF(jniEnv, param4);
         int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
-
-//        if(needDetach)
-//            ret = (*java_machine)->DetachCurrentThread(java_machine);
+//      if(needDetach) ret = (*java_machine)->DetachCurrentThread(java_machine);
         return result;
     }
 }
 
+// Must be called in the main thread
+int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileFromContentResolver", "(Ljava/lang/String;I)I");
+    jstring utfUrl = (*jniEnv)->NewStringUTF(jniEnv, url);
+    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfUrl, writeAccess);
+    return result;
+}
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject view) {
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
-    viewToUpdate = (*env)->NewGlobalRef(env, view);
     bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
+    mainActivity = (*env)->NewGlobalRef(env, activity);
+    viewToUpdate = (*env)->NewGlobalRef(env, view);
+
 
     int ret = AndroidBitmap_getInfo(env, bitmapMainScreen, &androidBitmapInfo);
     if (ret < 0) {

@@ -36,7 +36,7 @@ public class MainScreenView extends SurfaceView {
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.LTGRAY);
-        NativeLib.start(mgr, bitmapMainScreen, this);
+        NativeLib.start(mgr, bitmapMainScreen, (MainActivity)context, this);
 
         vkmap = new HashMap<Integer, Integer>();
         vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK

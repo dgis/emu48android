@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -169,7 +171,7 @@ public class MainActivity extends AppCompatActivity
     public static int INTENT_GETSAVEFILENAME = 2;
 
     private void OnFileOpen() {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
         intent.setType("*/*");
@@ -269,7 +271,8 @@ public class MainActivity extends AppCompatActivity
 
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
-                NativeLib.onFileSaveAs(uri.toString());
+                String url = uri.toString();
+                NativeLib.onFileSaveAs(url);
                 //            try {
                 //                OutputStream output = getContentResolver().openOutputStream(uri);
                 //
@@ -282,5 +285,26 @@ public class MainActivity extends AppCompatActivity
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    final int GENERIC_READ   = 1;
+    final int GENERIC_WRITE  = 2;
+    int openFileFromContentResolver(String url, int writeAccess) {
+        //https://stackoverflow.com/a/31677287
+        Uri uri = Uri.parse(url);
+        ParcelFileDescriptor filePfd;
+        try {
+            String mode = "";
+            if((writeAccess & GENERIC_READ) == GENERIC_READ)
+                mode += "r";
+            if((writeAccess & GENERIC_WRITE) == GENERIC_WRITE)
+                mode += "w";
+            filePfd = getContentResolver().openFileDescriptor(uri, mode);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        int fd = filePfd != null ? filePfd.getFd() : 0;
+        return fd;
     }
 }

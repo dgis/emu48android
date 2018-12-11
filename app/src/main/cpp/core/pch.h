@@ -33,6 +33,7 @@ extern void mainViewUpdateCallback();
 extern void mainViewResizeCallback(int x, int y);
 extern int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn);
 extern int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn);
+extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
 
 
 #if !defined VERIFY

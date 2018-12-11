@@ -101,23 +101,27 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 flags |= O_CREAT;
         }
 
-        fd = open(lpFileName, flags, perm);
-        if (-1 != fd && 0 != dwShareMode) {
-            // Not specifiying shared write means non-shared (exclusive) write
-            if (0 == (dwShareMode & FILE_SHARE_WRITE))
-                lock.l_type = F_WRLCK;
-            else if (0 != (dwShareMode & FILE_SHARE_READ))
-                lock.l_type = F_RDLCK;
-
-            // Lock entire file
-            lock.l_len = lock.l_start = 0;
-            lock.l_whence = SEEK_SET;
-
-            if (-1 == fcntl(fd, F_SETLK, &lock) && (EACCES == errno || EAGAIN == errno)) {
-                close(fd);
-                return -1;
-            }
-        }
+        TCHAR * urlSchemeFound = _tcsstr(lpFileName, _T("://"));
+        if(urlSchemeFound)
+            fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
+        else
+            fd = open(lpFileName, flags, perm);
+//        if (-1 != fd && 0 != dwShareMode) {
+//            // Not specifiying shared write means non-shared (exclusive) write
+//            if (0 == (dwShareMode & FILE_SHARE_WRITE))
+//                lock.l_type = F_WRLCK;
+//            else if (0 != (dwShareMode & FILE_SHARE_READ))
+//                lock.l_type = F_RDLCK;
+//
+//            // Lock entire file
+//            lock.l_len = lock.l_start = 0;
+//            lock.l_whence = SEEK_SET;
+//
+//            if (-1 == fcntl(fd, F_SETLK, &lock) && (EACCES == errno || EAGAIN == errno)) {
+//                close(fd);
+//                return -1;
+//            }
+//        }
         if (fd != -1) {
             HANDLE handle = malloc(sizeof(_HANDLE));
             memset(handle, 0, sizeof(_HANDLE));
