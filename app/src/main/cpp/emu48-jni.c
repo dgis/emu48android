@@ -16,6 +16,7 @@ static jobject viewToUpdate = NULL;
 static jobject mainActivity = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
+TCHAR   szChosenCurrentKml[MAX_PATH];
 
 extern void win32Init();
 
@@ -67,9 +68,7 @@ JNIEnv *getJNIEnvironment() {
 
 enum CALLBACK_TYPE {
     CALLBACK_TYPE_INVALIDATE = 0,
-    CALLBACK_TYPE_WINDOW_RESIZE = 1,
-    CALLBACK_TYPE_GETOPENFILENAME = 2,
-    CALLBACK_TYPE_GETSAVEFILENAME = 3
+    CALLBACK_TYPE_WINDOW_RESIZE = 1
 };
 
 void mainViewUpdateCallback() {
@@ -86,65 +85,6 @@ void mainViewResizeCallback(int x, int y) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
     }
 }
-
-TCHAR * fillNullCharacter(TCHAR * fileFilter) {
-    TCHAR * pos = fileFilter;
-    int length = 0;
-    if(pos) {
-        for (;; pos++, length++) {
-            if (*pos == 0) {
-                if (*(pos + 1) == 0)
-                    break;
-            }
-        }
-        TCHAR * newFileFilter = malloc(length + 1);
-        TCHAR * newPos = newFileFilter;
-        pos = fileFilter;
-        for (;; pos++, newPos++) {
-            if (*pos == 0) {
-                *newPos = _T('|');
-                if (*(pos + 1) == 0) {
-                    *(newPos + 1) = 0;
-                    break;
-                }
-            } else
-                *newPos = *pos;
-        }
-        return newFileFilter;
-    }
-    return NULL;
-}
-
-int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn) {
-    //https://stackoverflow.com/a/53031083
-    //https://developer.android.com/guide/topics/providers/document-provider
-
-//    ofn->lpstrFilter =
-//            _T("Emu48 Files (*.e38;*.e39;*.e48;*.e49)\0")
-//            _T("*.e38;*.e39;*.e48;*.e49\0")
-//            _T("HP-38 Files (*.e38)\0*.e38\0")
-//            _T("HP-39 Files (*.e39)\0*.e39\0")
-//            _T("HP-48 Files (*.e48)\0*.e48\0")
-//            _T("HP-49 Files (*.e49)\0*.e49\0")
-//            _T("Win48 Files (*.w48)\0*.w48\0");
-//    ofn->nFilterIndex = 1;
-//    ofn->lpstrDefExt = _T("e48");			// HP48SX/GX
-//    ofn->Flags |= OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST;
-//
-//
-//    ofn->nMaxFile = ARRAYSIZEOF(szBuffer);
-//    ofn->lpstrFile = szBuffer;
-    TCHAR * lpstrFilter = fillNullCharacter(ofn->lpstrFilter);
-    mainViewCallback(CALLBACK_TYPE_GETOPENFILENAME, ofn->nFilterIndex, ofn->Flags, lpstrFilter, ofn->lpstrDefExt);
-    free(lpstrFilter);
-}
-
-int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn) {
-    TCHAR * lpstrFilter = fillNullCharacter(ofn->lpstrFilter);
-    mainViewCallback(CALLBACK_TYPE_GETSAVEFILENAME, ofn->nFilterIndex, ofn->Flags, lpstrFilter, ofn->lpstrDefExt);
-    free(lpstrFilter);
-}
-
 
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, const TCHAR * param4) {
@@ -171,6 +111,8 @@ int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
+
+    szChosenCurrentKml[0] = '\0';
 
     bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
     mainActivity = (*env)->NewGlobalRef(env, activity);
@@ -199,9 +141,9 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
 }
 
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
-
-}
+//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
+//
+//}
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_draw(JNIEnv *env, jobject thisz) {
     draw();
@@ -221,19 +163,21 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env,
 
 
 
-JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
-    jstring result = (*env)->NewStringUTF(env, szBufferFilename);
-    return result;
-}
+//JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
+//    jstring result = (*env)->NewStringUTF(env, szBufferFilename);
+//    return result;
+//}
 //JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
 //    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
 //    _tcscpy(szBufferFilename, newFilenameUTF8);
 //    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
 //}
 
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
+    return cCurrentRomType;
+}
 
-
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     //OnFileNew();
     if (bDocumentAvail)
     {
@@ -242,11 +186,19 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *
             SaveDocument();
         }
     }
+
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
+    _tcscpy(szChosenCurrentKml, filenameUTF8);
+
     if (NewDocument()) SetWindowTitle(_T("Untitled"));
+
+    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+    draw();
+    if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
 
     if (pbyRom) SwitchToState(SM_RUN);
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring filename) {
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
     //OnFileOpen();
     if (bDocumentAvail)
     {
@@ -255,13 +207,14 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv 
             SaveDocument();
         }
     }
-    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
-    _tcscpy(szBufferFilename, filenameUTF8);
+    const char *stateFilenameUTF8 = (*env)->GetStringUTFChars(env, stateFilename , NULL) ;
+    _tcscpy(szBufferFilename, stateFilenameUTF8);
     if (OpenDocument(szBufferFilename))
         MruAdd(szBufferFilename);
-    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
-
+    mainViewResizeCallback(nBackgroundW, nBackgroundH);
     if (pbyRom) SwitchToState(SM_RUN);
+    draw();
+    (*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
 }
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
     // szBufferFilename must be set before calling that!!!
@@ -274,13 +227,13 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv 
     }
 
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newFilename) {
-    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newStateFilename) {
+    const char *newStateFilenameUTF8 = (*env)->GetStringUTFChars(env, newStateFilename , NULL) ;
 
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
-        _tcscpy(szBufferFilename, newFilenameUTF8);
+        _tcscpy(szBufferFilename, newStateFilenameUTF8);
         if (SaveDocumentAs(szBufferFilename))
             MruAdd(szCurrentFilename);
         else {
@@ -289,7 +242,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEn
         SwitchToState(SM_RUN);
     }
 
-    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, newStateFilename, newStateFilenameUTF8);
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
@@ -301,6 +254,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv
             SaveDocument();
         ResetDocument();
         SetWindowTitle(NULL);
+        mainViewResizeCallback(nBackgroundW, nBackgroundH);
+        draw();
     }
 }
 

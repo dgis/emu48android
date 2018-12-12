@@ -1372,69 +1372,69 @@ static LRESULT OnViewSettings(VOID)
 //
 /*static*/ LRESULT OnViewScript(VOID)
 {
-//	TCHAR szKmlFile[MAX_PATH];
-//	BOOL  bKMLChanged,bSucc;
-//
-//	BYTE cType = cCurrentRomType;
-//	if (nState != SM_RUN)
-//	{
-//		InfoMessage(_T("You cannot change the KML script when Emu48 is not running.\n")
-//					_T("Use the File,New menu item to create a new calculator."));
-//		return 0;
-//	}
-//	SwitchToState(SM_INVALID);
-//
-//	// make a copy of the current KML script file name
-//	_ASSERT(sizeof(szKmlFile) == sizeof(szCurrentKml));
-//	lstrcpyn(szKmlFile,szCurrentKml,ARRAYSIZEOF(szKmlFile));
-//
-//	bKMLChanged = FALSE;					// KML script not changed
-//	bSucc = TRUE;							// KML script successful loaded
-//
-//	do
-//	{
-//		if (!DisplayChooseKml(cType))		// quit with Cancel
-//		{
-//			if (!bKMLChanged)				// KML script not changed
-//				break;						// exit loop with current loaded KML script
-//
-//			// restore KML script file name
-//			lstrcpyn(szCurrentKml,szKmlFile,ARRAYSIZEOF(szCurrentKml));
-//
-//			// try to restore old KML script
-//			if ((bSucc = InitKML(szCurrentKml,FALSE)))
-//				break;						// exit loop with success
-//
-//			// restoring failed, save document
-//			if (IDCANCEL != SaveChanges(bAutoSave))
-//				break;						// exit loop with no success
-//
-//			_ASSERT(bSucc == FALSE);		// for continuing loop
-//		}
-//		else								// quit with Ok
-//		{
-//			bKMLChanged = TRUE;				// KML script changed
-//			bSucc = InitKML(szCurrentKml,FALSE);
-//		}
-//	}
-//	while (!bSucc);							// retry if KML script is invalid
-//
-//	if (bSucc)
-//	{
-//		if (Chipset.wRomCrc != wRomCrc)		// ROM changed
-//		{
-//			CpuReset();
-//			Chipset.Shutdn = FALSE;			// automatic restart
-//
-//			Chipset.wRomCrc = wRomCrc;		// update current ROM fingerprint
-//		}
-//		if (pbyRom) SwitchToState(SM_RUN);	// continue emulation
-//	}
-//	else
-//	{
-//		ResetDocument();					// close document
-//		SetWindowTitle(NULL);
-//	}
+	TCHAR szKmlFile[MAX_PATH];
+	BOOL  bKMLChanged,bSucc;
+
+	BYTE cType = cCurrentRomType;
+	if (nState != SM_RUN)
+	{
+		InfoMessage(_T("You cannot change the KML script when Emu48 is not running.\n")
+					_T("Use the File,New menu item to create a new calculator."));
+		return 0;
+	}
+	SwitchToState(SM_INVALID);
+
+	// make a copy of the current KML script file name
+	_ASSERT(sizeof(szKmlFile) == sizeof(szCurrentKml));
+	lstrcpyn(szKmlFile,szCurrentKml,ARRAYSIZEOF(szKmlFile));
+
+	bKMLChanged = FALSE;					// KML script not changed
+	bSucc = TRUE;							// KML script successful loaded
+
+	do
+	{
+		if (!DisplayChooseKml(cType))		// quit with Cancel
+		{
+			if (!bKMLChanged)				// KML script not changed
+				break;						// exit loop with current loaded KML script
+
+			// restore KML script file name
+			lstrcpyn(szCurrentKml,szKmlFile,ARRAYSIZEOF(szCurrentKml));
+
+			// try to restore old KML script
+			if ((bSucc = InitKML(szCurrentKml,FALSE)))
+				break;						// exit loop with success
+
+			// restoring failed, save document
+			if (IDCANCEL != SaveChanges(bAutoSave))
+				break;						// exit loop with no success
+
+			_ASSERT(bSucc == FALSE);		// for continuing loop
+		}
+		else								// quit with Ok
+		{
+			bKMLChanged = TRUE;				// KML script changed
+			bSucc = InitKML(szCurrentKml,FALSE);
+		}
+	}
+	while (!bSucc);							// retry if KML script is invalid
+
+	if (bSucc)
+	{
+		if (Chipset.wRomCrc != wRomCrc)		// ROM changed
+		{
+			CpuReset();
+			Chipset.Shutdn = FALSE;			// automatic restart
+
+			Chipset.wRomCrc = wRomCrc;		// update current ROM fingerprint
+		}
+		if (pbyRom) SwitchToState(SM_RUN);	// continue emulation
+	}
+	else
+	{
+		ResetDocument();					// close document
+		SetWindowTitle(NULL);
+	}
 	return 0;
 }
 
@@ -1710,31 +1710,31 @@ static INT_PTR CALLBACK Disasm(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 //
 static INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-//	switch (message)
-//	{
-//	case WM_INITDIALOG:
-//		SetDlgItemText(hDlg,IDC_VERSION,szNoTitle);
-//		SetDlgItemText(hDlg,IDC_LICENSE,szLicence);
-//		return TRUE;
-//	case WM_COMMAND:
-//		wParam = LOWORD(wParam);
-//		if ((wParam==IDOK)||(wParam==IDCANCEL))
-//		{
-//			EndDialog(hDlg, wParam);
-//			return TRUE;
-//		}
-//		break;
-//	}
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		SetDlgItemText(hDlg,IDC_VERSION,szNoTitle);
+		SetDlgItemText(hDlg,IDC_LICENSE,szLicence);
+		return TRUE;
+	case WM_COMMAND:
+		wParam = LOWORD(wParam);
+		if ((wParam==IDOK)||(wParam==IDCANCEL))
+		{
+			EndDialog(hDlg, wParam);
+			return TRUE;
+		}
+		break;
+	}
 	return FALSE;
 	UNREFERENCED_PARAMETER(lParam);
 }
 
 static LRESULT OnToolDisasm(VOID)			// disasm dialogbox call
 {
-//	if (pbyRom) SwitchToState(SM_SLEEP);
-//	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_DISASM), hWnd, (DLGPROC)Disasm) == -1)
-//		AbortMessage(_T("Disassembler Dialog Box Creation Error!"));
-//	if (pbyRom) SwitchToState(SM_RUN);
+	if (pbyRom) SwitchToState(SM_SLEEP);
+	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_DISASM), hWnd, (DLGPROC)Disasm) == -1)
+		AbortMessage(_T("Disassembler Dialog Box Creation Error!"));
+	if (pbyRom) SwitchToState(SM_RUN);
 	return 0;
 }
 
@@ -1746,8 +1746,8 @@ static LRESULT OnTopics(VOID)
 
 static LRESULT OnAbout(VOID)
 {
-//	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_ABOUT), hWnd, (DLGPROC)About) == -1)
-//		AbortMessage(_T("About Dialog Box Creation Error!"));
+	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_ABOUT), hWnd, (DLGPROC)About) == -1)
+		AbortMessage(_T("About Dialog Box Creation Error!"));
 	return 0;
 }
 
@@ -2249,16 +2249,16 @@ BOOL emu48Start()
 //	ShowWindow(hWnd,nCmdShow);				// show emulator menu
 
 	// no default document, ask for new one
-	if (NewDocument()) SetWindowTitle(_T("Untitled"));
-
-    mainViewResizeCallback(nBackgroundW, nBackgroundH);
-
-
-	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
-    OnPaint(NULL);
-//start:
-	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
-	if (pbyRom) SwitchToState(SM_RUN);
+//	if (NewDocument()) SetWindowTitle(_T("Untitled"));
+//
+//    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+//
+//
+//	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
+//    OnPaint(NULL);
+////start:
+//	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
+//	if (pbyRom) SwitchToState(SM_RUN);
 
 //	while (GetMessage(&msg, NULL, 0, 0))
 //	{
@@ -2306,12 +2306,6 @@ BOOL emu48Start()
 	UNREFERENCED_PARAMETER(hPrevInst);
 }
 
-
-
-//BOOL DisplayChooseKmlEx(CHAR cType)  {
-//	lstrcpy(szCurrentKml, "hello.kml");
-//    return TRUE;
-//}
 
 void draw() {
     OnPaint(NULL);

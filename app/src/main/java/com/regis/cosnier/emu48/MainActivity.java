@@ -1,7 +1,9 @@
 package com.regis.cosnier.emu48;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
@@ -14,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -24,9 +27,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -162,9 +174,103 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void OnFileNew() {
-        NativeLib.onFileNew();
+    class KMLScriptItem {
+        public String filename;
+        public String title;
+        public String model;
+    }
+    ArrayList<KMLScriptItem> kmlScripts;
 
+    private void OnFileNew() {
+        if(kmlScripts == null) {
+            kmlScripts = new ArrayList<>();
+            AssetManager assetManager = getAssets();
+            String[] calculatorsAssetFilenames = new String[0];
+            try {
+                calculatorsAssetFilenames = assetManager.list("calculators");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String cKmlType = null; //"S";
+            kmlScripts.clear();
+            Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
+            Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
+            Matcher m;
+            for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
+                if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
+                    BufferedReader reader = null;
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorsAssetFilename), "UTF-8"));
+                        // do reading, usually loop until end of file reading
+                        String mLine;
+                        boolean inGlobal = false;
+                        String title = null;
+                        String model = null;
+                        while ((mLine = reader.readLine()) != null) {
+                            //process line
+                            if (mLine.indexOf("Global") == 0) {
+                                inGlobal = true;
+                                title = null;
+                                model = null;
+                                continue;
+                            }
+                            if (inGlobal) {
+                                if (mLine.indexOf("End") == 0) {
+                                    KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+                                    newKMLScriptItem.filename = calculatorsAssetFilename;
+                                    newKMLScriptItem.title = title;
+                                    newKMLScriptItem.model = model;
+                                    kmlScripts.add(newKMLScriptItem);
+                                    title = null;
+                                    model = null;
+                                    break;
+                                }
+
+                                m = patternGlobalTitle.matcher(mLine);
+                                if (m.find()) {
+                                    title = m.group(1);
+                                }
+                                m = patternGlobalModel.matcher(mLine);
+                                if (m.find()) {
+                                    model = m.group(1);
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        //log the exception
+                        e.printStackTrace();
+                    } finally {
+                        if (reader != null) {
+                            try {
+                                reader.close();
+                            } catch (IOException e) {
+                                //log the exception
+                            }
+                        }
+                    }
+                }
+            }
+            Collections.sort(kmlScripts, new Comparator<KMLScriptItem>() {
+                @Override
+                public int compare(KMLScriptItem lhs, KMLScriptItem rhs) {
+                    return lhs.title.compareTo(rhs.title);
+                }
+            });
+        }
+
+
+        final String[] kmlScriptTitles = new String[kmlScripts.size()];
+        for (int i = 0; i < kmlScripts.size(); i++)
+            kmlScriptTitles[i] = kmlScripts.get(i).title;
+        new AlertDialog.Builder(this)
+            .setTitle("Pick a calculator")
+            .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String kmlScriptFilename = kmlScripts.get(which).filename;
+                    NativeLib.onFileNew(kmlScriptFilename);
+                }
+            }).show();
     }
 
     public static int INTENT_GETOPENFILENAME = 1;
@@ -175,9 +281,8 @@ public class MainActivity extends AppCompatActivity
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48"); //not needed, but maybe usefull
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
         startActivityForResult(intent, INTENT_GETOPENFILENAME);
-
     }
     private void OnFileSave() {
         NativeLib.onFileSave();
@@ -185,9 +290,22 @@ public class MainActivity extends AppCompatActivity
     private void OnFileSaveAs() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48"); //not needed, but maybe usefull
+        int model = NativeLib.getCurrentModel();
+        String extension = "e48"; // HP48SX/GX
+        switch (model) {
+            case '6':
+            case 'A':
+                extension = "e38"; // HP38G
+                break;
+            case 'E':
+                extension = "e39"; // HP39/40G
+                break;
+            case 'X':
+                extension = "e49"; // HP49G
+                break;
+        }
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state." + extension);
         startActivityForResult(intent, INTENT_GETSAVEFILENAME);
     }
     private void OnFileClose() {
@@ -207,6 +325,7 @@ public class MainActivity extends AppCompatActivity
 
     }
     private void OnStackCopy() {
+        //https://developer.android.com/guide/topics/text/copy-paste
         NativeLib.onStackCopy();
 
     }

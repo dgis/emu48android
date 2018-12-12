@@ -583,10 +583,12 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
 }
 
 BOOL GetOpenFileName(LPOPENFILENAME openFilename) {
-    return mainViewGetOpenFileNameCallback(openFilename);
+    //return mainViewGetOpenFileNameCallback(openFilename);
+    return FALSE;
 }
 BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
-    return mainViewGetSaveFileNameCallback(openFilename);
+    //return mainViewGetSaveFileNameCallback(openFilename);
+    return FALSE;
 }
 
 HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT fuLoad) {
@@ -950,6 +952,7 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     // For DIB_RGB_COLORS only
     int size = pbmi->bmiHeader.biWidth * abs(pbmi->bmiHeader.biHeight) * 4; //(pbmi->bmiHeader.biBitCount >> 3);
     newHDC->bitmapBits = malloc(size); //pbmi->bmiHeader.biSizeImage);
+    memset(newHDC->bitmapBits, 0, size);
     *ppvBits = newHDC->bitmapBits;
     return newHDC;
 }
@@ -1182,11 +1185,12 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     return NULL;
 }
 extern TCHAR   szCurrentKml[MAX_PATH];
+extern TCHAR   szChosenCurrentKml[MAX_PATH];
 //extern TCHAR   szLog[MAX_PATH];
 INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
-        lstrcpy(szCurrentKml, "real48sx.kml");
+        lstrcpy(szCurrentKml, szChosenCurrentKml);
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
         //LOGD(szLog);
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);

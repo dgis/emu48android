@@ -3,13 +3,11 @@ package com.regis.cosnier.emu48;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 
-import androidx.core.view.ViewCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -30,13 +28,13 @@ public class MainScreenView extends SurfaceView {
     public MainScreenView(Context context) {
         super(context);
 
-        AssetManager mgr = getResources().getAssets();
+        AssetManager assetManager = getResources().getAssets();
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
-        bitmapMainScreen.eraseColor(Color.LTGRAY);
-        NativeLib.start(mgr, bitmapMainScreen, (MainActivity)context, this);
+        bitmapMainScreen.eraseColor(Color.BLACK);
+        NativeLib.start(assetManager, bitmapMainScreen, (MainActivity)context, this);
 
         vkmap = new HashMap<Integer, Integer>();
         vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
@@ -202,6 +200,10 @@ public class MainScreenView extends SurfaceView {
     protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
         super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
 
+        calcTranslateAndScale(viewWidth, viewHeight);
+    }
+
+    private void calcTranslateAndScale(int viewWidth, int viewHeight) {
         float imageSizeX = bitmapMainScreen.getWidth();
         float imageSizeY = bitmapMainScreen.getHeight();
 
@@ -224,8 +226,6 @@ public class MainScreenView extends SurfaceView {
             screenOffsetX = translateX;
             screenOffsetY = translateY;
         }
-
-        //NativeLib.resize(viewWidth, viewHeight);
     }
 
     @Override
@@ -248,8 +248,9 @@ public class MainScreenView extends SurfaceView {
                 break;
             case CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size
-                bitmapMainScreen.reconfigure(/* x */ param1, /* y */ param2, Bitmap.Config.ARGB_8888);
-                bitmapMainScreen.eraseColor(Color.LTGRAY);
+                bitmapMainScreen.reconfigure(/* x */ Math.max(1, param1), /* y */ Math.max(1, param2), Bitmap.Config.ARGB_8888);
+                bitmapMainScreen.eraseColor(Color.BLACK);
+                calcTranslateAndScale(getWidth(), getHeight());
                 break;
         }
         return -1;

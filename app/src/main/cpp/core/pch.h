@@ -105,7 +105,3 @@ typedef LONG   LONG_PTR,  *PLONG_PTR;
                         language='*'\"")
 #endif
 #endif
-
-
-//#define DisplayChooseKml DisplayChooseKmlEx
-//extern BOOL DisplayChooseKmlEx(CHAR cType);

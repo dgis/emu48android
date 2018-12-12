@@ -22,9 +22,10 @@ public class NativeLib {
     public static native void keyUp(int virtKey);
 
 
-    public static native String getCurrentFilename();
+    //public static native String getCurrentFilename();
+    public static native int getCurrentModel();
 
-    public static native void onFileNew();
+    public static native void onFileNew(String kmlFilename);
     public static native void onFileOpen(String filename);
     public static native void onFileSave();
     public static native void onFileSaveAs(String newFilename);
