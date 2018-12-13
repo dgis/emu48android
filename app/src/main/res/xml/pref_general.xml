@@ -144,8 +144,8 @@
                 android:title="Port 1 is Writeable"
                 android:defaultValue="false" />
             <SwitchPreference
-                android:key="settings_port2isshared"
-                android:title="Port 2 is Shared"
+                android:key="settings_port2en"
+                android:title="Port 2 is Plugged"
                 android:defaultValue="false" />
             <SwitchPreference
                 android:key="settings_port2wr"

@@ -1,0 +1,628 @@
+Global
+	Print "=========================================================="
+	Print ""
+	Print "This graphic is by Casey Patterson."
+	Print "pattersc@gulftel.com"
+	Print ""
+	Print "Come to my page to get more graphics for your Win48!!!"
+	Print ""
+	Print "http://www.gulftel.com/~pattersc/win48/"
+	Print ""
+	Print "=========================================================="
+	Title  "Casey's Sx with Toolbar and Touch Screen"
+	Author "Casey Patterson"
+	Model   "S"
+	Rom    "ROM.48S"
+	Patch  "BEEP.48"
+	Bitmap "cp_48s3.bmp"
+	Debug  0
+End
+
+Background
+	Offset   0   0
+	Size   302 517
+End
+
+Lcd
+	Zoom 2
+	Offset  20  52
+	Color  0 255 255 255	# character color table
+	Color  1 255 255 255
+	Color  2 255 255 255
+	Color  3 240 240 240
+	Color  4 216 216 216
+	Color  5 192 192 192
+	Color  6 168 168 168
+	Color  7 144 144 144
+	Color  8 120 120 120
+	Color  9  96  96  96
+	Color 10  72  72  72
+	Color 11  48  48  48
+	Color 12  24  24  24
+	Color 13   0   0   0
+	Color 14   0   0   0
+	Color 15   0   0   0
+	Color 16   0   0   0
+	Color 17   0   0   0
+	Color 18   0   0   0
+	Color 19   0   0   0
+	Color 20   0   0   0
+	Color 21   0   0   0
+	Color 22   0   0   0
+	Color 23   0   0   0
+	Color 24   0   0   0
+	Color 25   0   0   0
+	Color 26   0   0   0
+	Color 27   0   0   0
+	Color 28   0   0   0
+	Color 29   0   0   0
+	Color 30   0   0   0
+	Color 31   0   0   0
+	Color 32 255 255 255	# background color table
+	Color 33 255 255 255
+	Color 34 255 255 255
+	Color 35 255 255 255
+	Color 36 255 255 255
+	Color 37 255 255 255
+	Color 38 255 255 255
+	Color 39 255 255 255
+	Color 40 255 255 255
+	Color 41 255 255 255
+	Color 42 255 255 255
+	Color 43 255 255 255
+	Color 44 255 255 255
+	Color 45 255 255 255
+	Color 46 230 230 230
+	Color 47 205 205 205
+	Color 48 180 180 180
+	Color 49 155 155 155
+	Color 50 130 130 130
+	Color 51 105 105 105
+	Color 52  80  80  80
+	Color 53  55  55  55
+	Color 54  30  30  30
+	Color 55   5   5   5
+	Color 56   0   0   0
+	Color 57   0   0   0
+	Color 58   0   0   0
+	Color 59   0   0   0
+	Color 60   0   0   0
+	Color 61   0   0   0
+	Color 62   0   0   0
+	Color 63   0   0   0
+End
+
+Annunciator 1
+	Size 15 11
+	Offset 41 37
+	Down 16 517
+End
+
+Annunciator 2
+	Size 15 11
+	Offset 82 37
+	Down 32 517
+End
+
+Annunciator 3
+	Size 13 11
+	Offset 123 37
+	Down 48 517
+End
+
+Annunciator 4
+	Size 15 11
+	Offset 164 37
+	Down 64 517
+End
+
+Annunciator 5
+	Size 11 11
+	Offset 205 37
+	Down 80 517
+End
+
+Annunciator 6
+	Size 12 11
+	Offset 246 37
+	Down 96 517
+End
+
+Button 11
+	Size  37  26
+	Offset     8 190
+	Down 0 528
+	OutIn 1 16
+End
+Button 12
+	Size  37  26
+	Offset 58 190
+	Down 0 528
+	OutIn 8 16
+End
+Button 13
+	Size  37  26
+	Offset 108 190
+	Down 0 528
+	OutIn 8 8
+End
+Button 14
+	Size  37  26
+	Offset 158 190
+	Down 0 528
+	OutIn 8 4
+End
+Button 15
+	Size  37  26
+	Offset 208 190
+	Down 0 528
+	OutIn 8 2
+End
+Button 16
+	Size  37  26
+	Offset 258 190
+	Down 0 528
+	OutIn 8 1
+End
+
+Button 21
+	Size  37  26
+	Offset     8 227
+	Down 37 528
+	OutIn 2 16
+End
+Button 22
+	Size  38  26
+	Offset 57 227
+	OutIn 7 16
+	Down 74 528
+End
+Button 23
+	Size  37  26
+	Offset 108 227
+	OutIn 7 8
+	Down 112 528
+End
+Button 24
+	Size  37  26
+	Offset 158 227
+	OutIn 7 4
+	Down 149 528
+End
+Button 25
+	Size  37  26
+	Offset 208 227
+	OutIn 7 2
+	Down 186 528
+End
+Button 26
+	Size  37  26
+	Offset 258 227
+	OutIn 7 1
+	Down 223 528
+End
+
+Button 31
+	Size  37  26
+	Offset     8 264
+	OutIn 0 16
+	Down 260 528
+End
+Button 32
+	Size  37  26
+	Offset 58 264
+	OutIn 6 16
+	Down 0 554
+End
+Button 33
+	Size  37  26
+	Offset 108 264
+	OutIn 6 8
+	Down 37 554
+End
+Button 34
+	Size  37  26
+	Offset 158 264
+	OutIn 6 4
+	Down 74 554
+End
+Button 35
+	Size  37  26
+	Offset 208 264
+	OutIn 6 2
+	Down 111 554
+End
+Button 36
+	Size  37  26
+	Offset 258 264
+	OutIn 6 1
+	Down 148 554
+End
+
+Button 41
+	Size  37  26
+	Offset     8 301
+	OutIn 3 16
+	Down 185 554
+End
+Button 42
+	Size  37  26
+	Offset 58 301
+	OutIn 5 16
+	Down 222 554
+End
+Button 43
+	Size  37  26
+	Offset 108 301
+	OutIn 5 8
+	Down 259 554
+End
+Button 44
+	Size  37  26
+	Offset 158 301
+	OutIn 5 4
+	Down 0 580
+End
+Button 45
+	Size  37  26
+	Offset 208 301
+	OutIn 5 2
+	Down 37 580
+End
+Button 46
+	Size  37  26
+	Offset 258 301
+	OutIn 5 1
+	Down 74 580
+End
+
+Button 51
+	Size 87 26
+	Offset 8 338
+	OutIn 4 16
+	Down 111 580
+End
+Button 52
+	Size  37  26
+	Offset 108 338
+	OutIn 4 8
+	Down 198 580
+End
+Button 53
+	Size  37  26
+	Offset 158 338
+	OutIn 4 4
+	Down 235 580
+End
+Button 54
+	Size  37  26
+	Offset 208 338
+	OutIn 4 2
+	Down 0 606
+End
+Button 55
+	Size  37  26
+	Offset 258 338
+	OutIn 4 1
+	Down 37 606
+End
+
+Button 61
+	Size  37  26
+	Offset     8 375
+	OutIn 3 32
+	Down 74 606
+End
+Button 62
+	Size 48 26
+	Offset 67 375
+	OutIn 3 8
+	Down 222 606
+End
+Button 63
+	Size 48 26
+	Offset 127 375
+	OutIn 3 4
+	Down 0 632
+End
+Button 64
+	Size 48 26
+	Offset 187 375
+	OutIn 3 2
+	Down 48 632
+End
+Button 65
+	Size 48 26
+	Offset 247 375
+	OutIn 3 1
+	Down 96 632
+End
+
+Button 71
+	Size  37  26
+	Offset     8 412
+	OutIn 2 32
+	Down 111 606
+End
+Button 72
+	Size 48 26
+	Offset 67 412
+	OutIn 2 8
+	Down 144 632
+End
+Button 73
+	Size 48 26
+	Offset 127 412
+	OutIn 2 4
+	Down 192 632
+End
+Button 74
+	Size 48 26
+	Offset 187 412
+	OutIn 2 2
+	Down 240 632
+End
+Button 75
+	Size 48 26
+	Offset 247 412
+	OutIn 2 1
+	Down 0 658
+End
+
+Button 81
+	Size  37  26
+	Offset     8 449
+	OutIn 1 32
+	Down 148 606
+End
+Button 82
+	Size 48 26
+	Offset 67 449
+	OutIn 1 8
+	Down 48 658
+End
+Button 83
+	Size 48 26
+	Offset 127 449
+	OutIn 1 4
+	Down 96 658
+End
+Button 84
+	Size 48 26
+	Offset 187 449
+	OutIn 1 2
+	Down 144 658
+End
+Button 85
+	Size 48 26
+	Offset 247 449
+	OutIn 1 1
+	Down 192 658
+End
+
+Button 91
+	Size  37  26
+	Offset     8 486
+	OutIn 0 32768
+	Down 185 606
+End
+Button 92
+	Size 48 26
+	Offset 67 486
+	OutIn 0 8
+	Down 240 658
+End
+Button 93
+	Size 48 26
+	Offset 127 486
+	OutIn 0 4
+	Down 0 684
+End
+Button 94
+	Size 48 26
+	Offset 187 486
+	OutIn 0 2
+	Down 48 684
+End
+Button 95
+	Size 48 26
+	Offset 247 486
+	OutIn 0 1
+	Down 96 684
+End
+
+Button 101
+	Type 3
+	Size 42 16
+	Offset 20 164
+	Virtual
+	OnDown
+		Press 11
+	End
+	OnUp
+		Release 11
+	End
+End
+Button 102
+	Type 3
+	Size 42 16
+	Offset 64 164
+	Virtual
+	OnDown
+		Press 12
+	End
+	OnUp
+		Release 12
+	End
+End
+Button 103
+	Type 3
+	Size  42  16
+	Offset 108 164
+	Virtual
+	OnDown
+		Press 13
+	End
+	OnUp
+		Release 13
+	End
+End
+Button 104
+	Type 3
+	Size  42  16
+	Offset 152 164
+	Virtual
+	OnDown
+		Press 14
+	End
+	OnUp
+		Release 14
+	End
+End
+Button 105
+	Type 3
+	Size  42  16
+	Offset 196 164
+	Virtual
+	OnDown
+		Press 15
+	End
+	OnUp
+		Release 15
+	End
+End
+Button 106
+	Type 3
+	Size  42  16
+	Offset 240 164
+	Virtual
+	OnDown
+		Press 16
+	End
+	OnUp
+		Release 16
+	End
+End
+
+Button 107
+	Type 4
+	Size 262 112
+	Offset 20 52
+	Down 20 52
+	NoHold
+End
+
+Button 108
+	Size 10 12
+	Offset 288 168
+	Down 288 591
+	Virtual
+	OnDown
+		Press 26
+	End
+	OnUp
+		Release 26
+	End
+End
+
+Button 110
+	Type 1
+	Size 23 22
+	Offset 12 5
+	NoHold
+	OnUp
+		MenuItem 1
+	End
+End
+Button 111
+	Type 1
+	Size 23 22
+	Offset 35 5
+	NoHold
+	OnUp
+		MenuItem 2
+	End
+End
+Button 112
+	Type 1
+	Size 23 22
+	Offset 59 5
+	NoHold
+	OnUp
+		MenuItem 3
+	End
+End
+Button 113
+	Type 1
+	Size 23 22
+	Offset 86 5
+	NoHold
+	OnUp
+		MenuItem 6
+	End
+End
+Button 114
+	Type 1
+	Size 23 22
+	Offset 114 5
+	NoHold
+	OnUp
+		MenuItem 8
+	End
+End
+Button 115
+	Type 1
+	Size 23 22
+	Offset 137 5
+	NoHold
+	OnUp
+		MenuItem 7
+	End
+End
+Button 116
+	Type 1
+	Size 23 22
+	Offset 160 5
+	NoHold
+	OnUp
+		MenuItem 17
+	End
+End
+Button 117
+	Type 1
+	Size 23 22
+	Offset 188 5
+	NoHold
+	OnUp
+		MenuItem 22
+	End
+End
+Button 118
+	Type 1
+	Size 23 22
+	Offset 216 5
+	NoHold
+	OnUp
+		MenuItem 9
+	End
+End
+Button 119
+	Type 1
+	Size 23 22
+	Offset 239 5
+	NoHold
+	OnUp
+		MenuItem 10
+	End
+End
+Button 120
+	Type 1
+	Size 23 22
+	Offset 267 5
+	NoHold
+	OnUp
+		MenuItem 11
+	End
+End
+
+Include "Keyboard.kmi"

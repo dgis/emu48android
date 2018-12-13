@@ -1,0 +1,57 @@
+Global
+ Print ""
+ Print "© Script Commands Authors and Emulation Software:"
+ Print "  Skin HP50g - Update: 2007Jan10 By: Mario Lohajner - manjo" 
+ Print "  http://fly.srk.fer.hr/~manjo/openfire"
+ Print ""
+ Print ""
+ Print "  KMB Keyboard Map Buttons by:"
+ Print "  ::. manjo .::"
+ Print ""
+ Print ""
+ Print "  PKM PC Keyboard Map by:"
+ Print "  ::. JaiMezaCalcs .::"
+ Print "  www.gaak.org/user/jaimeza"
+ Print ""
+ Print ""
+ Print "  LCD Contrast Table by:"
+ Print "  ::. JaiMezaCalcs .::"
+ Print ""
+ Print ""
+ Print "  BMP BitMapPicture Design by:"
+ Print "  ::. manjo, Based on Real 49G+ from Eric Rechlin www.hpcalc.org .::"
+ Print ""
+ Print ""
+ Print "  SFX by:"
+ Print "  ::. JaiMezaCalcs .::"
+ Print ""
+ Print ""
+ Print "  Emulation Software emu48.exe, emu48plus.exe, *.beep by:"
+ Print "  ::. Christoph Gieﬂelink - SÈbastien Carlier - Cyrille de Brebisson .::"
+ Print "  http://privat.swol.de/ChristophGiesselink/emu48.htm"
+ Print ""
+ Print ""
+ Print "  HP-OS by:"
+ Print "  ::. Bernard Parisse - Jean-Yves Avenard .::"
+ Print "  ftp://ftp-fourier.ujf-grenoble.fr/xcas/hpcas/rom.e49"
+ Print ""
+  Title  "HP50G   OS-MODE: RPN/ALG, Skin#03"
+	Author "Mario Lohajner"
+	Hardware "Yorke"
+	Model  "Q"
+	Rom    "hp49g-gp-50g-48g2.rom"
+	Patch  "hp49g-gp-50g-48g2.beep"
+	Bitmap "hp50g_skin03.bmp"
+	Debug  0
+End
+Background
+	Offset   0   0
+	Size   304 637
+End
+Lcd
+	Zoom 2
+	Offset  21  12
+  Include "hp49gp-50g-48g2.lcd"
+End
+  Include "hp49g-gp-50g-48g2.pkm"
+  Include "hp50g_skin03.kmb"

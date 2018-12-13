@@ -1,0 +1,424 @@
+Global
+	Title  "Emu48's Default Faceplate for HP48S/SX"
+	Author "Sebastien Carlier"
+	Model   "S"
+	Rom    "ROM.48S"
+	Patch  "BEEP.48"
+	Debug  0
+	Bitmap "DEFAULTS.BMP"
+End
+
+Background
+	Offset   0   0
+	Size   302 485
+End
+
+Lcd
+	Zoom 2
+	Offset  20  20
+	Color  0 255 255 255	# character color table
+	Color  1 255 255 255
+	Color  2 255 255 255
+	Color  3 240 240 240
+	Color  4 216 216 216
+	Color  5 192 192 192
+	Color  6 168 168 168
+	Color  7 144 144 144
+	Color  8 120 120 120
+	Color  9  96  96  96
+	Color 10  72  72  72
+	Color 11  48  48  48
+	Color 12  24  24  24
+	Color 13   0   0   0
+	Color 14   0   0   0
+	Color 15   0   0   0
+	Color 16   0   0   0
+	Color 17   0   0   0
+	Color 18   0   0   0
+	Color 19   0   0   0
+	Color 20   0   0   0
+	Color 21   0   0   0
+	Color 22   0   0   0
+	Color 23   0   0   0
+	Color 24   0   0   0
+	Color 25   0   0   0
+	Color 26   0   0   0
+	Color 27   0   0   0
+	Color 28   0   0   0
+	Color 29   0   0   0
+	Color 30   0   0   0
+	Color 31   0   0   0
+	Color 32 255 255 255	# background color table
+	Color 33 255 255 255
+	Color 34 255 255 255
+	Color 35 255 255 255
+	Color 36 255 255 255
+	Color 37 255 255 255
+	Color 38 255 255 255
+	Color 39 255 255 255
+	Color 40 255 255 255
+	Color 41 255 255 255
+	Color 42 255 255 255
+	Color 43 255 255 255
+	Color 44 255 255 255
+	Color 45 255 255 255
+	Color 46 230 230 230
+	Color 47 205 205 205
+	Color 48 180 180 180
+	Color 49 155 155 155
+	Color 50 130 130 130
+	Color 51 105 105 105
+	Color 52  80  80  80
+	Color 53  55  55  55
+	Color 54  30  30  30
+	Color 55   5   5   5
+	Color 56   0   0   0
+	Color 57   0   0   0
+	Color 58   0   0   0
+	Color 59   0   0   0
+	Color 60   0   0   0
+	Color 61   0   0   0
+	Color 62   0   0   0
+	Color 63   0   0   0
+End
+
+Annunciator 1
+	Size 15 11
+	Offset 41 4
+	Down 16 485
+End
+
+Annunciator 2
+	Size 15 11
+	Offset 82 4
+	Down 32 485
+End
+
+Annunciator 3
+	Size 13 11
+	Offset 123 4
+	Down 48 485
+End
+
+Annunciator 4
+	Size 15 11
+	Offset 164 4
+	Down 64 485
+End
+
+Annunciator 5
+	Size 11 11
+	Offset 205 4
+	Down 80 485
+End
+
+Annunciator 6
+	Size 12 11
+	Offset 246 4
+	Down 96 485
+End
+
+Button 11
+	Type 1
+	Size  36  25
+	Offset     8 158
+	OutIn 1 16
+End
+Button 12
+	Type 1
+	Size 36 25
+	Offset 58 158
+	OutIn 8 16
+End
+Button 13
+	Type 1
+	Size 36 25
+	Offset 108 158
+	OutIn 8 8
+End
+Button 14
+	Type 1
+	Size 36 25
+	Offset 158 158
+	OutIn 8 4
+End
+Button 15
+	Type 1
+	Size 36 25
+	Offset 208 158
+	OutIn 8 2
+End
+Button 16
+	Type 1
+	Size 36 25
+	Offset 258 158
+	OutIn 8 1
+End
+
+Button 21
+	Type 1
+	Size  36  25
+	Offset     8 195
+	OutIn 2 16
+End
+Button 22
+	Type 1
+	Size 36 25
+	Offset 58 195
+	OutIn 7 16
+End
+Button 23
+	Type 1
+	Size 36 25
+	Offset 108 195
+	OutIn 7 8
+End
+Button 24
+	Type 1
+	Size 36 25
+	Offset 158 195
+	OutIn 7 4
+End
+Button 25
+	Type 1
+	Size 36 25
+	Offset 208 195
+	OutIn 7 2
+End
+Button 26
+	Type 1
+	Size 36 25
+	Offset 258 195
+	OutIn 7 1
+End
+
+Button 31
+	Type 1
+	Size  36  25
+	Offset     8 232
+	OutIn 0 16
+End
+Button 32
+	Type 1
+	Size 36 25
+	Offset 58 232
+	OutIn 6 16
+End
+Button 33
+	Type 1
+	Size 36 25
+	Offset 108 232
+	OutIn 6 8
+End
+Button 34
+	Type 1
+	Size 36 25
+	Offset 158 232
+	OutIn 6 4
+End
+Button 35
+	Type 1
+	Size 36 25
+	Offset 208 232
+	OutIn 6 2
+End
+Button 36
+	Type 1
+	Size 36 25
+	Offset 258 232
+	OutIn 6 1
+End
+
+Button 41
+	Type 1
+	Size  36  25
+	Offset     8 269
+	OutIn 3 16
+End
+Button 42
+	Type 1
+	Size 36 25
+	Offset 58 269
+	OutIn 5 16
+End
+Button 43
+	Type 1
+	Size 36 25
+	Offset 108 269
+	OutIn 5 8
+End
+Button 44
+	Type 1
+	Size 36 25
+	Offset 158 269
+	OutIn 5 4
+End
+Button 45
+	Type 1
+	Size 36 25
+	Offset 208 269
+	OutIn 5 2
+End
+Button 46
+	Type 1
+	Size 36 25
+	Offset 258 269
+	OutIn 5 1
+End
+
+Button 51
+	Type 1
+	Size 86 25
+	Offset 8 306
+	OutIn 4 16
+End
+Button 52
+	Type 1
+	Size 36 25
+	Offset 108 306
+	OutIn 4 8
+End
+Button 53
+	Type 1
+	Size 36 25
+	Offset 158 306
+	OutIn 4 4
+End
+Button 54
+	Type 1
+	Size 36 25
+	Offset 208 306
+	OutIn 4 2
+End
+Button 55
+	Type 1
+	Size 36 25
+	Offset 258 306
+	OutIn 4 1
+End
+
+Button 61
+	Type 1
+	Size  36  25
+	Offset 8 343
+	OutIn 3 32
+End
+Button 62
+	Type 1
+	Size 47 25
+	Offset 67 343
+	OutIn 3 8
+End
+Button 63
+	Type 1
+	Size 47 25
+	Offset 127 343
+	OutIn 3 4
+End
+Button 64
+	Type 1
+	Size 47 25
+	Offset 187 343
+	OutIn 3 2
+End
+Button 65
+	Type 1
+	Size 47 25
+	Offset 247 343
+	OutIn 3 1
+End
+
+Button 71
+	Type 1
+	Size  36  25
+	Offset 8 380
+	OutIn 2 32
+End
+Button 72
+	Type 1
+	Size 47 25
+	Offset 67 380
+	OutIn 2 8
+End
+Button 73
+	Type 1
+	Size 47 25
+	Offset 127 380
+	OutIn 2 4
+End
+Button 74
+	Type 1
+	Size 47 25
+	Offset 187 380
+	OutIn 2 2
+End
+Button 75
+	Type 1
+	Size 47 25
+	Offset 247 380
+	OutIn 2 1
+End
+
+Button 81
+	Type 1
+	Size  36  25
+	Offset 8 417
+	OutIn 1 32
+End
+Button 82
+	Type 1
+	Size 47 25
+	Offset 67 417
+	OutIn 1 8
+End
+Button 83
+	Type 1
+	Size 47 25
+	Offset 127 417
+	OutIn 1 4
+End
+Button 84
+	Type 1
+	Size 47 25
+	Offset 187 417
+	OutIn 1 2
+End
+Button 85
+	Type 1
+	Size 47 25
+	Offset 247 417
+	OutIn 1 1
+End
+
+Button 91
+	Type 1
+	Size  36  25
+	Offset 8 454
+	OutIn 0 32768
+End
+Button 92
+	Type 1
+	Size 47 25
+	Offset 67 454
+	OutIn 0 8
+End
+Button 93
+	Type 1
+	Size 47 25
+	Offset 127 454
+	OutIn 0 4
+End
+Button 94
+	Type 1
+	Size 47 25
+	Offset 187 454
+	OutIn 0 2
+End
+Button 95
+	Type 1
+	Size 47 25
+	Offset 247 454
+	OutIn 0 1
+End
+
+Include "Keyboard.kmi"

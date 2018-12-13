@@ -295,15 +295,18 @@ BOOL SetEvent(HANDLE hEvent) {
 
 BOOL ResetEvent(HANDLE hEvent)
 {
-    int result = pthread_mutex_lock(&hEvent->eventMutex);
-    _ASSERT(result == 0);
+    if(hEvent) {
+        int result = pthread_mutex_lock(&hEvent->eventMutex);
+        _ASSERT(result == 0);
 
-    hEvent->eventState = FALSE;
+        hEvent->eventState = FALSE;
 
-    result = pthread_mutex_unlock(&hEvent->eventMutex);
-    _ASSERT(result == 0);
+        result = pthread_mutex_unlock(&hEvent->eventMutex);
+        _ASSERT(result == 0);
 
-    return TRUE;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)

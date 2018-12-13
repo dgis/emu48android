@@ -9,6 +9,7 @@
 
 #include "core/pch.h"
 #include "core/Emu48.h"
+#include "core/io.h"
 
 extern void emu48Start();
 extern AAssetManager * assetManager;
@@ -26,16 +27,9 @@ extern void buttonUp(int x, int y);
 extern void keyDown(int virtKey);
 extern void keyUp(int virtKey);
 
-//extern void OnFileNew();
-//extern void OnFileOpen();
-//extern void OnFileSave();
-//extern void OnFileSaveAs();
-//extern void OnFileClose();
 extern void OnObjectLoad();
 extern void OnObjectSave();
 extern void OnViewCopy();
-//extern void OnStackCopy();
-//extern void OnStackPaste();
 extern void OnViewReset();
 extern void OnBackupSave();
 extern void OnBackupRestore();
@@ -110,6 +104,136 @@ int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
     return result;
 }
 
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz,
+        jint settingsRealspeed, jint settingsGrayscale, jint settingsAutosave,
+        jint settingsAutosaveonexit, jint settingsObjectloadwarning, jint settingsAlwaysdisplog,
+        jint settingsPort1en, jint settingsPort1wr,
+        jint settingsPort2len, jint settingsPort2wr, jstring settingsPort2load) {
+
+    bRealSpeed = settingsRealspeed;
+    bAutoSave = settingsAutosave;
+    bAutoSaveOnExit = settingsAutosaveonexit;
+    bLoadObjectWarning = settingsObjectloadwarning;
+    bAlwaysDisplayLog = settingsAlwaysdisplog;
+
+    SetSpeed(bRealSpeed);			// set speed
+
+    // LCD grayscale checkbox has been changed
+    if (bGrayscale != (BOOL)settingsGrayscale) {
+        UINT nOldState = SwitchToState(SM_INVALID);
+        SetLcdMode(!bGrayscale);	// set new display mode
+        SwitchToState(nOldState);
+    }
+
+    //SettingsMemoryProc
+    LPCTSTR szActPort2Filename = _T("");
+
+    BOOL bPort2CfgChange = FALSE;
+    BOOL bPort2AttChange = FALSE;
+
+    // port1
+    if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
+    {
+        UINT nOldState = SwitchToState(SM_SLEEP);
+        // save old card status
+        BYTE byCardsStatus = Chipset.cards_status;
+
+        // port1 disabled?
+        Chipset.cards_status &= ~(PORT1_PRESENT | PORT1_WRITE);
+        if (settingsPort1en)
+        {
+            Chipset.cards_status |= PORT1_PRESENT;
+            if (settingsPort1wr)
+                Chipset.cards_status |= PORT1_WRITE;
+        }
+
+        // changed card status in slot1?
+        if (   ((byCardsStatus ^ Chipset.cards_status) & (PORT1_PRESENT | PORT1_WRITE)) != 0
+               && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+                )
+        {
+            Chipset.HST |= MP;		// set Module Pulled
+            IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+            Chipset.SoftInt = TRUE;	// set interrupt
+            bInterrupt = TRUE;
+        }
+        SwitchToState(nOldState);
+    }
+    // HP48SX/GX port2 change settings detection
+    if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
+    {
+        //bPort2IsShared = settingsPort2isshared;
+        const char * szNewPort2Filename = NULL;
+        const char *settingsPort2loadUTF8 = NULL;
+        if(settingsPort2load) {
+            settingsPort2loadUTF8 = (*env)->GetStringUTFChars(env, settingsPort2load , NULL);
+            szNewPort2Filename = settingsPort2loadUTF8;
+        } else
+            szNewPort2Filename = _T("SHARED.BIN");
+
+        if(_tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
+            _tcscpy(szPort2Filename, szNewPort2Filename);
+            szActPort2Filename = szPort2Filename;
+            bPort2CfgChange = TRUE;	// slot2 configuration changed
+
+            // R/W port
+            if (   *szActPort2Filename != 0
+                   && (BOOL) settingsAlwaysdisplog != bPort2Writeable)
+            {
+                bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
+                bPort2CfgChange = TRUE;	// slot2 configuration changed
+            }
+        }
+        if(settingsPort2loadUTF8)
+            (*env)->ReleaseStringUTFChars(env, settingsPort2load, settingsPort2loadUTF8);
+    }
+
+    if (bPort2CfgChange)			// slot2 configuration changed
+    {
+        UINT nOldState = SwitchToState(SM_INVALID);
+
+        UnmapPort2();				// unmap port2
+
+//        if (bPort2AttChange)		// slot2 R/W mode changed
+//        {
+//            DWORD dwFileAtt;
+//
+//            SetCurrentDirectory(szEmuDirectory);
+//            dwFileAtt = GetFileAttributes(szActPort2Filename);
+//            if (dwFileAtt != 0xFFFFFFFF)
+//            {
+//                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
+//                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
+//                else
+//                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
+//
+//                SetFileAttributes(szActPort2Filename,dwFileAtt);
+//            }
+//            SetCurrentDirectory(szCurrentDirectory);
+//        }
+
+        if (cCurrentRomType)		// ROM defined
+        {
+            MapPort2(szActPort2Filename);
+
+            // port2 changed and card detection enabled
+            if (   (bPort2AttChange || Chipset.wPort2Crc != wPort2Crc)
+                   && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+                    )
+            {
+                Chipset.HST |= MP;		// set Module Pulled
+                IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+                Chipset.SoftInt = TRUE;	// set interrupt
+                bInterrupt = TRUE;
+            }
+            // save fingerprint of port2
+            Chipset.wPort2Crc = wPort2Crc;
+        }
+        SwitchToState(nOldState);
+    }
+}
+
+
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
     szChosenCurrentKml[0] = '\0';
@@ -125,7 +249,58 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
     }
 
     assetManager = AAssetManager_fromJava(env, assetMgr);
-    emu48Start();
+
+
+
+
+
+    DWORD dwThreadId;
+
+    // read emulator settings
+    GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
+    ReadSettings();
+
+    _tcscpy(szCurrentDirectory, "");
+    _tcscpy(szEmuDirectory, "assets/calculators/");
+    _tcscpy(szRomDirectory, "assets/calculators/");
+    _tcscpy(szPort2Filename, "");
+
+    hWindowDC = CreateCompatibleDC(NULL);
+
+    // initialization
+    LARGE_INTEGER    lAppStart2;					// high performance counter value at Appl. start
+
+    QueryPerformanceFrequency(&lFreq);		// init high resolution counter
+    QueryPerformanceCounter(&lAppStart);
+    Sleep(1000);
+    QueryPerformanceCounter(&lAppStart2);
+
+    szCurrentKml[0] = 0;					// no KML file selected
+    SetSpeed(bRealSpeed);					// set speed
+	//MruInit(4);								// init MRU entries
+
+    // create auto event handle
+    hEventShutdn = CreateEvent(NULL,FALSE,FALSE,NULL);
+    if (hEventShutdn == NULL)
+    {
+        AbortMessage(_T("Event creation failed."));
+//		DestroyWindow(hWnd);
+        return;
+    }
+
+    nState     = SM_RUN;					// init state must be <> nNextState
+    nNextState = SM_INVALID;				// go into invalid state
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&WorkerThread, NULL, CREATE_SUSPENDED, &dwThreadId);
+    if (hThread == NULL)
+    {
+        CloseHandle(hEventShutdn);			// close event handle
+        AbortMessage(_T("Thread creation failed."));
+//		DestroyWindow(hWnd);
+        return;
+    }
+
+    ResumeThread(hThread);					// start thread
+    while (nState!=nNextState) Sleep(0);	// wait for thread initialized
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, jobject thisz) {
@@ -177,7 +352,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JN
     return cCurrentRomType;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     //OnFileNew();
     if (bDocumentAvail)
     {
@@ -189,16 +364,19 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *
 
     const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
     _tcscpy(szChosenCurrentKml, filenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
-    if (NewDocument()) SetWindowTitle(_T("Untitled"));
+    BOOL result = NewDocument();
 
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     draw();
-    if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
+    if (bStartupBackup) SaveBackup();        // make a RAM backup at startup
 
     if (pbyRom) SwitchToState(SM_RUN);
+
+    return result;
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
     //OnFileOpen();
     if (bDocumentAvail)
     {
@@ -209,32 +387,37 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv 
     }
     const char *stateFilenameUTF8 = (*env)->GetStringUTFChars(env, stateFilename , NULL) ;
     _tcscpy(szBufferFilename, stateFilenameUTF8);
-    if (OpenDocument(szBufferFilename))
+    BOOL result = OpenDocument(szBufferFilename);
+    if (result)
         MruAdd(szBufferFilename);
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     if (pbyRom) SwitchToState(SM_RUN);
     draw();
     (*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
+    return result;
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
     // szBufferFilename must be set before calling that!!!
     //OnFileSave();
+    BOOL result = FALSE;
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
-        SaveDocument();
+        result = SaveDocument();
         SwitchToState(SM_RUN);
     }
-
+    return result;
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newStateFilename) {
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newStateFilename) {
     const char *newStateFilenameUTF8 = (*env)->GetStringUTFChars(env, newStateFilename , NULL) ;
 
+    BOOL result = FALSE;
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
         _tcscpy(szBufferFilename, newStateFilenameUTF8);
-        if (SaveDocumentAs(szBufferFilename))
+        result = SaveDocumentAs(szBufferFilename);
+        if (result)
             MruAdd(szCurrentFilename);
         else {
             // ERROR !!!!!!!!!
@@ -243,9 +426,10 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEn
     }
 
     (*env)->ReleaseStringUTFChars(env, newStateFilename, newStateFilenameUTF8);
+    return result;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
     //OnFileClose();
     if (bDocumentAvail)
     {
@@ -256,7 +440,9 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv
         SetWindowTitle(NULL);
         mainViewResizeCallback(nBackgroundW, nBackgroundH);
         draw();
+        return TRUE;
     }
+    return FALSE;
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz) {

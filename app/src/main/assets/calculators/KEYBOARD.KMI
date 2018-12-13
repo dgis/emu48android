@@ -1,0 +1,352 @@
+
+Scancode 8			# <-
+	Map 8 55
+End
+
+Scancode 9			# Tab
+	Map 9 61
+End
+
+Scancode 13			# Enter
+	Map 13 51
+End
+
+Scancode 16			# Shift
+	Map 16 71
+	IfPressed 16
+		SetFlag 0
+	Else
+		ResetFlag 0
+	End
+End
+
+Scancode 17			# Control
+	Map 17 81
+	IfPressed 17
+		SetFlag 1
+	Else
+		ResetFlag 1
+	End
+End
+
+Scancode 27			# Esc
+	Map 27 91
+End
+
+Scancode 32			# Space
+	Map 32 94
+End
+
+Scancode 37
+	Map 37 34
+End
+
+Scancode 38
+	Map 38 25
+End
+
+Scancode 39
+	Map 39 36
+End
+
+Scancode 40
+	Map 40 35
+End
+
+Scancode 48
+	Map 48 92
+End
+
+Scancode 49
+	IfFlag 0
+		Map 49 71
+		Map 49 54
+	Else
+		Map 49 82
+	End
+End
+
+Scancode 46			# Delete
+	Map 46 54
+End
+
+Scancode 50
+	Map 50 83
+End
+
+Scancode 51
+	IfFlag 0
+		Map 51 81
+		Map 51 65
+	Else
+		Map 51 84
+	End
+End
+
+Scancode 52
+	Map 52 72
+End
+
+Scancode 53
+	Map 53 73
+End
+
+Scancode 54
+	Map 54 74
+End
+
+Scancode 55
+	Map 55 62
+End
+
+Scancode 56
+	IfFlag 0
+		Map 56 75
+	Else
+		Map 56 63
+	End
+End
+
+Scancode 57
+	IfFlag 0
+		Map 57 71
+		Map 57 65
+	Else
+		Map 57 64
+	End
+End
+
+Scancode 65
+	Map 65 11
+End
+
+Scancode 66
+	Map 66 12
+End
+
+Scancode 67
+	Map 67 13
+End
+
+Scancode 68
+	Map 68 14
+End
+
+Scancode 69
+	Map 69 15
+End
+
+Scancode 70
+	Map 70 16
+End
+
+Scancode 71
+	Map 71 21
+End
+
+Scancode 72
+	Map 72 22
+End
+
+Scancode 73
+	Map 73 23
+End
+
+Scancode 74
+	Map 74 24
+End
+
+Scancode 75
+	Map 75 25
+End
+
+Scancode 76
+	Map 76 26
+End
+
+Scancode 77
+	Map 77 31
+End
+
+Scancode 78
+	IfFlag 1
+		MenuItem 1
+	Else
+		Map 78 32
+	End
+End
+
+Scancode 79
+	Map 79 33
+End
+
+Scancode 80
+	Map 80 34
+End
+
+Scancode 81
+	Map 81 35
+End
+
+Scancode 82
+	Map 82 36
+End
+
+Scancode 83
+	Map 83 41
+End
+
+Scancode 84
+	Map 84 42
+End
+
+Scancode 85
+	Map 85 43
+End
+
+Scancode 86
+	Map 86 44
+End
+
+Scancode 87
+	Map 87 45
+End
+
+Scancode 88
+	Map 88 46
+End
+
+Scancode 89
+	Map 89 52
+End
+
+Scancode 90
+	Map 90 53
+End
+
+Scancode 96
+	Map 96 92
+End
+
+Scancode 97
+	Map 97 82
+End
+
+Scancode 98
+	Map 98 83
+End
+
+Scancode 99
+	Map 99 84
+End
+
+Scancode 100
+	Map 100 72
+End
+
+Scancode 101
+	Map 101 73
+End
+
+Scancode 102
+	Map 102 74
+End
+
+Scancode 103
+	Map 103 62
+End
+
+Scancode 104
+	Map 104 63
+End
+
+Scancode 105
+	Map 105 64
+End
+
+Scancode 106
+	Map 106 75
+End
+
+Scancode 107
+	Map 107 95
+End
+
+Scancode 109
+	Map 109 85
+End
+
+Scancode 110
+	Map 110 93
+End
+
+Scancode 111
+	Map 111 65
+End
+
+Scancode 186
+	IfFlag 0
+		Map 186 81
+		Map 186 95
+	End
+End
+
+Scancode 188
+	IfFlag 0
+		Map 188 71
+	Else
+		Map 188 71
+		Map 188 93
+	End
+End
+
+Scancode 190
+	IfFlag 0
+		Map 190 81
+	Else
+		Map 190 93
+	End
+End
+
+Scancode 191
+	IfFlag 0
+		Map 191 71
+		Map 191 55
+	Else
+		Map 191 65
+	End
+End
+
+Scancode 192
+	IfFlag 0
+		IfPressed 192
+			NotFlag 2
+			IfFlag 2
+				Press 61
+			Else
+				Release 61
+			End
+		End
+	Else
+		Map 192 61
+	End
+End
+
+Scancode 219
+	IfFlag 0
+		Map 219 71
+		Map 219 95
+	Else
+		Map 219 71
+		Map 219 75
+	End
+End
+
+Scancode 222
+	IfFlag 0
+		Map 222 81
+		Map 222 85
+	Else
+		Map 222 31
+	End
+End

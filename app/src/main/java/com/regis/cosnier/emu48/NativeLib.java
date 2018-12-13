@@ -25,11 +25,11 @@ public class NativeLib {
     //public static native String getCurrentFilename();
     public static native int getCurrentModel();
 
-    public static native void onFileNew(String kmlFilename);
-    public static native void onFileOpen(String filename);
-    public static native void onFileSave();
-    public static native void onFileSaveAs(String newFilename);
-    public static native void onFileClose();
+    public static native int onFileNew(String kmlFilename);
+    public static native int onFileOpen(String filename);
+    public static native int onFileSave();
+    public static native int onFileSaveAs(String newFilename);
+    public static native int onFileClose();
     public static native void onObjectLoad();
     public static native void onObjectSave();
     public static native void onViewCopy();
@@ -39,4 +39,9 @@ public class NativeLib {
     public static native void onBackupSave();
     public static native void onBackupRestore();
     public static native void onBackupDelete();
+
+    public static native void setConfiguration(int settingsRealspeed, int settingsGrayscale, int settingsAutosave,
+                                               int settingsAutosaveonexit, int settingsObjectloadwarning, int settingsAlwaysdisplog,
+                                               int settingsPort1en, int settingsPort1wr,
+                                               int settingsPort2en, int settingsPort2wr, String settingsPort2load);
 }

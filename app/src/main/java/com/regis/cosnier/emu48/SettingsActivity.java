@@ -214,7 +214,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToBoolValue(findPreference("settings_alwaysdisplog"));
             bindPreferenceSummaryToBoolValue(findPreference("settings_port1en"));
             bindPreferenceSummaryToBoolValue(findPreference("settings_port1wr"));
-            bindPreferenceSummaryToBoolValue(findPreference("settings_port2isshared"));
+            bindPreferenceSummaryToBoolValue(findPreference("settings_port2en"));
             bindPreferenceSummaryToBoolValue(findPreference("settings_port2wr"));
 
         }

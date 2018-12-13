@@ -1,0 +1,3 @@
+;0148D:6300; disable 10 min auto off (internal, undocumented)
+017BC:81B1; =makebeep (internal, undocumented)
+0212D:000; set =BounceTiming to 0 (internal, undocumented)

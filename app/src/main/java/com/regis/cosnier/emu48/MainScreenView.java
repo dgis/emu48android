@@ -28,13 +28,10 @@ public class MainScreenView extends SurfaceView {
     public MainScreenView(Context context) {
         super(context);
 
-        AssetManager assetManager = getResources().getAssets();
-
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.BLACK);
-        NativeLib.start(assetManager, bitmapMainScreen, (MainActivity)context, this);
 
         vkmap = new HashMap<Integer, Integer>();
         vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
@@ -254,5 +251,9 @@ public class MainScreenView extends SurfaceView {
                 break;
         }
         return -1;
+    }
+
+    public Bitmap getBitmapMainScreen() {
+        return bitmapMainScreen;
     }
 }

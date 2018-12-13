@@ -1,0 +1,811 @@
+Global
+	Print "=========================================================="
+	Print ""
+	Print "This Real 49G graphic is by Eric Rechlin."
+	Print "eric@hpcalc.org   http://www.hpcalc.org"
+	Print "Graphic based on a scan by Hewlett-Packard."
+	Print "Thanks to Christoph Gieﬂelink for BEEP.49G"
+	Print ""
+	Print "Note that contrast support, a touch-sensitive"
+	Print "screen, and NXT and PREV buttons to the right"
+	Print "and left of the menu are implemented."
+	Print ""
+	Print "=========================================================="
+	Title  "Eric's Real 49G for 800x600"
+	Author "Eric Rechlin"
+	Model  "X"
+	Rom    "ROM.49G"
+	Patch  "BEEP.49G"
+	Bitmap "REAL49G800.BMP"
+	Debug  0
+End
+
+Background
+	Offset   0   0
+	Size   312 537
+End
+
+Lcd
+	Zoom 2
+	Offset  25  13
+	Color  0 112 157 114
+	Color  1 112 157 114
+	Color  2 112 157 114
+	Color  3 104 145 106
+	Color  4  94 131  95
+	Color  5  85 119  86
+	Color  6  76 106  77
+	Color  7  66  92  67
+	Color  8  57  79  58
+	Color  9  48  67  49
+	Color 10  38  53  38
+	Color 11  29  40  29
+	Color 12  20  28  20
+	Color 13  10  13  10
+
+	Color 14   0   0   0
+
+	Color 15   0   0   0
+	Color 16   0   0   0
+	Color 17   0   0   0
+	Color 18   0   0   0
+	Color 19   0   0   0
+	Color 20   0   0   0
+	Color 21   0   0   0
+	Color 22   0   0   0
+	Color 23   0   0   0
+	Color 24   0   0   0
+	Color 25   0   0   0
+	Color 26   0   0   0
+	Color 27   0   0   0
+	Color 28   0   0   0
+	Color 29   0   0   0
+	Color 30   0   0   0
+	Color 31   0   0   0
+
+	Color 47 112 157 114
+	Color 48 104 145 106
+	Color 49  94 131  95
+	Color 50  85 119  86
+	Color 51  76 106  77
+	Color 52  66  92  67
+	Color 53  57  79  58
+	Color 54  48  67  49
+	Color 55  38  53  38
+	Color 56  29  40  29
+	Color 57  20  28  20
+	Color 58  10  13  10
+	Color 59   0   0   0
+	Color 60   0   0   0
+	Color 61   0   0   0
+	Color 62   0   0   0
+	Color 63   0   0   0
+End
+
+Annunciator 1
+	Size 16 11
+	Offset 49 1
+	Down 0 538
+End
+
+Annunciator 2
+	Size 16 11
+	Offset 90 1
+	Down 16 538
+End
+
+Annunciator 3
+	Size 16 11
+	Offset 131 1
+	Down 32 538
+End
+
+Annunciator 4
+	Size 16 11
+	Offset 172 1
+	Down 48 538
+End
+
+Annunciator 5
+	Size 16 11
+	Offset 215 1
+	Down 64 538
+End
+
+Annunciator 6
+	Size 16 11
+	Offset 255 1
+	Down 80 538
+End
+
+Button 11
+	Type 5
+	Size  42 23
+	Offset  7 152
+	OutIn 5 1
+End
+Scancode 65
+	Map 65 11
+End
+Scancode 112
+	Map 112 11
+End
+
+Button 12
+	Type 5
+	Size  42 23
+	Offset 58 152
+	OutIn 5 2
+End
+Scancode 66
+	Map 66 12
+End
+Scancode 113
+	Map 113 12
+End
+
+Button 13
+	Type 5
+	Size  42 23
+	Offset 109 152
+	OutIn 5 4
+End
+Scancode 67
+	Map 67 13
+End
+Scancode 114
+	Map 114 13
+End
+
+Button 14
+	Type 5
+	Size  42 23
+	Offset 160 152
+	OutIn 5 8
+End
+Scancode 68
+	Map 68 14
+End
+Scancode 114
+	Map 114 13
+End
+
+Button 15
+	Type 5
+	Size  42 23
+	Offset 211 152
+	OutIn 5 16
+End
+Scancode 69
+	Map 69 15
+End
+Scancode 116
+	Map 116 15
+End
+
+Button 16
+	Type 5
+	Size  42 23
+	Offset 263 152
+	OutIn 5 32
+End
+Scancode 70
+	Map 70 16
+End
+Scancode 116
+	Map 116 15
+End
+
+Button 21
+	Type 5
+	Size 48 28
+	Offset 15 192
+	OutIn 5 128
+End
+Scancode 71
+	Map 71 21
+End
+
+Button 22
+	Type 5
+	Size 48 28
+	Offset 73 192
+	OutIn 4 128
+End
+Scancode 72
+	Map 72 22
+End
+
+Button 23
+	Type 5
+	Size 48 28
+	Offset 132 192
+	OutIn 3 128
+End
+Scancode 73
+	Map 73 23
+End
+
+
+Button 31
+	Type 5
+	Size 48 28
+	Offset 15 231
+	OutIn 2 128
+End
+Scancode 74
+	Map 74 31
+End
+
+Button 32
+	Type 5
+	Size 48 28
+	Offset 73 231
+	OutIn 1 128
+End
+Scancode 75
+	Map 75 32
+End
+
+Button 33
+	Type 5
+	Size 48 28
+	Offset 132 231
+	OutIn 0 128
+End
+Scancode 76
+	Map 76 33
+End
+
+
+Button 41
+	Type 5
+	Size 48 28
+	Offset 15 270
+	OutIn 4 64
+End
+Scancode 77
+	Map 77 41
+End
+Button 42
+	Type 5
+	Size 48 28
+	Offset 73 270
+	OutIn 3 64
+End
+Scancode 78
+	Map 78 42
+End
+
+Button 43
+	Type 5
+	Size 48 28
+	Offset 132 270
+	OutIn 2 64
+End
+Scancode 79
+	Map 79 43
+End
+
+Button 44
+	Type 5
+	Size 48 28
+	Offset 190 270
+	OutIn 1 64
+End
+Scancode 80
+	Map 80 44
+End
+
+Button 45
+	Type 5
+	Size 48 28
+	Offset 249 270
+	OutIn 0 64
+End
+Scancode 8
+	Map 8 45
+End
+
+
+Button 51
+	Type 5
+	Size 48 28
+	Offset 15 305
+	OutIn 4 32
+End
+Scancode 81
+	Map 81 51
+End
+
+Button 52
+	Type 5
+	Size 48 28
+	Offset 73 305
+	OutIn 3 32
+End
+Scancode 82
+	Map 82 52
+End
+
+Button 53
+	Type 5
+	Size 48 28
+	Offset 132 305
+	OutIn 2 32
+End
+Scancode 83
+	Map 83 53
+End
+
+Button 54
+	Type 5
+	Size 48 28
+	Offset 190 305
+	OutIn 1 32
+End
+Scancode 84
+	Map 84 54
+End
+
+Button 55
+	Type 5
+	Size 48 28
+	Offset 249 305
+	OutIn 0 32
+End
+Scancode 85
+	Map 85 55
+End
+
+
+Button 61
+	Type 5
+	Size 48 32
+	Offset 15 340
+	OutIn 4 16
+End
+Scancode 86
+	Map 86 61
+End
+
+Button 62
+	Type 5
+	Size 48 32
+	Offset 73 340
+	OutIn 3 16
+End
+Scancode 87
+	Map 87 62
+End
+
+Button 63
+	Type 5
+	Size 48 32
+	Offset 132 340
+	OutIn 2 16
+End
+Scancode 88
+	Map 88 63
+End
+
+Button 64
+	Type 5
+	Size 48 32
+	Offset 190 340
+	OutIn 1 16
+End
+Scancode 89
+	Map 89 64
+End
+
+Button 65
+	Type 5
+	Size 48 32
+	Offset 249 340
+	OutIn 0 16
+End
+Scancode 90
+	Map 90 65
+End
+Scancode 111
+	Map 111 65
+End
+Scancode 191
+	Map 191 65
+End
+
+
+Button 71
+	Type 5
+	Size 48 32
+	Offset 15 379
+	OutIn 7 8
+End
+Scancode 9
+	Map 9 71
+End
+
+Button 72
+	Type 5
+	Size 48 32
+	Offset 73 379
+	OutIn 3 8
+End
+Scancode 55
+	Map 55 72
+End
+Scancode 103
+	Map 103 72
+End
+
+Button 73
+	Type 5
+	Size 48 32
+	Offset 132 379
+	OutIn 2 8
+End
+Scancode 56
+	Map 56 73
+End
+Scancode 104
+	Map 104 73
+End
+
+Button 74
+	Type 5
+	Size 48 32
+	Offset 190 379
+	OutIn 1 8
+End
+Scancode 57
+	Map 57 74
+End
+Scancode 105
+	Map 105 74
+End
+
+Button 75
+	Type 5
+	Size 48 32
+	Offset 249 379
+	OutIn 0 8
+End
+Scancode 106
+	Map 106 75
+End
+
+Button 81
+	Type 5
+	Size 48 32
+	Offset 15 419
+	OutIn 7 4
+End
+Scancode 16
+	Map 16 81
+End
+
+Button 82
+	Type 5
+	Size 48 32
+	Offset 73 419
+	OutIn 3 4
+End
+Scancode 52
+	Map 52 82
+End
+Scancode 100
+	Map 100 82
+End
+
+Button 83
+	Type 5
+	Size 48 32
+	Offset 132 419
+	OutIn 2 4
+End
+Scancode 53
+	Map 53 83
+End
+Scancode 101
+	Map 101 83
+End
+
+Button 84
+	Type 5
+	Size 48 32
+	Offset 190 419
+	OutIn 1 4
+End
+Scancode 54
+	Map 54 84
+End
+Scancode 102
+	Map 102 84
+End
+
+Button 85
+	Type 5
+	Size 48 32
+	Offset 249 419
+	OutIn 0 4
+End
+Scancode 109
+	Map 109 85
+End
+Scancode 189
+	Map 189 85
+End
+
+Button 91
+	Type 5
+	Size 48 32
+	Offset 15 458
+	OutIn 7 2
+End
+Scancode 17
+	Map 17 91
+End
+
+Button 92
+	Type 5
+	Size 48 32
+	Offset 73 458
+	OutIn 3 2
+End
+Scancode 49
+	Map 49 92
+End
+Scancode 97
+	Map 97 92
+End
+
+Button 93
+	Type 5
+	Size 48 32
+	Offset 132 458
+	OutIn 2 2
+End
+Scancode 50
+	Map 50 93
+End
+Scancode 98
+	Map 98 93
+End
+
+Button 94
+	Type 5
+	Size 48 32
+	Offset 191 458
+	OutIn 1 2
+End
+Scancode 51
+	Map 51 94
+End
+Scancode 99
+	Map 99 94
+End
+
+Button 95
+	Type 5
+	Size 48 32
+	Offset 249 458
+	OutIn 0 2
+End
+Scancode 107
+	Map 107 95
+End
+Scancode 187
+	Map 187 95
+End
+
+Button 101
+	Type 5
+	Size 48 32
+	Offset 15 496
+	OutIn 0 32768
+End
+Scancode 27
+	Map 27 101
+End
+
+Button 102
+	Type 5
+	Size 48 32
+	Offset 73 496
+	OutIn 3 1
+End
+Scancode 48
+	Map 48 102
+End
+Scancode 96
+	Map 96 102
+End
+
+Button 103
+	Type 5
+	Size 48 32
+	Offset 132 496
+	OutIn 2 1
+End
+Scancode 190
+	Map 190 103
+End
+Scancode 110
+	Map 110 103
+End
+
+Button 104
+	Type 5
+	Size 48 32
+	Offset 191 496
+	OutIn 1 1
+End
+Scancode 32
+	Map 32 104
+End
+Scancode 188
+	Map 188 104
+End
+
+Button 105
+	Type 5
+	Size 48 32
+	Offset 249 496
+	OutIn 0 1
+End
+Scancode 13
+	Map 13 105
+End
+
+
+Button 110
+	Type 5
+	Size 46 30
+	Offset 252 203
+	OutIn 6 1
+End
+Scancode 39
+	Map 39 110
+End
+
+Button 111
+	Type 5
+	Size 48 28
+	Offset 220 236
+	OutIn 6 2
+End
+Scancode 40
+	Map 40 111
+End
+
+Button 112
+	Type 5
+	Size 46 29
+	Offset 189 204
+	OutIn 6 4
+End
+Scancode 37
+	Map 37 112
+End
+
+Button 113
+	Type 5
+	Size 48 28
+	Offset 220 173
+	OutIn 6 8
+End
+Scancode 38
+	Map 38 113
+End
+
+Button 121
+	Type 3
+	Size 42 14
+	Offset 25 127
+	Virtual
+	OnDown
+		Press 11
+	End
+	OnUp
+		Release 11
+	End
+End
+
+Button 122
+	Type 3
+	Size 42 14
+	Offset 69 127
+	Virtual
+	OnDown
+		Press 12
+	End
+	OnUp
+		Release 12
+	End
+End
+Button 123
+	Type 3
+	Size 42 14
+	Offset 113 127
+	Virtual
+	OnDown
+		Press 13
+	End
+	OnUp
+		Release 13
+	End
+End
+Button 124
+	Type 3
+	Size 42 14
+	Offset 157 127
+	Virtual
+	OnDown
+		Press 14
+	End
+	OnUp
+		Release 14
+	End
+End
+Button 125
+	Type 3
+	Size 42 14
+	Offset 201 127
+	Virtual
+	OnDown
+		Press 15
+	End
+	OnUp
+		Release 15
+	End
+End
+
+Button 126
+	Type 3
+	Size 42 14
+	Offset 245 127
+	Virtual
+	OnDown
+		Press 16
+	End
+	OnUp
+		Release 16
+	End
+End
+
+Button 127
+	Type 1
+	Size 15 15
+	Offset 4 127
+	Virtual
+	OnDown
+		Press 81
+		Release 81
+	End
+	OnUp
+		Press 33
+		Release 33
+	End
+End
+
+Button 128
+	Type 1
+	Size 15 15
+	Offset 294 127
+	Virtual
+	OnDown
+		Press 33
+	End
+	OnUp
+		Release 33
+	End
+End
+
+Button 129
+	Type 4
+	Size 262 112
+	Offset 25 13
+	Down 25 13
+	NoHold
+End

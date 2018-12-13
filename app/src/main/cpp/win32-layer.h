@@ -934,7 +934,7 @@ extern int lstrcmp(LPCWSTR lpString1, LPCWSTR lpString2);
 
 extern int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2);
 #define _tcstoul    wcstoul
-#define _tcsncmp    wcsncmp
+#define _tcscmp     wcscmp
 #define _tcslen     wcslen
 #define _tcscpy     wcscpy
 #define _tcscat     wcscat
@@ -956,7 +956,7 @@ extern int lstrcmp(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcsncmp        strncmp
 extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcstoul    strtoul
-#define _tcsncmp        strncmp
+#define _tcscmp     strcmp
 #define _tcslen     strlen
 #define _tcscpy     strcpy
 #define _tcscat     strcat
