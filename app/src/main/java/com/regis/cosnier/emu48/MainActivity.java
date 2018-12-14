@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity
 
         String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
         if(lastDocumentUrl.length() > 0)
-            NativeLib.onFileOpen(lastDocumentUrl);
+            onFileOpen(lastDocumentUrl);
     }
 
     @Override
@@ -292,6 +292,7 @@ public class MainActivity extends AppCompatActivity
                 public void onClick(DialogInterface dialog, int which) {
                     String kmlScriptFilename = kmlScripts.get(which).filename;
                     NativeLib.onFileNew(kmlScriptFilename);
+                    showKMLLog();
                 }
             }).show();
     }
@@ -404,7 +405,7 @@ public class MainActivity extends AppCompatActivity
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + uri.toString());
                 String url = uri.toString();
-                if(NativeLib.onFileOpen(url) != 0) {
+                if(onFileOpen(url) != 0) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("lastDocument", url);
                     editor.commit();
@@ -423,6 +424,25 @@ public class MainActivity extends AppCompatActivity
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private int onFileOpen(String url) {
+        int result = NativeLib.onFileOpen(url);
+        showKMLLog();
+        return result;
+    }
+
+    private void showKMLLog() {
+        if(sharedPreferences.getBoolean("settings_alwaysdisplog", true)) {
+            String kmlLog = NativeLib.getKMLLog();
+            new AlertDialog.Builder(this)
+                    .setTitle("Pick a calculator")
+                    .setMessage(kmlLog)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    }).show();
+        }
     }
 
     final int GENERIC_READ   = 1;
@@ -457,7 +477,7 @@ public class MainActivity extends AppCompatActivity
         boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
         boolean settingsAutosaveonexit = sharedPreferences.getBoolean("settings_autosaveonexit", false);
         boolean settingsObjectloadwarning = sharedPreferences.getBoolean("settings_objectloadwarning", false);
-        boolean settingsAlwaysdisplog = sharedPreferences.getBoolean("settings_alwaysdisplog", false);
+        boolean settingsAlwaysdisplog = sharedPreferences.getBoolean("settings_alwaysdisplog", true);
         boolean settingsPort1en = sharedPreferences.getBoolean("settings_port1en", false);
         boolean settingsPort1wr = sharedPreferences.getBoolean("settings_port1wr", false);
         boolean settingsPort2en = sharedPreferences.getBoolean("settings_port2en", false);

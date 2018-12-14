@@ -13,6 +13,7 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
+- Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
 - Option to allow rotation
 - Option to auto hide the menu

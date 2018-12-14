@@ -17,7 +17,9 @@ static jobject viewToUpdate = NULL;
 static jobject mainActivity = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
-TCHAR   szChosenCurrentKml[MAX_PATH];
+TCHAR szChosenCurrentKml[MAX_PATH];
+TCHAR szKmlLog[10240];
+
 
 extern void win32Init();
 
@@ -350,6 +352,11 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env,
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
     return cCurrentRomType;
+}
+
+JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEnv *env, jobject thisz) {
+    jstring result = (*env)->NewStringUTF(env, szKmlLog);
+    return result;
 }
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {

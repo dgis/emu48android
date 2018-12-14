@@ -693,21 +693,23 @@ BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) { return 0; }
 
 // GDI
 HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
-    switch (h->handleType) {
-        case HGDIOBJ_TYPE_PEN:
-            break;
-        case HGDIOBJ_TYPE_BRUSH:
-            break;
-        case HGDIOBJ_TYPE_FONT:
-            break;
-        case HGDIOBJ_TYPE_BITMAP:
-            hdc->selectedBitmap = h;
-            return h;
-        case HGDIOBJ_TYPE_REGION:
-            break;
-        case HGDIOBJ_TYPE_PALETTE:
-            hdc->selectedPalette = h;
-            return h;
+    if(h) {
+        switch (h->handleType) {
+            case HGDIOBJ_TYPE_PEN:
+                break;
+            case HGDIOBJ_TYPE_BRUSH:
+                break;
+            case HGDIOBJ_TYPE_FONT:
+                break;
+            case HGDIOBJ_TYPE_BITMAP:
+                hdc->selectedBitmap = h;
+                return h;
+            case HGDIOBJ_TYPE_REGION:
+                break;
+            case HGDIOBJ_TYPE_PALETTE:
+                hdc->selectedPalette = h;
+                return h;
+        }
     }
     return NULL;
 }
@@ -930,7 +932,8 @@ HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CO
     memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
     newHDC->bitmapInfo = newBitmapInfo;
     newHDC->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
-    size_t stride = (size_t)(newBitmapInfo->bmiHeader.biWidth * (newBitmapInfo->bmiHeader.biBitCount >> 3));
+    //size_t stride = (size_t)(newBitmapInfo->bmiHeader.biWidth * (newBitmapInfo->bmiHeader.biBitCount >> 3));
+    size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
     size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
                     newBitmapInfo->bmiHeader.biSizeImage :
                     newBitmapInfo->bmiHeader.biHeight * stride;
@@ -1137,9 +1140,13 @@ UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax) {
     //TODO
     return 0;
 }
-BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCSTR lpString) {
+
+extern TCHAR szKmlLog[10240];
+
+BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCTSTR lpString) {
     if(nIDDlgItem == IDC_KMLLOG) {
         LOGD("KML log:\r\n%s", lpString);
+        _tcsncpy(szKmlLog, lpString, sizeof(szKmlLog)/sizeof(TCHAR));
     }
     //TODO
     return 0;
