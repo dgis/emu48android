@@ -845,6 +845,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
         float sourceStride = sourceWidth * sourceBytes;
+        sourceStride = (float)(4 * ((sourceWidth * hBitmap->bitmapInfoHeader->biBitCount + 31) / 32));
         float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
         //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 

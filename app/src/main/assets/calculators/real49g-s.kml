@@ -13,7 +13,7 @@ Global
 	Title  "Eric's Real 49G (Small)"
 	Author "Eric Rechlin"
 	Model  "X"
-	Rom    "rom.49g"
+	Rom    "ROM.49G"
 	Bitmap "real49g-s.bmp"
 	#Icon   "49g.ico"
 	Debug  0
