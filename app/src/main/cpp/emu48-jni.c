@@ -452,12 +452,114 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv
     return FALSE;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz) {
-    OnObjectLoad();
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz, jstring filename) {
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
+
+    SuspendDebugger();						// suspend debugger
+    bDbgAutoStateCtrl = FALSE;				// disable automatic debugger state control
+
+    // calculator off, turn on
+    if (!(Chipset.IORam[BITOFFSET]&DON))
+    {
+        KeyboardEvent(TRUE,0,0x8000);
+        Sleep(dwWakeupDelay);
+        KeyboardEvent(FALSE,0,0x8000);
+
+        // wait for sleep mode
+        while (Chipset.Shutdn == FALSE) Sleep(0);
+    }
+
+    if (nState != SM_RUN)
+    {
+        InfoMessage(_T("The emulator must be running to load an object."));
+        goto cancel;
+    }
+
+    if (WaitForSleepState())				// wait for cpu SHUTDN then sleep state
+    {
+        InfoMessage(_T("The emulator is busy."));
+        goto cancel;
+    }
+
+    _ASSERT(nState == SM_SLEEP);
+
+//    if (bLoadObjectWarning)
+//    {
+//        UINT uReply = YesNoCancelMessage(
+//                _T("Warning: Trying to load an object while the emulator is busy\n")
+//                _T("will certainly result in a memory lost. Before loading an object\n")
+//                _T("you should be sure that the calculator is in idle state.\n")
+//                _T("Do you want to see this warning next time you try to load an object?"),0);
+//        switch (uReply)
+//        {
+//            case IDYES:
+//                break;
+//            case IDNO:
+//                bLoadObjectWarning = FALSE;
+//                break;
+//            case IDCANCEL:
+//                SwitchToState(SM_RUN);
+//                goto cancel;
+//        }
+//    }
+
+//    if (!GetLoadObjectFilename(_T(HP_FILTER),_T("HP")))
+//    {
+//        SwitchToState(SM_RUN);
+//        goto cancel;
+//    }
+
+    if (!LoadObject(filenameUTF8))
+    {
+        SwitchToState(SM_RUN);
+        goto cancel;
+    }
+
+    SwitchToState(SM_RUN);					// run state
+    while (nState!=nNextState) Sleep(0);
+    _ASSERT(nState == SM_RUN);
+    KeyboardEvent(TRUE,0,0x8000);
+    Sleep(dwWakeupDelay);
+    KeyboardEvent(FALSE,0,0x8000);
+    while (Chipset.Shutdn == FALSE) Sleep(0);
+
+    cancel:
+    bDbgAutoStateCtrl = TRUE;				// enable automatic debugger state control
+    ResumeDebugger();
+
+    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+
+    return TRUE;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectSave(JNIEnv *env, jobject thisz) {
-    OnObjectSave();
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectSave(JNIEnv *env, jobject thisz, jstring filename) {
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
+    //OnObjectSave();
+
+    if (nState != SM_RUN)
+    {
+        InfoMessage(_T("The emulator must be running to save an object."));
+        return 0;
+    }
+
+    if (WaitForSleepState())				// wait for cpu SHUTDN then sleep state
+    {
+        InfoMessage(_T("The emulator is busy."));
+        return 0;
+    }
+
+    _ASSERT(nState == SM_SLEEP);
+
+//    if (GetSaveObjectFilename(_T(HP_FILTER),_T("HP")))
+//    {
+        SaveObject(filenameUTF8);
+//    }
+
+    SwitchToState(SM_RUN);
+
+    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+
+    return TRUE;
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv *env, jobject thisz) {

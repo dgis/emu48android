@@ -13,6 +13,7 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
+- Support 8bits images
 - Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
 - Option to allow rotation
@@ -25,3 +26,4 @@ DONE
 - Bug Red and Blue seems inverted.
 - Multitouch
 - Choose KML/Change KML/NewDocument
+- Load/Save object

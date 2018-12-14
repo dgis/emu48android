@@ -1,9 +1,11 @@
 package com.regis.cosnier.emu48;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,11 +18,13 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -47,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     SharedPreferences sharedPreferences;
     SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
 
+    private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,9 +115,39 @@ public class MainActivity extends AppCompatActivity
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
 
+        //https://developer.android.com/guide/topics/providers/document-provider#permissions
         String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
         if(lastDocumentUrl.length() > 0)
-            onFileOpen(lastDocumentUrl);
+            try {
+//                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+//                    //return;
+//                } else {
+                    onFileOpen(lastDocumentUrl);
+//                }
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+//				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//				} else {
+//					//Toast.makeText(this, R.string.toast_access_location_denied, Toast.LENGTH_SHORT).show();
+//				}
+                String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
+                if(lastDocumentUrl.length() > 0)
+                    onFileOpen(lastDocumentUrl);
+//				return;
+            }
+//			default:
+//				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     @Override
@@ -299,6 +334,8 @@ public class MainActivity extends AppCompatActivity
 
     public static int INTENT_GETOPENFILENAME = 1;
     public static int INTENT_GETSAVEFILENAME = 2;
+    public static int INTENT_OBJECT_LOAD = 3;
+    public static int INTENT_OBJECT_SAVE = 4;
 
     private void OnFileOpen() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -343,12 +380,38 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void OnObjectLoad() {
-        NativeLib.onObjectLoad();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
+        startActivityForResult(intent, INTENT_OBJECT_LOAD);
 
+        //NativeLib.onObjectLoad();
     }
     private void OnObjectSave() {
-        NativeLib.onObjectSave();
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        int model = NativeLib.getCurrentModel();
+        String extension = "e48"; // HP48SX/GX
+        switch (model) {
+            case '6':
+            case 'A':
+                extension = "e38"; // HP38G
+                break;
+            case 'E':
+                extension = "e39"; // HP39/40G
+                break;
+            case 'X':
+                extension = "e49"; // HP49G
+                break;
+        }
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state." + extension);
+        startActivityForResult(intent, INTENT_OBJECT_SAVE);
 
+
+        //NativeLib.onObjectSave();
     }
     private void OnViewCopy() {
         NativeLib.onViewCopy();
@@ -404,6 +467,9 @@ public class MainActivity extends AppCompatActivity
 
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + uri.toString());
+
+                makeUriPersistable(data, uri);
+
                 String url = uri.toString();
                 if(onFileOpen(url) != 0) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -415,15 +481,40 @@ public class MainActivity extends AppCompatActivity
 
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
+
+                makeUriPersistable(data, uri);
+
                 String url = uri.toString();
                 if(NativeLib.onFileSaveAs(url) != 0) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("lastDocument", url);
                     editor.commit();
                 }
+            } else if(requestCode == INTENT_OBJECT_LOAD) {
+                Uri uri = data.getData();
+
+                //just as an example, I am writing a String to the Uri I received from the user:
+                Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + uri.toString());
+
+                String url = uri.toString();
+                NativeLib.onObjectLoad(url);
+            } else if(requestCode == INTENT_OBJECT_SAVE) {
+                Uri uri = data.getData();
+
+                //just as an example, I am writing a String to the Uri I received from the user:
+                Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + uri.toString());
+
+                String url = uri.toString();
+                NativeLib.onObjectSave(url);
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void makeUriPersistable(Intent data, Uri uri) {
+        grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 
     private int onFileOpen(String url) {
@@ -458,9 +549,9 @@ public class MainActivity extends AppCompatActivity
             if((writeAccess & GENERIC_WRITE) == GENERIC_WRITE)
                 mode += "w";
             filePfd = getContentResolver().openFileDescriptor(uri, mode);
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return -1;
         }
         int fd = filePfd != null ? filePfd.getFd() : 0;
         return fd;
