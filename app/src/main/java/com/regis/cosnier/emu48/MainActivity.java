@@ -382,9 +382,15 @@ public class MainActivity extends AppCompatActivity
     private void OnObjectLoad() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
+        // //Intent.setType("application/*|text/*");
+//        String[] mimeTypes = {
+//            "text/plain",
+//            "application/pdf",
+//            "application/zip"
+//        };
+//        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_LOAD);
 
         //NativeLib.onObjectLoad();
@@ -393,21 +399,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        int model = NativeLib.getCurrentModel();
-        String extension = "e48"; // HP48SX/GX
-        switch (model) {
-            case '6':
-            case 'A':
-                extension = "e38"; // HP38G
-                break;
-            case 'E':
-                extension = "e39"; // HP39/40G
-                break;
-            case 'X':
-                extension = "e49"; // HP49G
-                break;
-        }
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state." + extension);
+        intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
 
 
