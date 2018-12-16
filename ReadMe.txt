@@ -13,6 +13,7 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
+- Change settings per settings
 - Support 8bits images
 - Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
