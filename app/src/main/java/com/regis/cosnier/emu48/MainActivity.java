@@ -102,11 +102,11 @@ public class MainActivity extends AppCompatActivity
         mainScreenContainer.addView(mainScreenView, 0);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        updateFromPreferences();
+        updateFromPreferences(null, false);
         sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                updateFromPreferences();
+                updateFromPreferences(key, true);
             }
         };
         sharedPreferences.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
@@ -549,27 +549,45 @@ public class MainActivity extends AppCompatActivity
         return fd;
     }
 
-    private void updateFromPreferences() {
-        //int settingsInput = Integer.parseInt(sharedPreferences.getString("settings_input", "0"));
-
-        boolean settingsRealspeed = sharedPreferences.getBoolean("settings_realspeed", false);
-        boolean settingsGrayscale = sharedPreferences.getBoolean("settings_grayscale", false);
-//        boolean settingsAlwaysontopt = sharedPreferences.getBoolean("settings_alwaysontop", false);
-//        boolean settingsActfollowsmouset = sharedPreferences.getBoolean("settings_actfollowsmouse", false);
-//        boolean settingsSingleinstancet = sharedPreferences.getBoolean("settings_singleinstance", false);
-        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
-        boolean settingsAutosaveonexit = sharedPreferences.getBoolean("settings_autosaveonexit", false);
-        boolean settingsObjectloadwarning = sharedPreferences.getBoolean("settings_objectloadwarning", false);
-        boolean settingsAlwaysdisplog = sharedPreferences.getBoolean("settings_alwaysdisplog", true);
-        boolean settingsPort1en = sharedPreferences.getBoolean("settings_port1en", false);
-        boolean settingsPort1wr = sharedPreferences.getBoolean("settings_port1wr", false);
-        boolean settingsPort2en = sharedPreferences.getBoolean("settings_port2en", false);
-        boolean settingsPort2wr = sharedPreferences.getBoolean("settings_port2wr", false);
-        String settingsPort2load = sharedPreferences.getString("settings_port2load", "");
-
-        NativeLib.setConfiguration(settingsRealspeed ? 1 : 0, settingsGrayscale ? 1 : 0, settingsAutosave ? 1 : 0,
-            settingsAutosaveonexit ? 1 : 0, settingsObjectloadwarning ? 1 : 0, settingsAlwaysdisplog ? 1 : 0,
-            settingsPort1en ? 1 : 0, settingsPort1wr ? 1 : 0,
-            settingsPort2en ? 1 : 0, settingsPort2wr ? 1 : 0, settingsPort2load);
+    private void updateFromPreferences(String key, boolean isDynamic) {
+        int isDynamicValue = isDynamic ? 1 : 0;
+        if(key == null) {
+//        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
+//        boolean settingsAutosaveonexit = sharedPreferences.getBoolean("settings_autosaveonexit", false);
+//        boolean settingsObjectloadwarning = sharedPreferences.getBoolean("settings_objectloadwarning", false);
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_alwaysdisplog", "settings_port1", "settings_port2" };
+            for (String settingKey : settingKeys) {
+                updateFromPreferences(settingKey, false);
+            }
+        } else {
+            switch (key) {
+                case "settings_realspeed":
+                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
+                    break;
+                case "settings_grayscale":
+                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
+                    break;
+                case "settings_alwaysdisplog":
+                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, true) ? 1 : 0, 0, null);
+                    break;
+                case "settings_port1":
+                case "settings_port1en":
+                case "settings_port1wr":
+                    NativeLib.setConfiguration("settings_port1", isDynamicValue,
+                            sharedPreferences.getBoolean("settings_port1en", false) ? 1 : 0,
+                            sharedPreferences.getBoolean("settings_port1wr", false) ? 1 : 0,
+                            null);
+                    break;
+                case "settings_port2":
+                case "settings_port2en":
+                case "settings_port2wr":
+                case "settings_port2load":
+                    NativeLib.setConfiguration("settings_port2", isDynamicValue,
+                            sharedPreferences.getBoolean("settings_port2en", false) ? 1 : 0,
+                            sharedPreferences.getBoolean("settings_port2wr", false) ? 1 : 0,
+                            sharedPreferences.getString("settings_port2load", ""));
+                    break;
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@
 #include <android/bitmap.h>
 #include "core/resource.h"
 #include "win32-layer.h"
+#include "core/Emu48.h"
 
 extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
@@ -64,6 +65,11 @@ BOOL SetCurrentDirectory(LPCTSTR path)
 
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
+    if(_tcscmp(lpFileName, szPort2Filename) == 0) {
+        // Special case for Port2 filename
+        //TODO
+    }
+
     if(szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0) {
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;

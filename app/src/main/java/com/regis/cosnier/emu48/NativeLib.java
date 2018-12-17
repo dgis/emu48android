@@ -41,8 +41,6 @@ public class NativeLib {
     public static native void onBackupRestore();
     public static native void onBackupDelete();
 
-    public static native void setConfiguration(int settingsRealspeed, int settingsGrayscale, int settingsAutosave,
-                                               int settingsAutosaveonexit, int settingsObjectloadwarning, int settingsAlwaysdisplog,
-                                               int settingsPort1en, int settingsPort1wr,
-                                               int settingsPort2en, int settingsPort2wr, String settingsPort2load);
+    public static native void setConfiguration(String key, int isDynamic, int intValue1, int intValue2, String stringValue);
+    public static native int getIsPortExtensionPossible();
 }

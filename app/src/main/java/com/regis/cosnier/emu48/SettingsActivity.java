@@ -217,6 +217,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToBoolValue(findPreference("settings_port2en"));
             bindPreferenceSummaryToBoolValue(findPreference("settings_port2wr"));
 
+            boolean disablePortPreferences = (NativeLib.getIsPortExtensionPossible() == 0);
+            //TODO not working
+            findPreference("settings_port1en").setShouldDisableView(disablePortPreferences);
+            findPreference("settings_port1wr").setShouldDisableView(disablePortPreferences);
+            findPreference("settings_port2en").setShouldDisableView(disablePortPreferences);
+            findPreference("settings_port2wr").setShouldDisableView(disablePortPreferences);
         }
 
         @Override

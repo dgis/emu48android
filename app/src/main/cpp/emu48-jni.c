@@ -106,135 +106,6 @@ int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
     return result;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz,
-        jint settingsRealspeed, jint settingsGrayscale, jint settingsAutosave,
-        jint settingsAutosaveonexit, jint settingsObjectloadwarning, jint settingsAlwaysdisplog,
-        jint settingsPort1en, jint settingsPort1wr,
-        jint settingsPort2len, jint settingsPort2wr, jstring settingsPort2load) {
-
-    bRealSpeed = settingsRealspeed;
-    bAutoSave = settingsAutosave;
-    bAutoSaveOnExit = settingsAutosaveonexit;
-    bLoadObjectWarning = settingsObjectloadwarning;
-    bAlwaysDisplayLog = settingsAlwaysdisplog;
-
-    SetSpeed(bRealSpeed);			// set speed
-
-    // LCD grayscale checkbox has been changed
-    if (bGrayscale != (BOOL)settingsGrayscale) {
-        UINT nOldState = SwitchToState(SM_INVALID);
-        SetLcdMode(!bGrayscale);	// set new display mode
-        SwitchToState(nOldState);
-    }
-
-    //SettingsMemoryProc
-    LPCTSTR szActPort2Filename = _T("");
-
-    BOOL bPort2CfgChange = FALSE;
-    BOOL bPort2AttChange = FALSE;
-
-    // port1
-    if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
-    {
-        UINT nOldState = SwitchToState(SM_SLEEP);
-        // save old card status
-        BYTE byCardsStatus = Chipset.cards_status;
-
-        // port1 disabled?
-        Chipset.cards_status &= ~(PORT1_PRESENT | PORT1_WRITE);
-        if (settingsPort1en)
-        {
-            Chipset.cards_status |= PORT1_PRESENT;
-            if (settingsPort1wr)
-                Chipset.cards_status |= PORT1_WRITE;
-        }
-
-        // changed card status in slot1?
-        if (   ((byCardsStatus ^ Chipset.cards_status) & (PORT1_PRESENT | PORT1_WRITE)) != 0
-               && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
-                )
-        {
-            Chipset.HST |= MP;		// set Module Pulled
-            IOBit(SRQ2,NINT,FALSE);	// set NINT to low
-            Chipset.SoftInt = TRUE;	// set interrupt
-            bInterrupt = TRUE;
-        }
-        SwitchToState(nOldState);
-    }
-    // HP48SX/GX port2 change settings detection
-    if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
-    {
-        //bPort2IsShared = settingsPort2isshared;
-        const char * szNewPort2Filename = NULL;
-        const char *settingsPort2loadUTF8 = NULL;
-        if(settingsPort2load) {
-            settingsPort2loadUTF8 = (*env)->GetStringUTFChars(env, settingsPort2load , NULL);
-            szNewPort2Filename = settingsPort2loadUTF8;
-        } else
-            szNewPort2Filename = _T("SHARED.BIN");
-
-        if(_tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
-            _tcscpy(szPort2Filename, szNewPort2Filename);
-            szActPort2Filename = szPort2Filename;
-            bPort2CfgChange = TRUE;	// slot2 configuration changed
-
-            // R/W port
-            if (   *szActPort2Filename != 0
-                   && (BOOL) settingsAlwaysdisplog != bPort2Writeable)
-            {
-                bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
-                bPort2CfgChange = TRUE;	// slot2 configuration changed
-            }
-        }
-        if(settingsPort2loadUTF8)
-            (*env)->ReleaseStringUTFChars(env, settingsPort2load, settingsPort2loadUTF8);
-    }
-
-    if (bPort2CfgChange)			// slot2 configuration changed
-    {
-        UINT nOldState = SwitchToState(SM_INVALID);
-
-        UnmapPort2();				// unmap port2
-
-//        if (bPort2AttChange)		// slot2 R/W mode changed
-//        {
-//            DWORD dwFileAtt;
-//
-//            SetCurrentDirectory(szEmuDirectory);
-//            dwFileAtt = GetFileAttributes(szActPort2Filename);
-//            if (dwFileAtt != 0xFFFFFFFF)
-//            {
-//                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
-//                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
-//                else
-//                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
-//
-//                SetFileAttributes(szActPort2Filename,dwFileAtt);
-//            }
-//            SetCurrentDirectory(szCurrentDirectory);
-//        }
-
-        if (cCurrentRomType)		// ROM defined
-        {
-            MapPort2(szActPort2Filename);
-
-            // port2 changed and card detection enabled
-            if (   (bPort2AttChange || Chipset.wPort2Crc != wPort2Crc)
-                   && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
-                    )
-            {
-                Chipset.HST |= MP;		// set Module Pulled
-                IOBit(SRQ2,NINT,FALSE);	// set NINT to low
-                Chipset.SoftInt = TRUE;	// set interrupt
-                bInterrupt = TRUE;
-            }
-            // save fingerprint of port2
-            Chipset.wPort2Crc = wPort2Crc;
-        }
-        SwitchToState(nOldState);
-    }
-}
-
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
@@ -588,6 +459,276 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupRestore(JN
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupDelete(JNIEnv *env, jobject thisz) {
     OnBackupDelete();
+}
+
+//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz,
+//                                                                               jint settingsRealspeed, jint settingsGrayscale, jint settingsAutosave,
+//                                                                               jint settingsAutosaveonexit, jint settingsObjectloadwarning, jint settingsAlwaysdisplog,
+//                                                                               jint settingsPort1en, jint settingsPort1wr,
+//                                                                               jint settingsPort2len, jint settingsPort2wr, jstring settingsPort2load) {
+//
+//    bRealSpeed = settingsRealspeed;
+//    bAutoSave = settingsAutosave;
+//    bAutoSaveOnExit = settingsAutosaveonexit;
+//    bLoadObjectWarning = settingsObjectloadwarning;
+//    bAlwaysDisplayLog = settingsAlwaysdisplog;
+//
+//    SetSpeed(bRealSpeed);			// set speed
+//
+//    // LCD grayscale checkbox has been changed
+//    if (bGrayscale != (BOOL)settingsGrayscale) {
+//        UINT nOldState = SwitchToState(SM_INVALID);
+//        SetLcdMode(!bGrayscale);	// set new display mode
+//        SwitchToState(nOldState);
+//    }
+//
+//    //SettingsMemoryProc
+//    LPCTSTR szActPort2Filename = _T("");
+//
+//    BOOL bPort2CfgChange = FALSE;
+//    BOOL bPort2AttChange = FALSE;
+//
+//    // port1
+//    if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
+//    {
+//        UINT nOldState = SwitchToState(SM_SLEEP);
+//        // save old card status
+//        BYTE byCardsStatus = Chipset.cards_status;
+//
+//        // port1 disabled?
+//        Chipset.cards_status &= ~(PORT1_PRESENT | PORT1_WRITE);
+//        if (settingsPort1en)
+//        {
+//            Chipset.cards_status |= PORT1_PRESENT;
+//            if (settingsPort1wr)
+//                Chipset.cards_status |= PORT1_WRITE;
+//        }
+//
+//        // changed card status in slot1?
+//        if (   ((byCardsStatus ^ Chipset.cards_status) & (PORT1_PRESENT | PORT1_WRITE)) != 0
+//               && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+//                )
+//        {
+//            Chipset.HST |= MP;		// set Module Pulled
+//            IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+//            Chipset.SoftInt = TRUE;	// set interrupt
+//            bInterrupt = TRUE;
+//        }
+//        SwitchToState(nOldState);
+//    }
+//    // HP48SX/GX port2 change settings detection
+//    if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
+//    {
+//        //bPort2IsShared = settingsPort2isshared;
+//        const char * szNewPort2Filename = NULL;
+//        const char *settingsPort2loadUTF8 = NULL;
+//        if(settingsPort2load) {
+//            settingsPort2loadUTF8 = (*env)->GetStringUTFChars(env, settingsPort2load , NULL);
+//            szNewPort2Filename = settingsPort2loadUTF8;
+//        } else
+//            szNewPort2Filename = _T("SHARED.BIN");
+//
+//        if(_tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
+//            _tcscpy(szPort2Filename, szNewPort2Filename);
+//            szActPort2Filename = szPort2Filename;
+//            bPort2CfgChange = TRUE;	// slot2 configuration changed
+//
+//            // R/W port
+//            if (   *szActPort2Filename != 0
+//                   && (BOOL) settingsAlwaysdisplog != bPort2Writeable)
+//            {
+//                bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
+//                bPort2CfgChange = TRUE;	// slot2 configuration changed
+//            }
+//        }
+//        if(settingsPort2loadUTF8)
+//            (*env)->ReleaseStringUTFChars(env, settingsPort2load, settingsPort2loadUTF8);
+//    }
+//
+//    if (bPort2CfgChange)			// slot2 configuration changed
+//    {
+//        UINT nOldState = SwitchToState(SM_INVALID);
+//
+//        UnmapPort2();				// unmap port2
+//
+////        if (bPort2AttChange)		// slot2 R/W mode changed
+////        {
+////            DWORD dwFileAtt;
+////
+////            SetCurrentDirectory(szEmuDirectory);
+////            dwFileAtt = GetFileAttributes(szActPort2Filename);
+////            if (dwFileAtt != 0xFFFFFFFF)
+////            {
+////                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
+////                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
+////                else
+////                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
+////
+////                SetFileAttributes(szActPort2Filename,dwFileAtt);
+////            }
+////            SetCurrentDirectory(szCurrentDirectory);
+////        }
+//
+//        if (cCurrentRomType)		// ROM defined
+//        {
+//            MapPort2(szActPort2Filename);
+//
+//            // port2 changed and card detection enabled
+//            if (   (bPort2AttChange || Chipset.wPort2Crc != wPort2Crc)
+//                   && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+//                    )
+//            {
+//                Chipset.HST |= MP;		// set Module Pulled
+//                IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+//                Chipset.SoftInt = TRUE;	// set interrupt
+//                bInterrupt = TRUE;
+//            }
+//            // save fingerprint of port2
+//            Chipset.wPort2Crc = wPort2Crc;
+//        }
+//        SwitchToState(nOldState);
+//    }
+//}
+
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
+    const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
+    const char *configStringValue = stringValue ? (*env)->GetStringUTFChars(env, stringValue, NULL) : NULL;
+
+    bAutoSave = FALSE; //settingsAutosave;
+    bAutoSaveOnExit = FALSE; //settingsAutosaveonexit;
+    bLoadObjectWarning = FALSE; //settingsObjectloadwarning;
+
+    if(_tcscmp(_T("settings_realspeed"), configKey) == 0) {
+        bRealSpeed = intValue1;
+        if(isDynamic)
+            SetSpeed(bRealSpeed);			// set speed
+    } else if(_tcscmp(_T("settings_grayscale"), configKey) == 0) {
+        // LCD grayscale checkbox has been changed
+        if (bGrayscale != (BOOL)intValue1) {
+            UINT nOldState = SwitchToState(SM_INVALID);
+            SetLcdMode(!bGrayscale);	// set new display mode
+            SwitchToState(nOldState);
+        }
+    } else if(_tcscmp(_T("settings_alwaysdisplog"), configKey) == 0) {
+        bAlwaysDisplayLog = intValue1;
+    } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
+        BOOL settingsPort1en = intValue1;
+        BOOL settingsPort1wr = intValue2;
+        // port1
+        if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
+        {
+            UINT nOldState = SwitchToState(SM_SLEEP);
+            // save old card status
+            BYTE byCardsStatus = Chipset.cards_status;
+
+            // port1 disabled?
+            Chipset.cards_status &= ~(PORT1_PRESENT | PORT1_WRITE);
+            if (settingsPort1en)
+            {
+                Chipset.cards_status |= PORT1_PRESENT;
+                if (settingsPort1wr)
+                    Chipset.cards_status |= PORT1_WRITE;
+            }
+
+            // changed card status in slot1?
+            if (   ((byCardsStatus ^ Chipset.cards_status) & (PORT1_PRESENT | PORT1_WRITE)) != 0
+                   && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+                    )
+            {
+                Chipset.HST |= MP;		// set Module Pulled
+                IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+                Chipset.SoftInt = TRUE;	// set interrupt
+                bInterrupt = TRUE;
+            }
+            SwitchToState(nOldState);
+        }
+    } else if(_tcscmp(_T("settings_port2"), configKey) == 0) {
+        BOOL settingsPort2en = (BOOL)intValue1;
+        BOOL settingsPort2wr = (BOOL)intValue2;
+        const char * settingsPort2load = settingsPort2en ? configStringValue : NULL;
+
+        LPCTSTR szActPort2Filename = _T("");
+        BOOL bPort2CfgChange = FALSE;
+        BOOL bPort2AttChange = FALSE;
+
+        // HP48SX/GX port2 change settings detection
+        if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
+        {
+            //bPort2IsShared = settingsPort2isshared;
+            const char * szNewPort2Filename = NULL;
+            if(settingsPort2load) {
+                szNewPort2Filename = settingsPort2load;
+            }
+//            else
+//                szNewPort2Filename = _T("SHARED.BIN");
+
+            if(szNewPort2Filename && _tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
+                _tcscpy(szPort2Filename, szNewPort2Filename);
+                szActPort2Filename = szPort2Filename;
+                bPort2CfgChange = TRUE;	// slot2 configuration changed
+
+                // R/W port
+                if (*szActPort2Filename != 0 && (BOOL)settingsPort2wr != bPort2Writeable)
+                {
+                    bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
+                    bPort2CfgChange = TRUE;	// slot2 configuration changed
+                }
+            }
+        }
+
+        if (bPort2CfgChange)			// slot2 configuration changed
+        {
+            UINT nOldState = SwitchToState(SM_INVALID);
+
+            UnmapPort2();				// unmap port2
+
+//        if (bPort2AttChange)		// slot2 R/W mode changed
+//        {
+//            DWORD dwFileAtt;
+//
+//            SetCurrentDirectory(szEmuDirectory);
+//            dwFileAtt = GetFileAttributes(szActPort2Filename);
+//            if (dwFileAtt != 0xFFFFFFFF)
+//            {
+//                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
+//                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
+//                else
+//                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
+//
+//                SetFileAttributes(szActPort2Filename,dwFileAtt);
+//            }
+//            SetCurrentDirectory(szCurrentDirectory);
+//        }
+
+            if (cCurrentRomType)		// ROM defined
+            {
+                MapPort2(szActPort2Filename);
+
+                // port2 changed and card detection enabled
+                if (   (bPort2AttChange || Chipset.wPort2Crc != wPort2Crc)
+                       && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
+                        )
+                {
+                    Chipset.HST |= MP;		// set Module Pulled
+                    IOBit(SRQ2,NINT,FALSE);	// set NINT to low
+                    Chipset.SoftInt = TRUE;	// set interrupt
+                    bInterrupt = TRUE;
+                }
+                // save fingerprint of port2
+                Chipset.wPort2Crc = wPort2Crc;
+            }
+            SwitchToState(nOldState);
+        }
+    }
+
+    if(configKey)
+        (*env)->ReleaseStringUTFChars(env, key, configKey);
+    if(configStringValue)
+        (*env)->ReleaseStringUTFChars(env, stringValue, configStringValue);
+}
+
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getIsPortExtensionPossible(JNIEnv *env, jobject thisz) {
+    return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0);
 }
 
 //p Read5(0x7050E)
