@@ -118,37 +118,37 @@ public class MainActivity extends AppCompatActivity
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
         String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
         if(lastDocumentUrl.length() > 0)
-            try {
+//            try {
 //                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
 //                    //return;
 //                } else {
                     onFileOpen(lastDocumentUrl);
 //                }
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-            }
+//            } catch (Exception e) {
+//                Log.e(TAG, e.getMessage());
+//            }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
-                // If request is cancelled, the result arrays are empty.
-//				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//
-//				} else {
-//					//Toast.makeText(this, R.string.toast_access_location_denied, Toast.LENGTH_SHORT).show();
-//				}
-                String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
-                if(lastDocumentUrl.length() > 0)
-                    onFileOpen(lastDocumentUrl);
-//				return;
-            }
-//			default:
-//				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+//        switch (requestCode) {
+//            case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
+//                // If request is cancelled, the result arrays are empty.
+////				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+////
+////				} else {
+////					//Toast.makeText(this, R.string.toast_access_location_denied, Toast.LENGTH_SHORT).show();
+////				}
+//                String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
+//                if(lastDocumentUrl.length() > 0)
+//                    onFileOpen(lastDocumentUrl);
+////				return;
+//            }
+////			default:
+////				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        }
+//    }
 
     @Override
     public void onBackPressed() {
@@ -460,13 +460,13 @@ public class MainActivity extends AppCompatActivity
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + uri.toString());
 
-                makeUriPersistable(data, uri);
-
                 String url = uri.toString();
                 if(onFileOpen(url) != 0) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("lastDocument", url);
                     editor.commit();
+
+                    makeUriPersistable(data, uri);
                 }
             } else if(requestCode == INTENT_GETSAVEFILENAME) {
                 Uri uri = data.getData();
@@ -474,13 +474,13 @@ public class MainActivity extends AppCompatActivity
                 //just as an example, I am writing a String to the Uri I received from the user:
                 Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
 
-                makeUriPersistable(data, uri);
-
                 String url = uri.toString();
                 if(NativeLib.onFileSaveAs(url) != 0) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("lastDocument", url);
                     editor.commit();
+
+                    makeUriPersistable(data, uri);
                 }
             } else if(requestCode == INTENT_OBJECT_LOAD) {
                 Uri uri = data.getData();
@@ -504,8 +504,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
-        grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        //grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 
