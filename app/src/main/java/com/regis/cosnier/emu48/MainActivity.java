@@ -1,15 +1,22 @@
 package com.regis.cosnier.emu48;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -45,7 +52,15 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final int INTENT_SETTINGS = 1;
+    public static final int INTENT_GETOPENFILENAME = 1;
+    public static final int INTENT_GETSAVEFILENAME = 2;
+    public static final int INTENT_OBJECT_LOAD = 3;
+    public static final int INTENT_OBJECT_SAVE = 4;
+    public static final int INTENT_SETTINGS = 5;
+    public static final int INTENT_PORT2LOAD = 6;
+
+    public static MainActivity mainActivity;
+
     private static final String TAG = "MainActivity";
     private MainScreenView mainScreenView;
     SharedPreferences sharedPreferences;
@@ -80,6 +95,8 @@ public class MainActivity extends AppCompatActivity
 
 
 
+        mainActivity = this;
+
 
         ViewGroup mainScreenContainer = (ViewGroup)findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this); //, currentProject);
@@ -101,7 +118,7 @@ public class MainActivity extends AppCompatActivity
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         updateFromPreferences(null, false);
         sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
@@ -332,11 +349,6 @@ public class MainActivity extends AppCompatActivity
             }).show();
     }
 
-    public static int INTENT_GETOPENFILENAME = 1;
-    public static int INTENT_GETSAVEFILENAME = 2;
-    public static int INTENT_OBJECT_LOAD = 3;
-    public static int INTENT_OBJECT_SAVE = 4;
-
     private void OnFileOpen() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -379,21 +391,40 @@ public class MainActivity extends AppCompatActivity
         startActivityForResult(new Intent(this, SettingsActivity.class), INTENT_SETTINGS);
     }
 
-    private void OnObjectLoad() {
+    private void openDocument() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         // //Intent.setType("application/*|text/*");
-//        String[] mimeTypes = {
-//            "text/plain",
-//            "application/pdf",
-//            "application/zip"
-//        };
-//        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        // String[] mimeTypes = {
+        //     "text/plain",
+        //     "application/pdf",
+        //     "application/zip"
+        // };
+        // intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
         intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_LOAD);
+    }
 
-        //NativeLib.onObjectLoad();
+    private void OnObjectLoad() {
+        if(sharedPreferences.getBoolean("settings_objectloadwarning", false)) {
+            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE) {
+                        openDocument();
+                    }
+                }
+            };
+            new AlertDialog.Builder(this)
+                    .setMessage("Warning: Trying to load an object while the emulator is busy\n" +
+                            "will certainly result in a memory lost. Before loading an object\n" +
+                            "you should be sure that the calculator is in idle state.\n" +
+                            "Do you want to see this warning next time you try to load an object?")
+                    .setPositiveButton(android.R.string.yes, onClickListener)
+                    .setNegativeButton(android.R.string.no, onClickListener)
+                    .show();
+        } else
+            openDocument();
     }
     private void OnObjectSave() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -401,9 +432,6 @@ public class MainActivity extends AppCompatActivity
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
-
-
-        //NativeLib.onObjectSave();
     }
     private void OnViewCopy() {
         NativeLib.onViewCopy();
@@ -498,6 +526,8 @@ public class MainActivity extends AppCompatActivity
 
                 String url = uri.toString();
                 NativeLib.onObjectSave(url);
+            } else if(requestCode == INTENT_SETTINGS) {
+
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -519,7 +549,7 @@ public class MainActivity extends AppCompatActivity
         if(sharedPreferences.getBoolean("settings_alwaysdisplog", true)) {
             String kmlLog = NativeLib.getKMLLog();
             new AlertDialog.Builder(this)
-                    .setTitle("Pick a calculator")
+                    .setTitle("KML Script Compilation Result")
                     .setMessage(kmlLog)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
@@ -554,7 +584,6 @@ public class MainActivity extends AppCompatActivity
         if(key == null) {
 //        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
 //        boolean settingsAutosaveonexit = sharedPreferences.getBoolean("settings_autosaveonexit", false);
-//        boolean settingsObjectloadwarning = sharedPreferences.getBoolean("settings_objectloadwarning", false);
             String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_alwaysdisplog", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);

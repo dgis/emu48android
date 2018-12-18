@@ -65,12 +65,13 @@ BOOL SetCurrentDirectory(LPCTSTR path)
 
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
+    BOOL forceNormalFile = FALSE;
     if(_tcscmp(lpFileName, szPort2Filename) == 0) {
         // Special case for Port2 filename
-        //TODO
+        forceNormalFile = TRUE;
     }
 
-    if(szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0) {
+    if(!forceNormalFile && (szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)) {
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;
         szFileName[0] = _T('\0');
@@ -190,7 +191,7 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
         *lpFileSizeHigh = 0;
     if(hFile->handleType == HANDLE_TYPE_FILE) {
         off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
-        off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END) + 1;
+        off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END); // + 1;
         lseek(hFile->fileDescriptor, currentPosition, SEEK_SET);
         return fileLength;
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
@@ -211,7 +212,7 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
         handle->handleType = HANDLE_TYPE_FILE_MAPPING_ASSET;
         handle->fileAsset = hFile->fileAsset;
     }
-    handle->fileMappingSize = (dwMaximumSizeHigh << 32) & dwMaximumSizeLow;
+    handle->fileMappingSize = (dwMaximumSizeHigh << 32) | dwMaximumSizeLow;
     handle->fileMappingAddress = NULL;
     return handle;
 }

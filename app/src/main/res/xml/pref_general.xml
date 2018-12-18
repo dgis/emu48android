@@ -1,90 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!--<ListPreference-->
-        <!--android:key="settings_input"-->
-        <!--android:defaultValue="0"-->
-        <!--android:title="@string/settings_input_title"-->
-        <!--android:entries="@array/settings_input_list_titles"-->
-        <!--android:entryValues="@array/settings_input_list_values"-->
-        <!--android:negativeButtonText="@null"-->
-        <!--android:positiveButtonText="@null"-->
-        <!--/>-->
-
-    <!--<ListPreference-->
-        <!--android:key="settings_audio_engine"-->
-        <!--android:defaultValue="0"-->
-        <!--android:title="@string/settings_audio_engine_title"-->
-        <!--android:entries="@array/settings_audio_engine_list_titles"-->
-        <!--android:entryValues="@array/settings_audio_engine_list_values"-->
-        <!--android:negativeButtonText="@null"-->
-        <!--android:positiveButtonText="@null"-->
-        <!--/>-->
-
-    <!--<com.regis.cosnier.emu48.AudioDeviceSpinnerPreference-->
-        <!--android:key="settings_audio_input"-->
-        <!--android:defaultValue="0"-->
-        <!--android:title="@string/settings_audio_input_title"-->
-        <!--android:dialogMessage="@string/settings_audio_input_title_dialog"-->
-        <!--/>-->
-
-    <!--<ListPreference-->
-        <!--android:key="settings_sample_rate"-->
-        <!--android:defaultValue="48000"-->
-        <!--android:title="@string/settings_sample_rate_title"-->
-        <!--android:entries="@array/settings_sample_rate_list_titles"-->
-        <!--android:entryValues="@array/settings_sample_rate_list_values"-->
-        <!--android:negativeButtonText="@null"-->
-        <!--android:positiveButtonText="@null"-->
-        <!--/>-->
-
-    <!--<ListPreference-->
-        <!--android:key="settings_fft_size"-->
-        <!--android:defaultValue="1024"-->
-        <!--android:title="@string/settings_fft_size_title"-->
-        <!--android:entries="@array/settings_fft_size_list_titles"-->
-        <!--android:entryValues="@array/settings_fft_size_list_values"-->
-        <!--android:negativeButtonText="@null"-->
-        <!--android:positiveButtonText="@null"-->
-        <!--/>-->
-
-    <!--<com.regis.cosnier.emu48.SeekBarPreference-->
-        <!--android:key="settings_volume_scale"-->
-        <!--android:title="@string/settings_volume_scale_title"-->
-        <!--android:dialogMessage="@string/settings_volume_scale_title"-->
-        <!--android:defaultValue="0"-->
-        <!--app:suffix="@string/settings_volume_scale_suffix"-->
-        <!--app:suffixes="@string/settings_volume_scale_suffixes"-->
-        <!--app:min="-1000"-->
-        <!--android:max="1000"-->
-        <!--/>-->
-
-    <!--<com.regis.cosnier.emu48.SeekBarPreference-->
-        <!--android:key="settings_tempo"-->
-        <!--android:title="settings_tempo_title"-->
-        <!--android:dialogMessage="settings_tempo_title"-->
-        <!--android:defaultValue="96"-->
-        <!--app:min="20"-->
-        <!--android:max="200"-->
-        <!--/>-->
-
-    <!--<com.regis.cosnier.emu48.SeekBarPreference-->
-        <!--android:key="settings_intensity_minimum"-->
-        <!--android:title="@string/settings_intensity_minimum_title"-->
-        <!--android:dialogMessage="@string/settings_intensity_minimum_title"-->
-        <!--android:defaultValue="20"-->
-        <!--app:min="1"-->
-        <!--android:max="90"-->
-        <!--/>-->
-
-    <!--<com.regis.cosnier.emu48.SeekBarPreference-->
-        <!--android:key="settings_translation"-->
-        <!--android:title="@string/settings_translation_title"-->
-        <!--android:dialogMessage="@string/settings_translation_title"-->
-        <!--android:defaultValue="0"-->
-        <!--app:min="-60"-->
-        <!--android:max="60"-->
-        <!--/>-->
     <!-- General -->
         <PreferenceCategory app:title="General">
             <SwitchPreference
@@ -138,21 +54,28 @@
             <SwitchPreference
                 android:key="settings_port1en"
                 android:title="Port 1 is Plugged"
-                android:defaultValue="false" />
+                android:defaultValue="false"
+                />
             <SwitchPreference
                 android:key="settings_port1wr"
                 android:title="Port 1 is Writeable"
-                android:defaultValue="false" />
+                android:defaultValue="false"
+                />
             <SwitchPreference
                 android:key="settings_port2en"
                 android:title="Port 2 is Plugged"
-                android:defaultValue="false" />
+                android:defaultValue="false"
+                />
             <SwitchPreference
                 android:key="settings_port2wr"
                 android:title="Port 2 is Writeable"
-                android:defaultValue="false" />
-            <!--"Port 2 File :",IDC_STATIC,14,47,37,8-->
-            <!--"...",IDC_PORT2LOAD,227,45,10,12-->
+                android:defaultValue="false"
+                />
+            <Preference
+                android:key="settings_port2load"
+                android:title="Port 2 File"
+                android:summary=""
+                />
         </PreferenceCategory>
 
     <!-- Peripheral -->

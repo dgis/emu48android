@@ -13,7 +13,7 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Change settings per settings
+- Autosave
 - Support 8bits images
 - Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
@@ -29,3 +29,4 @@ DONE
 - Choose KML/Change KML/NewDocument
 - Load/Save object
 - Permission issues when reopening document after an OS restart
+- Change settings per settings
