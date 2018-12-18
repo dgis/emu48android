@@ -10,6 +10,10 @@
     <string name="nav_new">New...</string>
     <string name="nav_open">Open...</string>
     <string name="nav_save">Save</string>
-    <string name="nav_save_as">SaveAs...</string>
+    <string name="nav_save_as">Save As...</string>
     <string name="nav_close">Close</string>
+    <string name="nav_load_object">Load Object...</string>
+    <string name="nav_save_object">Save Object...</string>
+    <string name="nav_copy_screen">Copy Screen</string>
+    <string name="nav_copy_stack">Copy Stack</string>
 </resources>

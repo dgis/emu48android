@@ -14,6 +14,8 @@ NOT WORKING
 
 TODO
 - Autosave
+- Add help and about
+- Change KML
 - Support 8bits images
 - Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
@@ -30,3 +32,4 @@ DONE
 - Load/Save object
 - Permission issues when reopening document after an OS restart
 - Change settings per settings
+- Add icons

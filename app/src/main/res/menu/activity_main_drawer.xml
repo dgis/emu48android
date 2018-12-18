@@ -3,26 +3,88 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
+<!--
+https://material.io/tools/icons/?icon=insert_drive_file&style=baseline
+https://github.com/google/material-design-icons/tree/master/action/drawable-anydpi-v21
+
+NEW
+++insert_drive_file *editor
+
+OPEN
+++ description *action
+open_in_new *action
+
+SAVEs
+save *content
+
+CLOSE
+close *navigation
+
+
+LOAD OBJECT
+open_in_browser *action
+
+SAVE OBJECT
+save_alt     *content-
+
+COPY SCREEN
+tv *hardware
+
+COPY STACK
+filter_none *image
+
+PASTE STACK
+file_copy *content-
+
+
+RESET CALCULATOR
+refresh *navigation
+
+SAVE BACKUP
+++playlist_add *av
+input *action
+subdirectory_arrow_right *navigation
+
+RESTORE BACKUP
+++playlist_play *av
+subdirectory_arrow_left *navigation
+restore_page *action
+
+DELETE BACKUP
+remove *content
+
+KML
+wallpaper *device
+art_track *av
+
+
+HELP
+help *action
+
+ABOUT
+info *action
+-->
+
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_new"
-            android:icon="@drawable/ic_menu_camera"
+            android:icon="@drawable/ic_insert_drive_file_black_24dp"
             android:title="@string/nav_new" />
         <item
             android:id="@+id/nav_open"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_description_black_24dp"
             android:title="@string/nav_open" />
         <item
             android:id="@+id/nav_save"
-            android:icon="@drawable/ic_menu_slideshow"
+            android:icon="@drawable/ic_save_black_24dp"
             android:title="@string/nav_save" />
         <item
             android:id="@+id/nav_save_as"
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/ic_save_black_24dp"
             android:title="@string/nav_save_as" />
         <item
             android:id="@+id/nav_close"
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/ic_close_black_24dp"
             android:title="@string/nav_close" />
 
         <item
@@ -35,39 +97,39 @@
         <menu>
             <item
                 android:id="@+id/nav_load_object"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Load Object..." />
+                android:icon="@drawable/ic_open_in_browser_black_24dp"
+                android:title="@string/nav_load_object" />
             <item
                 android:id="@+id/nav_save_object"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Save Object..." />
+                android:icon="@drawable/ic_save_alt_black_24dp"
+                android:title="@string/nav_save_object" />
             <item
                 android:id="@+id/nav_copy_screen"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Copy Screen" />
+                android:icon="@drawable/ic_tv_black_24dp"
+                android:title="@string/nav_copy_screen" />
             <item
                 android:id="@+id/nav_copy_stack"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Copy Stack" />
+                android:icon="@drawable/ic_filter_none_black_24dp"
+                android:title="@string/nav_copy_stack" />
             <item
                 android:id="@+id/nav_paste_stack"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_file_copy_black_24dp"
                 android:title="Paste Stack" />
             <item
                 android:id="@+id/nav_reset_calculator"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_refresh_black_24dp"
                 android:title="Reset Calculator" />
             <item
                 android:id="@+id/nav_backup_save"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_playlist_add_black_24dp"
                 android:title="Save Backup" />
             <item
                 android:id="@+id/nav_backup_restore"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_playlist_play_black_24dp"
                 android:title="Restore Backup" />
             <item
                 android:id="@+id/nav_backup_delete"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_remove_black_24dp"
                 android:title="Delete Backup" />
         </menu>
     </item>
@@ -75,7 +137,7 @@
         <menu>
             <item
                 android:id="@+id/nav_change_kml_script"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_wallpaper_black_24dp"
                 android:title="Change KML Script..." />
         </menu>
     </item>
@@ -83,11 +145,11 @@
         <menu>
             <item
                 android:id="@+id/nav_help"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_help_black_24dp"
                 android:title="Help" />
             <item
                 android:id="@+id/nav_about"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/ic_info_black_24dp"
                 android:title="About Emu48..." />
         </menu>
     </item>
