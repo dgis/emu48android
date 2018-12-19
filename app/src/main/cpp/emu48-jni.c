@@ -10,6 +10,7 @@
 #include "core/pch.h"
 #include "core/Emu48.h"
 #include "core/io.h"
+#include "core/kml.h"
 
 extern void emu48Start();
 extern AAssetManager * assetManager;
@@ -104,6 +105,16 @@ int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
     jstring utfUrl = (*jniEnv)->NewStringUTF(jniEnv, url);
     int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfUrl, writeAccess);
     return result;
+}
+
+// Must be called in the main thread
+int showAlert(const TCHAR * messageText, int flags) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "showAlert", "(Ljava/lang/String;)V");
+    jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, messageText);
+    (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, messageUTF);
+    return IDOK;
 }
 
 
@@ -226,6 +237,10 @@ JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilen
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
     return cCurrentRomType;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isBackup(JNIEnv *env, jobject thisz) {
+    return bBackup ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEnv *env, jobject thisz) {
@@ -452,6 +467,72 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewReset(JNIEnv
     OnViewReset();
 }
 
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+
+    TCHAR szKmlFile[MAX_PATH];
+    BOOL  bKMLChanged,bSucc;
+    BYTE cType = cCurrentRomType;
+    SwitchToState(SM_INVALID);
+
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
+    _tcscpy(szCurrentKml, filenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
+
+    // make a copy of the current KML script file name
+    _ASSERT(sizeof(szKmlFile) == sizeof(szCurrentKml));
+    lstrcpyn(szKmlFile,szCurrentKml,ARRAYSIZEOF(szKmlFile));
+
+    bKMLChanged = FALSE;					// KML script not changed
+    bSucc = TRUE;							// KML script successful loaded
+
+//    do
+//    {
+//        if (!DisplayChooseKml(cType))		// quit with Cancel
+//        {
+//            if (!bKMLChanged)				// KML script not changed
+//                break;						// exit loop with current loaded KML script
+//
+//            // restore KML script file name
+//            lstrcpyn(szCurrentKml,szKmlFile,ARRAYSIZEOF(szCurrentKml));
+//
+//            // try to restore old KML script
+//            if ((bSucc = InitKML(szCurrentKml,FALSE)))
+//                break;						// exit loop with success
+//
+//            // restoring failed, save document
+//            if (IDCANCEL != SaveChanges(bAutoSave))
+//                break;						// exit loop with no success
+//
+//            _ASSERT(bSucc == FALSE);		// for continuing loop
+//        }
+//        else								// quit with Ok
+//        {
+            bKMLChanged = TRUE;				// KML script changed
+            bSucc = InitKML(szCurrentKml,FALSE);
+//        }
+//    }
+//    while (!bSucc);							// retry if KML script is invalid
+
+    if (bSucc)
+    {
+        if (Chipset.wRomCrc != wRomCrc)		// ROM changed
+        {
+            CpuReset();
+            Chipset.Shutdn = FALSE;			// automatic restart
+
+            Chipset.wRomCrc = wRomCrc;		// update current ROM fingerprint
+        }
+        if (pbyRom) SwitchToState(SM_RUN);	// continue emulation
+    }
+    else
+    {
+        ResetDocument();					// close document
+        SetWindowTitle(NULL);
+    }
+    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+    draw();
+}
+
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {
     OnBackupSave();
 }
@@ -463,135 +544,6 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupRestore(JN
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupDelete(JNIEnv *env, jobject thisz) {
     OnBackupDelete();
 }
-
-//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz,
-//                                                                               jint settingsRealspeed, jint settingsGrayscale, jint settingsAutosave,
-//                                                                               jint settingsAutosaveonexit, jint settingsObjectloadwarning, jint settingsAlwaysdisplog,
-//                                                                               jint settingsPort1en, jint settingsPort1wr,
-//                                                                               jint settingsPort2len, jint settingsPort2wr, jstring settingsPort2load) {
-//
-//    bRealSpeed = settingsRealspeed;
-//    bAutoSave = settingsAutosave;
-//    bAutoSaveOnExit = settingsAutosaveonexit;
-//    bLoadObjectWarning = settingsObjectloadwarning;
-//    bAlwaysDisplayLog = settingsAlwaysdisplog;
-//
-//    SetSpeed(bRealSpeed);			// set speed
-//
-//    // LCD grayscale checkbox has been changed
-//    if (bGrayscale != (BOOL)settingsGrayscale) {
-//        UINT nOldState = SwitchToState(SM_INVALID);
-//        SetLcdMode(!bGrayscale);	// set new display mode
-//        SwitchToState(nOldState);
-//    }
-//
-//    //SettingsMemoryProc
-//    LPCTSTR szActPort2Filename = _T("");
-//
-//    BOOL bPort2CfgChange = FALSE;
-//    BOOL bPort2AttChange = FALSE;
-//
-//    // port1
-//    if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
-//    {
-//        UINT nOldState = SwitchToState(SM_SLEEP);
-//        // save old card status
-//        BYTE byCardsStatus = Chipset.cards_status;
-//
-//        // port1 disabled?
-//        Chipset.cards_status &= ~(PORT1_PRESENT | PORT1_WRITE);
-//        if (settingsPort1en)
-//        {
-//            Chipset.cards_status |= PORT1_PRESENT;
-//            if (settingsPort1wr)
-//                Chipset.cards_status |= PORT1_WRITE;
-//        }
-//
-//        // changed card status in slot1?
-//        if (   ((byCardsStatus ^ Chipset.cards_status) & (PORT1_PRESENT | PORT1_WRITE)) != 0
-//               && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
-//                )
-//        {
-//            Chipset.HST |= MP;		// set Module Pulled
-//            IOBit(SRQ2,NINT,FALSE);	// set NINT to low
-//            Chipset.SoftInt = TRUE;	// set interrupt
-//            bInterrupt = TRUE;
-//        }
-//        SwitchToState(nOldState);
-//    }
-//    // HP48SX/GX port2 change settings detection
-//    if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
-//    {
-//        //bPort2IsShared = settingsPort2isshared;
-//        const char * szNewPort2Filename = NULL;
-//        const char *settingsPort2loadUTF8 = NULL;
-//        if(settingsPort2load) {
-//            settingsPort2loadUTF8 = (*env)->GetStringUTFChars(env, settingsPort2load , NULL);
-//            szNewPort2Filename = settingsPort2loadUTF8;
-//        } else
-//            szNewPort2Filename = _T("SHARED.BIN");
-//
-//        if(_tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
-//            _tcscpy(szPort2Filename, szNewPort2Filename);
-//            szActPort2Filename = szPort2Filename;
-//            bPort2CfgChange = TRUE;	// slot2 configuration changed
-//
-//            // R/W port
-//            if (   *szActPort2Filename != 0
-//                   && (BOOL) settingsAlwaysdisplog != bPort2Writeable)
-//            {
-//                bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
-//                bPort2CfgChange = TRUE;	// slot2 configuration changed
-//            }
-//        }
-//        if(settingsPort2loadUTF8)
-//            (*env)->ReleaseStringUTFChars(env, settingsPort2load, settingsPort2loadUTF8);
-//    }
-//
-//    if (bPort2CfgChange)			// slot2 configuration changed
-//    {
-//        UINT nOldState = SwitchToState(SM_INVALID);
-//
-//        UnmapPort2();				// unmap port2
-//
-////        if (bPort2AttChange)		// slot2 R/W mode changed
-////        {
-////            DWORD dwFileAtt;
-////
-////            SetCurrentDirectory(szEmuDirectory);
-////            dwFileAtt = GetFileAttributes(szActPort2Filename);
-////            if (dwFileAtt != 0xFFFFFFFF)
-////            {
-////                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
-////                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
-////                else
-////                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
-////
-////                SetFileAttributes(szActPort2Filename,dwFileAtt);
-////            }
-////            SetCurrentDirectory(szCurrentDirectory);
-////        }
-//
-//        if (cCurrentRomType)		// ROM defined
-//        {
-//            MapPort2(szActPort2Filename);
-//
-//            // port2 changed and card detection enabled
-//            if (   (bPort2AttChange || Chipset.wPort2Crc != wPort2Crc)
-//                   && (Chipset.IORam[CARDCTL] & ECDT) != 0 && (Chipset.IORam[TIMER2_CTRL] & RUN) != 0
-//                    )
-//            {
-//                Chipset.HST |= MP;		// set Module Pulled
-//                IOBit(SRQ2,NINT,FALSE);	// set NINT to low
-//                Chipset.SoftInt = TRUE;	// set interrupt
-//                bInterrupt = TRUE;
-//            }
-//            // save fingerprint of port2
-//            Chipset.wPort2Crc = wPort2Crc;
-//        }
-//        SwitchToState(nOldState);
-//    }
-//}
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
@@ -733,6 +685,11 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
 JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isPortExtensionPossible(JNIEnv *env, jobject thisz) {
     return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0 ? JNI_TRUE : JNI_FALSE);
 }
+
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getState(JNIEnv *env, jobject thisz) {
+    return nState;
+}
+
 
 //p Read5(0x7050E)
 //   -> $1 = 461076

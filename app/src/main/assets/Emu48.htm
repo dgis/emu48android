@@ -1,0 +1,608 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+     "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<title>Emu48 Manual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="author" content="Christoph Giesselink">
+<meta name="description" content="Emulator Manual Emu48">
+<style type="text/css">
+<!--
+body { background-color:white;
+       font-family:'Times New Roman',Times,Arial,serif;
+       /* font-size:76%; */
+     }
+p  { font-size:1.0em; }
+h1 { color:red; font-size:1.5em;  }
+h2 { color:red; font-size:1.5em;  }
+h3 { color:red; font-size:1.1em; }
+#headline { margin-left: 20%; text-align:center; font-size:1.5em; }
+#navi { float: left; width: 15%; }
+#main { margin-left: 20%; }
+.nav1 { font-weight:bold;   font-size:0.8em; }
+.nav2 { font-weight:normal; font-size:0.8em; }
+-->
+</style>
+</head>
+<body>
+<div id="headline">
+  <p>Emu48 - A freeware HP38G/39G/40G/48SX/48GX/49G Emulator<br>
+    for Windows 9x, ME, NT, 2000, XP, Vista, 7, 8 and 10</p>
+</div>
+<div id="navi">
+  <p><a class="nav1" href="#s1">1. General</a></p>
+  <p><a class="nav1" href="#s2">2. Acknowledgements</a></p>
+  <p><a class="nav1" href="#s3">3. ROM Images</a></p>
+  <p><a class="nav1" href="#s4">4. Installation</a></p>
+  <p><a class="nav1" href="#s5">5. How to Start</a></p>
+  <p><a class="nav1" href="#s6">6. Command Line</a></p>
+  <p><a class="nav1" href="#s7">7. Virtual Keyboard</a></p>
+  <p><a class="nav1" href="#s8">8. File Menu</a><br>
+    <span class="nav2">
+    <a href="#ss8.1">8.1 New...</a><br>
+    <a href="#ss8.2">8.2 Open...</a><br>
+    <a href="#ss8.3">8.3 Save</a><br>
+    <a href="#ss8.4">8.4 Save As...</a><br>
+    <a href="#ss8.5">8.5 Close</a><br>
+    <a href="#ss8.6">8.6 Settings</a><br>
+    <a href="#ss8.6.1">8.6.1 Settings General</a><br>
+    <a href="#ss8.6.2">8.6.2 Settings Memory</a><br>
+    <a href="#ss8.6.3">8.6.3 Settings Peripheral</a><br>
+    <a href="#ss8.7">8.7 Exit</a>
+    </span></p>
+  <p><a class="nav1" href="#s9">9. Edit Menu</a><br>
+    <span class="nav2">
+    <a href="#ss9.1">9.1 Load Object...</a><br>
+    <a href="#ss9.2">9.2 Save Object...</a><br>
+    <a href="#ss9.3">9.3 Copy Screen</a><br>
+    <a href="#ss9.4">9.4 Copy Stack</a><br>
+    <a href="#ss9.5">9.5 Paste Stack</a><br>
+    <a href="#ss9.6">9.6 Reset Calculator</a><br>
+    <a href="#ss9.7">9.7 Backup</a><br>
+    <a href="#ss9.7.1">9.7.1 Backup Save</a><br>
+    <a href="#ss9.7.2">9.7.2 Backup Restore</a><br>
+    <a href="#ss9.7.3">9.7.3 Backup Delete</a>
+    </span></p>
+  <p><a class="nav1" href="#s10">10. View Menu</a><br>
+    <a class="nav2" href="#ss10.1">10.1 Change KML Script...</a></p>
+  <p><a class="nav1" href="#s11">11. Tools Menu</a><br>
+    <span class="nav2">
+    <a href="#ss11.1">11.1 Disassembler...</a><br>
+    <a href="#ss11.2">11.2 Debugger...</a><br>
+    <a href="#ss11.3">11.3 Macro</a><br>
+    <a href="#ss11.3.1">11.3.1 Macro Record...</a><br>
+    <a href="#ss11.3.2">11.3.2 Macro Play...</a><br>
+    <a href="#ss11.3.3">11.3.3 Macro Stop</a><br>
+    <a href="#ss11.3.4">11.3.4 Macro Settings...</a>
+    </span></p>
+  <p><a class="nav1" href="#s12">12. Help Menu</a><br>
+    <span class="nav2">
+    <a href="#ss12.1">12.1 Help Topics</a><br>
+    <a href="#ss12.2">12.2 About Emu48...</a>
+    </span></p>
+  <p><a class="nav1" href="#s13">13. DDE Server</a></p>
+  <p><a class="nav1" href="#s14">14. License</a></p>
+</div>
+<div id="main">
+  <h1><a name=s1>1. General</a></h1>
+    <p>Emu48 is an emulator for the Hewlett Packard HP38G, HP39G,
+    HP40G, HP48SX, HP48GX and HP49G calculator hardware. These calculators
+    are based on the 1LT8 Clarke (HP48SX) and on the Yorke chip.</p>
+  <h1><a name=s2>2. Acknowledgements</a></h1>
+    <p>First of all a big thank to S&eacute;bastien Carlier for publishing
+    Emu48 v1.0 under the GPL. Without this decision newer versions of the
+    emulator wouldn't have been possible or ports to other similar
+    calculators wouldn't have been made. Also a big thank to Jean-Yves
+    Avenard for his technical assistance in the beginning. Lode Vandevenne
+    spend the PNG image decoder and finally I want to thank all the
+    unnamed authors for publishing material about these calculators.</p>
+  <h1><a name=s3>3. ROM Images</a></h1>
+    <p>Emu48 needs an image of a calculator ROM to be able to run. ROM
+    images are valid in a packed (even address lower nibble, odd address
+    higher nibble) or unpacked (one nibble per byte with even address first)
+    form.</p>
+    <p>Since fall 2000 the emulator ROM's for the HP38, 39, 40, 48 and 49
+    are freely available on different Internet sites. Because there's no
+    license for the distribution of the ROM images, they aren't included
+    in the Emu48 package. You can still use the classic way extracting
+    them from your own calculator. But in mostly all cases you have to
+    convert the ROM files into the Emu48 ROM format.</p>
+    <ul>
+      <li>HP38
+      <p>To upload the ROM of your HP38G, you will need a special aplet
+      called <a href="http://www.hpcalc.org/details.php?id=633">&quot;ROM UPLOAD&quot;</a>.
+      Once you've uploaded the ROM, you have to convert it using the
+      Convert utility.</p>
+      <p>To do that, start a Command Prompt while running Windows, and
+      type:</p>
+      <blockquote>Convert &lt;rom-file&gt; ROM.38G</blockquote>
+      <p>Where &lt;rom-file&gt; is the path to your ROM image. This will
+      create a file named ROM.38G. This tool will also check its validity.
+      </p></li>
+      <li>HP39/40
+      <p>To upload the ROM of your HP39G/HP40G, you will need a special aplet
+      called <a href="http://hp.giesselink.com/emu48.htm">&quot;ROM UPLOAD&quot;</a>.
+      Once you've uploaded the ROM, you have to convert it using the Rom2emu utility.
+      </p>
+      <p>To do that, start a Command Prompt while running Windows, and
+      type:</p>
+      <blockquote>Rom2emu &lt;rom-file&gt; ROM.39G</blockquote>
+      <p>There's also a HP39G/HP40G beta ROM for emulators inside an old
+      <a href="http://www.hpcalc.org/details.php?id=4272">Emu48 package</a>.
+      </p></li>
+      <li>HP48
+      <p>If you have already used another HP48 emulator, you can convert
+      the ROM using the Convert utility.
+      </p>
+      <p>To do that, start a Command Prompt while running Windows, and
+      type:</p>
+      <blockquote>Convert &lt;rom-file&gt; ROM.48G</blockquote>
+      <p>or</p>
+      <blockquote>Convert &lt;rom-file&gt; ROM.48S</blockquote>
+      <p>Where &lt;rom-file&gt; is the path to your old ROM image. This
+      will create a file named ROM.48G or ROM.48S, depending on the version
+      you own. This tool should be able to read any style of ROM image, and
+      will also check its validity. Note that if you run it with only one
+      parameter, no file will be written, but it will still check the
+      validity of the ROM.</p>
+      <p>If you have never used an HP48 emulator, and don't have a ROM
+      dump, you can either use Jean-Yves Avenard's ROMUPL.BIN or the
+      ROMDump Wizard V1.x, which will almost automatically get the ROM from
+      your HP48. After the download you may have to convert your dump with
+      the CONVERT utility into the Emu48 format.</p>
+      <p>You can find the latest version of the ROM dump programs on:</p>
+      <blockquote>
+      ROMUPL.BIN <a href="http://www.hpcalc.org/details.php?id=3686">
+      http://www.hpcalc.org/details.php?id=3686</a><br>
+      ROMDump Wizard
+      <a href="http://hp.giesselink.com/emu48.htm">
+      http://hp.giesselink.com/emu48.htm</a>
+      </blockquote></li>
+      <li>HP49G
+      <p>There's no ROM download program available so far. But you can
+      create a ROM image with the
+      <a href="http://hp.giesselink.com/emu48.htm">UPD49ROM tool</a>
+      and a <a href="http://www.hpcalc.org/hp49/pc/rom/">
+      ROM update file</a> for the HP49G calculator. I suggested to use
+      <a href="http://www.hpcalc.org/details.php?id=3240">version 1.19-6</a>
+      </p>
+      <p>To create a HP49G ROM image file, start a Command Prompt while
+      running Windows, and type:</p>
+      <blockquote>UPD49ROM -f hp49119-6.flash ROM.49G</blockquote>
+      <p>This will create a HP49G ROM image file with an empty User
+      Port 2.</p></li>
+    </ul>
+  <h1><a name=s4>4. Installation</a></h1>
+    <p>To install Emu48 you may use the installer package which contain,
+    among the binaries, some HP48 KML scripts or just unzip the emulator
+    and the required emulator skins from archives into an empty directory.
+    Finally you have to copy your ROM images into this directory and
+    adjust the ROM image name to the name used in the corresponding KML
+    script. When you first run Emu48, it will detect the directory in
+    which you installed it, and will write the configuration to the
+    registry at <i>HKCU\Software\Emu48</i>.</p>
+  <h1><a name=s5>5. How to Start</a></h1>
+    <p>When Emu48 is installed and you have put valid KML scripts and the
+    corresponding ROM image(s) into your Emu48 installation directory, you
+    can start Emu48. You'll see a &quot;Choose Your KML Script&quot;
+    box.</p>
+    <p>KML scripts in fact define the visual aspect of Emu48, the behavior of
+    the buttons, of the keyboard, ... It's a GREAT way to customize your copy
+    of Emu48.</p>
+    <p>Check that the path in the &quot;Emu48 Directory&quot; text area is
+    correct. Modify it if the directory in which you installed Emu48 is not
+    the directory displayed. Click the refresh button (&quot;V&quot;) after
+    modifying it to update the list box or use the (&quot;...&quot;) button to
+    start the directory browser.</p>
+    <p>Choose a KML script in the list box for your calculator ROM you put
+    into Emu48's directory.</p>
+    <p>Several HP48 scripts are included in the Emu48 archive:</p>
+    <ul>
+      <li>Emu48's Default Faceplate for HP48G/GX</li>
+      <li>Emu48's Default Faceplate for HP48S/SX
+      <p>These two are simple scripts, good for 800x600 display
+      resolution.</p></li>
+      <li>Casey's Gx with Toolbar and Touch Screen</li>
+      <li>Casey's Sx with Toolbar and Touch Screen
+      <p>These script uses many advanced features, and is a good
+      demonstration of the power of Emu48's scripting language KML.
+      Try it, it is really great!</p></li>
+      <li>Floating buttons
+      <p>This one looks really great.</p></li>
+      <li>Small but realistic HP48 Gx
+      <p>This one has been designed for small resolutions such as
+      640x480.
+      </p></li>
+    </ul>
+    <p>If you want other great scripts, visit Rechlin's great HP archive
+    <a href="http://www.hpcalc.org/"></a></p>
+    <p>And if you are interested in writing new scripts, get the KML 2.0
+    documentation from <a href="http://hp.giesselink.com/emu48.htm">the
+    authors Emu48 page</a>.</p>
+    <p>Once you have selected a script, press OK to start the emulator. In
+    most cases, when Emu48 crash after pressing the OK button, you are using
+    an invalid ROM image. While it's running, you can use the View/Change KML
+    Script... command to change the visual aspect of Emu48.</p>
+  <h1><a name=s6>6. Command Line</a></h1>
+    <p>The command line syntax is &quot;<i>Emu48 [E48file [Port2file]]</i>&quot;.
+    The first parameter sets the filename for the emulation data
+    independent from the &quot;LastDocument&quot; setting, the second
+    parameter the Port2 file. You're not able to set a Port 2 file without
+    setting the emulation data file. The arguments are optional.</p>
+  <h1><a name=s7>7. Virtual Keyboard</a></h1>
+    <p>There are two ways to use the virtual keyboard on the emulated
+    calculator:</p>
+    <ol>
+      <li><a href="#mouse">by Mouse</a></li>
+      <li><a href="#keyboard">by PC keyboard</a></li>
+    </ol>
+    <p><a name=mouse></a>
+    The easiest way to use the emulated calculator is using the mouse. The KML
+    script define buttons with an area where mouse input is active. The mouse
+    cursor change from an arrow to a hand cursor in these areas. The state of
+    the virtual key follow the state of your left mouse button. When the mouse
+    cursor leaves the virtual key area the virtual button automatically
+    release. In some cases you need to press more than one key on the
+    emulator. For these cases press the virtual key with the right mouse
+    button. When you release the mouse button or leave the area of the virtual
+    key, the key is still hold. To release all hold virtual buttons, just use
+    the left mouse button again. A single release of a hold virtual key isn't
+    possible.</p>
+    <p><a name=keyboard></a>
+    Another convenient way is using the PC keyboard. The KML script language
+    support a large variety of commands to implement this feature. So keyboard
+    usage depends on your used KML script and not on the emulator. Because of
+    this it's impossible to say what's happen when you press a key on the PC
+    keyboard. For further details read the KML 2.0 documentation mentioned
+    before please.</p>
+  <h1><a name=s8>8. File Menu</a></h1>
+  <h2><a name=ss8.1>8.1 New...</a></h2>
+    <p>Creates a new emulation session. You're asked for a new KML script
+    where you can select the calculator type and skin to emulate.</p>
+  <h2><a name=ss8.2>8.2 Open...</a></h2>
+    <p>Opens an existing emulation session. The emulation continues at the
+    same position where the loaded session was aborted. Loading emulation
+    sessions made with a different ROM revision may <u>destroy</u> the memory
+    content or may cause other unpredictable results.</p>
+  <h2><a name=ss8.3>8.3 Save</a></h2>
+    <p>Saves the current running session with the actual name.</p>
+  <h2><a name=ss8.4>8.4 Save As...</a></h2>
+    <p>Saves the current running session with a new name. You're also get in
+    this dialog when you Exit a new session without a state file name.</p>
+  <h2><a name=ss8.5>8.5 Close</a></h2>
+    <p>Closes the current session without closing the emulator.</p>
+  <h2><a name=ss8.6>8.6 Settings</a></h2>
+    <p>This calls the Settings dialog. This dialog has three tabs:
+    General, Memory and Peripheral.</p>
+  <h3><a name=ss8.6.1>8.6.1 Settings General</a></h3>
+  <h4>8.6.1.1 Section General</h4>
+    <ul>
+      <li><i>Authentic Calculator Speed</i>
+      <p>When this option is checked, the emulation speed will be similar
+      to the real calculator depending on the RATE control register
+      content.</p></li>
+      <li><i>Enable Virtual LCD Delay</i>
+      <p>Try this option for a better 4 color gray scale display simulation
+      output.</p></li>
+      <li><i>Always On Top</i>
+      <p>When this option is checked, the emulator window will always be the
+      topmost one.</p></li>
+      <li><i>Activation Follows Mouse</i>
+      <p>This option enables a X-Mouse style windows activation. When the
+      mouse is moved over the emulator window, the emulator is getting the
+      focus and popping up into foreground.</p></li>
+      <li><i>Single Instance</i>
+      <p>When this option is checked, the program is only allowed to run in
+      a single instance. If another running instance is detected, the detected
+      instance is set into foreground as active window and get a request to
+      change his state file to the given one by the current instance. Finally
+      the current instance is terminated.</p></li>
+      <li><i>Automatically Save Files</i>
+      <p>When this option is checked, the current state file will automatically
+      saved when you change to another state file, but not when you close the
+      emulator program.</p></li>
+      <li><i>Automatically Save Files On Exit</i>
+      <p>When this option is checked, the current state file will be saved
+      automatically at the end when the emulator program is closed.</p></li>
+      <li><i>Show Load Object Warning</i>
+      <p>When this option is checked, you'll get a warning message box when you
+      try to load an object with the <i>Load Object...</i> menu command. If
+      this option is unchecked, the warning will be skipped.</p></li>
+      <li><i>Always Show KML Compilation Result</i>
+      <p>When this option is checked, you see the results of the KML
+      (Keyboard Macro Language) interpreter at every KML script load.</p></li>
+    </ul>
+  <h4>8.6.1.2 Section Style</h4>
+    <ul>
+      <li><i>Show Title</i>
+      <p>When this option is checked, the window title bar is visible.</p></li>
+      <li><i>Show Menu</i>
+      <p>When this option is checked, the menu bar is enabled. If unchecked,
+      the menu is accessible as context menu in the client area outside the
+      calculator button definitions.</p></li>
+    </ul>
+  <h4>8.6.1.3 Section Disassembler</h4>
+    <p>Choosing the assembler syntax:</p>
+    <ul>
+      <li><i>HP Mnemonics</i>
+      <p>This is the standard syntax used by HP.</p></li>
+      <li><i>Class Mnemonics</i>
+      <p>Class (Clarke assembler) was written by Lutz Vieweg in 1991, at a time
+      when HP had not published their own development tools. The syntax is very
+      similar to the AG and STAR mnemonics used at this time. Especially
+      published assembler programs written for the HP28S use the similar AG
+      syntax.</p></li>
+    </ul>
+  <h3><a name=ss8.6.2>8.6.2 Settings Memory</a></h3>
+  <h4>8.6.2.1 Section Memory Cards</h4>
+    <ul>
+      <li><i>Port 1 is Plugged</i>
+      <p>When this option is checked, a 128 KB RAM card is emulated in card
+      Port 1. The RAM card content is saved in the current emulator state
+      file.</p></li>
+      <li><i>Port 1 is Writeable</i>
+      <p>When this option is checked, the RAM card in card Port 1 is
+      writable else the card is Read-Only by simulating the card write
+      protect switch.</p></li>
+      <li><i>Port 2 is Shared</i>
+      <p>When this option is unchecked, only the first instance of Emu48
+      will allow you to use the RAM card in Port 2. When this option is
+      checked, the first instance of Emu48 will give you both read and
+      write access to this RAM card. If you start Emu48 in another
+      instance, the RAM card in Port 2 will be write-protected. Thus you
+      can transfer files very easily between two calculators. This RAM card
+      is used by both S/SX and G/GX types.</p></li>
+      <li><i>Port 2 is Writeable</i>
+      <p>This option represents the actual read/write state of the Port 2
+      file. Changing the option will also change the state for the
+      calculator by modifying the Read-Only attribute of the file.</p></li>
+      <li><i>Port 2 File</i>
+      <p>You can add a RAM card of up to 4MB to a HP48. By default, no such
+      card will be created when you start Emu48. The MkShared.exe utility
+      will allow you to create one. To create a Port 2 RAM Card, call the
+      program, select the RAM Card size, enter the card file name and press
+      the 'Create' button. That's it. Please remember, this program replace
+      the destination file without any request!</p>
+      <p>If you already have a Port 2 card file in unpacked format, you
+      have to copy the file into the emulator directory. If you choose a
+      different directory you have to use a full path file name.</p>
+      <p>If you use RAM cards greater than 128 KB in a HP48SX, you can only
+      see the first 128 KB of the card. Please remember, the firmware of
+      all HP48GX versions has a bug when using a 4 MB RAM card. You always
+      get the message &quot;Warning: Invalid Card Data&quot; at startup
+      and Port 33 is inaccessible. This is not a bug of the emulator!</p>
+      <p>When you have created or copied the file, enter the card file
+      name into the Port 2 File edit box.</p>
+      <p>Please remember, all port configuration changes mostly behave
+      like on the original calculator. This means when you do this changes
+      with the emulated calculator on, it's the same like when you do this
+      with a real calculator on. In many times, this depends on the current
+      state of the calculator, this will work without any problems by doing
+      an automatically calculator warmstart. But for the most secure way,
+      switch off the emulated calculator first, please!</p></li>
+    </ul>
+  <h3><a name=ss8.6.3>8.6.3 Settings Peripheral</a></h3>
+  <h4>8.6.3.1 Section Sound</h4>
+    <p>A new implementation of the sound engine made ROM patches for sound
+      output obsolete. The new sound engine emulates the behavior of the beeper
+      output ports and only work in connection with a sound card. Using the
+      internal PC speaker isn't possible any more. The old beeper method with a
+      ROM patch is still working but deprecated, it's strongly recommended to
+      remove all beep patches from your current KML scripts to enable the new
+      sound engine. The support of the old sound implementation by a ROM patch
+      maybe removed in later versions of the emulator and remaining beep
+      patches will corrupt the ROM with an illegal opcode then.
+    </p>
+    <p>
+      For the sound generation the calculator must know his own CPU strobe
+      frequency. On the real calculator the speed depends on various settings
+      like component tolerances, actual temperature, humidity and other
+      variables. The resulting speed is measured by the calculator firmware
+      at a cold- or at a warmstart and stored in the =CSPEED variable. The
+      content of this calculator variable has direct influence on the
+      resulting frequency and duration. On the emulator the HP48SX CPU
+      strobe frequency is set by the registry key
+      <i>HKCU\Software\Emu48\Emulator\SXCycles</i>, for all other
+      calculators at <i>HKCU\Software\Emu48\Emulator\GXCycles</i>.
+      For some reasons the CPU cycles are only estimated and so the
+      strobe frequency value in the registry is not the exact CPU strobe
+      frequency of the calculator in Hz divided by 16384 like in the
+      other emulators. Because older versions of the emulator were not
+      able to measure the CPU strobe frequency properly or the strobe
+      frequency registry content has been changed since the last
+      measurement, the =CSPEED variable of this session file may contain
+      a wrong frequency value. You easily may discover this by measuring
+      the real duration of a 10s beep. Is the difference to 10s less
+      than 1s everything is ok, if not, you should perform a
+      <u style="color:red">warmstart</u> of the calculator in this
+      session file. Alternatively you may execute a
+      <a href=#ss9.6>Reset Calculator</a>. This recalls the measuring
+      routine and save the result in the speed variable. Both restart
+      variants purge the stack content!
+    </p>
+    <ul>
+      <li><i>Volume</i>
+      <p>The output volume can be selected with the Volume slider relative to
+      the Master Volume control.
+      </p></li>
+      <li><i>Device</i>
+      <p>By default the sound device is set to &quot;Standard Audio&quot;, but
+      you can also manually choose the output device. The device name is
+      somehow cut since Window Vista, but the method of reading the device
+      name is used for backwards compatibility to older versions of the
+      Operating System. When you change the Standard Audio device in the
+      Operating System settings dialog, the internal device numbering may
+      change, and so the manually selected audio device.</p></li>
+    </ul>
+  <h4>8.6.3.2 Section Infrared Printer</h4>
+    <p>The emulator has the ability to print data to a HP82240A/B printer
+    simulation. The data transfer to the printer simulator is done over UDP.
+    In this section you can the define the IPv4 address and the port the
+    printer simulator is listening. A suitable HP82240B printer simulation can
+    be found <a href="http://hp.giesselink.com/hp82240b.htm">here</a>.</p>
+  <h4>8.6.3.3 Section Serial Ports</h4>
+    <ul>
+      <li><i>Wire</i>
+      <p>In the Wire combo box you can select the COM port device connected
+      to the wire port of the calculator.</p></li>
+      <li><i>Ir</i>
+      <p>In the Ir combo box you can select the COM port device connected
+      to the IR port of the calculator. Please remember that the IR port
+      only work with 2400 baud.</p></li>
+    </ul>
+  <h2><a name=ss8.7>8.7 Exit</a></h2>
+    <p>Quit emulation. The default actions at finishing are defined in the
+    <a href=#ss8.6>Settings</a> dialog. If the current session is
+    &quot;Untitled&quot; you are asked for a session file name using the
+    <a href="#ss8.4">Save As...</a> dialog. If you quit the emulator
+    without a given filename, you're asked for choosing a KML script at
+    next startup.</p>
+  <h1><a name=s9>9. Edit Menu</a></h1>
+  <h2><a name=ss9.1>9.1 Load Object...</a></h2>
+    <p>This is only valid for the HP48SX, HP48GX and the HP49G emulation.
+    You can load HP48 and HP49G binary objects to stack level 1. Therefore
+    the object must begin with &quot;HPHP48-x&quot; for a HP48 or with
+    &quot;HPHP49-x&quot; for a HP49G binary object where x can be any
+    alphanumeric character. If the binary header isn't present, the object
+    is loaded as string. Dropping HP objects over the emulator window will
+    also load objects. Be sure that the emulator isn't busy before doing
+    this.</p>
+  <h2><a name=ss9.2>9.2 Save Object...</a></h2>
+    <p>This is only valid for the HP48SX, HP48GX and the HP49G emulation.
+    Save the current object in stack level 1 as binary object to disk.</p>
+  <h2><a name=ss9.3>9.3 Copy Screen</a></h2>
+    <p>Copy the screen content as bitmap to the clipboard.</p>
+  <h2><a name=ss9.4>9.4 Copy Stack</a></h2>
+    <p>This is only valid for the HP48SX, HP48GX and the HP49G emulation.</p>
+    <p>Copy a &quot;Real Number&quot;, &quot;Complex Number&quot; or
+    &quot;String&quot; object in stack level 1 to the clipboard. On all
+    other objects, the command will be ignored. This prevents sending
+    binary objects to the clipboard.</p>
+    <p>The decimal point (radix mark) of &quot;Real Numbers&quot; in the
+    clipboard is equal to the calculator setting. This point maybe
+    important when you try to paste the numbers into a program using the
+    locale settings of the host operating system.</p>
+  <h2><a name=ss9.5>9.5 Paste Stack</a></h2>
+    <p>This is only valid for the HP48SX, HP48GX and the HP49G emulation.</p>
+    <p>Paste the text field content of the clipboard to stack level 1 of
+    the emulated calculator. If the clipboard content is representing a
+    real number, the number will be saved as &quot;Real Number&quot;
+    object. Is the content a complex number object, the number will be
+    saved as &quot;Complex Number&quot; object, in all other cases as
+    &quot;String&quot; object.</p>
+    <p>To import &quot;Real or Complex Numbers&quot; from the clipboard,
+    the decimal point (radix mark) of the clipboard and calculator
+    <u>must</u> be equal. A real or complex number is only detected in the
+    case of valid real number characters in the clipboard. Especially
+    heading and tailing white spaces aren't valid number characters
+    also.</p>
+    <p>Complex numbers must be in the form <i>(a,b)</i> when using the
+    point radix mark or in the form <i>(a;b)</i> when using the comma
+    radix mark. The Cartesian or algebraic form <i>a+bi</i> is not
+    supported.</p>
+  <h2><a name=ss9.6>9.6 Reset Calculator</a></h2>
+    <p>This emulates the Reset pin of the internal CPU.</p>
+  <h2><a name=ss9.7>9.7 Backup</a></h2>
+  <h3><a name=ss9.7.1>9.7.1 Backup Save</a></h3>
+    <p>This saves the current emulator status into a backup slot. If the
+    backup slot already contain data, it will be overwritten.</p>
+  <h3><a name=ss9.7.2>9.7.2 Backup Restore</a></h3>
+    <p>This restores a previous saved emulator status without request. If you
+    changed the calculator model meanwhile, the emulator will switch back to
+    the old model.</p>
+  <h3><a name=ss9.7.3>9.7.3 Backup Delete</a></h3>
+    <p>This deletes the data in the backup slot.</p>
+  <h1><a name=s10>10. View Menu</a></h1>
+  <h2><a name=ss10.1>10.1 Change KML Script...</a></h2>
+    <p>This allows you to change the skin of the current emulated calculator.
+    In opposite to the New... command you see only scripts emulating the same
+    calculator model.</p>
+  <h1><a name=s11>11. Tools Menu</a></h1>
+  <h2><a name=ss11.1>11.1 Disassembler...</a></h2>
+    <p>This is a simple disassembler.</p>
+    <p>Enter the address to disassemble in hexadecimal into the &quot;Address
+    (HEX)&quot; field and press &lt;Return&gt;. With the &quot;Next Address&quot;
+    button the next opcode is disassembled. With the &quot;Copy Data&quot; button
+    you can copy all selected lines inside the list box to the clipboard.</p>
+  <h2><a name=ss11.2>11.2 Debugger...</a></h2>
+    <p>The assembler code debugger of the emulator. For more details refer to the
+    extra documentation of the debugger please.</p>
+  <h2><a name=ss11.3>11.3 Macro</a></h2>
+    <p>The keyboard macro recorder unit.</p>
+  	<h3><a name=ss11.3.1>11.3.1 Macro Record...</a></h3>
+      <p>Prompts a dialog to enter the macro file for the data to record. After
+      accepting the confirm message, every key event is recorded into the macro
+      file with it's time information.</p>
+  	<h3><a name=ss11.3.2>11.3.2 Macro Play...</a></h3>
+      <p>Prompts a dialog box to ask for the keyboard macro file to play. The
+      replay starts immediately after selecting the file.</p>
+  	<h3><a name=ss11.3.3>11.3.3 Macro Stop</a></h3>
+      <p>Stops recording or replaying a keyboard macro file.</p>
+  	<h3><a name=ss11.3.4>11.3.4 Macro Settings...</a></h3>
+      <p>Settings for the Macro Replay mode</p>
+      <ul>
+        <li><i>Real</i>
+        <p>Replay macro with the original recording speed.</p></li>
+        <li><i>Manual</i>
+        <p>Replay macro with the speed set by the speed slider.</p></li>
+      </ul>
+  <h1><a name=s12>12. Help Menu</a></h1>
+  <h2><a name=ss12.1>12.1 Help Topics</a></h2>
+  <p>Call this document.</p>
+  <h2><a name=ss12.2>12.2 About Emu48...</a></h2>
+  <p>The version, copyright and license message...</p>
+  <h1><a name=s13>13. DDE Server</a></h1>
+    <p>Emu48 has an integrated DDE server to transmit data from and to the HP
+    stack. Because only the HP48 and HP49 have a stack, all DDE transfers
+    are ignored on the other calculators. You have the same restrictions like
+    with the commands &quot;Load object...&quot; and &quot;Save
+    Object...&quot;, that a running program may corrupt memory. In difference
+    you can choose the stack level for the transfer in the DDE item field.
+    Take care to transmit data only after the acknowledge of the last DDE
+    transaction.</p>
+    <p>Technical data:</p>
+    <table border="0" cellpadding="0" cellspacing="0" width="651" summary="DDE settings">
+      <tr>
+        <td width="111">Servicename:</td>
+        <td width="536">Emu48</td>
+      </tr>
+      <tr>
+        <td width="111">Topicname:</td>
+        <td width="536">Stack</td>
+      </tr>
+      <tr>
+        <td width="111">Item:</td>
+        <td width="536">1 (stack level)</td>
+      </tr>
+      <tr>
+        <td width="111">Clipboardformat:</td>
+        <td width="536">&quot;CF_HPOBJ&quot; (user defined)</td>
+      </tr>
+    </table>
+    <p>The DDE commands CONNECT, POKE and REQUEST are supported.</p>
+    <p>The structure of the clipboard format &quot;CF_HPOBJ&quot;:</p>
+    <table border="1" cellpadding="0" cellspacing="0" width="100%" summary="CF_HPOBJ format">
+      <tr>
+        <td width="34%">4 Byte (length of object, LSB first)</td>
+        <td width="66%" align="center">HP object (normal HP object)</td>
+      </tr>
+    </table>
+  <h1><a name=s14>14. License</a></h1>
+    <p>Emu48 - A HP38G/39G/40G/48SX/48GX/49G Emulator<br>
+    Copyright (C) 2018 Christoph Gie&szlig;elink</p>
+    <p>This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.</p>
+    <p>This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.</p>
+    <p>You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.</p>
+</div>
+</body>
+</html>

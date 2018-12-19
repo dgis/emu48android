@@ -1,4 +1,20 @@
 <resources>
+
+    <!-- Info Activity -->
+
+    <string name="title_activity_info">About</string>
+    <string name="info_readme">ReadMe.txt</string>
+
+    <!-- Info Activity -->
+    <string name="title_web_activity_info">Help</string>
+    <string name="help_url">file:///android_asset/Emu48.htm</string>
+
+    <!-- Settings Activity -->
+
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- PaintByNumber Activity -->
+
     <string name="app_name">Emu48</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -6,7 +22,6 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_settings">Settings</string>
     <string name="nav_new">New...</string>
     <string name="nav_open">Open...</string>
     <string name="nav_save">Save</string>
@@ -16,4 +31,6 @@
     <string name="nav_save_object">Save Object...</string>
     <string name="nav_copy_screen">Copy Screen</string>
     <string name="nav_copy_stack">Copy Stack</string>
+
+
 </resources>

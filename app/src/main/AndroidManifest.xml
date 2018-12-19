@@ -20,7 +20,6 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -32,6 +31,20 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.regis.cosnier.emu48.MainActivity"/>
+        </activity>
+        <activity
+            android:name=".InfoWebActivity"
+            android:label="@string/title_web_activity_info">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.regis.cosnier.emu48.MainActivity" />
+        </activity>
+        <activity
+            android:name=".InfoActivity"
+            android:label="@string/title_activity_info">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.regis.cosnier.emu48.MainActivity" />
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -31,9 +31,9 @@
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 extern void mainViewUpdateCallback();
 extern void mainViewResizeCallback(int x, int y);
-extern int mainViewGetOpenFileNameCallback(OPENFILENAME * ofn);
-extern int mainViewGetSaveFileNameCallback(OPENFILENAME * ofn);
 extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
+extern int showAlert(const TCHAR * messageText, int flags);
+
 
 
 #if !defined VERIFY

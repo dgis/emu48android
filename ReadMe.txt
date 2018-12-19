@@ -13,15 +13,12 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Add help and about
-- Change KML
 - Support 8bits images
 - Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
 - Option to allow rotation
 - Option to auto hide the menu
 - Bitmap corruption when touching the buttons
-- Android UI Settings
 - Sound
 
 DONE
@@ -30,6 +27,9 @@ DONE
 - Choose KML/Change KML/NewDocument
 - Load/Save object
 - Permission issues when reopening document after an OS restart
+- Android UI Settings
 - Change settings per settings
 - Add icons
 - Autosave
+- Add help and about
+- Change KML

@@ -289,6 +289,7 @@ public class MainActivity extends AppCompatActivity
     private void updateNavigationDrawerItems() {
         Menu menu = navigationView.getMenu();
         boolean isDocumentAvailable = NativeLib.isDocumentAvailable();
+        boolean isBackup = NativeLib.isBackup();
         menu.findItem(R.id.nav_save).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_save_as).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_close).setEnabled(isDocumentAvailable);
@@ -299,10 +300,9 @@ public class MainActivity extends AppCompatActivity
         menu.findItem(R.id.nav_paste_stack).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_reset_calculator).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_backup_save).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_backup_restore).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_backup_delete).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_backup_restore).setEnabled(isDocumentAvailable && isBackup);
+        menu.findItem(R.id.nav_backup_delete).setEnabled(isDocumentAvailable && isBackup);
         menu.findItem(R.id.nav_change_kml_script).setEnabled(isDocumentAvailable);
-
     }
 
     class KMLScriptItem {
@@ -577,11 +577,42 @@ public class MainActivity extends AppCompatActivity
 
     }
     private void OnViewScript() {
-        //NativeLib.onViewScript();
+        extractKMLScripts();
+
+        if (NativeLib.getState() != 0 /*SM_RUN*/)
+        {
+            showAlert("You cannot change the KML script when Emu48 is not running.\n"
+                    + "Use the File,New menu item to create a new calculator.");
+            return;
+        }
+        final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel = new ArrayList<>();
+        char m = (char)NativeLib.getCurrentModel();
+        for (int i = 0; i < kmlScripts.size(); i++) {
+            KMLScriptItem kmlScriptItem = kmlScripts.get(i);
+            if (kmlScriptItem.model.charAt(0) == m)
+                kmlScriptsForCurrentModel.add(kmlScriptItem);
+        }
+
+        final String[] kmlScriptTitles = new String[kmlScriptsForCurrentModel.size()];
+        for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
+            kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Pick a calculator")
+                .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
+                        NativeLib.onViewScript(kmlScriptFilename);
+                        showKMLLog();
+                        updateNavigationDrawerItems();
+                    }
+                }).show();
     }
     private void OnTopics() {
+        startActivity(new Intent(this, InfoWebActivity.class));
     }
     private void OnAbout() {
+        startActivity(new Intent(this, InfoActivity.class));
     }
 
     @Override
@@ -685,6 +716,10 @@ public class MainActivity extends AppCompatActivity
         }
         int fd = filePfd != null ? filePfd.getFd() : 0;
         return fd;
+    }
+
+    void showAlert(String text) {
+        Snackbar.make(getWindow().getDecorView().getRootView(), "text", Snackbar.LENGTH_LONG).setAction("Action", null).show();
     }
 
     private void updateFromPreferences(String key, boolean isDynamic) {

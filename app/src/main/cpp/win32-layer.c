@@ -593,11 +593,9 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
 }
 
 BOOL GetOpenFileName(LPOPENFILENAME openFilename) {
-    //return mainViewGetOpenFileNameCallback(openFilename);
     return FALSE;
 }
 BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
-    //return mainViewGetSaveFileNameCallback(openFilename);
     return FALSE;
 }
 
@@ -618,7 +616,7 @@ BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 
 int MessageBox(HANDLE h, LPCTSTR szMessage, LPCTSTR title, int flags)
 {
-    int result = IDOK;
+//    int result = IDOK;
 //#if !TARGET_OS_IPHONE
 //    NSAlert *alert = [[NSAlert alloc] init];
 //    [alert setMessageText: NSLocalizedString([NSString stringWithUTF8String: szMessage],@"")];
@@ -654,7 +652,8 @@ int MessageBox(HANDLE h, LPCTSTR szMessage, LPCTSTR title, int flags)
 //        result = NSAlertFirstButtonReturn ? IDYES :
 //                 NSAlertSecondButtonReturn ? IDCANCEL : IDNO;
 //#endif
-    return result;
+
+    return showAlert(szMessage, flags);
 }
 
 DWORD timeGetTime(void)
