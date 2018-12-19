@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -228,17 +230,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             preferenceAutosave.setOnPreferenceChangeListener(onPreferenceChangeListenerAutosave);
             onPreferenceChangeListenerAutosave.onPreferenceChange(preferenceAutosave, sharedPreferences.getBoolean(preferenceAutosave.getKey(), false));
 
-            Preference preferenceAutosaveonexit = findPreference("settings_autosaveonexit");
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerAutosaveonexit = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    String stringValue = value.toString();
-                    preference.setSummary(stringValue);
-                    return true;
-                }
-            };
-            preferenceAutosaveonexit.setOnPreferenceChangeListener(onPreferenceChangeListenerAutosaveonexit);
-            onPreferenceChangeListenerAutosaveonexit.onPreferenceChange(preferenceAutosaveonexit, sharedPreferences.getBoolean(preferenceAutosaveonexit.getKey(), false));
+//            Preference preferenceAutosaveonexit = findPreference("settings_autosaveonexit");
+//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerAutosaveonexit = new Preference.OnPreferenceChangeListener() {
+//                @Override
+//                public boolean onPreferenceChange(Preference preference, Object value) {
+//                    String stringValue = value.toString();
+//                    preference.setSummary(stringValue);
+//                    return true;
+//                }
+//            };
+//            preferenceAutosaveonexit.setOnPreferenceChangeListener(onPreferenceChangeListenerAutosaveonexit);
+//            onPreferenceChangeListenerAutosaveonexit.onPreferenceChange(preferenceAutosaveonexit, sharedPreferences.getBoolean(preferenceAutosaveonexit.getKey(), false));
 
             Preference preferenceObjectloadwarning = findPreference("settings_objectloadwarning");
             Preference.OnPreferenceChangeListener onPreferenceChangeListenerObjectloadwarning = new Preference.OnPreferenceChangeListener() {
@@ -272,7 +274,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             final Preference preferencePort2wr = findPreference("settings_port2wr");
             final Preference preferencePort2load = findPreference("settings_port2load");
 
-            final boolean enablePortPreferences = !(NativeLib.getIsPortExtensionPossible() == 0);
+            final boolean enablePortPreferences = NativeLib.isPortExtensionPossible();
 
             Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort1en = new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -329,7 +331,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object value) {
                     String stringValue = value.toString();
-                    preference.setSummary(stringValue);
+                    String displayName = stringValue;
+                    try {
+                        displayName = getFileName(Uri.parse(stringValue));
+                    } catch(Exception e) {
+                    }
+                    preference.setSummary(displayName);
                     return true;
                 }
             };
@@ -357,6 +364,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 return true;
             }
             return super.onOptionsItemSelected(item);
+        }
+
+        public String getFileName(Uri uri) {
+            String result = null;
+            if (uri.getScheme().equals("content")) {
+                Cursor cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
+                try {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+            if (result == null) {
+                result = uri.getPath();
+                int cut = result.lastIndexOf('/');
+                if (cut != -1) {
+                    result = result.substring(cut + 1);
+                }
+            }
+            return result;
         }
     }
 

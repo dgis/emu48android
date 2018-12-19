@@ -211,10 +211,13 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env,
 
 
 
-//JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
-//    jstring result = (*env)->NewStringUTF(env, szBufferFilename);
-//    return result;
-//}
+JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isDocumentAvailable(JNIEnv *env, jobject thisz) {
+    return bDocumentAvail ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
+    jstring result = (*env)->NewStringUTF(env, szCurrentFilename);
+    return result;
+}
 //JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
 //    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
 //    _tcscpy(szBufferFilename, newFilenameUTF8);
@@ -727,8 +730,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
         (*env)->ReleaseStringUTFChars(env, stringValue, configStringValue);
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getIsPortExtensionPossible(JNIEnv *env, jobject thisz) {
-    return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0);
+JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isPortExtensionPossible(JNIEnv *env, jobject thisz) {
+    return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0 ? JNI_TRUE : JNI_FALSE);
 }
 
 //p Read5(0x7050E)

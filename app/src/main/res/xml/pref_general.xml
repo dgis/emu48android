@@ -11,26 +11,14 @@
                 android:key="settings_grayscale"
                 android:title="Enable Virtual LCD Delay"
                 android:defaultValue="false" />
-            <!--<SwitchPreference-->
-                <!--android:key="settings_alwaysontop"-->
-                <!--android:title="Always On Top"-->
-                <!--android:defaultValue="false" />-->
-            <!--<SwitchPreference-->
-                <!--android:key="settings_actfollowsmouse"-->
-                <!--android:title="Activation Follows Mouse"-->
-                <!--android:defaultValue="false" />-->
-            <!--<SwitchPreference-->
-                <!--android:key="settings_singleinstance"-->
-                <!--android:title="Single Instance"-->
-                <!--android:defaultValue="false" />-->
             <SwitchPreference
                 android:key="settings_autosave"
                 android:title="Automatically Save Files"
-                android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_autosaveonexit"
-                android:title="Automatically Save Files On Exit"
                 android:defaultValue="true" />
+            <!--<SwitchPreference-->
+                <!--android:key="settings_autosaveonexit"-->
+                <!--android:title="Automatically Save Files On Exit"-->
+                <!--android:defaultValue="true" />-->
             <SwitchPreference
                 android:key="settings_objectloadwarning"
                 android:title="Show Load Object Warning"

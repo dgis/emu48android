@@ -13,7 +13,6 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Autosave
 - Add help and about
 - Change KML
 - Support 8bits images
@@ -33,3 +32,4 @@ DONE
 - Permission issues when reopening document after an OS restart
 - Change settings per settings
 - Add icons
+- Autosave

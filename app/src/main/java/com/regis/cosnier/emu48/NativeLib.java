@@ -22,7 +22,8 @@ public class NativeLib {
     public static native void keyUp(int virtKey);
 
 
-    //public static native String getCurrentFilename();
+    public static native boolean isDocumentAvailable();
+    public static native String getCurrentFilename();
     public static native int getCurrentModel();
     public static native String getKMLLog();
 
@@ -42,5 +43,5 @@ public class NativeLib {
     public static native void onBackupDelete();
 
     public static native void setConfiguration(String key, int isDynamic, int intValue1, int intValue2, String stringValue);
-    public static native int getIsPortExtensionPossible();
+    public static native boolean isPortExtensionPossible();
 }

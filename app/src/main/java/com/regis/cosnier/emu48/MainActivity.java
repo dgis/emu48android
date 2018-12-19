@@ -63,8 +63,9 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
     private MainScreenView mainScreenView;
-    SharedPreferences sharedPreferences;
-    SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
+    private NavigationView navigationView;
 
     private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
@@ -90,8 +91,11 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
+
 
 
 
@@ -132,6 +136,8 @@ public class MainActivity extends AppCompatActivity
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
 
+        updateNavigationDrawerItems();
+
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
         String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
         if(lastDocumentUrl.length() > 0)
@@ -145,6 +151,37 @@ public class MainActivity extends AppCompatActivity
 //            } catch (Exception e) {
 //                Log.e(TAG, e.getMessage());
 //            }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        //TODO We cannot make the difference between going to the settings or loading/saving a file and a real app stop/kill!
+        // -> Maybe by settings some flags when loading/saving
+        if(NativeLib.isDocumentAvailable() && sharedPreferences.getBoolean("settings_autosave", true)) {
+            String currentFilename = NativeLib.getCurrentFilename();
+            if (currentFilename != null && currentFilename.length() > 0) {
+                NativeLib.onFileSave();
+            }
+        }
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        //onDestroy is never called!
+        NativeLib.stop();
+
+        super.onDestroy();
     }
 
 //    @Override
@@ -249,14 +286,32 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void updateNavigationDrawerItems() {
+        Menu menu = navigationView.getMenu();
+        boolean isDocumentAvailable = NativeLib.isDocumentAvailable();
+        menu.findItem(R.id.nav_save).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_save_as).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_close).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_load_object).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_save_object).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_copy_screen).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_copy_stack).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_paste_stack).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_reset_calculator).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_backup_save).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_backup_restore).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_backup_delete).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_change_kml_script).setEnabled(isDocumentAvailable);
+
+    }
+
     class KMLScriptItem {
         public String filename;
         public String title;
         public String model;
     }
     ArrayList<KMLScriptItem> kmlScripts;
-
-    private void OnFileNew() {
+    private void extractKMLScripts() {
         if(kmlScripts == null) {
             kmlScripts = new ArrayList<>();
             AssetManager assetManager = getAssets();
@@ -332,33 +387,86 @@ public class MainActivity extends AppCompatActivity
                 }
             });
         }
+    }
 
+    private Runnable fileSaveAsCallback = null;
+    private void ensureDocumentSaved(final Runnable continueCallback) {
+        if(NativeLib.isDocumentAvailable()) {
+            final String currentFilename = NativeLib.getCurrentFilename();
+            final boolean hasFilename = (currentFilename != null && currentFilename.length() > 0);
 
-        final String[] kmlScriptTitles = new String[kmlScripts.size()];
-        for (int i = 0; i < kmlScripts.size(); i++)
-            kmlScriptTitles[i] = kmlScripts.get(i).title;
-        new AlertDialog.Builder(this)
-            .setTitle("Pick a calculator")
-            .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
-                @Override
+            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                    String kmlScriptFilename = kmlScripts.get(which).filename;
-                    NativeLib.onFileNew(kmlScriptFilename);
-                    showKMLLog();
+                    if (which == DialogInterface.BUTTON_POSITIVE) {
+                        if (hasFilename) {
+                            NativeLib.onFileSave();
+                            if (continueCallback != null)
+                                continueCallback.run();
+                        } else {
+                            //TODO SaveAs...
+                            fileSaveAsCallback = continueCallback;
+                            OnFileSaveAs();
+                        }
+                    } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                        if(continueCallback != null)
+                            continueCallback.run();
+                    }
                 }
-            }).show();
+            };
+
+            if(hasFilename && sharedPreferences.getBoolean("settings_autosave", true)) {
+                onClickListener.onClick(null, DialogInterface.BUTTON_POSITIVE);
+            } else {
+                new AlertDialog.Builder(this)
+                        .setMessage("Do you want to save changes?\n(BACK to cancel)")
+                        .setPositiveButton("Yes", onClickListener)
+                        .setNegativeButton("No", onClickListener)
+                        .show();
+            }
+        } else if(continueCallback != null)
+            continueCallback.run();
+    }
+
+    private void OnFileNew() {
+        extractKMLScripts();
+
+        ensureDocumentSaved(new Runnable() {
+            @Override
+            public void run() {
+                final String[] kmlScriptTitles = new String[kmlScripts.size()];
+                for (int i = 0; i < kmlScripts.size(); i++)
+                    kmlScriptTitles[i] = kmlScripts.get(i).title;
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Pick a calculator")
+                        .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String kmlScriptFilename = kmlScripts.get(which).filename;
+                                NativeLib.onFileNew(kmlScriptFilename);
+                                showKMLLog();
+                                updateNavigationDrawerItems();
+                            }
+                        }).show();
+            }
+        });
     }
 
     private void OnFileOpen() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
-        intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
-        startActivityForResult(intent, INTENT_GETOPENFILENAME);
+        ensureDocumentSaved(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
+                intent.setType("*/*");
+                intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
+                startActivityForResult(intent, INTENT_GETOPENFILENAME);
+            }
+        });
     }
     private void OnFileSave() {
-        NativeLib.onFileSave();
+        //NativeLib.onFileSave();
+        ensureDocumentSaved(null);
     }
     private void OnFileSaveAs() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -382,10 +490,16 @@ public class MainActivity extends AppCompatActivity
         startActivityForResult(intent, INTENT_GETSAVEFILENAME);
     }
     private void OnFileClose() {
-        NativeLib.onFileClose();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("lastDocument", "");
-        editor.commit();
+        ensureDocumentSaved(new Runnable() {
+            @Override
+            public void run() {
+                NativeLib.onFileClose();
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("lastDocument", "");
+                editor.commit();
+                updateNavigationDrawerItems();
+            }
+        });
     }
     private void OnSettings() {
         startActivityForResult(new Intent(this, SettingsActivity.class), INTENT_SETTINGS);
@@ -471,14 +585,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
-
-        NativeLib.stop();
-
-        super.onDestroy();
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if(resultCode == Activity.RESULT_OK) {
 
@@ -493,7 +599,6 @@ public class MainActivity extends AppCompatActivity
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("lastDocument", url);
                     editor.commit();
-
                     makeUriPersistable(data, uri);
                 }
             } else if(requestCode == INTENT_GETSAVEFILENAME) {
@@ -509,6 +614,8 @@ public class MainActivity extends AppCompatActivity
                     editor.commit();
 
                     makeUriPersistable(data, uri);
+                    if(fileSaveAsCallback != null)
+                        fileSaveAsCallback.run();
                 }
             } else if(requestCode == INTENT_OBJECT_LOAD) {
                 Uri uri = data.getData();
@@ -527,9 +634,9 @@ public class MainActivity extends AppCompatActivity
                 String url = uri.toString();
                 NativeLib.onObjectSave(url);
             } else if(requestCode == INTENT_SETTINGS) {
-
             }
         }
+        fileSaveAsCallback = null;
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -542,6 +649,7 @@ public class MainActivity extends AppCompatActivity
     private int onFileOpen(String url) {
         int result = NativeLib.onFileOpen(url);
         showKMLLog();
+        updateNavigationDrawerItems();
         return result;
     }
 
@@ -583,7 +691,6 @@ public class MainActivity extends AppCompatActivity
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
 //        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
-//        boolean settingsAutosaveonexit = sharedPreferences.getBoolean("settings_autosaveonexit", false);
             String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_alwaysdisplog", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
