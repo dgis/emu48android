@@ -1,53 +1,43 @@
 package com.regis.cosnier.emu48;
 
-import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -66,6 +56,7 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreferences;
     private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
     private NavigationView navigationView;
+    private DrawerLayout drawer;
 
     private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
@@ -85,7 +76,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -151,6 +142,8 @@ public class MainActivity extends AppCompatActivity
 //            } catch (Exception e) {
 //                Log.e(TAG, e.getMessage());
 //            }
+        else if(drawer != null)
+            drawer.openDrawer(GravityCompat.START);
     }
 
     @Override
@@ -443,6 +436,7 @@ public class MainActivity extends AppCompatActivity
                             public void onClick(DialogInterface dialog, int which) {
                                 String kmlScriptFilename = kmlScripts.get(which).filename;
                                 NativeLib.onFileNew(kmlScriptFilename);
+                                displayFilename("");
                                 showKMLLog();
                                 updateNavigationDrawerItems();
                             }
@@ -498,6 +492,14 @@ public class MainActivity extends AppCompatActivity
                 editor.putString("lastDocument", "");
                 editor.commit();
                 updateNavigationDrawerItems();
+                displayFilename("");
+                if(drawer != null) {
+                    new android.os.Handler().postDelayed(new Runnable() {
+                        public void run() {
+                            drawer.openDrawer(GravityCompat.START);
+                        }
+                    }, 300);
+                }
             }
         });
     }
@@ -645,6 +647,7 @@ public class MainActivity extends AppCompatActivity
                     editor.commit();
 
                     makeUriPersistable(data, uri);
+                    displayFilename(url);
                     if(fileSaveAsCallback != null)
                         fileSaveAsCallback.run();
                 }
@@ -679,9 +682,26 @@ public class MainActivity extends AppCompatActivity
 
     private int onFileOpen(String url) {
         int result = NativeLib.onFileOpen(url);
+        displayFilename(url);
         showKMLLog();
         updateNavigationDrawerItems();
         return result;
+    }
+
+    private void displayFilename(String url) {
+        String displayName = "";
+        try {
+            displayName = SettingsActivity.getFileName(this, url);
+        } catch(Exception e) {
+        }
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        View header = navigationView.getHeaderView(0);
+        TextView textViewTitle = header.findViewById(R.id.nav_header_title);
+        if(textViewTitle != null)
+            textViewTitle.setText(NativeLib.getKMLTitle());
+        TextView textViewSubtitle = header.findViewById(R.id.nav_header_subtitle);
+        if(textViewSubtitle != null)
+            textViewSubtitle.setText(displayName);
     }
 
     private void showKMLLog() {
@@ -699,6 +719,7 @@ public class MainActivity extends AppCompatActivity
 
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
+    Map<Integer, ParcelFileDescriptor> parcelFileDescriptorPerFd = null;
     int openFileFromContentResolver(String url, int writeAccess) {
         //https://stackoverflow.com/a/31677287
         Uri uri = Uri.parse(url);
@@ -715,7 +736,26 @@ public class MainActivity extends AppCompatActivity
             return -1;
         }
         int fd = filePfd != null ? filePfd.getFd() : 0;
+        if(parcelFileDescriptorPerFd == null) {
+            parcelFileDescriptorPerFd = new HashMap<>();
+        }
+        parcelFileDescriptorPerFd.put(fd, filePfd);
         return fd;
+    }
+    int closeFileFromContentResolver(int fd) {
+        if(parcelFileDescriptorPerFd != null) {
+            ParcelFileDescriptor filePfd = parcelFileDescriptorPerFd.get(fd);
+            if(filePfd != null) {
+                try {
+                    filePfd.close();
+                    parcelFileDescriptorPerFd.remove(fd);
+                    return 0;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return -1;
     }
 
     void showAlert(String text) {
@@ -726,7 +766,7 @@ public class MainActivity extends AppCompatActivity
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
 //        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_alwaysdisplog", "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", /*"settings_alwaysdisplog",*/ "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -738,9 +778,9 @@ public class MainActivity extends AppCompatActivity
                 case "settings_grayscale":
                     NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
                     break;
-                case "settings_alwaysdisplog":
-                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, true) ? 1 : 0, 0, null);
-                    break;
+//                case "settings_alwaysdisplog":
+//                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, true) ? 1 : 0, 0, null);
+//                    break;
                 case "settings_port1":
                 case "settings_port1en":
                 case "settings_port1wr":

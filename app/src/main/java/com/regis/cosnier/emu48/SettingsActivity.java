@@ -333,7 +333,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     String stringValue = value.toString();
                     String displayName = stringValue;
                     try {
-                        displayName = getFileName(Uri.parse(stringValue));
+                        displayName = getFileName(getActivity(), stringValue);
                     } catch(Exception e) {
                     }
                     preference.setSummary(displayName);
@@ -365,28 +365,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
-
-        public String getFileName(Uri uri) {
-            String result = null;
-            if (uri.getScheme().equals("content")) {
-                Cursor cursor = getActivity().getContentResolver().query(uri, null, null, null, null);
-                try {
-                    if (cursor != null && cursor.moveToFirst()) {
-                        result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                    }
-                } finally {
-                    cursor.close();
-                }
-            }
-            if (result == null) {
-                result = uri.getPath();
-                int cut = result.lastIndexOf('/');
-                if (cut != -1) {
-                    result = result.substring(cut + 1);
-                }
-            }
-            return result;
-        }
     }
 
     @Override
@@ -409,5 +387,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         //grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
+    }
+
+    public static String getFileName(Context context, String url) {
+        Uri uri = Uri.parse(url);
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 }

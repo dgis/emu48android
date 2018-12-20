@@ -13,8 +13,9 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
+- Support clipboard
+- Support screen copy
 - Support 8bits images
-- Put the KML title in the header of the menu in the drawer
 - Bug: No refresh with the clock
 - Option to allow rotation
 - Option to auto hide the menu
@@ -33,3 +34,5 @@ DONE
 - Autosave
 - Add help and about
 - Change KML
+- Bug Re open file not working when permanent link
+- Put the KML title in the header of the menu in the drawer

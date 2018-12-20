@@ -91,6 +91,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
     } else {
 
+        BOOL useOpenFileFromContentResolver = FALSE;
         int flags = O_RDWR;
         int fd = -1;
         struct flock lock;
@@ -109,10 +110,18 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
 
         TCHAR * urlSchemeFound = _tcsstr(lpFileName, _T("://"));
-        if(urlSchemeFound)
+        if(urlSchemeFound) {
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
-        else
+            useOpenFileFromContentResolver = TRUE;
+            if(fd == -1) {
+                LOGD("openFileFromContentResolver() %d", errno);
+            }
+        } else {
             fd = open(lpFileName, flags, perm);
+            if(fd == -1) {
+                LOGD("open() %d", errno);
+            }
+        }
 //        if (-1 != fd && 0 != dwShareMode) {
 //            // Not specifiying shared write means non-shared (exclusive) write
 //            if (0 == (dwShareMode & FILE_SHARE_WRITE))
@@ -134,6 +143,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             memset(handle, 0, sizeof(_HANDLE));
             handle->handleType = HANDLE_TYPE_FILE;
             handle->fileDescriptor = fd;
+            handle->fileOpenFileFromContentResolver = useOpenFileFromContentResolver;
             return handle;
         }
     }
@@ -443,13 +453,22 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
     // Can be a thread/event/file handle!
     switch(hObject->handleType) {
         case HANDLE_TYPE_FILE: {
-            int closeResult = close(hObject->fileDescriptor);
+            int closeResult;
+            if(hObject->fileOpenFileFromContentResolver) {
+                closeResult = closeFileFromContentResolver(hObject->fileDescriptor);
+            } else {
+                closeResult = close(hObject->fileDescriptor);
+                if(closeResult == -1) {
+                    LOGD("close() %d", errno); //9 -> EBADF
+                }
+            }
             if(closeResult >= 0) {
                 hObject->handleType = HANDLE_TYPE_INVALID;
                 hObject->fileDescriptor = 0;
                 free(hObject);
                 return TRUE;
             }
+
             break;
         }
         case HANDLE_TYPE_FILE_ASSET: {
@@ -1148,11 +1167,14 @@ UINT GetDlgItemTextA(HWND hDlg, int nIDDlgItem, LPSTR lpString,int cchMax) {
 }
 
 extern TCHAR szKmlLog[10240];
+extern TCHAR szKmlTitle[10240];
 
 BOOL SetDlgItemText(HWND hDlg, int nIDDlgItem, LPCTSTR lpString) {
     if(nIDDlgItem == IDC_KMLLOG) {
-        LOGD("KML log:\r\n%s", lpString);
+        //LOGD("KML log:\r\n%s", lpString);
         _tcsncpy(szKmlLog, lpString, sizeof(szKmlLog)/sizeof(TCHAR));
+    } if(nIDDlgItem == IDC_TITLE) {
+        _tcsncpy(szKmlTitle, lpString, sizeof(szKmlTitle)/sizeof(TCHAR));
     }
     //TODO
     return 0;

@@ -20,6 +20,8 @@ jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
+TCHAR szKmlTitle[10240];
+
 
 
 extern void win32Init();
@@ -106,6 +108,13 @@ int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
     int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfUrl, writeAccess);
     return result;
 }
+int closeFileFromContentResolver(int fd) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "closeFileFromContentResolver", "(I)I");
+    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, fd);
+    return result;
+}
 
 // Must be called in the main thread
 int showAlert(const TCHAR * messageText, int flags) {
@@ -113,7 +122,7 @@ int showAlert(const TCHAR * messageText, int flags) {
     jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
     jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "showAlert", "(Ljava/lang/String;)V");
     jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, messageText);
-    (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, messageUTF);
+    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
     return IDOK;
 }
 
@@ -248,6 +257,11 @@ JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEn
     return result;
 }
 
+JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLTitle(JNIEnv *env, jobject thisz) {
+    jstring result = (*env)->NewStringUTF(env, szKmlTitle);
+    return result;
+}
+
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     //OnFileNew();
     if (bDocumentAvail)
@@ -316,7 +330,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEn
         if (result)
             MruAdd(szCurrentFilename);
         else {
-            // ERROR !!!!!!!!!
+            //TODO ERROR !!!!!!!!!
         }
         SwitchToState(SM_RUN);
     }
@@ -334,6 +348,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv
             SaveDocument();
         ResetDocument();
         SetWindowTitle(NULL);
+        szKmlTitle[0] = '\0';
         mainViewResizeCallback(nBackgroundW, nBackgroundH);
         draw();
         return TRUE;
@@ -549,9 +564,10 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
     const char *configStringValue = stringValue ? (*env)->GetStringUTFChars(env, stringValue, NULL) : NULL;
 
-    bAutoSave = FALSE; //settingsAutosave;
-    bAutoSaveOnExit = FALSE; //settingsAutosaveonexit;
-    bLoadObjectWarning = FALSE; //settingsObjectloadwarning;
+    bAutoSave = FALSE;
+    bAutoSaveOnExit = FALSE;
+    bLoadObjectWarning = FALSE;
+    bAlwaysDisplayLog = TRUE;
 
     if(_tcscmp(_T("settings_realspeed"), configKey) == 0) {
         bRealSpeed = intValue1;
@@ -564,8 +580,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
             SetLcdMode(!bGrayscale);	// set new display mode
             SwitchToState(nOldState);
         }
-    } else if(_tcscmp(_T("settings_alwaysdisplog"), configKey) == 0) {
-        bAlwaysDisplayLog = intValue1;
+//    } else if(_tcscmp(_T("settings_alwaysdisplog"), configKey) == 0) {
+//        bAlwaysDisplayLog = intValue1;
     } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
         BOOL settingsPort1en = intValue1;
         BOOL settingsPort1wr = intValue2;

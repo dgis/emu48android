@@ -26,6 +26,7 @@ public class NativeLib {
     public static native int getCurrentModel();
     public static native boolean isBackup();
     public static native String getKMLLog();
+    public static native String getKMLTitle();
 
     public static native int onFileNew(String kmlFilename);
     public static native int onFileOpen(String filename);

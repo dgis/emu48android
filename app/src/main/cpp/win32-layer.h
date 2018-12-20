@@ -79,6 +79,7 @@ typedef struct {
     enum HANDLE_TYPE handleType;
 
 	int fileDescriptor;
+	BOOL fileOpenFileFromContentResolver;
 
     AAsset* fileAsset;
 
