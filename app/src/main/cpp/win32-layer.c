@@ -736,8 +736,34 @@ HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
     return NULL;
 }
 int GetObject(HANDLE h, int c, LPVOID pv) {
-    //TODO
-    return 0;
+    if(h) {
+        switch (h->handleType) {
+            case HGDIOBJ_TYPE_PEN:
+                break;
+            case HGDIOBJ_TYPE_BRUSH:
+                break;
+            case HGDIOBJ_TYPE_FONT:
+                break;
+            case HGDIOBJ_TYPE_BITMAP:
+                if(h && c == sizeof(BITMAP) && pv) {
+                    BITMAP * pBITMAP = (BITMAP *)pv;
+                    HBITMAP hBITMAP = (HBITMAP)h;
+                    pBITMAP->bmType = 0;
+                    pBITMAP->bmWidth = hBITMAP->bitmapInfoHeader->biWidth;
+                    pBITMAP->bmHeight = hBITMAP->bitmapInfoHeader->biWidth;
+                    pBITMAP->bmWidthBytes = (4 * ((hBITMAP->bitmapInfoHeader->biWidth * hBITMAP->bitmapInfoHeader->biBitCount + 31) / 32));
+                    pBITMAP->bmPlanes = hBITMAP->bitmapInfoHeader->biPlanes;
+                    pBITMAP->bmBitsPixel = hBITMAP->bitmapInfoHeader->biBitCount;
+                    pBITMAP->bmBits = (LPVOID)hBITMAP->bitmapBits;
+                    return sizeof(BITMAP);
+                }
+                break;
+            case HGDIOBJ_TYPE_REGION:
+                break;
+            case HGDIOBJ_TYPE_PALETTE:
+                break;
+        }
+    }    return 0;
 }
 HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
     //TODO
@@ -849,12 +875,12 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         }
 
-        HBITMAP hBitmap = hdcSrc->selectedBitmap;
+        HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
 
-        void * pixelsSource = hBitmap->bitmapBits;
+        void * pixelsSource = hBitmapSource->bitmapBits;
 
-        int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
-        int sourceHeight = abs(hBitmap->bitmapInfoHeader->biHeight);
+        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
         int destinationWidth = androidBitmapInfo.width;
         int destinationHeight = androidBitmapInfo.height;
 
@@ -867,9 +893,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float dst_maxy = yDest + hDest;
         float src_cury = ySrc;
 
-        int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
+        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
         float sourceStride = sourceWidth * sourceBytes;
-        sourceStride = (float)(4 * ((sourceWidth * hBitmap->bitmapInfoHeader->biBitCount + 31) / 32));
+        sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
         float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
         //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
@@ -910,7 +936,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         destinationPixel[3] = 255;
                         break;
                     case 4:
-                        memcpy(destinationPixel, sourcePixel, sourceBytes);
+                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
                         break;
                     default:
                         break;
@@ -928,6 +954,84 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 //            ret = (*java_machine)->DetachCurrentThread(java_machine);
 
         //mainViewUpdateCallback();
+        return TRUE;
+    } else if(hdcDest->selectedBitmap && hdcSrc->selectedBitmap && hDest && hSrc) {
+        // We update the main window
+
+        HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
+        void * pixelsSource = (void *) hBitmapSource->bitmapBits;
+
+        HBITMAP hBitmapDestination = hdcDest->selectedBitmap;
+        void * pixelsDestination = (void *) hBitmapDestination->bitmapBits;
+
+        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
+        int destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
+        int destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+
+        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
+        float src_dx = (float)wSrc / (float)wDest;
+        float src_dy = (float)hSrc / (float)hDest;
+        float src_maxx = xSrc + wSrc;
+        float src_maxy = ySrc + hSrc;
+        float dst_maxx = xDest + wDest;
+        float dst_maxy = yDest + hDest;
+        float src_cury = ySrc;
+
+        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
+        float sourceStride = (float)(4 * ((sourceWidth * sourceBytes * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        int destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
+        float destinationStride = (float)(4 * ((destinationWidth * destinationBytes * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+
+        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
+                                     hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+
+        for (float y = yDest; y < dst_maxy; y++)
+        {
+            float src_curx = xSrc;
+            for (float x = xDest; x < dst_maxx; x++)
+            {
+                // Point sampling - you can also impl as bilinear or other
+                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
+
+                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
+                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
+
+                // -> ARGB_8888
+                switch (sourceBytes) {
+                    case 1:
+                        if(palPalEntry) {
+                            BYTE colorIndex = sourcePixel[0];
+                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[3] = 255;
+                        } else {
+                            destinationPixel[0] = sourcePixel[0];
+                            destinationPixel[1] = sourcePixel[0];
+                            destinationPixel[2] = sourcePixel[0];
+                            destinationPixel[3] = 255;
+                        }
+                        break;
+                    case 3:
+                        destinationPixel[0] = sourcePixel[2];
+                        destinationPixel[1] = sourcePixel[1];
+                        destinationPixel[2] = sourcePixel[0];
+                        destinationPixel[3] = 255;
+                        break;
+                    case 4:
+                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
+                        break;
+                    default:
+                        break;
+                }
+
+                src_curx += src_dx;
+            }
+
+            src_cury += src_dy;
+        }
         return TRUE;
     }
     return FALSE;
@@ -947,13 +1051,13 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
     return 0;
 }
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
-    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
-    memset(newHDC, 0, sizeof(_HGDIOBJ));
-    newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
+    HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
+    newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
     BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
     memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
-    newHDC->bitmapInfo = newBitmapInfo;
-    newHDC->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
+    newHBITMAP->bitmapInfo = newBitmapInfo;
+    newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
     //size_t stride = (size_t)(newBitmapInfo->bmiHeader.biWidth * (newBitmapInfo->bmiHeader.biBitCount >> 3));
     size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
     size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
@@ -969,25 +1073,43 @@ HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CO
         bitmapBitsSource += stride;
         bitmapBitsDestination -= stride;
     }
-    newHDC->bitmapBits = bitmapBits;
-    return newHDC;
+    newHBITMAP->bitmapBits = bitmapBits;
+    return newHBITMAP;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
-    HGDIOBJ newHDC = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
-    memset(newHDC, 0, sizeof(_HGDIOBJ));
-    newHDC->handleType = HGDIOBJ_TYPE_BITMAP;
-    newHDC->bitmapInfo = pbmi;
-    newHDC->bitmapInfoHeader = pbmi;
+    HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
+    newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
+    newHBITMAP->bitmapInfo = pbmi;
+    newHBITMAP->bitmapInfoHeader = (const BITMAPINFOHEADER *) pbmi;
     // For DIB_RGB_COLORS only
-    int size = pbmi->bmiHeader.biWidth * abs(pbmi->bmiHeader.biHeight) * 4; //(pbmi->bmiHeader.biBitCount >> 3);
-    newHDC->bitmapBits = malloc(size); //pbmi->bmiHeader.biSizeImage);
-    memset(newHDC->bitmapBits, 0, size);
-    *ppvBits = newHDC->bitmapBits;
-    return newHDC;
+    size_t size = (size_t) (pbmi->bmiHeader.biWidth * abs(pbmi->bmiHeader.biHeight) * 4);
+    newHBITMAP->bitmapBits = malloc(size);
+    memset((void *) newHBITMAP->bitmapBits, 0, size);
+    *ppvBits = (void *) newHBITMAP->bitmapBits;
+    return newHBITMAP;
 }
 HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
-    //TODO
-    return NULL;
+    HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
+    newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
+
+    BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
+    memset(newBitmapInfo, 0, sizeof(BITMAPINFO));
+    newHBITMAP->bitmapInfo = newBitmapInfo;
+    newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
+
+    newBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    newBitmapInfo->bmiHeader.biWidth = cx;
+    newBitmapInfo->bmiHeader.biHeight = cy;
+    newBitmapInfo->bmiHeader.biBitCount = 24;
+
+    size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
+    size_t size = newBitmapInfo->bmiHeader.biHeight * stride;
+    newBitmapInfo->bmiHeader.biSizeImage = (DWORD) size;
+    newHBITMAP->bitmapBits = malloc(size);
+    memset((void *) newHBITMAP->bitmapBits, 0, size);
+    return newHBITMAP;
 }
 int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage) {
     //TODO

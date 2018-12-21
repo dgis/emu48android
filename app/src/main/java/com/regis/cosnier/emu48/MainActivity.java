@@ -587,7 +587,7 @@ public class MainActivity extends AppCompatActivity
         Bitmap bitmapScreen = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         bitmapScreen.eraseColor(Color.BLACK);
 
-        //TODO NativeLib.onViewCopy(bitmapScreen);
+        NativeLib.onViewCopy(bitmapScreen);
 
         String imageFilename = "Emu48-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
         try {

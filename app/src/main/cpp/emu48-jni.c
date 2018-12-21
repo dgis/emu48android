@@ -11,6 +11,7 @@
 #include "core/Emu48.h"
 #include "core/io.h"
 #include "core/kml.h"
+#include "win32-layer.h"
 
 extern void emu48Start();
 extern AAssetManager * assetManager;
@@ -635,6 +636,21 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv 
         // add size for color table
         dwLen += (DWORD) (1 << wBits) * sizeof(RGBQUAD);
     }
+
+
+
+
+
+    size_t strideSource = (size_t)(4 * ((hBmp->bitmapInfoHeader->biWidth * hBmp->bitmapInfoHeader->biBitCount + 31) / 32));
+    size_t strideDestination = (size_t)(4 * hBmp->bitmapInfoHeader->biWidth * hBmp->bitmapInfoHeader->biBitCount);
+    VOID * bitmapBitsSource = (VOID *)hBmp->bitmapBits;
+    VOID * bitmapBitsDestination = pixelsDestination;
+    for(int y = 0; y < hBmp->bitmapInfoHeader->biHeight; y++) {
+        memcpy(bitmapBitsDestination, bitmapBitsSource, strideSource);
+        bitmapBitsSource += strideSource;
+        bitmapBitsDestination += strideDestination;
+    }
+
 
 //    // memory allocation for clipboard data
 //    if ((hClipObj = GlobalAlloc(GMEM_MOVEABLE, dwLen)) != NULL)
