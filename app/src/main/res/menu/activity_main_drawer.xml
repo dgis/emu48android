@@ -105,7 +105,7 @@ info *action
                 android:title="@string/nav_save_object" />
             <item
                 android:id="@+id/nav_copy_screen"
-                android:icon="@drawable/ic_tv_black_24dp"
+                android:icon="@drawable/ic_menu_share"
                 android:title="@string/nav_copy_screen" />
             <item
                 android:id="@+id/nav_copy_stack"

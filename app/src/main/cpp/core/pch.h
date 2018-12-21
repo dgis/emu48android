@@ -34,6 +34,8 @@ extern void mainViewResizeCallback(int x, int y);
 extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
 extern int closeFileFromContentResolver(int fd);
 extern int showAlert(const TCHAR * messageText, int flags);
+void clipboardCopyText(const TCHAR * text);
+const TCHAR * clipboardPasteText();
 
 
 

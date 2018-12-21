@@ -1116,21 +1116,21 @@ cancel:
 //
 // ID_FILE_CLOSE
 //
-/*static*/ LRESULT OnFileClose(VOID)
+static LRESULT OnFileClose(VOID)
 {
-	if (bDocumentAvail)
-	{
-		SwitchToState(SM_INVALID);
-		if (SaveChanges(bAutoSave) != IDCANCEL)
-		{
-			ResetDocument();
-			SetWindowTitle(NULL);
-		}
-		else
-		{
-			SwitchToState(SM_RUN);
-		}
-	}
+//	if (bDocumentAvail)
+//	{
+//		SwitchToState(SM_INVALID);
+//		if (SaveChanges(bAutoSave) != IDCANCEL)
+//		{
+//			ResetDocument();
+//			SetWindowTitle(NULL);
+//		}
+//		else
+//		{
+//			SwitchToState(SM_RUN);
+//		}
+//	}
 	return 0;
 }
 
@@ -1139,14 +1139,14 @@ cancel:
 //
 // WM_SYS_CLOSE
 //
-/*static*/ LRESULT OnFileExit(VOID)
+static LRESULT OnFileExit(VOID)
 {
-	SwitchToState(SM_INVALID);				// hold emulation thread
-	if (SaveChanges(bAutoSaveOnExit) == IDCANCEL)
-	{
-		SwitchToState(SM_RUN);				// on cancel restart emulation thread
-		return 0;
-	}
+//	SwitchToState(SM_INVALID);				// hold emulation thread
+//	if (SaveChanges(bAutoSaveOnExit) == IDCANCEL)
+//	{
+//		SwitchToState(SM_RUN);				// on cancel restart emulation thread
+//		return 0;
+//	}
 //	DestroyWindow(hWnd);
 	return 0;
 }
@@ -1154,7 +1154,7 @@ cancel:
 //
 // ID_VIEW_COPY
 //
-/*static*/ LRESULT OnViewCopy(VOID)
+static LRESULT OnViewCopy(VOID)
 {
 //	if (OpenClipboard(hWnd))
 //	{
@@ -1273,15 +1273,15 @@ cancel:
 //
 // ID_VIEW_RESET
 //
-/*static*/ LRESULT OnViewReset(VOID)
+static LRESULT OnViewReset(VOID)
 {
-	if (nState != SM_RUN) return 0;
-	if (YesNoMessage(_T("Are you sure you want to press the Reset Button?"))==IDYES)
-	{
-		SwitchToState(SM_SLEEP);
-		CpuReset();							// register setting after Cpu Reset
-		SwitchToState(SM_RUN);
-	}
+//	if (nState != SM_RUN) return 0;
+//	if (YesNoMessage(_T("Are you sure you want to press the Reset Button?"))==IDYES)
+//	{
+//		SwitchToState(SM_SLEEP);
+//		CpuReset();							// register setting after Cpu Reset
+//		SwitchToState(SM_RUN);
+//	}
 	return 0;
 }
 

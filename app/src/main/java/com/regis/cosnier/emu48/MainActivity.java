@@ -1,41 +1,60 @@
 package com.regis.cosnier.emu48;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -58,7 +77,20 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private DrawerLayout drawer;
 
-    private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+    //private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+
+    enum FileType {
+        PDF,
+        SVG,
+        JPG,
+        PNG
+    }
+
+    enum ExportType {
+        Share,
+        View,
+        Print
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -550,21 +582,51 @@ public class MainActivity extends AppCompatActivity
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
     }
     private void OnViewCopy() {
-        NativeLib.onViewCopy();
+        int width = NativeLib.getScreenWidth();
+        int height = NativeLib.getScreenHeight();
+        Bitmap bitmapScreen = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmapScreen.eraseColor(Color.BLACK);
 
+        //TODO NativeLib.onViewCopy(bitmapScreen);
+
+        String imageFilename = "Emu48-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
+        try {
+            File storagePath = new File(this.getExternalCacheDir(), "");
+            File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
+            FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+            bitmapScreen.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
+            fileOutputStream.close();
+            String mimeType = "application/png";
+            Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+            intent.setType(mimeType);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Emu48 screenshot");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(this,this.getPackageName() + ".provider", imageFile));
+            startActivity(Intent.createChooser(intent, "Share Emu48 screenshot"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void OnStackCopy() {
-        //https://developer.android.com/guide/topics/text/copy-paste
         NativeLib.onStackCopy();
-
     }
     private void OnStackPaste() {
         NativeLib.onStackPaste();
-
     }
     private void OnViewReset() {
-        NativeLib.onViewReset();
-
+        DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    NativeLib.onViewReset();
+                }
+            }
+        };
+        new AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to press the Reset Button?")
+                .setPositiveButton("Yes", onClickListener)
+                .setNegativeButton("No", onClickListener)
+                .show();
     }
     private void OnBackupSave() {
         NativeLib.onBackupSave();
@@ -760,6 +822,24 @@ public class MainActivity extends AppCompatActivity
 
     void showAlert(String text) {
         Snackbar.make(getWindow().getDecorView().getRootView(), "text", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+    }
+    void clipboardCopyText(String text) {
+        // Gets a handle to the clipboard service.
+        ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("simple text", text);
+        // Set the clipboard's primary clip.
+        clipboard.setPrimaryClip(clip);
+    }
+    String clipboardPasteText() {
+        ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard.hasPrimaryClip()) {
+            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+            // Gets the clipboard as text.
+            CharSequence pasteData = item.getText();
+            if(pasteData != null)
+                return pasteData.toString();
+        }
+        return "";
     }
 
     private void updateFromPreferences(String key, boolean isDynamic) {

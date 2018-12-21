@@ -593,21 +593,18 @@ void SetTimer(void *, TimerType id, int msec, void *)
 
 
 HGLOBAL WINAPI GlobalAlloc(UINT uFlags, SIZE_T dwBytes) {
-    //TODO
-    return NULL;
+    return malloc(dwBytes);
 }
 LPVOID WINAPI GlobalLock (HGLOBAL hMem) {
-    //TODO
-    return NULL;
+    return hMem;
 }
 
 BOOL WINAPI GlobalUnlock(HGLOBAL hMem) {
-    //TODO
-    return 0;
+    return TRUE;
 }
 
 HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
-    //TODO
+    free(hMem);
     return NULL;
 }
 
@@ -1037,8 +1034,7 @@ BOOL WINAPI MessageBeep(UINT uType) {
 }
 
 BOOL WINAPI OpenClipboard(HWND hWndNewOwner) {
-    //TODO
-    return 0;
+    return TRUE;
 }
 BOOL WINAPI CloseClipboard(VOID) {
     //TODO
@@ -1046,23 +1042,27 @@ BOOL WINAPI CloseClipboard(VOID) {
 }
 
 BOOL WINAPI EmptyClipboard(VOID) {
-    //TODO
-    return 0;
+    return TRUE;
 }
 
 HANDLE WINAPI SetClipboardData(UINT uFormat,HANDLE hMem) {
-    //TODO
+    if(CF_TEXT) {
+        clipboardCopyText((const TCHAR *)hMem);
+    }
+    GlobalFree(hMem);
     return NULL;
 }
 
 BOOL WINAPI IsClipboardFormatAvailable(UINT format) {
-    //TODO
-    return 0;
+    TCHAR * szText = clipboardPasteText();
+    BOOL result = szText != NULL;
+    GlobalFree(szText);
+    return result;
 }
 
 HANDLE WINAPI GetClipboardData(UINT uFormat) {
-    //TODO
-    return NULL;
+    TCHAR * szText = clipboardPasteText();
+    return szText;
 }
 
 void timerCallback(int timerId) {

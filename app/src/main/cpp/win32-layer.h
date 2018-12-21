@@ -759,13 +759,13 @@ typedef HANDLE              HGLOBAL;
 extern HGLOBAL GlobalAlloc(UINT uFlags, SIZE_T dwBytes);
 extern LPVOID GlobalLock (HGLOBAL hMem);
 extern BOOL GlobalUnlock(HGLOBAL hMem);
+extern HGLOBAL GlobalFree(HGLOBAL hMem);
 
 #define CF_TEXT             1
 extern BOOL OpenClipboard(HWND hWndNewOwner);
 extern BOOL CloseClipboard(VOID);
 extern BOOL EmptyClipboard(VOID);
 extern HANDLE SetClipboardData(UINT uFormat,HANDLE hMem);
-extern HGLOBAL GlobalFree(HGLOBAL hMem);
 extern BOOL IsClipboardFormatAvailable(UINT format);
 extern HANDLE GetClipboardData(UINT uFormat);
 

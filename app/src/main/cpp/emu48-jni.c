@@ -32,10 +32,7 @@ extern void buttonUp(int x, int y);
 extern void keyDown(int virtKey);
 extern void keyUp(int virtKey);
 
-extern void OnObjectLoad();
-extern void OnObjectSave();
 extern void OnViewCopy();
-extern void OnViewReset();
 extern void OnBackupSave();
 extern void OnBackupRestore();
 extern void OnBackupDelete();
@@ -116,7 +113,6 @@ int closeFileFromContentResolver(int fd) {
     return result;
 }
 
-// Must be called in the main thread
 int showAlert(const TCHAR * messageText, int flags) {
     JNIEnv *jniEnv = getJNIEnvironment();
     jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
@@ -126,6 +122,28 @@ int showAlert(const TCHAR * messageText, int flags) {
     return IDOK;
 }
 
+void clipboardCopyText(const TCHAR * text) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardCopyText", "(Ljava/lang/String;)V");
+    jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, text);
+    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
+}
+const TCHAR * clipboardPasteText() {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardPasteText", "()Ljava/lang/String;");
+    jobject result = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr);
+    if(result) {
+        const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, result, 0);
+        size_t length = _tcslen(strReturn);
+        TCHAR * pasteText = GlobalAlloc(0, length + 2);
+        _tcscpy(pasteText, strReturn);
+        (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
+        return pasteText;
+    }
+    return NULL;
+}
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
@@ -340,7 +358,6 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEn
 }
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
-    //OnFileClose();
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
@@ -466,8 +483,201 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectSave(JNIEn
     return TRUE;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv *env, jobject thisz) {
-    OnViewCopy();
+JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv *env, jobject thisz, jobject bitmapScreen) {
+
+    //jobject bitmapScreen = (*env)->NewGlobalRef(env, bitmapScreen0);
+
+    AndroidBitmapInfo bitmapScreenInfo;
+    int ret = AndroidBitmap_getInfo(env, bitmapScreen, &bitmapScreenInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        return;
+    }
+
+    void * pixelsDestination;
+    if ((ret = AndroidBitmap_lockPixels(env, bitmapScreen, &pixelsDestination)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+    }
+
+//    void * pixelsSource = hBitmap->bitmapBits;
+//
+//    int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
+//    int sourceHeight = abs(hBitmap->bitmapInfoHeader->biHeight);
+//    int destinationWidth = bitmapScreenInfo.width;
+//    int destinationHeight = bitmapScreenInfo.height;
+//
+//    //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
+//    float src_dx = (float)wSrc / (float)wDest;
+//    float src_dy = (float)hSrc / (float)hDest;
+//    float src_maxx = xSrc + wSrc;
+//    float src_maxy = ySrc + hSrc;
+//    float dst_maxx = xDest + wDest;
+//    float dst_maxy = yDest + hDest;
+//    float src_cury = ySrc;
+//
+//    int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
+//    float sourceStride = sourceWidth * sourceBytes;
+//    sourceStride = (float)(4 * ((sourceWidth * hBitmap->bitmapInfoHeader->biBitCount + 31) / 32));
+//    float destinationStride = bitmapScreenInfo.stride; // Destination always 4 bytes RGBA
+//    //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+//
+//    PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
+//                                 hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+//
+//    for (float y = yDest; y < dst_maxy; y++)
+//    {
+//        float src_curx = xSrc;
+//        for (float x = xDest; x < dst_maxx; x++)
+//        {
+//            // Point sampling - you can also impl as bilinear or other
+//            //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
+//
+//            BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
+//            BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
+//
+//            // -> ARGB_8888
+//            switch (sourceBytes) {
+//                case 1:
+//                    if(palPalEntry) {
+//                        BYTE colorIndex = sourcePixel[0];
+//                        destinationPixel[0] = palPalEntry[colorIndex].peBlue;
+//                        destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+//                        destinationPixel[2] = palPalEntry[colorIndex].peRed;
+//                        destinationPixel[3] = 255;
+//                    } else {
+//                        destinationPixel[0] = sourcePixel[0];
+//                        destinationPixel[1] = sourcePixel[0];
+//                        destinationPixel[2] = sourcePixel[0];
+//                        destinationPixel[3] = 255;
+//                    }
+//                    break;
+//                case 3:
+//                    destinationPixel[0] = sourcePixel[2];
+//                    destinationPixel[1] = sourcePixel[1];
+//                    destinationPixel[2] = sourcePixel[0];
+//                    destinationPixel[3] = 255;
+//                    break;
+//                case 4:
+//                    memcpy(destinationPixel, sourcePixel, sourceBytes);
+//                    break;
+//                default:
+//                    break;
+//            }
+//
+//            src_curx += src_dx;
+//        }
+//
+//        src_cury += src_dy;
+//    }
+
+
+    // DIB bitmap
+    #define WIDTHBYTES(bits) (((bits) + 31) / 32 * 4)
+    #define PALVERSION       0x300
+
+    BITMAP bm;
+    LPBITMAPINFOHEADER lpbi;
+    PLOGPALETTE ppal;
+    HBITMAP hBmp;
+    HDC hBmpDC;
+    HANDLE hClipObj;
+    WORD wBits;
+    DWORD dwLen, dwSizeImage;
+
+    _ASSERT(nLcdZoom >= 1 && nLcdZoom <= 4);
+    hBmp = CreateCompatibleBitmap(hLcdDC,131*nLcdZoom*nGdiXZoom,SCREENHEIGHT*nLcdZoom*nGdiYZoom);   // CdB for HP: add apples display stuff
+    hBmpDC = CreateCompatibleDC(hLcdDC);
+    hBmp = (HBITMAP) SelectObject(hBmpDC,hBmp);
+    EnterCriticalSection(&csGDILock); // solving NT GDI problems
+    {
+        UINT nLines = MAINSCREENHEIGHT;
+
+        // copy header display area
+        StretchBlt(hBmpDC, 0, 0,
+                   131*nLcdZoom*nGdiXZoom, Chipset.d0size*nLcdZoom*nGdiYZoom,
+                   hLcdDC, Chipset.d0offset, 0,
+                   131, Chipset.d0size, SRCCOPY);
+        // copy main display area
+        StretchBlt(hBmpDC, 0, Chipset.d0size*nLcdZoom*nGdiYZoom,
+                   131*nLcdZoom*nGdiXZoom, nLines*nLcdZoom*nGdiYZoom,
+                   hLcdDC, Chipset.boffset, Chipset.d0size,
+                   131, nLines, SRCCOPY);
+        // copy menu display area
+        StretchBlt(hBmpDC, 0, (nLines+Chipset.d0size)*nLcdZoom*nGdiYZoom,
+                   131*nLcdZoom*nGdiXZoom, MENUHEIGHT*nLcdZoom*nGdiYZoom,
+                   hLcdDC, 0, (nLines+Chipset.d0size),
+                   131, MENUHEIGHT, SRCCOPY);
+        GdiFlush();
+    }
+    LeaveCriticalSection(&csGDILock);
+    hBmp = (HBITMAP) SelectObject(hBmpDC,hBmp);
+
+    // fill BITMAP structure for size information
+    GetObject(hBmp, sizeof(bm), &bm);
+
+    wBits = bm.bmPlanes * bm.bmBitsPixel;
+    // make sure bits per pixel is valid
+    if (wBits <= 1)
+        wBits = 1;
+    else if (wBits <= 4)
+        wBits = 4;
+    else if (wBits <= 8)
+        wBits = 8;
+    else // if greater than 8-bit, force to 24-bit
+        wBits = 24;
+
+    dwSizeImage = WIDTHBYTES((DWORD)bm.bmWidth * wBits) * bm.bmHeight;
+
+    // calculate memory size to store CF_DIB data
+    dwLen = sizeof(BITMAPINFOHEADER) + dwSizeImage;
+    if (wBits != 24)				// a 24 bitcount DIB has no color table
+    {
+        // add size for color table
+        dwLen += (DWORD) (1 << wBits) * sizeof(RGBQUAD);
+    }
+
+//    // memory allocation for clipboard data
+//    if ((hClipObj = GlobalAlloc(GMEM_MOVEABLE, dwLen)) != NULL)
+//    {
+//        lpbi = (LPBITMAPINFOHEADER ) GlobalLock(hClipObj);
+//        // initialize BITMAPINFOHEADER
+//        lpbi->biSize = sizeof(BITMAPINFOHEADER);
+//        lpbi->biWidth = bm.bmWidth;
+//        lpbi->biHeight = bm.bmHeight;
+//        lpbi->biPlanes = 1;
+//        lpbi->biBitCount = wBits;
+//        lpbi->biCompression = BI_RGB;
+//        lpbi->biSizeImage = dwSizeImage;
+//        lpbi->biXPelsPerMeter = 0;
+//        lpbi->biYPelsPerMeter = 0;
+//        lpbi->biClrUsed = 0;
+//        lpbi->biClrImportant = 0;
+//        // get bitmap color table and bitmap data
+//        GetDIBits(hBmpDC, hBmp, 0, lpbi->biHeight, (LPBYTE)lpbi + dwLen - dwSizeImage,
+//                  (LPBITMAPINFO)lpbi, DIB_RGB_COLORS);
+//        GlobalUnlock(hClipObj);
+//        SetClipboardData(CF_DIB, hClipObj);
+//
+//        // get number of entries in the logical palette
+//        GetObject(hPalette,sizeof(WORD),&wBits);
+//
+//        // memory allocation for temporary palette data
+//        if ((ppal = (PLOGPALETTE) calloc(sizeof(LOGPALETTE) + wBits * sizeof(PALETTEENTRY),1)) != NULL)
+//        {
+//            ppal->palVersion    = PALVERSION;
+//            ppal->palNumEntries = wBits;
+//            GetPaletteEntries(hPalette, 0, wBits, ppal->palPalEntry);
+//            SetClipboardData(CF_PALETTE, CreatePalette(ppal));
+//            free(ppal);
+//        }
+//    }
+    DeleteDC(hBmpDC);
+    DeleteObject(hBmp);
+    #undef WIDTHBYTES
+    #undef PALVERSION
+
+
+    AndroidBitmap_unlockPixels(env, bitmapScreen);
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onStackCopy(JNIEnv *env, jobject thisz) {
@@ -475,11 +685,17 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onStackCopy(JNIEnv
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onStackPaste(JNIEnv *env, jobject thisz) {
+    //TODO Memory leak -> No GlobalFree of the paste data!!!!
     OnStackPaste();
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewReset(JNIEnv *env, jobject thisz) {
-    OnViewReset();
+    //OnViewReset();
+    if (nState != SM_RUN)
+        return;
+    SwitchToState(SM_SLEEP);
+    CpuReset();							// register setting after Cpu Reset
+    SwitchToState(SM_RUN);
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
@@ -704,6 +920,13 @@ JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isPortExtensio
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getState(JNIEnv *env, jobject thisz) {
     return nState;
+}
+
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getScreenWidth(JNIEnv *env, jobject thisz) {
+    return 131*nLcdZoom*nGdiXZoom;
+}
+JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getScreenHeight(JNIEnv *env, jobject thisz) {
+    return SCREENHEIGHT*nLcdZoom*nGdiYZoom;
 }
 
 
