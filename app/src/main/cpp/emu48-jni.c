@@ -642,7 +642,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv 
 
 
     size_t strideSource = (size_t)(4 * ((hBmp->bitmapInfoHeader->biWidth * hBmp->bitmapInfoHeader->biBitCount + 31) / 32));
-    size_t strideDestination = (size_t)(4 * hBmp->bitmapInfoHeader->biWidth * hBmp->bitmapInfoHeader->biBitCount);
+    size_t strideDestination = bitmapScreenInfo.stride;
     VOID * bitmapBitsSource = (VOID *)hBmp->bitmapBits;
     VOID * bitmapBitsDestination = pixelsDestination;
     for(int y = 0; y < hBmp->bitmapInfoHeader->biHeight; y++) {

@@ -161,15 +161,44 @@ public class MainActivity extends AppCompatActivity
 
         updateNavigationDrawerItems();
 
+
+        String documentToOpenUrl = sharedPreferences.getString("lastDocument", "");
+        Uri documentToOpenUri = null;
+        Intent intent = getIntent();
+        if(intent != null) {
+            String action = intent.getAction();
+            if(action != null) {
+                if (action.equals(Intent.ACTION_VIEW)) {
+                    documentToOpenUri = intent.getData();
+                    if (documentToOpenUri != null) {
+                        if(documentToOpenUri.getScheme().compareTo("file") == 0)
+                            documentToOpenUrl = documentToOpenUri.getPath();
+                        else
+                            documentToOpenUrl = documentToOpenUri.toString();
+                    }
+                } else if (action.equals(Intent.ACTION_SEND)) {
+                    documentToOpenUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    if (documentToOpenUri != null) {
+                        documentToOpenUrl = documentToOpenUri.toString();
+                    }
+                }
+            }
+        }
+
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
-        String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
-        if(lastDocumentUrl.length() > 0)
+        if(documentToOpenUrl.length() > 0)
 //            try {
 //                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
 //                    //return;
 //                } else {
-                    onFileOpen(lastDocumentUrl);
+                    if(onFileOpen(documentToOpenUrl) != 0 && documentToOpenUri != null) {
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("lastDocument", documentToOpenUrl);
+                        editor.commit();
+                        makeUriPersistable(intent, documentToOpenUri);
+                    }
+
 //                }
 //            } catch (Exception e) {
 //                Log.e(TAG, e.getMessage());

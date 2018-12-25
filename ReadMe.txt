@@ -13,8 +13,7 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Support clipboard
-- Support screen copy
+- Open Emu48 with a state file shared with it
 - Support 8bits images
 - Bug: No refresh with the clock
 - Option to allow rotation
@@ -37,3 +36,5 @@ DONE
 - Bug Re open file not working when permanent link
 - Put the KML title in the header of the menu in the drawer
 - Fix Reset calculator
+- Support clipboard
+- Support screen copy

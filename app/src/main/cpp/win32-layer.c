@@ -109,14 +109,17 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 flags |= O_CREAT;
         }
 
-        TCHAR * urlSchemeFound = _tcsstr(lpFileName, _T("://"));
-        if(urlSchemeFound) {
+        TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, _T("content://"));
+        if(urlContentSchemeFound) {
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd == -1) {
                 LOGD("openFileFromContentResolver() %d", errno);
             }
         } else {
+            TCHAR * urlFileSchemeFound = _tcsstr(lpFileName, _T("file://"));
+            if(urlFileSchemeFound)
+                lpFileName = urlFileSchemeFound + 7;
             fd = open(lpFileName, flags, perm);
             if(fd == -1) {
                 LOGD("open() %d", errno);
@@ -894,8 +897,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float src_cury = ySrc;
 
         int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
-        float sourceStride = sourceWidth * sourceBytes;
-        sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+//        float sourceStride = sourceWidth * sourceBytes;
+//        sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
         float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
         //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
@@ -979,9 +983,10 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float src_cury = ySrc;
 
         int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
-        float sourceStride = (float)(4 * ((sourceWidth * sourceBytes * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        //TODO float sourceStride = (float)(sourceBytes * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
         int destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
-        float destinationStride = (float)(4 * ((destinationWidth * destinationBytes * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+        float destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
 
         PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
@@ -1102,7 +1107,7 @@ HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
     newBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     newBitmapInfo->bmiHeader.biWidth = cx;
     newBitmapInfo->bmiHeader.biHeight = cy;
-    newBitmapInfo->bmiHeader.biBitCount = 24;
+    newBitmapInfo->bmiHeader.biBitCount = 32;
 
     size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
     size_t size = newBitmapInfo->bmiHeader.biHeight * stride;
