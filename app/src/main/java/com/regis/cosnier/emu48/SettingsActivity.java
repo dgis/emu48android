@@ -283,7 +283,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     String stringValue = value.toString();
                     preference.setSummary(stringValue);
                     preferencePort1en.setEnabled(enablePortPreferences);
-                    preferencePort1wr.setEnabled(enablePortPreferences && booleanValue.booleanValue());
+                    preferencePort1wr.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
                     return true;
                 }
             };
@@ -308,8 +308,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     String stringValue = value.toString();
                     preference.setSummary(stringValue);
                     preferencePort2en.setEnabled(enablePortPreferences);
-                    preferencePort2wr.setEnabled(enablePortPreferences && booleanValue.booleanValue());
-                    preferencePort2load.setEnabled(enablePortPreferences && booleanValue.booleanValue());
+                    preferencePort2wr.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
+                    preferencePort2load.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
                     return true;
                 }
             };

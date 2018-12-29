@@ -63,12 +63,17 @@ BOOL SetCurrentDirectory(LPCTSTR path)
     return chdir(path);
 }
 
+extern BOOL settingsPort2en;
+extern BOOL settingsPort2wr;
+
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
     BOOL forceNormalFile = FALSE;
     if(_tcscmp(lpFileName, szPort2Filename) == 0) {
         // Special case for Port2 filename
         forceNormalFile = TRUE;
+        if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
+            return INVALID_HANDLE_VALUE;
     }
 
     if(!forceNormalFile && (szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)) {

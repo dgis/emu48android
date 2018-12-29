@@ -1,5 +1,6 @@
 package com.regis.cosnier.emu48;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
@@ -8,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -54,6 +56,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private DrawerLayout drawer;
 
-    //private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+    private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
     enum FileType {
         PDF,
@@ -122,6 +125,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mainActivity = this;
 
 
@@ -145,7 +149,9 @@ public class MainActivity extends AppCompatActivity
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        AssetManager assetManager = getResources().getAssets();
+        NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
+
         updateFromPreferences(null, false);
         sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
@@ -155,15 +161,12 @@ public class MainActivity extends AppCompatActivity
         };
         sharedPreferences.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
 
-
-        AssetManager assetManager = getResources().getAssets();
-        NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
-
         updateNavigationDrawerItems();
 
 
         String documentToOpenUrl = sharedPreferences.getString("lastDocument", "");
         Uri documentToOpenUri = null;
+        boolean isFileAndNeedPermission = false;
         Intent intent = getIntent();
         if(intent != null) {
             String action = intent.getAction();
@@ -171,9 +174,10 @@ public class MainActivity extends AppCompatActivity
                 if (action.equals(Intent.ACTION_VIEW)) {
                     documentToOpenUri = intent.getData();
                     if (documentToOpenUri != null) {
-                        if(documentToOpenUri.getScheme().compareTo("file") == 0)
+                        if(documentToOpenUri.getScheme().compareTo("file") == 0) {
                             documentToOpenUrl = documentToOpenUri.getPath();
-                        else
+                            isFileAndNeedPermission = true;
+                        } else
                             documentToOpenUrl = documentToOpenUri.toString();
                     }
                 } else if (action.equals(Intent.ACTION_SEND)) {
@@ -187,22 +191,22 @@ public class MainActivity extends AppCompatActivity
 
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
         if(documentToOpenUrl.length() > 0)
-//            try {
-//                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-//                    //return;
-//                } else {
-                    if(onFileOpen(documentToOpenUrl) != 0 && documentToOpenUri != null) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("lastDocument", documentToOpenUrl);
-                        editor.commit();
-                        makeUriPersistable(intent, documentToOpenUri);
+            try {
+                if(isFileAndNeedPermission
+                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                    //return;
+                } else {
+                    if(onFileOpen(documentToOpenUrl) != 0) {
+                        saveLastDocument(documentToOpenUrl);
+                        if(intent != null && documentToOpenUri != null && !isFileAndNeedPermission)
+                            makeUriPersistable(intent, documentToOpenUri);
                     }
 
-//                }
-//            } catch (Exception e) {
-//                Log.e(TAG, e.getMessage());
-//            }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
     }
@@ -238,25 +242,30 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
     }
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-//        switch (requestCode) {
-//            case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
-//                // If request is cancelled, the result arrays are empty.
-////				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-////
-////				} else {
-////					//Toast.makeText(this, R.string.toast_access_location_denied, Toast.LENGTH_SHORT).show();
-////				}
-//                String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
-//                if(lastDocumentUrl.length() > 0)
-//                    onFileOpen(lastDocumentUrl);
-////				return;
-//            }
-////			default:
-////				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        }
-//    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+//				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//				} else {
+//					//Toast.makeText(this, R.string.toast_access_location_denied, Toast.LENGTH_SHORT).show();
+//				}
+                String lastDocumentUrl = sharedPreferences.getString("lastDocument", "");
+                if(lastDocumentUrl.length() > 0) {
+                    if(onFileOpen(lastDocumentUrl) != 0)
+                        try {
+                            makeUriPersistable(getIntent(), Uri.parse(lastDocumentUrl));
+                        } catch (Exception e) {
+                        }
+                }
+//				return;
+            }
+//			default:
+//				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -549,9 +558,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 NativeLib.onFileClose();
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("lastDocument", "");
-                editor.commit();
+                saveLastDocument("");
                 updateNavigationDrawerItems();
                 displayFilename("");
                 if(drawer != null) {
@@ -720,9 +727,7 @@ public class MainActivity extends AppCompatActivity
 
                 String url = uri.toString();
                 if(onFileOpen(url) != 0) {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("lastDocument", url);
-                    editor.commit();
+                    saveLastDocument(url);
                     makeUriPersistable(data, uri);
                 }
             } else if(requestCode == INTENT_GETSAVEFILENAME) {
@@ -733,10 +738,7 @@ public class MainActivity extends AppCompatActivity
 
                 String url = uri.toString();
                 if(NativeLib.onFileSaveAs(url) != 0) {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("lastDocument", url);
-                    editor.commit();
-
+                    saveLastDocument(url);
                     makeUriPersistable(data, uri);
                     displayFilename(url);
                     if(fileSaveAsCallback != null)
@@ -763,6 +765,12 @@ public class MainActivity extends AppCompatActivity
         }
         fileSaveAsCallback = null;
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void saveLastDocument(String url) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("lastDocument", url);
+        editor.commit();
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {

@@ -22,6 +22,8 @@ AndroidBitmapInfo androidBitmapInfo;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
 TCHAR szKmlTitle[10240];
+BOOL settingsPort2en;
+BOOL settingsPort2wr;
 
 
 
@@ -846,8 +848,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
             SwitchToState(nOldState);
         }
     } else if(_tcscmp(_T("settings_port2"), configKey) == 0) {
-        BOOL settingsPort2en = (BOOL)intValue1;
-        BOOL settingsPort2wr = (BOOL)intValue2;
+        settingsPort2en = (BOOL)intValue1;
+        settingsPort2wr = (BOOL)intValue2;
         const char * settingsPort2load = settingsPort2en ? configStringValue : NULL;
 
         LPCTSTR szActPort2Filename = _T("");
@@ -857,24 +859,22 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
         // HP48SX/GX port2 change settings detection
         if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
         {
-            //bPort2IsShared = settingsPort2isshared;
-            const char * szNewPort2Filename = NULL;
-            if(settingsPort2load) {
-                szNewPort2Filename = settingsPort2load;
-            }
-//            else
-//                szNewPort2Filename = _T("SHARED.BIN");
-
-            if(szNewPort2Filename && _tcscmp(szPort2Filename, szNewPort2Filename) != 0) {
-                _tcscpy(szPort2Filename, szNewPort2Filename);
+            if(settingsPort2en && settingsPort2load) {
+                if(_tcscmp(szPort2Filename, settingsPort2load) != 0) {
+                    _tcscpy(szPort2Filename, settingsPort2load);
+                    bPort2CfgChange = TRUE;    // slot2 configuration changed
+                }
                 szActPort2Filename = szPort2Filename;
-                bPort2CfgChange = TRUE;	// slot2 configuration changed
 
                 // R/W port
-                if (*szActPort2Filename != 0 && (BOOL)settingsPort2wr != bPort2Writeable)
-                {
-                    bPort2AttChange = TRUE;	// slot2 file R/W attribute changed
-                    bPort2CfgChange = TRUE;	// slot2 configuration changed
+                if (*szActPort2Filename != 0 && (BOOL) settingsPort2wr != bPort2Writeable) {
+                    bPort2AttChange = TRUE;    // slot2 file R/W attribute changed
+                    bPort2CfgChange = TRUE;    // slot2 configuration changed
+                }
+            } else {
+                if(szPort2Filename[0] != '\0') {
+                    bPort2CfgChange = TRUE;    // slot2 configuration changed
+                    szPort2Filename[0] = '\0';
                 }
             }
         }
@@ -884,24 +884,6 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
             UINT nOldState = SwitchToState(SM_INVALID);
 
             UnmapPort2();				// unmap port2
-
-//        if (bPort2AttChange)		// slot2 R/W mode changed
-//        {
-//            DWORD dwFileAtt;
-//
-//            SetCurrentDirectory(szEmuDirectory);
-//            dwFileAtt = GetFileAttributes(szActPort2Filename);
-//            if (dwFileAtt != 0xFFFFFFFF)
-//            {
-//                if (IsDlgButtonChecked(hDlg,IDC_PORT2WR))
-//                    dwFileAtt &= ~FILE_ATTRIBUTE_READONLY;
-//                else
-//                    dwFileAtt |= FILE_ATTRIBUTE_READONLY;
-//
-//                SetFileAttributes(szActPort2Filename,dwFileAtt);
-//            }
-//            SetCurrentDirectory(szCurrentDirectory);
-//        }
 
             if (cCurrentRomType)		// ROM defined
             {

@@ -4,8 +4,8 @@
     package="com.regis.cosnier.emu48">
 
     <!--<uses-permission android:name="android.permission.MANAGE_DOCUMENTS"/>-->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!--<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -25,17 +25,41 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-
-                <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.SEND" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <!--<data android:mimeType="*/*" />-->
-                <data android:scheme="file"
-                    android:mimeType="*/*"
-                    android:pathPattern=".*\\.e48"
-                    android:host="*"/>
+                <!--<action android:name="android.intent.action.VIEW" />-->
+                <!--<action android:name="android.intent.action.SEND" />-->
+                <!--<category android:name="android.intent.category.DEFAULT" />-->
+                <!--<data android:scheme="content"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e38"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="content"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e39"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="content"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e48"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="content"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e49"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="file"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e38"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="file"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e39"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="file"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e48"-->
+                    <!--android:host="*"/>-->
+                <!--<data android:scheme="file"-->
+                    <!--android:mimeType="*/*"-->
+                    <!--android:pathPattern=".*\\.e49"-->
+                    <!--android:host="*"/>-->
             </intent-filter>
         </activity>
         <activity
