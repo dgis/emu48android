@@ -13,7 +13,9 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Open Emu48 with a state file shared with it
+- Bug: Port1 is not enable from the state.e48 file!
+- Settings show KML log should be true by default.
+- Open Emu48 with a state file shared with it (Can not work)
 - Support 8bits images
 - Bug: No refresh with the clock
 - Option to allow rotation
@@ -38,3 +40,4 @@ DONE
 - Fix Reset calculator
 - Support clipboard
 - Support screen copy
+- Add HP48SX icon
