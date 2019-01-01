@@ -56,11 +56,11 @@ BOOL SetCurrentDirectory(LPCTSTR path)
         return FALSE;
 
     if(_tcsncmp(path, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)
-        szCurrentDirectorySet = path + assetsPrefixLength;
+        szCurrentDirectorySet = (LPTSTR) (path + assetsPrefixLength);
     else
         szCurrentDirectorySet = NULL;
 
-    return chdir(path);
+    return (BOOL) chdir(path);
 }
 
 extern BOOL settingsPort2en;
@@ -73,7 +73,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         // Special case for Port2 filename
         forceNormalFile = TRUE;
         if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
-            return INVALID_HANDLE_VALUE;
+            return (HANDLE) INVALID_HANDLE_VALUE;
     }
 
     if(!forceNormalFile && (szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)) {
@@ -88,8 +88,8 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             asset = AAssetManager_open(assetManager, lpFileName + assetsPrefixLength, AASSET_MODE_STREAMING);
         }
         if(asset) {
-            HANDLE handle = malloc(sizeof(_HANDLE));
-            memset(handle, 0, sizeof(_HANDLE));
+            HANDLE handle = malloc(sizeof(struct _HANDLE));
+            memset(handle, 0, sizeof(struct _HANDLE));
             handle->handleType = HANDLE_TYPE_FILE_ASSET;
             handle->fileAsset = asset;
             return handle;
@@ -130,25 +130,9 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 LOGD("open() %d", errno);
             }
         }
-//        if (-1 != fd && 0 != dwShareMode) {
-//            // Not specifiying shared write means non-shared (exclusive) write
-//            if (0 == (dwShareMode & FILE_SHARE_WRITE))
-//                lock.l_type = F_WRLCK;
-//            else if (0 != (dwShareMode & FILE_SHARE_READ))
-//                lock.l_type = F_RDLCK;
-//
-//            // Lock entire file
-//            lock.l_len = lock.l_start = 0;
-//            lock.l_whence = SEEK_SET;
-//
-//            if (-1 == fcntl(fd, F_SETLK, &lock) && (EACCES == errno || EAGAIN == errno)) {
-//                close(fd);
-//                return -1;
-//            }
-//        }
         if (fd != -1) {
-            HANDLE handle = malloc(sizeof(_HANDLE));
-            memset(handle, 0, sizeof(_HANDLE));
+            HANDLE handle = malloc(sizeof(struct _HANDLE));
+            memset(handle, 0, sizeof(struct _HANDLE));
             handle->handleType = HANDLE_TYPE_FILE;
             handle->fileDescriptor = fd;
             handle->fileOpenFileFromContentResolver = useOpenFileFromContentResolver;
@@ -161,9 +145,9 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
     DWORD readByteCount = 0;
     if(hFile->handleType == HANDLE_TYPE_FILE) {
-        readByteCount = read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
+        readByteCount = (DWORD) read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
-        readByteCount = AAsset_read(hFile->fileAsset, lpBuffer, nNumberOfBytesToRead);
+        readByteCount = (DWORD) AAsset_read(hFile->fileAsset, lpBuffer, nNumberOfBytesToRead);
     }
     if(lpNumberOfBytesRead)
         *lpNumberOfBytesRead = readByteCount;
@@ -173,9 +157,9 @@ BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD
 BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) {
     if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
         return FALSE;
-    size_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
+    ssize_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
     if(lpNumberOfBytesWritten)
-        *lpNumberOfBytesWritten = writenByteCount;
+        *lpNumberOfBytesWritten = (DWORD) writenByteCount;
     return writenByteCount >= 0;
 }
 
@@ -189,9 +173,9 @@ DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveH
         moveMode = SEEK_END;
     int seekResult = -1;
     if(hFile->handleType == HANDLE_TYPE_FILE) {
-        seekResult = lseek(hFile->fileDescriptor, lDistanceToMove, moveMode);
+        seekResult = (int) lseek(hFile->fileDescriptor, lDistanceToMove, moveMode);
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
-        seekResult = AAsset_seek64(hFile->fileAsset, lDistanceToMove, moveMode);
+        seekResult = (int) AAsset_seek64(hFile->fileAsset, lDistanceToMove, moveMode);
     }
     return seekResult < 0 ? INVALID_SET_FILE_POINTER : seekResult;
 }
@@ -211,9 +195,9 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
         off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
         off_t fileLength = lseek(hFile->fileDescriptor, 0, SEEK_END); // + 1;
         lseek(hFile->fileDescriptor, currentPosition, SEEK_SET);
-        return fileLength;
+        return (DWORD) fileLength;
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
-        return AAsset_getLength64(hFile->fileAsset);
+        return (DWORD) AAsset_getLength64(hFile->fileAsset);
     }
 }
 
@@ -221,8 +205,8 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
 //https://www.ibm.com/developerworks/systems/library/es-win32linux.html
 //https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
-    HANDLE handle = malloc(sizeof(_HANDLE));
-    memset(handle, 0, sizeof(_HANDLE));
+    HANDLE handle = malloc(sizeof(struct _HANDLE));
+    memset(handle, 0, sizeof(struct _HANDLE));
     if(hFile->handleType == HANDLE_TYPE_FILE) {
         handle->handleType = HANDLE_TYPE_FILE_MAPPING;
         handle->fileDescriptor = hFile->fileDescriptor;
@@ -251,7 +235,7 @@ LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwF
     } else if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
         if (dwDesiredAccess & FILE_MAP_WRITE)
             return NULL;
-        return AAsset_getBuffer(hFileMappingObject->fileAsset) + offset;
+        return (LPVOID) (AAsset_getBuffer(hFileMappingObject->fileAsset) + offset);
     }
     return NULL;
 }
@@ -264,10 +248,9 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
 }
 
 //https://github.com/neosmart/pevents/blob/master/src/pevents.cpp
-HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name)
-{
-    HANDLE handle = malloc(sizeof(_HANDLE));
-    memset(handle, 0, sizeof(_HANDLE));
+HANDLE CreateEvent(LPVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCTSTR name) {
+    HANDLE handle = malloc(sizeof(struct _HANDLE));
+    memset(handle, 0, sizeof(struct _HANDLE));
     handle->handleType = HANDLE_TYPE_EVENT;
 
     int result = pthread_cond_init(&(handle->eventCVariable), 0);
@@ -390,23 +373,48 @@ int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
     return result;
 }
 
+static DWORD ThreadStart(LPVOID lpThreadParameter) {
+    HANDLE handle = (HANDLE)lpThreadParameter;
+    if(handle) {
+        handle->threadStartAddress(handle->threadParameter);
+    }
+
+    CloseHandle(handle->threadEventMessage);
+}
+
+
+// Should be protected by mutex
+#define MAX_CREATED_THREAD 20
+static HANDLE threads[MAX_CREATED_THREAD];
+static int threadsNextIndex = 0;
+
 HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
-    pthread_t   threadId;
     pthread_attr_t  attr;
     pthread_attr_init(&attr);
     if(dwStackSize)
         pthread_attr_setstacksize(&attr, dwStackSize);
+
+    HANDLE handle = malloc(sizeof(struct _HANDLE));
+    memset(handle, 0, sizeof(struct _HANDLE));
+    handle->handleType = HANDLE_TYPE_THREAD;
+    handle->threadStartAddress = lpStartAddress;
+    handle->threadParameter = lpParameter;
+    handle->threadEventMessage = CreateEvent(NULL, FALSE, FALSE, NULL);
+    threads[threadsNextIndex] = handle;
+
     //Suspended
     //https://stackoverflow.com/questions/3140867/suspend-pthreads-without-using-condition
     //https://stackoverflow.com/questions/7953917/create-thread-in-suspended-mode-using-pthreads
     //http://man7.org/linux/man-pages/man3/pthread_create.3.html
-    int pthreadResult = pthread_create(&threadId, &attr, /*(void*(*)(void*))*/lpStartAddress, lpParameter);
+    int pthreadResult = pthread_create(&handle->threadId, &attr, (void *(*)(void *)) ThreadStart, handle);
     if(pthreadResult == 0) {
-        HANDLE handle = malloc(sizeof(_HANDLE));
-        memset(handle, 0, sizeof(_HANDLE));
-        handle->handleType = HANDLE_TYPE_THREAD;
-        handle->threadId = threadId;
+        threadsNextIndex++;
+        if(lpThreadId)
+            *lpThreadId = (DWORD) handle->threadId;
         return handle;
+    } else {
+        threads[threadsNextIndex] = NULL;
+        free(handle);
     }
     return NULL;
 }
@@ -449,7 +457,7 @@ DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
         tempResult = pthread_mutex_unlock(&hHandle->eventMutex);
         _ASSERT(tempResult == 0);
 
-        return result;
+        return (DWORD) result;
     }
 
     DWORD result = WAIT_OBJECT_0;
@@ -523,6 +531,8 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             hObject->threadId = 0;
             free(hObject);
             return TRUE;
+        default:
+            break;
     }
     return FALSE;
 }
@@ -549,14 +559,24 @@ BOOL QueryPerformanceFrequency(PLARGE_INTEGER l) {
 
 BOOL QueryPerformanceCounter(PLARGE_INTEGER l)
 {
-    struct timespec {
-        time_t   tv_sec;        /* seconds */
-        long     tv_nsec;       /* nanoseconds */
-    } time;
+    struct timespec /*{
+        time_t   tv_sec;
+        long     tv_nsec;
+    } */ time;
     int result = clock_gettime(CLOCK_MONOTONIC, &time);
-    l->QuadPart = (1e9 * time.tv_sec + time.tv_nsec) / 1000;
+    l->QuadPart = (uint64_t) ((1e9 * time.tv_sec + time.tv_nsec) / 1000);
     return TRUE;
 }
+void InitializeCriticalSection(CRITICAL_SECTION * lpCriticalSection) {
+    pthread_mutexattr_t Attr;
+    pthread_mutexattr_init(&Attr);
+    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(lpCriticalSection, &Attr);
+}
+void DeleteCriticalSection(CRITICAL_SECTION * lpCriticalSection) {
+    pthread_mutex_destroy(lpCriticalSection);
+}
+
 void EnterCriticalSection(CRITICAL_SECTION *lock)
 {
     pthread_mutex_lock(lock);
@@ -578,7 +598,7 @@ DWORD GetPrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDe
 }
 UINT GetPrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nDefault, LPCTSTR lpFileName) {
     //TODO
-    return nDefault;
+    return (UINT) nDefault;
 }
 BOOL WritePrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpString, LPCTSTR lpFileName) {
     //TODO
@@ -692,6 +712,272 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
     return TRUE;
 }
 
+
+// Wave API
+
+
+
+
+// this callback handler is called every time a buffer finishes playing
+void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
+    HWAVEOUT hwo = context;
+    if (hwo->pWaveHeaderNext != NULL) {
+        LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext->lpNext;
+        PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
+        //free(hwo->pWaveHeaderNext->lpData);
+//        free(hwo->pWaveHeaderNext);
+        hwo->pWaveHeaderNext = pWaveHeaderNext;
+        if(pWaveHeaderNext != NULL) {
+            SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pWaveHeaderNext->lpData, pWaveHeaderNext->dwBufferLength);
+            if (SL_RESULT_SUCCESS != result) {
+                // Error
+                //pthread_mutex_unlock(&hwo->audioEngineLock);
+//                return;
+            }
+//            return;
+        }
+    }
+//    pthread_mutex_unlock(&hwo->audioEngineLock);
+}
+
+
+MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen) {
+
+    HWAVEOUT handle = (HWAVEOUT)malloc(sizeof(struct _HWAVEOUT));
+    memset(handle, 0, sizeof(struct _HWAVEOUT));
+    handle->pwfx = (WAVEFORMATEX *) pwfx;
+    handle->uDeviceID = uDeviceID;
+
+
+    SLObjectItf engineObject = NULL;
+    SLObjectItf outputMixObject = NULL;
+    SLObjectItf bqPlayerObject = NULL;
+    //pthread_mutex_t  audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
+    //handle->audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
+
+
+    SLresult result;
+
+    // create engine
+    result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
+    //_ASSERT(SL_RESULT_SUCCESS == result);
+
+    // realize the engine
+    result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
+
+    // get the engine interface, which is needed in order to create other objects
+    result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &handle->engineEngine);
+
+    // create output mix, with environmental reverb specified as a non-required interface
+    const SLInterfaceID ids[1] = { SL_IID_ENVIRONMENTALREVERB };
+    const SLboolean req[1] = { SL_BOOLEAN_FALSE };
+    result = (*handle->engineEngine)->CreateOutputMix(handle->engineEngine, &outputMixObject, 1, ids, req);
+
+    // realize the output mix
+    result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
+
+    // configure audio source
+    SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
+            SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,   // locatorType
+            20                                          // numBuffers
+    };
+    SLDataFormat_PCM format_pcm = {
+            SL_DATAFORMAT_PCM,             // formatType
+            1,                             // numChannels
+            SL_SAMPLINGRATE_8,             // samplesPerSec
+            SL_PCMSAMPLEFORMAT_FIXED_16,   // bitsPerSample
+            SL_PCMSAMPLEFORMAT_FIXED_16,   // containerSize
+            SL_SPEAKER_FRONT_CENTER,       // channelMask
+            SL_BYTEORDER_LITTLEENDIAN      // endianness
+    };
+    /*
+     * Enable Fast Audio when possible:  once we set the same rate to be the native, fast audio path
+     * will be triggered
+     */
+    format_pcm.samplesPerSec = pwfx->nSamplesPerSec * 1000;       //sample rate in mili second
+    format_pcm.bitsPerSample = pwfx->wBitsPerSample;
+    format_pcm.containerSize = pwfx->wBitsPerSample;
+    format_pcm.numChannels = pwfx->nChannels;
+
+    SLDataSource audioSrc = {
+            &loc_bufq,   // pLocator
+            &format_pcm  // pFormat
+    };
+
+    // configure audio sink
+    SLDataLocator_OutputMix loc_outmix = {
+            SL_DATALOCATOR_OUTPUTMIX, // locatorType
+            outputMixObject           // outputMix
+    };
+    SLDataSink audioSnk = {
+            &loc_outmix,  // pLocator
+            NULL          // pFormat
+    };
+
+    /*
+     * create audio player:
+     *     fast audio does not support when SL_IID_EFFECTSEND is required, skip it
+     *     for fast audio case
+     */
+    const SLInterfaceID ids2[3] = {
+            SL_IID_BUFFERQUEUE,
+            SL_IID_VOLUME,
+            //SL_IID_EFFECTSEND,
+            //SL_IID_MUTESOLO,
+    };
+    const SLboolean req2[3] = {
+            SL_BOOLEAN_TRUE,
+            SL_BOOLEAN_TRUE,
+            //SL_BOOLEAN_TRUE,
+            //SL_BOOLEAN_TRUE,
+    };
+
+    result = (*handle->engineEngine)->CreateAudioPlayer(handle->engineEngine, &bqPlayerObject, &audioSrc, &audioSnk, 2, ids2, req2);
+
+    // realize the player
+    result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
+
+    // get the play interface
+    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &handle->bqPlayerPlay);
+
+    // get the buffer queue interface
+    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE, &handle->bqPlayerBufferQueue);
+
+    // register callback on the buffer queue
+    result = (*handle->bqPlayerBufferQueue)->RegisterCallback(handle->bqPlayerBufferQueue, bqPlayerCallback, handle);
+
+    // get the volume interface
+    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_VOLUME, &handle->bqPlayerVolume);
+
+    // set the player's state to playing
+    result = (*handle->bqPlayerPlay)->SetPlayState(handle->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+
+
+
+
+    *phwo = handle;
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT waveOutReset(HWAVEOUT hwo) {
+    //TODO
+    return 0;
+}
+
+MMRESULT waveOutClose(HWAVEOUT handle) {
+
+    // destroy buffer queue audio player object, and invalidate all associated interfaces
+    if (handle->bqPlayerObject != NULL) {
+        (*handle->bqPlayerObject)->Destroy(handle->bqPlayerObject);
+        handle->bqPlayerObject = NULL;
+        handle->bqPlayerPlay = NULL;
+        handle->bqPlayerBufferQueue = NULL;
+        handle->bqPlayerVolume = NULL;
+    }
+
+    // destroy output mix object, and invalidate all associated interfaces
+    if (handle->outputMixObject != NULL) {
+        (*handle->outputMixObject)->Destroy(handle->outputMixObject);
+        handle->outputMixObject = NULL;
+    }
+
+    // destroy engine object, and invalidate all associated interfaces
+    if (handle->engineObject != NULL) {
+        (*handle->engineObject)->Destroy(handle->engineObject);
+        handle->engineObject = NULL;
+        handle->engineEngine = NULL;
+    }
+
+    pthread_mutex_destroy(&handle->audioEngineLock);
+
+
+    memset(handle, 0, sizeof(struct _HWAVEOUT));
+    free(handle);
+    return 0;
+}
+
+MMRESULT waveOutPrepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
+    //TODO
+    return 0;
+}
+
+MMRESULT waveOutUnprepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
+    //TODO
+    return 0;
+}
+
+MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
+
+//    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
+//        // If we could not acquire audio engine lock, reject this request and client should re-try
+//        return MMSYSERR_ERROR;
+//    }
+    pwh->lpNext = NULL;
+    if(hwo->pWaveHeaderNext == NULL) {
+        hwo->pWaveHeaderNext = pwh;
+        SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pwh->lpData, pwh->dwBufferLength);
+        if (SL_RESULT_SUCCESS != result) {
+            // SL_RESULT_BUFFER_INSUFFICIENT?
+            //pthread_mutex_unlock(&hwo->audioEngineLock);
+            return MMSYSERR_ERROR;
+        }
+    } else {
+        LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext;
+        while (pWaveHeaderNext->lpNext)
+            pWaveHeaderNext = pWaveHeaderNext->lpNext;
+        pWaveHeaderNext->lpNext = pwh;
+    }
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT waveOutGetDevCaps(UINT_PTR uDeviceID, LPWAVEOUTCAPS pwoc, UINT cbwoc) {
+    if(pwoc) {
+        pwoc->dwFormats = WAVE_FORMAT_4M08;
+    }
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT waveOutGetID(HWAVEOUT hwo, LPUINT puDeviceID) {
+    //TODO
+    return 0;
+}
+
+
+
+
+BOOL GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax) {
+    //TODO
+    pthread_t thId = pthread_self();
+    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+        HANDLE threadHandle = threads[i];
+        if(threadHandle && threadHandle->threadId == thId) {
+            WaitForSingleObject(threadHandle->threadEventMessage, INFINITE);
+            if(lpMsg)
+                memcpy(lpMsg, &threadHandle->threadMessage, sizeof(MSG));
+            if(lpMsg->message == WM_QUIT)
+                return FALSE;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam) {
+    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+        HANDLE threadHandle = threads[i];
+        if(threadHandle && threadHandle->threadId == idThread) {
+            threadHandle->threadMessage.hwnd = NULL;
+            threadHandle->threadMessage.message = Msg;
+            threadHandle->threadMessage.wParam = wParam;
+            threadHandle->threadMessage.lParam = lParam;
+            SetEvent(threadHandle->threadEventMessage);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 BOOL DestroyWindow(HWND hWnd) {
     //TODO

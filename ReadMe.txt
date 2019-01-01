@@ -14,14 +14,13 @@ NOT WORKING
 
 TODO
 - Bug: Port1 is not enable from the state.e48 file!
-- Settings show KML log should be true by default.
-- Open Emu48 with a state file shared with it (Can not work)
+- Sound
 - Support 8bits images
 - Bug: No refresh with the clock
 - Option to allow rotation
 - Option to auto hide the menu
 - Bitmap corruption when touching the buttons
-- Sound
+- Open Emu48 with a state file shared with it (Can not work)
 
 DONE
 - Bug Red and Blue seems inverted.
@@ -41,3 +40,4 @@ DONE
 - Support clipboard
 - Support screen copy
 - Add HP48SX icon
+- Settings show KML log should be true by default.

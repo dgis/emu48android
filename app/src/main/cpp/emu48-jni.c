@@ -54,7 +54,7 @@ JNIEnv *getJNIEnvironment() {
     JNIEnv * jniEnv;
     jint ret;
     BOOL needDetach = FALSE;
-    ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
+    ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
     if (ret == JNI_EDETACHED) {
         // GetEnv: not attached
         ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
@@ -70,21 +70,6 @@ enum CALLBACK_TYPE {
     CALLBACK_TYPE_WINDOW_RESIZE = 1
 };
 
-void mainViewUpdateCallback() {
-    mainViewCallback(CALLBACK_TYPE_INVALIDATE, 0, 0, NULL, NULL);
-}
-
-void mainViewResizeCallback(int x, int y) {
-    mainViewCallback(CALLBACK_TYPE_WINDOW_RESIZE, x, y, NULL, NULL);
-
-    JNIEnv * jniEnv;
-    int ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
-    ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo);
-    if (ret < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-    }
-}
-
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, const TCHAR * param4) {
     if (viewToUpdate) {
@@ -96,6 +81,22 @@ int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, con
         int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
 //      if(needDetach) ret = (*java_machine)->DetachCurrentThread(java_machine);
         return result;
+    }
+    return 0;
+}
+
+void mainViewUpdateCallback() {
+    mainViewCallback(CALLBACK_TYPE_INVALIDATE, 0, 0, NULL, NULL);
+}
+
+void mainViewResizeCallback(int x, int y) {
+    mainViewCallback(CALLBACK_TYPE_WINDOW_RESIZE, x, y, NULL, NULL);
+
+    JNIEnv * jniEnv;
+    int ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
+    ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
     }
 }
 
@@ -140,7 +141,7 @@ const TCHAR * clipboardPasteText() {
     if(result) {
         const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, result, 0);
         size_t length = _tcslen(strReturn);
-        TCHAR * pasteText = GlobalAlloc(0, length + 2);
+        TCHAR * pasteText = (TCHAR *) GlobalAlloc(0, length + 2);
         _tcscpy(pasteText, strReturn);
         (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
         return pasteText;
@@ -163,6 +164,20 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
     }
 
     assetManager = AAssetManager_fromJava(env, assetMgr);
+
+
+
+    // OnCreate
+    InitializeCriticalSection(&csGDILock);
+    InitializeCriticalSection(&csLcdLock);
+    InitializeCriticalSection(&csKeyLock);
+    InitializeCriticalSection(&csIOLock);
+    InitializeCriticalSection(&csT1Lock);
+    InitializeCriticalSection(&csT2Lock);
+    InitializeCriticalSection(&csTxdLock);
+    InitializeCriticalSection(&csRecvLock);
+    InitializeCriticalSection(&csSlowLock);
+    InitializeCriticalSection(&csDbgLock);
 
 
 
@@ -215,9 +230,27 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
 
     ResumeThread(hThread);					// start thread
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized
+
+    SoundOpen(uWaveDevId);					// open waveform-audio output device
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, jobject thisz) {
+
+  	//ReleaseDC(hWnd, hWindowDC);
+	hWindowDC = NULL;						// hWindowDC isn't valid any more
+	hWnd = NULL;
+
+	DeleteCriticalSection(&csGDILock);
+	DeleteCriticalSection(&csLcdLock);
+	DeleteCriticalSection(&csKeyLock);
+	DeleteCriticalSection(&csIOLock);
+	DeleteCriticalSection(&csT1Lock);
+	DeleteCriticalSection(&csT2Lock);
+	DeleteCriticalSection(&csTxdLock);
+	DeleteCriticalSection(&csRecvLock);
+	DeleteCriticalSection(&csSlowLock);
+	DeleteCriticalSection(&csDbgLock);
+
 
     if (viewToUpdate) {
         (*env)->DeleteGlobalRef(env, viewToUpdate);
@@ -227,6 +260,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
         (*env)->DeleteGlobalRef(env, bitmapMainScreen);
         bitmapMainScreen = NULL;
     }
+
+    SoundClose();							// close waveform-audio output device
 }
 
 
@@ -616,7 +651,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv 
     hBmp = (HBITMAP) SelectObject(hBmpDC,hBmp);
 
     // fill BITMAP structure for size information
-    GetObject(hBmp, sizeof(bm), &bm);
+    GetObject((HANDLE) hBmp, sizeof(bm), &bm);
 
     wBits = bm.bmPlanes * bm.bmBitsPixel;
     // make sure bits per pixel is valid

@@ -37,6 +37,7 @@ typedef DWORD *LPDWORD;
 typedef BYTE *LPBYTE;
 typedef uint16_t WORD;
 typedef uint32_t UINT;
+typedef UINT * LPUINT;
 typedef int32_t INT;
 typedef int INT_PTR, *PINT_PTR;
 typedef char CHAR;
@@ -64,38 +65,6 @@ typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 //		(1 != _CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls", NULL)) || \
 //		(_CrtDbgBreak(), 0)                                                                     \
 //	)
-
-
-enum HANDLE_TYPE {
-	HANDLE_TYPE_INVALID = 0,
-	HANDLE_TYPE_FILE,
-    HANDLE_TYPE_FILE_ASSET,
-    HANDLE_TYPE_FILE_MAPPING,
-    HANDLE_TYPE_FILE_MAPPING_ASSET,
-    HANDLE_TYPE_EVENT,
-    HANDLE_TYPE_THREAD,
-};
-typedef struct {
-    enum HANDLE_TYPE handleType;
-
-	int fileDescriptor;
-	BOOL fileOpenFileFromContentResolver;
-
-    AAsset* fileAsset;
-
-    size_t fileMappingSize;
-    void* fileMappingAddress;
-
-    pthread_t threadId;
-
-    pthread_cond_t eventCVariable;
-    pthread_mutex_t eventMutex;
-    BOOL eventAutoReset;
-    BOOL eventState;
-} _HANDLE;
-typedef _HANDLE * HANDLE;
-
-typedef HANDLE HMENU;
 
 #define MK_LBUTTON          0x0001
 
@@ -150,11 +119,7 @@ typedef char TCHAR;
 
 
 typedef pthread_mutex_t CRITICAL_SECTION;
-typedef HANDLE HINSTANCE;
-typedef HANDLE HWND;
 typedef void WNDCLASS;
-
-typedef HANDLE HCURSOR;
 
 struct FILETIME {
 	DWORD dwLowDateTime;
@@ -279,12 +244,11 @@ enum MsgBoxFlagType {
 #define MB_SETFOREGROUND    0
 
 // These are passed to tab control callbacks
-enum {
-	WM_INITDIALOG,	// fills in tab controls when first shown
-	WM_COMMAND,	// respond to validation/dimming commands
-	WM_GETDLGVALUES	// read off the control settings
-};
+#define WM_QUIT                         0x0012
+#define WM_INITDIALOG                   0x0110
+#define WM_COMMAND                      0x0111
 #define WM_SYSCOMMAND                   0x0112
+
 
 // Constants for the msg parameter in SendDlgItemMessage()
 enum {
@@ -347,6 +311,67 @@ enum {
 #define ZeroMemory(p,s)     memset(p,0,s)
 #define FillMemory(p,n,v)   memset(p,v,n*sizeof(*(p)))
 #define CopyMemory(d,src,s) memcpy(d,src,s)
+
+struct _HANDLE;
+typedef struct _HANDLE * HWND;
+
+typedef struct tagPOINT
+{
+    LONG  x;
+    LONG  y;
+} POINT, *PPOINT, NEAR *NPPOINT, FAR *LPPOINT;
+
+typedef struct tagMSG {
+    HWND        hwnd;
+    UINT        message;
+    WPARAM      wParam;
+    LPARAM      lParam;
+    DWORD       time;
+    POINT       pt;
+#ifdef _MAC
+    DWORD       lPrivate;
+#endif
+} MSG, *PMSG, NEAR *NPMSG, FAR *LPMSG;
+
+
+enum HANDLE_TYPE {
+    HANDLE_TYPE_INVALID = 0,
+    HANDLE_TYPE_FILE,
+    HANDLE_TYPE_FILE_ASSET,
+    HANDLE_TYPE_FILE_MAPPING,
+    HANDLE_TYPE_FILE_MAPPING_ASSET,
+    HANDLE_TYPE_EVENT,
+    HANDLE_TYPE_THREAD,
+};
+struct _HANDLE {
+    enum HANDLE_TYPE handleType;
+
+    int fileDescriptor;
+    BOOL fileOpenFileFromContentResolver;
+
+    AAsset* fileAsset;
+
+    size_t fileMappingSize;
+    void* fileMappingAddress;
+
+    pthread_t threadId;
+    DWORD (*threadStartAddress)(LPVOID);
+    LPVOID threadParameter;
+    struct _HANDLE * threadEventMessage;
+    struct tagMSG threadMessage;
+
+    pthread_cond_t eventCVariable;
+    pthread_mutex_t eventMutex;
+    BOOL eventAutoReset;
+    BOOL eventState;
+};
+typedef struct _HANDLE * HANDLE;
+
+typedef HANDLE HMENU;
+typedef HANDLE HINSTANCE;
+//typedef HANDLE HWND;
+typedef HANDLE HCURSOR;
+
 
 typedef struct _OVERLAPPED {
 /*
@@ -486,8 +511,10 @@ extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwSt
 extern DWORD ResumeThread(HANDLE hThread);
 extern BOOL CloseHandle(HANDLE hObject);
 
+extern void InitializeCriticalSection(CRITICAL_SECTION * lpCriticalSection);
 extern void EnterCriticalSection(CRITICAL_SECTION *);
 extern void LeaveCriticalSection(CRITICAL_SECTION *);
+extern void DeleteCriticalSection(CRITICAL_SECTION * lpCriticalSection);
 
 // GDI
 typedef struct __attribute__((packed)) tagBITMAP
@@ -604,11 +631,7 @@ extern HDC CreateCompatibleDC(HDC hdc);
 extern BOOL DeleteDC(HDC hdc);
 extern HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h);
 extern HGDIOBJ GetCurrentObject(HDC hdc, UINT type);
-typedef struct tagPOINT
-{
-    LONG  x;
-    LONG  y;
-} POINT, *PPOINT, NEAR *NPPOINT, FAR *LPPOINT;
+
 extern BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt);
 extern BOOL LineTo(HDC hdc, int x, int y);
 #define SRCCOPY             (DWORD)0x00CC0020 /* dest = source                   */
@@ -672,24 +695,109 @@ extern HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 extern BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 
+// Sound / Wave API
+
+typedef UINT        MMRESULT;   /* error return code, 0 means no error */
+#define MMSYSERR_NOERROR      0                    /* no error */
+#define MMSYSERR_ERROR        1  /* unspecified error */
+#define MM_WOM_DONE         0x3BD
+
+/* wave data block header */
+typedef struct wavehdr_tag {
+	LPSTR       lpData;                 /* pointer to locked data buffer */
+	DWORD       dwBufferLength;         /* length of data buffer */
+	DWORD       dwBytesRecorded;        /* used for input only */
+	DWORD_PTR   dwUser;                 /* for client's use */
+	DWORD       dwFlags;                /* assorted flags (see defines) */
+	DWORD       dwLoops;                /* loop control counter */
+	struct wavehdr_tag FAR *lpNext;     /* reserved for driver */
+	DWORD_PTR   reserved;               /* reserved for driver */
+} WAVEHDR, *PWAVEHDR, NEAR *NPWAVEHDR, FAR *LPWAVEHDR;
+
+typedef UINT        MMVERSION;  /* major (high byte), minor (low byte) */
+#define MAXPNAMELEN      32     /* max product name length (including NULL) */
+typedef struct tagWAVEOUTCAPS {
+	WORD    wMid;                  /* manufacturer ID */
+	WORD    wPid;                  /* product ID */
+	MMVERSION vDriverVersion;      /* version of the driver */
+	TCHAR    szPname[MAXPNAMELEN];  /* product name (NULL terminated string) */
+	DWORD   dwFormats;             /* formats supported */
+	WORD    wChannels;             /* number of sources supported */
+	WORD    wReserved1;            /* packing */
+	DWORD   dwSupport;             /* functionality supported by driver */
+} WAVEOUTCAPS, *PWAVEOUTCAPS, *NPWAVEOUTCAPS, *LPWAVEOUTCAPS;
+
+#define WAVE_FORMAT_4M08       0x00000100       /* 44.1   kHz, Mono,   8-bit  */
+/*
+ *  extended waveform format structure used for all non-PCM formats. this
+ *  structure is common to all non-PCM formats.
+ */
+typedef struct tWAVEFORMATEX
+{
+	WORD        wFormatTag;         /* format type */
+	WORD        nChannels;          /* number of channels (i.e. mono, stereo...) */
+	DWORD       nSamplesPerSec;     /* sample rate */
+	DWORD       nAvgBytesPerSec;    /* for buffer estimation */
+	WORD        nBlockAlign;        /* block size of data */
+	WORD        wBitsPerSample;     /* number of bits per sample of mono data */
+	WORD        cbSize;             /* the count in bytes of the size of */
+	/* extra information (after cbSize) */
+} WAVEFORMATEX, *PWAVEFORMATEX, NEAR *NPWAVEFORMATEX, FAR *LPWAVEFORMATEX;
+typedef const WAVEFORMATEX FAR *LPCWAVEFORMATEX;
+#define WAVE_FORMAT_PCM     1
+#define CALLBACK_TASK       0x00020000l    /* dwCallback is a HTASK */
+#define CALLBACK_THREAD     (CALLBACK_TASK)/* thread ID replaces 16 bit task */
+
+
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+
+struct _HWAVEOUT;
+typedef struct _HWAVEOUT * HWAVEOUT;
+typedef HWAVEOUT * LPHWAVEOUT;
+struct _HWAVEOUT{
+    WAVEFORMATEX * pwfx;
+    UINT uDeviceID;
+
+    // engine interfaces
+    SLObjectItf engineObject;
+    SLEngineItf engineEngine;
+
+// output mix interfaces
+    SLObjectItf outputMixObject;
+
+// buffer queue player interfaces
+    SLObjectItf bqPlayerObject;
+    SLPlayItf bqPlayerPlay;
+    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
+    SLVolumeItf bqPlayerVolume;
+
+// a mutext to guard against re-entrance to record & playback
+// as well as make recording and playing back to be mutually exclusive
+// this is to avoid crash at situations like:
+//    recording is in session [not finished]
+//    user presses record button and another recording coming in
+// The action: when recording/playing back is not finished, ignore the new request
+    pthread_mutex_t  audioEngineLock;
+
+    LPWAVEHDR pWaveHeaderNext;
+};
+
+extern MMRESULT waveOutPrepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh);
+extern MMRESULT waveOutUnprepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh);
+extern MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh);
+extern MMRESULT waveOutGetDevCaps(UINT_PTR uDeviceID, LPWAVEOUTCAPS pwoc, UINT cbwoc);
+extern MMRESULT waveOutGetID(HWAVEOUT hwo, LPUINT puDeviceID);
+extern MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen);
+extern MMRESULT waveOutReset(HWAVEOUT hwo);
+extern MMRESULT waveOutClose(HWAVEOUT hwo);
+
+
 // Window
 
+extern BOOL GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
+extern BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam);
 
-
-// disrpl.c
-//wvsprintf(cOutput,lpFormat,arglist);
-
-//_tcschr(_T(" \t\n\r"),str->szBuffer[str->dwPos-1]) == NULL)
-//_tcschr(lpszStart,_T('\n')
-
-//lstrcmp(lpszObject,ObjDecode[i].lpszName)
-//lstrcmp(lpszObject,_T("::"))
-
-//_tcsncmp(lpszObject,_T("DIR\n"),4)
-//_tcsncmp(lpszStart,_T("ENDDIR"),lpszEnd-lpszStart)
-
-
-// file.c
 typedef struct tagWINDOWPLACEMENT {
 	UINT  length;
 	UINT  flags;
@@ -768,6 +876,14 @@ extern BOOL EmptyClipboard(VOID);
 extern HANDLE SetClipboardData(UINT uFormat,HANDLE hMem);
 extern BOOL IsClipboardFormatAvailable(UINT format);
 extern HANDLE GetClipboardData(UINT uFormat);
+
+
+
+
+
+
+
+
 
 
 extern DWORD GetPrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpDefault, LPTSTR lpReturnedString, DWORD nSize, LPCTSTR lpFileName);
@@ -917,6 +1033,11 @@ typedef struct tagCOPYDATASTRUCT {
     DWORD cbData;
     PVOID lpData;
 } COPYDATASTRUCT, *PCOPYDATASTRUCT;
+
+
+
+
+
 
 #ifdef UNICODE
 

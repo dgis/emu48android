@@ -26,7 +26,7 @@
             <SwitchPreference
                 android:key="settings_alwaysdisplog"
                 android:title="Always Show KML Compilation Result"
-                android:defaultValue="false" />
+                android:defaultValue="true" />
         </PreferenceCategory>
         <!--<PreferenceCategory app:title="Style">
             "Show Title",IDC_SHOWTITLE

@@ -24,12 +24,12 @@ VOID CommReceive(VOID) {
 }
 
 // Sound.c
-DWORD dwWaveVol;
-DWORD dwWaveTime;
-VOID  SoundOut(CHIPSET* w, WORD wOut) {
-}
-VOID  SoundBeep(DWORD dwFrequency, DWORD dwDuration) {
-}
+//DWORD dwWaveVol;
+//DWORD dwWaveTime;
+//VOID  SoundOut(CHIPSET* w, WORD wOut) {
+//}
+//VOID  SoundBeep(DWORD dwFrequency, DWORD dwDuration) {
+//}
 
 
 // udp.c

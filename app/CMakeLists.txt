@@ -46,7 +46,7 @@ add_library( # Sets the name of the library.
 #        src/main/cpp/core/serial.c
         src/main/cpp/core/settings.c
 #        src/main/cpp/core/sndenum.c
-#        src/main/cpp/core/sound.c # -> To rewrite
+        src/main/cpp/core/sound.c
         src/main/cpp/core/stack.c
         src/main/cpp/core/symbfile.c
         src/main/cpp/core/timer.c
@@ -66,4 +66,5 @@ target_link_libraries( # Specifies the target library.
         native-lib
         android
         jnigraphics
+        OpenSLES
         log)
