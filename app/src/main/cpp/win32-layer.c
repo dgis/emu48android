@@ -27,6 +27,7 @@ struct timerEvent {
     int timerId;
     LPTIMECALLBACK fptc;
     DWORD_PTR dwUser;
+    UINT fuEvent;
     timer_t timer;
 };
 
@@ -414,6 +415,7 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
         return handle;
     } else {
         threads[threadsNextIndex] = NULL;
+        CloseHandle(handle->threadEventMessage);
         free(handle);
     }
     return NULL;
@@ -723,9 +725,9 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     HWAVEOUT hwo = context;
     if (hwo->pWaveHeaderNext != NULL) {
         LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext->lpNext;
-        PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
-        //free(hwo->pWaveHeaderNext->lpData);
-//        free(hwo->pWaveHeaderNext);
+        //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
+        free(hwo->pWaveHeaderNext->lpData);
+        free(hwo->pWaveHeaderNext);
         hwo->pWaveHeaderNext = pWaveHeaderNext;
         if(pWaveHeaderNext != NULL) {
             SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pWaveHeaderNext->lpData, pWaveHeaderNext->dwBufferLength);
@@ -948,34 +950,35 @@ MMRESULT waveOutGetID(HWAVEOUT hwo, LPUINT puDeviceID) {
 
 BOOL GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax) {
     //TODO
-    pthread_t thId = pthread_self();
-    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
-        HANDLE threadHandle = threads[i];
-        if(threadHandle && threadHandle->threadId == thId) {
-            WaitForSingleObject(threadHandle->threadEventMessage, INFINITE);
-            if(lpMsg)
-                memcpy(lpMsg, &threadHandle->threadMessage, sizeof(MSG));
-            if(lpMsg->message == WM_QUIT)
-                return FALSE;
-            return TRUE;
-        }
-    }
+//    pthread_t thId = pthread_self();
+//    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+//        HANDLE threadHandle = threads[i];
+//        if(threadHandle && threadHandle->threadId == thId) {
+//            WaitForSingleObject(threadHandle->threadEventMessage, INFINITE);
+//            if(lpMsg)
+//                memcpy(lpMsg, &threadHandle->threadMessage, sizeof(MSG));
+//            if(lpMsg->message == WM_QUIT)
+//                return FALSE;
+//            return TRUE;
+//        }
+//    }
 
     return FALSE;
 }
 
 BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam) {
-    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
-        HANDLE threadHandle = threads[i];
-        if(threadHandle && threadHandle->threadId == idThread) {
-            threadHandle->threadMessage.hwnd = NULL;
-            threadHandle->threadMessage.message = Msg;
-            threadHandle->threadMessage.wParam = wParam;
-            threadHandle->threadMessage.lParam = lParam;
-            SetEvent(threadHandle->threadEventMessage);
-            return TRUE;
-        }
-    }
+    //TODO not working because idThread is uint32_t (4 bytes) and threadId if a long (8 bytes)
+//    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+//        HANDLE threadHandle = threads[i];
+//        if(threadHandle && threadHandle->threadId == idThread) {
+//            threadHandle->threadMessage.hwnd = NULL;
+//            threadHandle->threadMessage.message = Msg;
+//            threadHandle->threadMessage.wParam = wParam;
+//            threadHandle->threadMessage.lParam = lParam;
+//            SetEvent(threadHandle->threadEventMessage);
+//            return TRUE;
+//        }
+//    }
     return FALSE;
 }
 
@@ -1483,13 +1486,22 @@ HANDLE WINAPI GetClipboardData(UINT uFormat) {
     return szText;
 }
 
+void deleteTimeEvent(UINT uTimerID) {
+    timer_delete(timerEvents[uTimerID - 1].timer);
+    timerEvents[uTimerID - 1].valid = FALSE;
+}
 void timerCallback(int timerId) {
     if(timerId >= 0 && timerId < MAX_TIMER && timerEvents[timerId].valid) {
-        timerEvents[timerId].fptc(timerId + 1, 0, timerEvents[timerId].dwUser, 0, 0);
+        timerEvents[timerId].fptc((UINT) (timerId + 1), 0, (DWORD) timerEvents[timerId].dwUser, 0, 0);
+
+        if(timerEvents[timerId].fuEvent == TIME_ONESHOT) {
+            LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
+            deleteTimeEvent((UINT) (timerId + 1));
+        }
     }
 }
-
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
+    LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
 
     // Find a timer id
     int timerId = -1;
@@ -1499,39 +1511,53 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
             break;
         }
     }
+    if(timerId == -1) {
+        LOGD("timeSetEvent() ERROR: No more timer available");
+        return NULL;
+    }
     timerEvents[timerId].timerId = timerId;
     timerEvents[timerId].fptc = fptc;
     timerEvents[timerId].dwUser = dwUser;
+    timerEvents[timerId].fuEvent = fuEvent;
 
 
     struct sigevent sev;
     sev.sigev_notify = SIGEV_THREAD;
-    sev.sigev_notify_function = timerCallback; //this function will be called when timer expires
-    sev.sigev_value.sival_int = timerEvents[timerId].timerId;//this argument will be passed to cbf
+    sev.sigev_notify_function = (void (*)(sigval_t)) timerCallback; //this function will be called when timer expires
+    sev.sigev_value.sival_int = timerEvents[timerId].timerId; //this argument will be passed to cbf
     sev.sigev_notify_attributes = NULL;
     timer_t * timer = &(timerEvents[timerId].timer);
-    //if (timer_create(CLOCK_REALTIME, &sev, &timer) == -1)
-    if (timer_create(CLOCK_REALTIME, &sev, timer) == -1)
+    if (timer_create(CLOCK_REALTIME, &sev, timer) == -1) {
+        LOGD("timeSetEvent() ERROR in timer_create");
         return NULL;
+    }
 
     long long freq_nanosecs = uDelay * 1000000;
     struct itimerspec its;
     its.it_value.tv_sec = freq_nanosecs / 1000000000;
     its.it_value.tv_nsec = freq_nanosecs % 1000000000;
-    its.it_interval.tv_sec = its.it_value.tv_sec;
-    its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    if(fuEvent == TIME_PERIODIC) {
+        its.it_interval.tv_sec = its.it_value.tv_sec;
+        its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    } else /*if(fuEvent == TIME_ONESHOT)*/ {
+        its.it_interval.tv_sec = 0;
+        its.it_interval.tv_nsec = 0;
+    }
     if (timer_settime(timerEvents[timerId].timer, 0, &its, NULL) == -1) {
         timer_delete(timerEvents[timerId].timer);
+        LOGD("timeSetEvent() ERROR in timer_settime");
         return NULL;
     }
     timerEvents[timerId].valid = TRUE;
-    return timerId + 1; //No error
+    LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
+    return (MMRESULT) (timerId + 1); // No error
 }
 MMRESULT timeKillEvent(UINT uTimerID) {
-    timer_delete(timerEvents[uTimerID - 1].timer);
-    timerEvents[uTimerID - 1].valid = FALSE;
+    LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
+    deleteTimeEvent(uTimerID);
     return 0; //No error
 }
+
 MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc) {
     if(ptc) {
         ptc->wPeriodMin = 1; // ms

@@ -197,12 +197,8 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
     hWindowDC = CreateCompatibleDC(NULL);
 
     // initialization
-    LARGE_INTEGER    lAppStart2;					// high performance counter value at Appl. start
-
     QueryPerformanceFrequency(&lFreq);		// init high resolution counter
     QueryPerformanceCounter(&lAppStart);
-    Sleep(1000);
-    QueryPerformanceCounter(&lAppStart2);
 
     szCurrentKml[0] = 0;					// no KML file selected
     SetSpeed(bRealSpeed);					// set speed
@@ -228,10 +224,10 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
         return;
     }
 
+    SoundOpen(uWaveDevId);					// open waveform-audio output device
+
     ResumeThread(hThread);					// start thread
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized
-
-    SoundOpen(uWaveDevId);					// open waveform-audio output device
 }
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, jobject thisz) {

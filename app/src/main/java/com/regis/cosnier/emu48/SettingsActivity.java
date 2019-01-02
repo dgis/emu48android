@@ -16,7 +16,6 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.MenuItem;
 
 import androidx.annotation.Nullable;

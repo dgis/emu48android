@@ -5,7 +5,6 @@ This win32 layer will allow to easily update from the original Emu48 source code
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
 NOT WORKING
-- Sound
 - Disassembler
 - Debugger
 - Macro
@@ -14,9 +13,7 @@ NOT WORKING
 
 TODO
 - Bug: Port1 is not enable from the state.e48 file!
-- Sound
 - Support 8bits images
-- Bug: No refresh with the clock
 - Option to allow rotation
 - Option to auto hide the menu
 - Bitmap corruption when touching the buttons
@@ -41,3 +38,5 @@ DONE
 - Support screen copy
 - Add HP48SX icon
 - Settings show KML log should be true by default.
+- Sound
+- Bug: No refresh with the clock (Fix timers)
