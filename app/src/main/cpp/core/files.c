@@ -1698,9 +1698,9 @@ static HPALETTE CreateBIPalette(BITMAPINFOHEADER CONST *lpbi)
 		// create a logical color palette.
 		for (i = 0; i < pPal->palNumEntries; i++)
 		{
-			pPal->palPalEntry[i].peRed   = pRgb[i].rgbRed;
+			pPal->palPalEntry[i].peRed   = pRgb[i].rgbBlue;
 			pPal->palPalEntry[i].peGreen = pRgb[i].rgbGreen;
-			pPal->palPalEntry[i].peBlue  = pRgb[i].rgbBlue;
+			pPal->palPalEntry[i].peBlue  = pRgb[i].rgbRed;
 			pPal->palPalEntry[i].peFlags = 0;
 		}
 		hpal = CreatePalette(pPal);

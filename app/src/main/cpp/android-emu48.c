@@ -2312,11 +2312,11 @@ void draw() {
 }
 
 void buttonDown(int x, int y) {
-    OnLButtonDown(0, x, y);
+    OnLButtonDown(MK_LBUTTON, x, y);
 }
 
 void buttonUp(int x, int y) {
-    OnLButtonUp(0, x, y);
+    OnLButtonUp(MK_LBUTTON, x, y);
 }
 
 void keyDown(int virtKey) {

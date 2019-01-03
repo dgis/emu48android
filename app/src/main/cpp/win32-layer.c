@@ -656,6 +656,10 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 }
 BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
+    if(hWnd == 0 && Msg == WM_COMMAND) {
+        int menuCommand = (wParam & 0xffff);
+        LOGD("Menu Item %d", menuCommand);
+    }
     return NULL;
 }
 
@@ -1495,13 +1499,13 @@ void timerCallback(int timerId) {
         timerEvents[timerId].fptc((UINT) (timerId + 1), 0, (DWORD) timerEvents[timerId].dwUser, 0, 0);
 
         if(timerEvents[timerId].fuEvent == TIME_ONESHOT) {
-            LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
+            //LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
             deleteTimeEvent((UINT) (timerId + 1));
         }
     }
 }
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
-    LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
+    //LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
 
     // Find a timer id
     int timerId = -1;
@@ -1512,7 +1516,7 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
         }
     }
     if(timerId == -1) {
-        LOGD("timeSetEvent() ERROR: No more timer available");
+        //LOGD("timeSetEvent() ERROR: No more timer available");
         return NULL;
     }
     timerEvents[timerId].timerId = timerId;
@@ -1528,7 +1532,7 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     sev.sigev_notify_attributes = NULL;
     timer_t * timer = &(timerEvents[timerId].timer);
     if (timer_create(CLOCK_REALTIME, &sev, timer) == -1) {
-        LOGD("timeSetEvent() ERROR in timer_create");
+        //LOGD("timeSetEvent() ERROR in timer_create");
         return NULL;
     }
 
@@ -1545,15 +1549,15 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     }
     if (timer_settime(timerEvents[timerId].timer, 0, &its, NULL) == -1) {
         timer_delete(timerEvents[timerId].timer);
-        LOGD("timeSetEvent() ERROR in timer_settime");
+        //LOGD("timeSetEvent() ERROR in timer_settime");
         return NULL;
     }
     timerEvents[timerId].valid = TRUE;
-    LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
+    //LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
     return (MMRESULT) (timerId + 1); // No error
 }
 MMRESULT timeKillEvent(UINT uTimerID) {
-    LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
+    //LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
     deleteTimeEvent(uTimerID);
     return 0; //No error
 }
