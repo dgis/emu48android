@@ -595,7 +595,7 @@ typedef HGDIOBJ HPALETTE;
 typedef HGDIOBJ HBITMAP;
 typedef HGDIOBJ HFONT;
 
-extern int GetObject(HANDLE h, int c, LPVOID pv);
+extern int GetObject(HGDIOBJ h, int c, LPVOID pv);
 extern BOOL DeleteObject(HGDIOBJ ho);
 
 #define OBJ_BITMAP          7
@@ -623,7 +623,8 @@ struct _HDC{
 	HDC hdcCompatible;
     enum DC_TYPE dcType;
 	HBITMAP selectedBitmap;
-	HPALETTE selectedPalette;
+    HPALETTE selectedPalette;
+    HPALETTE realizedPalette;
 };
 //typedef HANDLE HDC;
 

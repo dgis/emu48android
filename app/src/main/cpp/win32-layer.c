@@ -21,7 +21,7 @@ LPTSTR szCurrentDirectorySet = NULL;
 const TCHAR * assetsPrefix = _T("assets/"),
         assetsPrefixLength = 7;
 AAssetManager * assetManager;
-static HDC mainPaintDC = NULL;
+//static HDC mainPaintDC = NULL;
 struct timerEvent {
     BOOL valid;
     int timerId;
@@ -1024,19 +1024,25 @@ HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
                 break;
             case HGDIOBJ_TYPE_FONT:
                 break;
-            case HGDIOBJ_TYPE_BITMAP:
+            case HGDIOBJ_TYPE_BITMAP: {
+                //HBITMAP oldSelectedBitmap = hdc->selectedBitmap;
                 hdc->selectedBitmap = h;
-                return h;
+                return h; //oldSelectedBitmap;
+            }
             case HGDIOBJ_TYPE_REGION:
                 break;
-            case HGDIOBJ_TYPE_PALETTE:
+            case HGDIOBJ_TYPE_PALETTE: {
+                //HPALETTE oldSelectedPalette = hdc->selectedPalette;
                 hdc->selectedPalette = h;
-                return h;
+                return h; //oldSelectedPalette;
+            }
+            default:
+                break;
         }
     }
     return NULL;
 }
-int GetObject(HANDLE h, int c, LPVOID pv) {
+int GetObject(HGDIOBJ h, int c, LPVOID pv) {
     if(h) {
         switch (h->handleType) {
             case HGDIOBJ_TYPE_PEN:
@@ -1063,6 +1069,8 @@ int GetObject(HANDLE h, int c, LPVOID pv) {
                 break;
             case HGDIOBJ_TYPE_PALETTE:
                 break;
+            default:
+                break;
         }
     }    return 0;
 }
@@ -1073,7 +1081,7 @@ HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
 BOOL DeleteObject(HGDIOBJ ho) {
     switch(ho->handleType) {
         case HGDIOBJ_TYPE_PALETTE: {
-            ho->handleType = 0;
+            ho->handleType = HGDIOBJ_TYPE_INVALID;
             if(ho->paletteLog)
                 free(ho->paletteLog);
             ho->paletteLog = NULL;
@@ -1081,13 +1089,15 @@ BOOL DeleteObject(HGDIOBJ ho) {
             return TRUE;
         }
         case HGDIOBJ_TYPE_BITMAP: {
-            ho->handleType = 0;
+            ho->handleType = HGDIOBJ_TYPE_INVALID;
             ho->bitmapInfoHeader = NULL;
             ho->bitmapBits = NULL;
             ho->bitmapInfo = NULL;
             free(ho);
             return TRUE;
         }
+        default:
+            break;
     }
     return FALSE;
 }
@@ -1107,11 +1117,20 @@ HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
     return handle;
 }
 HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
+    HPALETTE hOldPal = hdc->selectedPalette;
     hdc->selectedPalette = hPal;
-    return hPal;
+    return hOldPal;
 }
 UINT RealizePalette(HDC hdc) {
-    //TODO
+    if(hdc && hdc->selectedPalette) {
+        PLOGPALETTE paletteLog = hdc->selectedPalette->paletteLog;
+        if (paletteLog) {
+            HPALETTE oldRealizedPalette = hdc->realizedPalette;
+            hdc->realizedPalette = CreatePalette(paletteLog);
+            if(oldRealizedPalette)
+                DeleteObject(oldRealizedPalette);
+        }
+    }
     return 0;
 }
 
@@ -1155,121 +1174,64 @@ int SetStretchBltMode(HDC hdc, int mode) {
     return 0;
 }
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-
-    if(hdcDest->hdcCompatible == NULL && hdcSrc->selectedBitmap && hDest && hSrc) {
-        // We update the main window
-
-        JNIEnv * jniEnv;
-        jint ret;
-        BOOL needDetach = FALSE;
-        ret = (*java_machine)->GetEnv(java_machine, &jniEnv, JNI_VERSION_1_6);
-        if (ret == JNI_EDETACHED) {
-            // GetEnv: not attached
-            ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
-            if (ret == JNI_OK) {
-                needDetach = TRUE;
-            }
-        }
-
-        void * pixelsDestination;
-        if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
-            LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-        }
-
-        HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
-
-        void * pixelsSource = hBitmapSource->bitmapBits;
-
-        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
-        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
-        int destinationWidth = androidBitmapInfo.width;
-        int destinationHeight = androidBitmapInfo.height;
-
-        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
-        float src_dx = (float)wSrc / (float)wDest;
-        float src_dy = (float)hSrc / (float)hDest;
-        float src_maxx = xSrc + wSrc;
-        float src_maxy = ySrc + hSrc;
-        float dst_maxx = xDest + wDest;
-        float dst_maxy = yDest + hDest;
-        float src_cury = ySrc;
-
-        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
-//        float sourceStride = sourceWidth * sourceBytes;
-//        sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
-        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
-        float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
-        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
-
-        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
-                hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
-
-        for (float y = yDest; y < dst_maxy; y++)
-        {
-            float src_curx = xSrc;
-            for (float x = xDest; x < dst_maxx; x++)
-            {
-                // Point sampling - you can also impl as bilinear or other
-                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
-
-                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
-                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
-
-                // -> ARGB_8888
-                switch (sourceBytes) {
-                    case 1:
-                        if(palPalEntry) {
-                            BYTE colorIndex = sourcePixel[0];
-                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
-                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
-                            destinationPixel[3] = 255;
-                        } else {
-                            destinationPixel[0] = sourcePixel[0];
-                            destinationPixel[1] = sourcePixel[0];
-                            destinationPixel[2] = sourcePixel[0];
-                            destinationPixel[3] = 255;
-                        }
-                        break;
-                    case 3:
-                        destinationPixel[0] = sourcePixel[2];
-                        destinationPixel[1] = sourcePixel[1];
-                        destinationPixel[2] = sourcePixel[0];
-                        destinationPixel[3] = 255;
-                        break;
-                    case 4:
-                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
-                        break;
-                    default:
-                        break;
-                }
-
-                src_curx += src_dx;
-            }
-
-            src_cury += src_dy;
-        }
-
-        AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
-
-//        if(needDetach)
-//            ret = (*java_machine)->DetachCurrentThread(java_machine);
-
-        //mainViewUpdateCallback();
-        return TRUE;
-    } else if(hdcDest->selectedBitmap && hdcSrc->selectedBitmap && hDest && hSrc) {
-        // We update the main window
+    if((hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL)
+              && hdcSrc->selectedBitmap && hDest && hSrc) {
 
         HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
         void * pixelsSource = (void *) hBitmapSource->bitmapBits;
 
-        HBITMAP hBitmapDestination = hdcDest->selectedBitmap;
-        void * pixelsDestination = (void *) hBitmapDestination->bitmapBits;
+        HBITMAP hBitmapDestination = NULL;
+        void * pixelsDestination = NULL;
 
         int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
         int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
-        int destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
-        int destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+        int destinationWidth = 0;
+        int destinationHeight = 0;
+
+        int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
+        int sourceBytes = (sourceBitCount >> 3);
+        float sourceBytesWithDecimal = (float)sourceBitCount / 8.0f;
+        //TODO float sourceStride = (float)(sourceBytesWithDecimal * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        int destinationBytes = 0;
+        float destinationStride = 0;
+
+        JNIEnv * jniEnv = NULL;
+
+        if(hdcDest->hdcCompatible == NULL) {
+            // We update the main window
+
+            jint ret;
+            BOOL needDetach = FALSE;
+            ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
+            if (ret == JNI_EDETACHED) {
+                // GetEnv: not attached
+                ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+                if (ret == JNI_OK) {
+                    needDetach = TRUE;
+                }
+            }
+
+            destinationWidth = androidBitmapInfo.width;
+            destinationHeight = androidBitmapInfo.height;
+
+            destinationBytes = 4;
+            destinationStride = androidBitmapInfo.stride;
+
+            if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
+                LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+            }
+        } else {
+            hBitmapDestination = hdcDest->selectedBitmap;
+            pixelsDestination = (void *) hBitmapDestination->bitmapBits;
+
+            destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
+            destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+
+            destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
+            destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+        }
+
 
         //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
         float src_dx = (float)wSrc / (float)wDest;
@@ -1280,35 +1242,50 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         float dst_maxy = yDest + hDest;
         float src_cury = ySrc;
 
-        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
-        //TODO float sourceStride = (float)(sourceBytes * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
-        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
-        int destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
-        float destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
-        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytesWithDecimal);
 
-        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
-                                     hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+//        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
+//                                     hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+        HPALETTE palette = hdcSrc->realizedPalette;
+        if(!palette)
+            palette = hdcSrc->selectedPalette;
+        PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
+                                     palette->paletteLog->palPalEntry : NULL;
 
-        for (float y = yDest; y < dst_maxy; y++)
-        {
+        for (float y = yDest; y < dst_maxy; y++) {
             float src_curx = xSrc;
-            for (float x = xDest; x < dst_maxx; x++)
-            {
+            BYTE parity = 0;
+            for (float x = xDest; x < dst_maxx; x++, parity++) {
                 // Point sampling - you can also impl as bilinear or other
-                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
 
-                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
-                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
+
+                float currentXBytes = sourceBytesWithDecimal * (int)src_curx;
+                BYTE * sourcePixel = pixelsSource + (int)(sourceStride * (int)src_cury) + (int)currentXBytes;
+                BYTE * destinationPixel = pixelsDestination + (int)(destinationStride * y + 4.0 * x);
 
                 // -> ARGB_8888
-                switch (sourceBytes) {
-                    case 1:
-                        if(palPalEntry) {
-                            BYTE colorIndex = sourcePixel[0];
-                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
+                switch (sourceBitCount) {
+                    case 4: {
+                        BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
+                        if (palPalEntry) {
+                            destinationPixel[0] = palPalEntry[colorIndex].peRed; //TODO Exchange Blue and Red?
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[3] = 255;
+                        } else {
+                            destinationPixel[0] = colorIndex;
+                            destinationPixel[1] = colorIndex;
+                            destinationPixel[2] = colorIndex;
+                            destinationPixel[3] = 255;
+                        }
+                        break;
+                    }
+                    case 8: {
+                        BYTE colorIndex = sourcePixel[0];
+                        if (palPalEntry) {
+                            destinationPixel[0] = palPalEntry[colorIndex].peRed; //TODO Exchange Blue and Red?
+                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[3] = 255;
                         } else {
                             destinationPixel[0] = sourcePixel[0];
@@ -1317,13 +1294,14 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                             destinationPixel[3] = 255;
                         }
                         break;
-                    case 3:
+                    }
+                    case 24:
                         destinationPixel[0] = sourcePixel[2];
                         destinationPixel[1] = sourcePixel[1];
                         destinationPixel[2] = sourcePixel[0];
                         destinationPixel[3] = 255;
                         break;
-                    case 4:
+                    case 32:
                         memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
                         break;
                     default:
@@ -1335,15 +1313,208 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
             src_cury += src_dy;
         }
+
+        if(jniEnv)
+            AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
+
         return TRUE;
     }
     return FALSE;
+
+//    if(hdcDest->hdcCompatible == NULL && hdcSrc->selectedBitmap && hDest && hSrc) {
+//        // We update the main window
+//
+//        JNIEnv * jniEnv;
+//        jint ret;
+//        BOOL needDetach = FALSE;
+//        ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
+//        if (ret == JNI_EDETACHED) {
+//            // GetEnv: not attached
+//            ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+//            if (ret == JNI_OK) {
+//                needDetach = TRUE;
+//            }
+//        }
+//
+//        void * pixelsDestination;
+//        if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
+//            LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+//        }
+//
+//        HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
+//
+//        void * pixelsSource = (void *) hBitmapSource->bitmapBits;
+//
+//        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+//        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
+//        int destinationWidth = androidBitmapInfo.width;
+//        int destinationHeight = androidBitmapInfo.height;
+//
+//        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
+//        float src_dx = (float)wSrc / (float)wDest;
+//        float src_dy = (float)hSrc / (float)hDest;
+//        float src_maxx = xSrc + wSrc;
+//        float src_maxy = ySrc + hSrc;
+//        float dst_maxx = xDest + wDest;
+//        float dst_maxy = yDest + hDest;
+//        float src_cury = ySrc;
+//
+//        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
+////        float sourceStride = sourceWidth * sourceBytes;
+////        sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+//        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+//        float destinationStride = androidBitmapInfo.stride; // Destination always 4 bytes RGBA
+//        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+//
+//        HPALETTE palette = hdcSrc->realizedPalette;
+//        if(!palette)
+//            palette = hdcSrc->selectedPalette;
+//        PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
+//                palette->paletteLog->palPalEntry : NULL;
+//
+//        for (float y = yDest; y < dst_maxy; y++)
+//        {
+//            float src_curx = xSrc;
+//            for (float x = xDest; x < dst_maxx; x++)
+//            {
+//                // Point sampling - you can also impl as bilinear or other
+//                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
+//
+//                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
+//                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
+//
+//                // -> ARGB_8888
+//                switch (sourceBytes) {
+//                    case 1:
+//                        if(palPalEntry) {
+//                            BYTE colorIndex = sourcePixel[0];
+//                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
+//                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+//                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+//                            destinationPixel[3] = 255;
+//                        } else {
+//                            destinationPixel[0] = sourcePixel[0];
+//                            destinationPixel[1] = sourcePixel[0];
+//                            destinationPixel[2] = sourcePixel[0];
+//                            destinationPixel[3] = 255;
+//                        }
+//                        break;
+//                    case 3:
+//                        destinationPixel[0] = sourcePixel[2];
+//                        destinationPixel[1] = sourcePixel[1];
+//                        destinationPixel[2] = sourcePixel[0];
+//                        destinationPixel[3] = 255;
+//                        break;
+//                    case 4:
+//                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
+//                        break;
+//                    default:
+//                        break;
+//                }
+//
+//                src_curx += src_dx;
+//            }
+//
+//            src_cury += src_dy;
+//        }
+//
+//        AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
+//
+////        if(needDetach)
+////            ret = (*java_machine)->DetachCurrentThread(java_machine);
+//
+//        //mainViewUpdateCallback();
+//        return TRUE;
+//    } else if(hdcDest->selectedBitmap && hdcSrc->selectedBitmap && hDest && hSrc) {
+//        // We update the main window
+//
+//        HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
+//        void * pixelsSource = (void *) hBitmapSource->bitmapBits;
+//
+//        HBITMAP hBitmapDestination = hdcDest->selectedBitmap;
+//        void * pixelsDestination = (void *) hBitmapDestination->bitmapBits;
+//
+//        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+//        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight);
+//        int destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
+//        int destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+//
+//        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
+//        float src_dx = (float)wSrc / (float)wDest;
+//        float src_dy = (float)hSrc / (float)hDest;
+//        float src_maxx = xSrc + wSrc;
+//        float src_maxy = ySrc + hSrc;
+//        float dst_maxx = xDest + wDest;
+//        float dst_maxy = yDest + hDest;
+//        float src_cury = ySrc;
+//
+//        int sourceBytes = (hBitmapSource->bitmapInfoHeader->biBitCount >> 3);
+//        //TODO float sourceStride = (float)(sourceBytes * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+//        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+//        int destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
+//        float destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+//        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
+//
+//        PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
+//                                     hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
+//
+//        for (float y = yDest; y < dst_maxy; y++)
+//        {
+//            float src_curx = xSrc;
+//            for (float x = xDest; x < dst_maxx; x++)
+//            {
+//                // Point sampling - you can also impl as bilinear or other
+//                //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
+//
+//                BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
+//                BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
+//
+//                // -> ARGB_8888
+//                switch (sourceBytes) {
+//                    case 1:
+//                        if(palPalEntry) {
+//                            BYTE colorIndex = sourcePixel[0];
+//                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
+//                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
+//                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
+//                            destinationPixel[3] = 255;
+//                        } else {
+//                            destinationPixel[0] = sourcePixel[0];
+//                            destinationPixel[1] = sourcePixel[0];
+//                            destinationPixel[2] = sourcePixel[0];
+//                            destinationPixel[3] = 255;
+//                        }
+//                        break;
+//                    case 3:
+//                        destinationPixel[0] = sourcePixel[2];
+//                        destinationPixel[1] = sourcePixel[1];
+//                        destinationPixel[2] = sourcePixel[0];
+//                        destinationPixel[3] = 255;
+//                        break;
+//                    case 4:
+//                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
+//                        break;
+//                    default:
+//                        break;
+//                }
+//
+//                src_curx += src_dx;
+//            }
+//
+//            src_cury += src_dy;
+//        }
+//        return TRUE;
+//    }
+//    return FALSE;
 }
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     if(prgbq
-        && hdc && hdc->selectedPalette && hdc->selectedPalette->paletteLog && hdc->selectedPalette->paletteLog->palPalEntry
-        && hdc->selectedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->selectedPalette->paletteLog->palNumEntries) {
-        PALETTEENTRY * palPalEntry = hdc->selectedPalette->paletteLog->palPalEntry;
+//        && hdc && hdc->selectedPalette && hdc->selectedPalette->paletteLog && hdc->selectedPalette->paletteLog->palPalEntry
+//        && hdc->selectedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->selectedPalette->paletteLog->palNumEntries) {
+//        PALETTEENTRY * palPalEntry = hdc->selectedPalette->paletteLog->palPalEntry;
+       && hdc && hdc->realizedPalette && hdc->realizedPalette->paletteLog && hdc->realizedPalette->paletteLog->palPalEntry
+       && hdc->realizedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->realizedPalette->paletteLog->palNumEntries) {
+        PALETTEENTRY * palPalEntry = hdc->realizedPalette->paletteLog->palPalEntry;
         for (int i = iStart, j = 0; i < cEntries; i++, j++) {
             palPalEntry[i].peRed = prgbq[j].rgbRed;
             palPalEntry[i].peGreen = prgbq[j].rgbGreen;
@@ -1435,16 +1606,17 @@ BOOL GdiFlush(void) {
     return 0;
 }
 HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
-    if(!mainPaintDC)
-        mainPaintDC = CreateCompatibleDC(NULL);
+    //hWindowDC;
+//    if(!mainPaintDC)
+//        mainPaintDC = CreateCompatibleDC(NULL);
     if(lpPaint) {
         memset(lpPaint, 0, sizeof(PAINTSTRUCT));
         lpPaint->fErase = TRUE;
-        lpPaint->hdc = mainPaintDC;
-        lpPaint->rcPaint.right = nBackgroundW; //androidBitmapInfo.width; // - 1;
-        lpPaint->rcPaint.bottom = nBackgroundH; //androidBitmapInfo.height; // - 1;
+        lpPaint->hdc = hWindowDC; //mainPaintDC;
+        lpPaint->rcPaint.right = (short) nBackgroundW; //androidBitmapInfo.width; // - 1;
+        lpPaint->rcPaint.bottom = (short) nBackgroundH; //androidBitmapInfo.height; // - 1;
     }
-    return mainPaintDC;
+    return hWindowDC; //mainPaintDC;
 }
 BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     mainViewUpdateCallback();

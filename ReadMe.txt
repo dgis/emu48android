@@ -12,11 +12,11 @@ NOT WORKING
 - Serial Ports (Wire or Ir)
 
 TODO
-- Bug: Port1 is not enable from the state.e48 file!
 - Support 8bits images
+- Add recent files
+- Bug: Port1 is not enable from the state.e48 file!
 - Option to allow rotation
 - Option to auto hide the menu
-- Bitmap corruption when touching the buttons
 - Open Emu48 with a state file shared with it (Can not work)
 
 DONE
