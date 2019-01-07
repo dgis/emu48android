@@ -1254,7 +1254,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         for (float y = yDest; y < dst_maxy; y++) {
             float src_curx = xSrc;
-            BYTE parity = 0;
+            BYTE parity = xSrc;
             for (float x = xDest; x < dst_maxx; x++, parity++) {
                 // Point sampling - you can also impl as bilinear or other
 
@@ -1267,6 +1267,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                 switch (sourceBitCount) {
                     case 4: {
                         BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
+                        //BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] >> 4 : sourcePixel[0] & (BYTE)0x0F);
                         if (palPalEntry) {
                             destinationPixel[0] = palPalEntry[colorIndex].peRed; //TODO Exchange Blue and Red?
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
@@ -1516,9 +1517,9 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
        && hdc->realizedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->realizedPalette->paletteLog->palNumEntries) {
         PALETTEENTRY * palPalEntry = hdc->realizedPalette->paletteLog->palPalEntry;
         for (int i = iStart, j = 0; i < cEntries; i++, j++) {
-            palPalEntry[i].peRed = prgbq[j].rgbRed;
+            palPalEntry[i].peRed = prgbq[j].rgbBlue;
             palPalEntry[i].peGreen = prgbq[j].rgbGreen;
-            palPalEntry[i].peBlue = prgbq[j].rgbBlue;
+            palPalEntry[i].peBlue = prgbq[j].rgbRed;
             palPalEntry[i].peFlags = 0;
         }
     }

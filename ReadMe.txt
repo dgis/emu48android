@@ -5,14 +5,13 @@ This win32 layer will allow to easily update from the original Emu48 source code
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
 NOT WORKING
-- Disassembler
-- Debugger
 - Macro
 - Infrared Printer
 - Serial Ports (Wire or Ir)
+- Disassembler
+- Debugger
 
 TODO
-- Support 8bits images
 - Add recent files
 - Bug: Port1 is not enable from the state.e48 file!
 - Option to allow rotation
@@ -40,3 +39,4 @@ DONE
 - Settings show KML log should be true by default.
 - Sound
 - Bug: No refresh with the clock (Fix timers)
+- Support 8bits images
