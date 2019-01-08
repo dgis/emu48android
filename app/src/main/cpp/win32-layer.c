@@ -657,8 +657,9 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
     if(hWnd == 0 && Msg == WM_COMMAND) {
-        int menuCommand = (wParam & 0xffff);
+        int menuCommand = (wParam & 0xffff) - 40000;
         LOGD("Menu Item %d", menuCommand);
+        sendMenuItemCommand(menuCommand);
     }
     return NULL;
 }
@@ -1510,9 +1511,6 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 }
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     if(prgbq
-//        && hdc && hdc->selectedPalette && hdc->selectedPalette->paletteLog && hdc->selectedPalette->paletteLog->palPalEntry
-//        && hdc->selectedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->selectedPalette->paletteLog->palNumEntries) {
-//        PALETTEENTRY * palPalEntry = hdc->selectedPalette->paletteLog->palPalEntry;
        && hdc && hdc->realizedPalette && hdc->realizedPalette->paletteLog && hdc->realizedPalette->paletteLog->palPalEntry
        && hdc->realizedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->realizedPalette->paletteLog->palNumEntries) {
         PALETTEENTRY * palPalEntry = hdc->realizedPalette->paletteLog->palPalEntry;

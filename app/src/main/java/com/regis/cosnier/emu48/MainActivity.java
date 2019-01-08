@@ -22,6 +22,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -45,8 +46,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,6 +97,15 @@ public class MainActivity extends AppCompatActivity
         View,
         Print
     }
+
+    private int MRU_ID_START = 10000;
+    private int MAX_MRU = 5;
+    private LinkedHashMap<String, String> mruLinkedHashMap = new LinkedHashMap<String, String>(5, 1.0f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > MAX_MRU;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,6 +163,15 @@ public class MainActivity extends AppCompatActivity
 
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
+
+        Set<String> savedMRU = sharedPreferences.getStringSet("MRU", null);
+        if(savedMRU != null) {
+            for (String url : savedMRU) {
+                mruLinkedHashMap.put(url, null);
+            }
+        }
+
+        updateMRU();
 
         updateFromPreferences(null, false);
         sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -211,6 +232,25 @@ public class MainActivity extends AppCompatActivity
             drawer.openDrawer(GravityCompat.START);
     }
 
+    private void updateMRU() {
+        Menu menu = navigationView.getMenu();
+        MenuItem recentsMenuItem = menu.findItem(R.id.nav_item_recents);
+        SubMenu recentsSubMenu = null;
+        if(recentsMenuItem != null) {
+            recentsSubMenu = recentsMenuItem.getSubMenu();
+            if (recentsSubMenu != null)
+                recentsSubMenu.clear();
+        }
+        if (recentsSubMenu != null) {
+            Set<String> mruLinkedHashMapKeySet = mruLinkedHashMap.keySet();
+            String[] mrus = mruLinkedHashMapKeySet.toArray(new String[mruLinkedHashMapKeySet.size()]);
+            for (int i = mrus.length - 1; i >= 0; i--) {
+                String displayName = getFilenameFromURL(mrus[i]);
+                recentsSubMenu.add(Menu.NONE, MRU_ID_START + i, Menu.NONE, displayName);
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -228,9 +268,15 @@ public class MainActivity extends AppCompatActivity
         if(NativeLib.isDocumentAvailable() && sharedPreferences.getBoolean("settings_autosave", true)) {
             String currentFilename = NativeLib.getCurrentFilename();
             if (currentFilename != null && currentFilename.length() > 0) {
-                NativeLib.onFileSave();
+                if(NativeLib.onFileSave() == 1)
+                    showAlert("State saved");
             }
         }
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putStringSet("MRU", mruLinkedHashMap.keySet());
+        editor.apply();
+
         super.onStop();
     }
 
@@ -342,6 +388,25 @@ public class MainActivity extends AppCompatActivity
             OnTopics();
         } else if (id == R.id.nav_about) {
             OnAbout();
+        } else if(id >= MRU_ID_START && id < MRU_ID_START + MAX_MRU) {
+
+            Set<String> mruLinkedHashMapKeySet = mruLinkedHashMap.keySet();
+            int mruLength = mruLinkedHashMapKeySet.size();
+            String[] mrus = mruLinkedHashMapKeySet.toArray(new String[mruLength]);
+
+            int mruClickedIndex = id - MRU_ID_START;
+            final String url = mrus[mruClickedIndex];
+            mruLinkedHashMap.get(url);
+
+            ensureDocumentSaved(new Runnable() {
+                @Override
+                public void run() {
+                    if(onFileOpen(url) != 0) {
+                        saveLastDocument(url);
+                    }
+                }
+            });
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -462,7 +527,8 @@ public class MainActivity extends AppCompatActivity
                 public void onClick(DialogInterface dialog, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
                         if (hasFilename) {
-                            NativeLib.onFileSave();
+                            if(NativeLib.onFileSave() == 1)
+                                showAlert("State saved");
                             if (continueCallback != null)
                                 continueCallback.run();
                         } else {
@@ -529,7 +595,6 @@ public class MainActivity extends AppCompatActivity
         });
     }
     private void OnFileSave() {
-        //NativeLib.onFileSave();
         ensureDocumentSaved(null);
     }
     private void OnFileSaveAs() {
@@ -703,6 +768,7 @@ public class MainActivity extends AppCompatActivity
                     public void onClick(DialogInterface dialog, int which) {
                         String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
                         NativeLib.onViewScript(kmlScriptFilename);
+                        displayKMLTitle();
                         showKMLLog();
                         updateNavigationDrawerItems();
                     }
@@ -738,6 +804,7 @@ public class MainActivity extends AppCompatActivity
 
                 String url = uri.toString();
                 if(NativeLib.onFileSaveAs(url) != 0) {
+                    showAlert("State saved");
                     saveLastDocument(url);
                     makeUriPersistable(data, uri);
                     displayFilename(url);
@@ -770,7 +837,10 @@ public class MainActivity extends AppCompatActivity
     private void saveLastDocument(String url) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("lastDocument", url);
-        editor.commit();
+        editor.apply();
+
+        mruLinkedHashMap.put(url, null);
+        updateMRU();
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
@@ -788,19 +858,30 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void displayFilename(String url) {
+        String displayName = getFilenameFromURL(url);
+        View header = displayKMLTitle();
+        TextView textViewSubtitle = header.findViewById(R.id.nav_header_subtitle);
+        if(textViewSubtitle != null)
+            textViewSubtitle.setText(displayName);
+    }
+
+    private String getFilenameFromURL(String url) {
         String displayName = "";
         try {
             displayName = SettingsActivity.getFileName(this, url);
         } catch(Exception e) {
+            // Do nothing
         }
+        return displayName;
+    }
+
+    private View displayKMLTitle() {
         NavigationView navigationView = findViewById(R.id.nav_view);
         View header = navigationView.getHeaderView(0);
         TextView textViewTitle = header.findViewById(R.id.nav_header_title);
         if(textViewTitle != null)
             textViewTitle.setText(NativeLib.getKMLTitle());
-        TextView textViewSubtitle = header.findViewById(R.id.nav_header_subtitle);
-        if(textViewSubtitle != null)
-            textViewSubtitle.setText(displayName);
+        return header;
     }
 
     private void showKMLLog() {
@@ -858,8 +939,86 @@ public class MainActivity extends AppCompatActivity
     }
 
     void showAlert(String text) {
-        Snackbar.make(getWindow().getDecorView().getRootView(), "text", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+        Snackbar.make(findViewById(R.id.main_coordinator), text, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
     }
+
+    void sendMenuItemCommand(int menuItem) {
+        switch (menuItem) {
+            case 1: // FILE_NEW
+                OnFileNew();
+                break;
+            case 2: // FILE_OPEN
+                OnFileOpen();
+                break;
+            case 3: // FILE_SAVE
+                OnFileSave();
+                break;
+            case 4: // FILE_SAVEAS
+                OnFileSaveAs();
+                break;
+            case 5: // FILE_EXIT
+                break;
+            case 6: // EDIT_COPY_SCREEN
+                OnViewCopy();
+                break;
+            case 7: // FILE_SETTINGS
+                OnSettings();
+                break;
+            case 8: // EDIT_RESET
+                OnViewReset();
+                break;
+            case 9: // EDIT_LOAD_OBJECT
+                OnObjectLoad();
+                break;
+            case 10: // EDIT_SAVE_OBJECT
+                OnObjectSave();
+                break;
+            case 11: // HELP_ABOUT
+                OnAbout();
+                break;
+            case 12: // HELP_TOPICS
+                OnTopics();
+                break;
+            case 13: // FILE_CLOSE
+                OnFileClose();
+                break;
+            case 14: // EDIT_BACKUP_SAVE
+                OnBackupSave();
+                break;
+            case 15: // EDIT_BACKUP_RESTORE
+                OnBackupRestore();
+                break;
+            case 16: // EDIT_BACKUP_DELETE
+                OnBackupDelete();
+                break;
+            case 17: // VIEW_SCRIPT
+                OnViewScript();
+                break;
+            case 18: // EDIT_PORT_CONFIGURATION
+                break;
+            case 19: // EDIT_COPY_STRING
+                OnStackCopy();
+                break;
+            case 20: // EDIT_PASTE_STRING
+                OnStackPaste();
+                break;
+            case 21: // TOOL_DISASM
+                break;
+            case 22: // TOOL_DEBUG
+                break;
+            case 23: // TOOL_MACRO_RECORD
+                break;
+            case 24: // TOOL_MACRO_PLAY
+                break;
+            case 25: // TOOL_MACRO_STOP
+                break;
+            case 26: // TOOL_MACRO_SETTINGS
+                break;
+            default:
+                break;
+        }
+    }
+
     void clipboardCopyText(String text) {
         // Gets a handle to the clipboard service.
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);

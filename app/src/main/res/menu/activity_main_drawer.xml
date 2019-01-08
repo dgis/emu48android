@@ -93,6 +93,12 @@ info *action
             android:title="@string/action_settings" />
     </group>
 
+    <item android:id="@+id/nav_item_recents"
+        android:title="Recent">
+        <menu android:id="@+id/nav_menu_recents">
+        </menu>
+    </item>
+
     <item android:title="Edit">
         <menu>
             <item

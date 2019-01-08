@@ -126,6 +126,13 @@ int showAlert(const TCHAR * messageText, int flags) {
     return IDOK;
 }
 
+void sendMenuItemCommand(int menuItem) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "sendMenuItemCommand", "(I)V");
+    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, menuItem);
+}
+
 void clipboardCopyText(const TCHAR * text) {
     JNIEnv *jniEnv = getJNIEnvironment();
     jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
