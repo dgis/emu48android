@@ -12,7 +12,10 @@ NOT WORKING
 - Debugger
 
 TODO
-- Add recent files
+- If KML not found in OpenDocument, allow to choose a new one
+- Improve loading errors
+- Allows to see the errors in a log
+- Improve button support with HDC operations
 - Bug: Port1 is not enable from the state.e48 file!
 - Option to allow rotation
 - Option to auto hide the menu
@@ -40,3 +43,5 @@ DONE
 - Sound
 - Bug: No refresh with the clock (Fix timers)
 - Support 8bits images
+- Add recent files
+- Bug: Port2 not saved

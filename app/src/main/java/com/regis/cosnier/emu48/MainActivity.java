@@ -77,26 +77,11 @@ public class MainActivity extends AppCompatActivity
     public static MainActivity mainActivity;
 
     private static final String TAG = "MainActivity";
-    private MainScreenView mainScreenView;
     private SharedPreferences sharedPreferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
     private NavigationView navigationView;
     private DrawerLayout drawer;
 
     private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
-
-    enum FileType {
-        PDF,
-        SVG,
-        JPG,
-        PNG
-    }
-
-    enum ExportType {
-        Share,
-        View,
-        Print
-    }
 
     private int MRU_ID_START = 10000;
     private int MAX_MRU = 5;
@@ -123,7 +108,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -141,8 +126,8 @@ public class MainActivity extends AppCompatActivity
         mainActivity = this;
 
 
-        ViewGroup mainScreenContainer = (ViewGroup)findViewById(R.id.main_screen_container);
-        mainScreenView = new MainScreenView(this); //, currentProject);
+        ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
+        MainScreenView mainScreenView = new MainScreenView(this);
 //        mainScreenView.setOnTouchListener(new View.OnTouchListener() {
 //            @Override
 //            public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -174,7 +159,7 @@ public class MainActivity extends AppCompatActivity
         updateMRU();
 
         updateFromPreferences(null, false);
-        sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                 updateFromPreferences(key, true);
@@ -195,7 +180,8 @@ public class MainActivity extends AppCompatActivity
                 if (action.equals(Intent.ACTION_VIEW)) {
                     documentToOpenUri = intent.getData();
                     if (documentToOpenUri != null) {
-                        if(documentToOpenUri.getScheme().compareTo("file") == 0) {
+                        String scheme = documentToOpenUri.getScheme();
+                        if(scheme != null && scheme.compareTo("file") == 0) {
                             documentToOpenUrl = documentToOpenUri.getPath();
                             isFileAndNeedPermission = true;
                         } else
@@ -211,7 +197,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
-        if(documentToOpenUrl.length() > 0)
+        if(documentToOpenUrl != null && documentToOpenUrl.length() > 0)
             try {
                 if(isFileAndNeedPermission
                         && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -304,6 +290,7 @@ public class MainActivity extends AppCompatActivity
                         try {
                             makeUriPersistable(getIntent(), Uri.parse(lastDocumentUrl));
                         } catch (Exception e) {
+                        // Do nothing
                         }
                 }
 //				return;
@@ -1022,18 +1009,23 @@ public class MainActivity extends AppCompatActivity
     void clipboardCopyText(String text) {
         // Gets a handle to the clipboard service.
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("simple text", text);
-        // Set the clipboard's primary clip.
-        clipboard.setPrimaryClip(clip);
+        if(clipboard != null) {
+            ClipData clip = ClipData.newPlainText("simple text", text);
+            // Set the clipboard's primary clip.
+            clipboard.setPrimaryClip(clip);
+        }
     }
     String clipboardPasteText() {
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboard.hasPrimaryClip()) {
-            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
-            // Gets the clipboard as text.
-            CharSequence pasteData = item.getText();
-            if(pasteData != null)
-                return pasteData.toString();
+        if (clipboard != null && clipboard.hasPrimaryClip()) {
+            ClipData clipData = clipboard.getPrimaryClip();
+            if(clipData != null) {
+                ClipData.Item item = clipData.getItemAt(0);
+                // Gets the clipboard as text.
+                CharSequence pasteData = item.getText();
+                if (pasteData != null)
+                    return pasteData.toString();
+            }
         }
         return "";
     }

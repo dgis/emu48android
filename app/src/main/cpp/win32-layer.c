@@ -34,9 +34,15 @@ struct timerEvent {
 #define MAX_TIMER 10
 struct timerEvent timerEvents[MAX_TIMER];
 
+#define MAX_FILE_MAPPING_HANDLE 10
+static HANDLE fileMappingHandles[MAX_FILE_MAPPING_HANDLE];
+
 void win32Init() {
     for (int i = 0; i < MAX_TIMER; ++i) {
         timerEvents[i].valid = FALSE;
+    }
+    for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
+        fileMappingHandles[i] = NULL;
     }
 }
 
@@ -165,7 +171,7 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 }
 
 DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) {
-    int moveMode;
+    int moveMode = FILE_BEGIN;
     if(dwMoveMethod == FILE_BEGIN)
         moveMode = SEEK_SET;
     else if(dwMoveMethod == FILE_CURRENT)
@@ -223,6 +229,7 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) {
     off_t offset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
+    LPVOID result = NULL;
     if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING) {
         int prot = PROT_NONE;
         if (dwDesiredAccess & FILE_MAP_READ)
@@ -232,19 +239,45 @@ LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwF
         hFileMappingObject->fileMappingAddress = mmap(NULL, hFileMappingObject->fileMappingSize,
                                                       prot, MAP_PRIVATE,
                                                       hFileMappingObject->fileDescriptor, offset);
-        return hFileMappingObject->fileMappingAddress;
     } else if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
         if (dwDesiredAccess & FILE_MAP_WRITE)
             return NULL;
-        return (LPVOID) (AAsset_getBuffer(hFileMappingObject->fileAsset) + offset);
+        hFileMappingObject->fileMappingAddress = (LPVOID) (AAsset_getBuffer(hFileMappingObject->fileAsset) + offset);
     }
-    return NULL;
+    if(hFileMappingObject->fileMappingAddress) {
+        for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
+            if(!fileMappingHandles[i]) {
+                fileMappingHandles[i] = hFileMappingObject;
+                break;
+            }
+        }
+    }
+    result = hFileMappingObject->fileMappingAddress;
+    return result;
 }
 
 // https://msdn.microsoft.com/en-us/library/aa366882(v=vs.85).aspx
 BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
-    //TODO for HANDLE_TYPE_FILE_MAPPING/HANDLE_TYPE_FILE_MAPPING_ASSET
-    int result = munmap(lpBaseAddress, -1);
+    int result = -1;
+    for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
+        HANDLE fileMappingHandle = fileMappingHandles[i];
+        if(fileMappingHandle && lpBaseAddress == fileMappingHandle->fileMappingAddress) {
+            if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING) {
+                // munmap does not seem to work, so:
+                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+                lseek(fileMappingHandle->fileDescriptor, 0, SEEK_SET);
+                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize);
+                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+                result = munmap(lpBaseAddress, fileMappingHandle->fileMappingSize);
+            } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
+                // No need to unmap
+                result = 0;
+            }
+            fileMappingHandles[i] = NULL;
+            break;
+        }
+    }
+
     return result == 0;
 }
 
@@ -497,16 +530,12 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             return TRUE;
         }
         case HANDLE_TYPE_FILE_MAPPING: {
-            int closeResult = UnmapViewOfFile(hObject->fileMappingAddress);
-            if(closeResult == TRUE) {
-                hObject->handleType = HANDLE_TYPE_INVALID;
-                hObject->fileDescriptor = 0;
-                hObject->fileMappingSize = 0;
-                hObject->fileMappingAddress = NULL;
-                free(hObject);
-                return TRUE;
-            }
-            break;
+            hObject->handleType = HANDLE_TYPE_INVALID;
+            hObject->fileDescriptor = 0;
+            hObject->fileMappingSize = 0;
+            hObject->fileMappingAddress = NULL;
+            free(hObject);
+            return TRUE;
         }
         case HANDLE_TYPE_FILE_MAPPING_ASSET: {
             hObject->handleType = HANDLE_TYPE_INVALID;
