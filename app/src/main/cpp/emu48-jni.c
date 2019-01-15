@@ -13,12 +13,12 @@
 #include "core/kml.h"
 #include "win32-layer.h"
 
-extern void emu48Start();
 extern AAssetManager * assetManager;
 static jobject viewToUpdate = NULL;
 static jobject mainActivity = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
+enum ChooseKmlMode  chooseCurrentKmlMode;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
 TCHAR szKmlTitle[10240];
@@ -35,7 +35,6 @@ extern void buttonUp(int x, int y);
 extern void keyDown(int virtKey);
 extern void keyUp(int virtKey);
 
-extern void OnViewCopy();
 extern void OnBackupSave();
 extern void OnBackupRestore();
 extern void OnBackupDelete();
@@ -133,6 +132,22 @@ void sendMenuItemCommand(int menuItem) {
     (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, menuItem);
 }
 
+BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize) {
+    if(firstKMLFilename) {
+        JNIEnv *jniEnv = getJNIEnvironment();
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "getFirstKMLFilenameForType", "(C)Ljava/lang/String;");
+        jobject resultString = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr, (char)chipsetType);
+        if (resultString) {
+            const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, resultString, 0);
+            _tcsncpy(firstKMLFilename, strReturn, firstKMLFilenameSize);
+            (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void clipboardCopyText(const TCHAR * text) {
     JNIEnv *jniEnv = getJNIEnvironment();
     jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
@@ -158,6 +173,7 @@ const TCHAR * clipboardPasteText() {
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
+    chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     szChosenCurrentKml[0] = '\0';
 
     bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
@@ -239,11 +255,12 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
 
 JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, jobject thisz) {
 
+    if (hThread) SwitchToState(SM_RETURN);	// exit emulation thread
   	//ReleaseDC(hWnd, hWindowDC);
 	hWindowDC = NULL;						// hWindowDC isn't valid any more
 	hWnd = NULL;
 
-	DeleteCriticalSection(&csGDILock);
+    DeleteCriticalSection(&csGDILock);
 	DeleteCriticalSection(&csLcdLock);
 	DeleteCriticalSection(&csKeyLock);
 	DeleteCriticalSection(&csIOLock);
@@ -254,6 +271,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
 	DeleteCriticalSection(&csSlowLock);
 	DeleteCriticalSection(&csDbgLock);
 
+    SoundClose();							// close waveform-audio output device
 
     if (viewToUpdate) {
         (*env)->DeleteGlobalRef(env, viewToUpdate);
@@ -263,8 +281,6 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
         (*env)->DeleteGlobalRef(env, bitmapMainScreen);
         bitmapMainScreen = NULL;
     }
-
-    SoundClose();							// close waveform-audio output device
 }
 
 
@@ -308,7 +324,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JN
 }
 
 JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isBackup(JNIEnv *env, jobject thisz) {
-    return bBackup ? JNI_TRUE : JNI_FALSE;
+    return (jboolean) (bBackup ? JNI_TRUE : JNI_FALSE);
 }
 
 JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEnv *env, jobject thisz) {
@@ -319,6 +335,14 @@ JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEn
 JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLTitle(JNIEnv *env, jobject thisz) {
     jstring result = (*env)->NewStringUTF(env, szKmlTitle);
     return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_getPort1Plugged(JNIEnv *env, jobject thisz) {
+    return (jboolean) ((Chipset.cards_status & PORT1_PRESENT) != 0);
+}
+
+JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_getPort1Writable(JNIEnv *env, jobject thisz) {
+    return (jboolean) ((Chipset.cards_status & PORT1_WRITE) != 0);
 }
 
 JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
@@ -332,10 +356,13 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *
     }
 
     const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
+    chooseCurrentKmlMode = ChooseKmlMode_FILE_NEW;
     _tcscpy(szChosenCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
     BOOL result = NewDocument();
+
+    chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
 
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     draw();
@@ -356,9 +383,12 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv 
     }
     const char *stateFilenameUTF8 = (*env)->GetStringUTFChars(env, stateFilename , NULL) ;
     _tcscpy(szBufferFilename, stateFilenameUTF8);
+
+    chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
     BOOL result = OpenDocument(szBufferFilename);
     if (result)
         MruAdd(szBufferFilename);
+    chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     if (pbyRom) SwitchToState(SM_RUN);
     draw();

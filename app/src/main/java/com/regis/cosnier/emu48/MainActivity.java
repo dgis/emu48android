@@ -65,7 +65,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener{
 
     public static final int INTENT_GETOPENFILENAME = 1;
     public static final int INTENT_GETSAVEFILENAME = 2;
@@ -96,27 +96,25 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
 
 
 
@@ -149,23 +147,18 @@ public class MainActivity extends AppCompatActivity
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
 
+        // By default Port1 is set
+        setPort1Settings(true, true);
+
         Set<String> savedMRU = sharedPreferences.getStringSet("MRU", null);
         if(savedMRU != null) {
             for (String url : savedMRU) {
                 mruLinkedHashMap.put(url, null);
             }
         }
-
         updateMRU();
-
         updateFromPreferences(null, false);
-        SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                updateFromPreferences(key, true);
-            }
-        };
-        sharedPreferences.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         updateNavigationDrawerItems();
 
@@ -270,8 +263,13 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         //onDestroy is never called!
         NativeLib.stop();
-
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        updateFromPreferences(key, true);
     }
 
     @Override
@@ -544,6 +542,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void OnFileNew() {
+        // By default Port1 is set
+        setPort1Settings(true, true);
+
         extractKMLScripts();
 
         ensureDocumentSaved(new Runnable() {
@@ -838,6 +839,7 @@ public class MainActivity extends AppCompatActivity
 
     private int onFileOpen(String url) {
         int result = NativeLib.onFileOpen(url);
+        setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable());
         displayFilename(url);
         showKMLLog();
         updateNavigationDrawerItems();
@@ -1006,6 +1008,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    String getFirstKMLFilenameForType(char chipsetType) {
+        extractKMLScripts();
+
+        for (int i = 0; i < kmlScripts.size(); i++) {
+            KMLScriptItem kmlScriptItem = kmlScripts.get(i);
+            if (kmlScriptItem.model.charAt(0) == chipsetType) {
+                return kmlScriptItem.filename;
+            }
+        }
+        return null;
+    }
+
     void clipboardCopyText(String text) {
         // Gets a handle to the clipboard service.
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
@@ -1030,11 +1044,17 @@ public class MainActivity extends AppCompatActivity
         return "";
     }
 
+    private void setPort1Settings(boolean port1Plugged, boolean port1Writable) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("settings_port1en", port1Plugged);
+        editor.putBoolean("settings_port1wr", port1Writable);
+        editor.apply();
+    }
+
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-//        boolean settingsAutosave = sharedPreferences.getBoolean("settings_autosave", false);
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", /*"settings_alwaysdisplog",*/ "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1046,9 +1066,6 @@ public class MainActivity extends AppCompatActivity
                 case "settings_grayscale":
                     NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
                     break;
-//                case "settings_alwaysdisplog":
-//                    NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, true) ? 1 : 0, 0, null);
-//                    break;
                 case "settings_port1":
                 case "settings_port1en":
                 case "settings_port1wr":

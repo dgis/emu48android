@@ -8,6 +8,14 @@
 #include <jni.h>
 #include <android/bitmap.h>
 #include <android/asset_manager.h>
+#include <android/log.h>
+#define LOG_TAG "NDK_NativeEmu48"
+#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
+
+//#define DEBUG_DISPLAY 1
+
+
 
 #ifndef __OBJC__
 typedef signed char BOOL;   // deliberately same type as defined in objc
@@ -52,7 +60,8 @@ typedef unsigned int UINT_PTR, *PUINT_PTR;
 typedef LONG   LONG_PTR,  *PLONG_PTR;
 typedef size_t SIZE_T;
 typedef /*_W64*/ unsigned long ULONG_PTR, *PULONG_PTR;
-typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+//typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
 
 #define MAXLONG     0x7fffffff
 
@@ -933,11 +942,9 @@ extern UINT IsDlgButtonChecked(HWND hDlg, int nIDButton);
 extern BOOL EndDialog(HWND hDlg, INT_PTR nResult);
 typedef INT_PTR (CALLBACK* DLGPROC)(HWND, UINT, WPARAM, LPARAM);
 //extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
-extern INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
-#define DialogBoxA(hInstance, lpTemplate, hWndParent, lpDialogFunc) \
-    DialogBoxParamA(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
-#define DialogBox  DialogBoxA
-#define DialogBoxParam  DialogBoxParamA
+extern INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+#define DialogBox(hInstance, lpTemplate, hWndParent, lpDialogFunc) \
+    DialogBoxParam(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
 
 #define MAKEINTRESOURCE(i) ((LPSTR)((ULONG_PTR)((WORD)(i))))
 typedef struct _FILETIME {
@@ -1099,3 +1106,25 @@ extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 
 /* device ID for wave device mapper */
 #define WAVE_MAPPER     ((UINT)-1)
+
+
+
+
+
+extern void mainViewUpdateCallback();
+extern void mainViewResizeCallback(int x, int y);
+extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
+extern int closeFileFromContentResolver(int fd);
+extern int showAlert(const TCHAR * messageText, int flags);
+extern void sendMenuItemCommand(int menuItem);
+extern TCHAR szCurrentKml[MAX_PATH];
+extern TCHAR szChosenCurrentKml[MAX_PATH];
+enum ChooseKmlMode {
+    ChooseKmlMode_UNKNOWN,
+    ChooseKmlMode_FILE_NEW,
+    ChooseKmlMode_FILE_OPEN
+};
+extern enum ChooseKmlMode chooseCurrentKmlMode;
+BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize);
+void clipboardCopyText(const TCHAR * text);
+const TCHAR * clipboardPasteText();

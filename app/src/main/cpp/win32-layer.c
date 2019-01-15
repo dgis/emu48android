@@ -732,6 +732,9 @@ int MessageBox(HANDLE h, LPCTSTR szMessage, LPCTSTR title, int flags)
 //        result = NSAlertFirstButtonReturn ? IDYES :
 //                 NSAlertSecondButtonReturn ? IDCANCEL : IDNO;
 //#endif
+    if(flags & MB_YESNO) {
+        return IDOK;
+    }
 
     return showAlert(szMessage, flags);
 }
@@ -1013,7 +1016,8 @@ BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam) {
 //            return TRUE;
 //        }
 //    }
-    return FALSE;
+    return TRUE;
+    //return FALSE;
 }
 
 BOOL DestroyWindow(HWND hWnd) {
@@ -1843,10 +1847,6 @@ BOOL EndDialog(HWND hDlg, INT_PTR nResult) {
     //TODO
     return 0;
 }
-//INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
-//    //TODO
-//    return NULL;
-//}
 HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
     //TODO
     return INVALID_HANDLE_VALUE;
@@ -1871,15 +1871,19 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     //TODO
     return NULL;
 }
-extern TCHAR   szCurrentKml[MAX_PATH];
-extern TCHAR   szChosenCurrentKml[MAX_PATH];
-//extern TCHAR   szLog[MAX_PATH];
-INT_PTR DialogBoxParamA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
-        lstrcpy(szCurrentKml, szChosenCurrentKml);
+        if(chooseCurrentKmlMode == ChooseKmlMode_UNKNOWN) {
+        } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_NEW) {
+            lstrcpy(szCurrentKml, szChosenCurrentKml);
+        } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN) {
+            if(getFirstKMLFilenameForType(Chipset.type, szCurrentKml, sizeof(szCurrentKml) / sizeof(szCurrentKml[0])))
+                showAlert(_T("Cannot find the KML template file, so, try another one."), 0);
+            else
+                showAlert(_T("Cannot find the KML template file, sorry."), 0);
+        }
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
-        //LOGD(szLog);
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
     }
     return NULL;

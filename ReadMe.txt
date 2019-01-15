@@ -12,11 +12,11 @@ NOT WORKING
 - Debugger
 
 TODO
-- If KML not found in OpenDocument, allow to choose a new one
+- Change the logo following the template
+- Find a new open source package name
 - Improve loading errors
 - Allows to see the errors in a log
 - Improve button support with HDC operations
-- Bug: Port1 is not enable from the state.e48 file!
 - Option to allow rotation
 - Option to auto hide the menu
 - Open Emu48 with a state file shared with it (Can not work)
@@ -45,3 +45,9 @@ DONE
 - Support 8bits images
 - Add recent files
 - Bug: Port2 not saved
+- Fix Process not closed when leaving
+- Bug: Port1 is not enable from the state.e48 file!
+- Bug no preference event sometimes!
+- Bug with android back button acts as the hp48 back button!
+- Add new KMLs and ROMs.
+- If KML not found in OpenDocument, allow to choose a new one

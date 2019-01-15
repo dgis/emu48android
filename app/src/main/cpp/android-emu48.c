@@ -2019,288 +2019,288 @@ LRESULT CALLBACK MainWndProc(HWND hWindow, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 BOOL emu48Start()
 {
-//	typedef DWORD (WINAPI *LPFN_STIP)(HANDLE hThread,DWORD dwIdealProcessor);
+////	typedef DWORD (WINAPI *LPFN_STIP)(HANDLE hThread,DWORD dwIdealProcessor);
+////
+////	MSG msg;
+////	WNDCLASS wc;
+////	ATOM classAtom;
+////	RECT rectWindow;
+////	HACCEL hAccel;
+//	DWORD dwThreadId;
+////	LPFN_STIP fnSetThreadIdealProcessor;
+////	DWORD dwProcessor;
+////	HSZ hszService, hszTopic;				// variables for DDE server
+////	LPTSTR lpFilePart;
+////
+////	// enable memory leak detection
+////	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+////
+////	hApp = hInst;
+////	#if defined _UNICODE
+////	{
+////		ppArgv = (LPCTSTR*) CommandLineToArgvW(GetCommandLine(),&nArgc);
+////	}
+////	#else
+////	{
+////		nArgc = __argc;						// no. of command line arguments
+////		ppArgv = (LPCTSTR*) __argv;			// command line arguments
+////	}
+////	#endif
+////
+////	wc.style = CS_BYTEALIGNCLIENT;
+////	wc.lpfnWndProc = (WNDPROC)MainWndProc;
+////	wc.cbClsExtra = 0;
+////	wc.cbWndExtra = 0;
+////	wc.hInstance = hInst;
+////	wc.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_EMU48));
+////	wc.hCursor = NULL;
+////	wc.hbrBackground = NULL;
+////	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU);
+////	wc.lpszClassName = _T("CEmu48");
+////
+////	if (!(classAtom = RegisterClass(&wc)))
+////	{
+////		AbortMessage(
+////			_T("CEmu48 class registration failed.\n")
+////			_T("This application will now terminate."));
+////		return FALSE;
+////	}
 //
-//	MSG msg;
-//	WNDCLASS wc;
-//	ATOM classAtom;
-//	RECT rectWindow;
-//	HACCEL hAccel;
-	DWORD dwThreadId;
-//	LPFN_STIP fnSetThreadIdealProcessor;
-//	DWORD dwProcessor;
-//	HSZ hszService, hszTopic;				// variables for DDE server
-//	LPTSTR lpFilePart;
+//	// read emulator settings
+//	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
+//	ReadSettings();
 //
-//	// enable memory leak detection
-//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//    _tcscpy(szCurrentDirectory, "");
+//    _tcscpy(szEmuDirectory, "assets/calculators/");
+//    _tcscpy(szRomDirectory, "assets/calculators/");
+//    _tcscpy(szPort2Filename, "");
 //
-//	hApp = hInst;
-//	#if defined _UNICODE
+//	// running an instance of me?
+////	if (bSingleInstance && (hWnd = FindWindow(MAKEINTATOM(classAtom),NULL)) != NULL)
+////	{
+////		COPYDATASTRUCT sCDS;
+////
+////		if (IsIconic(hWnd))					// window minimized
+////			ShowWindow(hWnd,SW_RESTORE);	// show window
+////
+////		// put the window into foreground
+////		ForceForegroundWindow(GetLastActivePopup(hWnd));
+////
+////		if (nArgc >= 2)						// use decoded parameter line
+////		{
+////			LPTSTR lpFilePart;				// address of file name in path
+////			DWORD  dwLength;				// file name length
+////
+////			// get full path file name
+////			GetFullPathName(ppArgv[1],ARRAYSIZEOF(szBufferFilename),szBufferFilename,&lpFilePart);
+////
+////			// size of file name incl. EOS
+////			dwLength = lstrlen(szBufferFilename) + 1;
+////			sCDS.cbData = dwLength * sizeof(WCHAR);
+////
+////			#if defined _UNICODE
+////			{
+////				sCDS.lpData = szBufferFilename;
+////			}
+////			#else
+////			{
+////				sCDS.lpData = _alloca(sCDS.cbData);
+////				if (sCDS.lpData != NULL)
+////				{
+////					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBufferFilename, dwLength,
+////										(LPWSTR) sCDS.lpData, sCDS.cbData);
+////				}
+////				else
+////				{
+////					sCDS.cbData = 0;		// size of file name
+////				}
+////			}
+////			#endif
+////		}
+////		else
+////		{
+////			sCDS.lpData = NULL;				// file name
+////			sCDS.cbData = 0;				// size of file name
+////		}
+////
+////		// fill the COPYDATA structure and send file name to other instance
+////		sCDS.dwData = CDID_FILENAME;		// function identifier
+////		SendMessage(hWnd,WM_COPYDATA,(WPARAM) NULL,(LPARAM) &sCDS);
+////		return 0;							// quit program
+////	}
+////
+////	// Create window
+////	rectWindow.left   = 0;
+////	rectWindow.top    = 0;
+////	rectWindow.right  = 256;
+////	rectWindow.bottom = 0;
+////	AdjustWindowRect(&rectWindow, STYLE_TITLE, TRUE);
+////
+////	hWnd = CreateWindow(MAKEINTATOM(classAtom),_T("Emu48"),
+////		STYLE_TITLE,
+////		CW_USEDEFAULT, CW_USEDEFAULT,
+////		rectWindow.right  - rectWindow.left,
+////		rectWindow.bottom - rectWindow.top,
+////		NULL,NULL,hApp,NULL);
+////
+////	if (hWnd == NULL)
+////	{
+////		AbortMessage(_T("Window creation failed."));
+////		return FALSE;
+////	}
+////
+////	VERIFY(hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_MENU)));
+//
+//    hWindowDC = CreateCompatibleDC(NULL);
+//
+//	// initialization
+//    LARGE_INTEGER    lAppStart2;					// high performance counter value at Appl. start
+//
+//	QueryPerformanceFrequency(&lFreq);		// init high resolution counter
+//    QueryPerformanceCounter(&lAppStart);
+//    Sleep(1000);
+//    QueryPerformanceCounter(&lAppStart2);
+//
+//	szCurrentKml[0] = 0;					// no KML file selected
+//	SetSpeed(bRealSpeed);					// set speed
+////	MruInit(4);								// init MRU entries
+//
+//	// create auto event handle
+//	hEventShutdn = CreateEvent(NULL,FALSE,FALSE,NULL);
+//	if (hEventShutdn == NULL)
 //	{
-//		ppArgv = (LPCTSTR*) CommandLineToArgvW(GetCommandLine(),&nArgc);
-//	}
-//	#else
-//	{
-//		nArgc = __argc;						// no. of command line arguments
-//		ppArgv = (LPCTSTR*) __argv;			// command line arguments
-//	}
-//	#endif
-//
-//	wc.style = CS_BYTEALIGNCLIENT;
-//	wc.lpfnWndProc = (WNDPROC)MainWndProc;
-//	wc.cbClsExtra = 0;
-//	wc.cbWndExtra = 0;
-//	wc.hInstance = hInst;
-//	wc.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_EMU48));
-//	wc.hCursor = NULL;
-//	wc.hbrBackground = NULL;
-//	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU);
-//	wc.lpszClassName = _T("CEmu48");
-//
-//	if (!(classAtom = RegisterClass(&wc)))
-//	{
-//		AbortMessage(
-//			_T("CEmu48 class registration failed.\n")
-//			_T("This application will now terminate."));
+//		AbortMessage(_T("Event creation failed."));
+////		DestroyWindow(hWnd);
 //		return FALSE;
 //	}
-
-	// read emulator settings
-	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
-	ReadSettings();
-
-    _tcscpy(szCurrentDirectory, "");
-    _tcscpy(szEmuDirectory, "assets/calculators/");
-    _tcscpy(szRomDirectory, "assets/calculators/");
-    _tcscpy(szPort2Filename, "");
-
-	// running an instance of me?
-//	if (bSingleInstance && (hWnd = FindWindow(MAKEINTATOM(classAtom),NULL)) != NULL)
+//
+//	nState     = SM_RUN;					// init state must be <> nNextState
+//	nNextState = SM_INVALID;				// go into invalid state
+//	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&WorkerThread, NULL, CREATE_SUSPENDED, &dwThreadId);
+//	if (hThread == NULL)
 //	{
-//		COPYDATASTRUCT sCDS;
-//
-//		if (IsIconic(hWnd))					// window minimized
-//			ShowWindow(hWnd,SW_RESTORE);	// show window
-//
-//		// put the window into foreground
-//		ForceForegroundWindow(GetLastActivePopup(hWnd));
-//
-//		if (nArgc >= 2)						// use decoded parameter line
-//		{
-//			LPTSTR lpFilePart;				// address of file name in path
-//			DWORD  dwLength;				// file name length
-//
-//			// get full path file name
-//			GetFullPathName(ppArgv[1],ARRAYSIZEOF(szBufferFilename),szBufferFilename,&lpFilePart);
-//
-//			// size of file name incl. EOS
-//			dwLength = lstrlen(szBufferFilename) + 1;
-//			sCDS.cbData = dwLength * sizeof(WCHAR);
-//
-//			#if defined _UNICODE
-//			{
-//				sCDS.lpData = szBufferFilename;
-//			}
-//			#else
-//			{
-//				sCDS.lpData = _alloca(sCDS.cbData);
-//				if (sCDS.lpData != NULL)
-//				{
-//					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBufferFilename, dwLength,
-//										(LPWSTR) sCDS.lpData, sCDS.cbData);
-//				}
-//				else
-//				{
-//					sCDS.cbData = 0;		// size of file name
-//				}
-//			}
-//			#endif
-//		}
-//		else
-//		{
-//			sCDS.lpData = NULL;				// file name
-//			sCDS.cbData = 0;				// size of file name
-//		}
-//
-//		// fill the COPYDATA structure and send file name to other instance
-//		sCDS.dwData = CDID_FILENAME;		// function identifier
-//		SendMessage(hWnd,WM_COPYDATA,(WPARAM) NULL,(LPARAM) &sCDS);
-//		return 0;							// quit program
-//	}
-//
-//	// Create window
-//	rectWindow.left   = 0;
-//	rectWindow.top    = 0;
-//	rectWindow.right  = 256;
-//	rectWindow.bottom = 0;
-//	AdjustWindowRect(&rectWindow, STYLE_TITLE, TRUE);
-//
-//	hWnd = CreateWindow(MAKEINTATOM(classAtom),_T("Emu48"),
-//		STYLE_TITLE,
-//		CW_USEDEFAULT, CW_USEDEFAULT,
-//		rectWindow.right  - rectWindow.left,
-//		rectWindow.bottom - rectWindow.top,
-//		NULL,NULL,hApp,NULL);
-//
-//	if (hWnd == NULL)
-//	{
-//		AbortMessage(_T("Window creation failed."));
-//		return FALSE;
-//	}
-//
-//	VERIFY(hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_MENU)));
-
-    hWindowDC = CreateCompatibleDC(NULL);
-
-	// initialization
-    LARGE_INTEGER    lAppStart2;					// high performance counter value at Appl. start
-
-	QueryPerformanceFrequency(&lFreq);		// init high resolution counter
-    QueryPerformanceCounter(&lAppStart);
-    Sleep(1000);
-    QueryPerformanceCounter(&lAppStart2);
-
-	szCurrentKml[0] = 0;					// no KML file selected
-	SetSpeed(bRealSpeed);					// set speed
-//	MruInit(4);								// init MRU entries
-
-	// create auto event handle
-	hEventShutdn = CreateEvent(NULL,FALSE,FALSE,NULL);
-	if (hEventShutdn == NULL)
-	{
-		AbortMessage(_T("Event creation failed."));
-//		DestroyWindow(hWnd);
-		return FALSE;
-	}
-
-	nState     = SM_RUN;					// init state must be <> nNextState
-	nNextState = SM_INVALID;				// go into invalid state
-	hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&WorkerThread, NULL, CREATE_SUSPENDED, &dwThreadId);
-	if (hThread == NULL)
-	{
-		CloseHandle(hEventShutdn);			// close event handle
-		AbortMessage(_T("Thread creation failed."));
-//		DestroyWindow(hWnd);
-		return FALSE;
-	}
-
-	// SetThreadIdealProcessor() is available since Windows NT4.0
-//	fnSetThreadIdealProcessor = (LPFN_STIP) GetProcAddress(GetModuleHandle(_T("kernel32")),
-//														   "SetThreadIdealProcessor");
-
-//	// bind Saturn CPU emulation thread to current ideal processor
-//	dwProcessor = (fnSetThreadIdealProcessor != NULL)					// running on NT4.0 or later
-//				? fnSetThreadIdealProcessor(hThread,MAXIMUM_PROCESSORS)	// get ideal processor no.
-//				: 0;													// select 1st processor
-
-	// on multiprocessor machines for QueryPerformanceCounter()
-//	VERIFY(SetThreadAffinityMask(hThread,(DWORD_PTR) (1 << dwProcessor)));
-	ResumeThread(hThread);					// start thread
-	while (nState!=nNextState) Sleep(0);	// wait for thread initialized
-
-//	idDdeInst = 0;							// initialize DDE server
-//	if (DdeInitialize(&idDdeInst,(PFNCALLBACK) &DdeCallback,
-//					  APPCLASS_STANDARD |
-//					  CBF_FAIL_EXECUTES | CBF_FAIL_ADVISES |
-//					  CBF_SKIP_REGISTRATIONS | CBF_SKIP_UNREGISTRATIONS,0))
-//	{
-//		TerminateThread(hThread, 0);		// kill emulation thread
 //		CloseHandle(hEventShutdn);			// close event handle
-//		AbortMessage(_T("Could not initialize server!"));
-//		DestroyWindow(hWnd);
+//		AbortMessage(_T("Thread creation failed."));
+////		DestroyWindow(hWnd);
 //		return FALSE;
 //	}
-
-//	// init clipboard format and name service
-//	uCF_HpObj = RegisterClipboardFormat(_T(CF_HPOBJ));
-//	hszService = DdeCreateStringHandle(idDdeInst,szAppName,0);
-//	hszTopic   = DdeCreateStringHandle(idDdeInst,szTopic,0);
-//	DdeNameService(idDdeInst,hszService,NULL,DNS_REGISTER);
 //
-//	SoundOpen(uWaveDevId);					// open waveform-audio output device
+//	// SetThreadIdealProcessor() is available since Windows NT4.0
+////	fnSetThreadIdealProcessor = (LPFN_STIP) GetProcAddress(GetModuleHandle(_T("kernel32")),
+////														   "SetThreadIdealProcessor");
 //
-//	_ASSERT(hWnd != NULL);
-//	_ASSERT(hWindowDC != NULL);
+////	// bind Saturn CPU emulation thread to current ideal processor
+////	dwProcessor = (fnSetThreadIdealProcessor != NULL)					// running on NT4.0 or later
+////				? fnSetThreadIdealProcessor(hThread,MAXIMUM_PROCESSORS)	// get ideal processor no.
+////				: 0;													// select 1st processor
 //
-//	if (nArgc >= 2)							// use decoded parameter line
-//		lstrcpyn(szBufferFilename,ppArgv[1],ARRAYSIZEOF(szBufferFilename));
-//	else									// use last document setting
-//		ReadLastDocument(szBufferFilename, ARRAYSIZEOF(szBufferFilename));
+//	// on multiprocessor machines for QueryPerformanceCounter()
+////	VERIFY(SetThreadAffinityMask(hThread,(DWORD_PTR) (1 << dwProcessor)));
+//	ResumeThread(hThread);					// start thread
+//	while (nState!=nNextState) Sleep(0);	// wait for thread initialized
 //
-//	if (szBufferFilename[0])				// given default document
-//	{
-//		TCHAR szTemp[MAX_PATH+8] = _T("Loading ");
-//		RECT  rectClient;
+////	idDdeInst = 0;							// initialize DDE server
+////	if (DdeInitialize(&idDdeInst,(PFNCALLBACK) &DdeCallback,
+////					  APPCLASS_STANDARD |
+////					  CBF_FAIL_EXECUTES | CBF_FAIL_ADVISES |
+////					  CBF_SKIP_REGISTRATIONS | CBF_SKIP_UNREGISTRATIONS,0))
+////	{
+////		TerminateThread(hThread, 0);		// kill emulation thread
+////		CloseHandle(hEventShutdn);			// close event handle
+////		AbortMessage(_T("Could not initialize server!"));
+////		DestroyWindow(hWnd);
+////		return FALSE;
+////	}
 //
-//		_ASSERT(hWnd != NULL);
-//		VERIFY(GetClientRect(hWnd,&rectClient));
-//		GetCutPathName(szBufferFilename,&szTemp[8],MAX_PATH,rectClient.right/11);
-//		SetWindowTitle(szTemp);
-//		if (OpenDocument(szBufferFilename))
-//		{
-//			MruAdd(szCurrentFilename);
-//			ShowWindow(hWnd,nCmdShow);
-//			goto start;
-//		}
-//	}
+////	// init clipboard format and name service
+////	uCF_HpObj = RegisterClipboardFormat(_T(CF_HPOBJ));
+////	hszService = DdeCreateStringHandle(idDdeInst,szAppName,0);
+////	hszTopic   = DdeCreateStringHandle(idDdeInst,szTopic,0);
+////	DdeNameService(idDdeInst,hszService,NULL,DNS_REGISTER);
+////
+////	SoundOpen(uWaveDevId);					// open waveform-audio output device
+////
+////	_ASSERT(hWnd != NULL);
+////	_ASSERT(hWindowDC != NULL);
+////
+////	if (nArgc >= 2)							// use decoded parameter line
+////		lstrcpyn(szBufferFilename,ppArgv[1],ARRAYSIZEOF(szBufferFilename));
+////	else									// use last document setting
+////		ReadLastDocument(szBufferFilename, ARRAYSIZEOF(szBufferFilename));
+////
+////	if (szBufferFilename[0])				// given default document
+////	{
+////		TCHAR szTemp[MAX_PATH+8] = _T("Loading ");
+////		RECT  rectClient;
+////
+////		_ASSERT(hWnd != NULL);
+////		VERIFY(GetClientRect(hWnd,&rectClient));
+////		GetCutPathName(szBufferFilename,&szTemp[8],MAX_PATH,rectClient.right/11);
+////		SetWindowTitle(szTemp);
+////		if (OpenDocument(szBufferFilename))
+////		{
+////			MruAdd(szCurrentFilename);
+////			ShowWindow(hWnd,nCmdShow);
+////			goto start;
+////		}
+////	}
+////
+////	SetWindowTitle(_T("New Document"));
+////	ShowWindow(hWnd,nCmdShow);				// show emulator menu
 //
-//	SetWindowTitle(_T("New Document"));
-//	ShowWindow(hWnd,nCmdShow);				// show emulator menu
-
-	// no default document, ask for new one
-//	if (NewDocument()) SetWindowTitle(_T("Untitled"));
+//	// no default document, ask for new one
+////	if (NewDocument()) SetWindowTitle(_T("Untitled"));
+////
+////    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+////
+////
+////	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
+////    OnPaint(NULL);
+//////start:
+////	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
+////	if (pbyRom) SwitchToState(SM_RUN);
 //
-//    mainViewResizeCallback(nBackgroundW, nBackgroundH);
-//
-//
-//	//BitBlt(hWindowDC, 0, 0, hMainDC->selectedBitmap->bitmapInfoHeader->biWidth, hMainDC->selectedBitmap->bitmapInfoHeader->biHeight, hMainDC, 0, 0, 0);
-//    OnPaint(NULL);
-////start:
-//	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
-//	if (pbyRom) SwitchToState(SM_RUN);
-
-//	while (GetMessage(&msg, NULL, 0, 0))
-//	{
-//		if (   !TranslateAccelerator(hWnd, hAccel, &msg)
-//			&& (hDlgDebug      == NULL || !IsDialogMessage(hDlgDebug,      &msg))
-//			&& (hDlgFind       == NULL || !IsDialogMessage(hDlgFind,       &msg))
-//			&& (hDlgProfile    == NULL || !IsDialogMessage(hDlgProfile,    &msg))
-//			&& (hDlgRplObjView == NULL || !IsDialogMessage(hDlgRplObjView, &msg)))
-//		{
-//			TranslateMessage(&msg);
-//			DispatchMessage(&msg);
-//		}
-//	}
-//
-//	// clean up DDE server
-//	DdeNameService(idDdeInst, hszService, NULL, DNS_UNREGISTER);
-//	DdeFreeStringHandle(idDdeInst, hszService);
-//	DdeFreeStringHandle(idDdeInst, hszTopic);
-//	DdeUninitialize(idDdeInst);
-//
-//	SoundClose();							// close waveform-audio output device
-//
-//	// get full path name of szCurrentFilename
-//	if (GetFullPathName(szCurrentFilename,ARRAYSIZEOF(szBufferFilename),szBufferFilename,&lpFilePart) == 0)
-//		szBufferFilename[0] = 0;			// no last document name
-//
-//	WriteLastDocument(szBufferFilename);	// save last document setting
-//	WriteSettings();						// save emulation settings
-//
-//	CloseHandle(hThread);					// close thread handle
-//	CloseHandle(hEventShutdn);				// close event handle
-//	_ASSERT(nState == SM_RETURN);			// emulation thread down?
-//	ResetDocument();
-//	ResetBackup();
-//	MruCleanup();
-//	_ASSERT(pbyRom == NULL);				// rom file unmapped
-//	_ASSERT(pbyPort2 == NULL);				// port2 file unmapped
-//	_ASSERT(pKml == NULL);					// KML script not closed
-//	_ASSERT(szTitle == NULL);				// freed allocated memory
-//	_ASSERT(hPalette == NULL);				// freed resource memory
-//
-//	return (int) msg.wParam;
+////	while (GetMessage(&msg, NULL, 0, 0))
+////	{
+////		if (   !TranslateAccelerator(hWnd, hAccel, &msg)
+////			&& (hDlgDebug      == NULL || !IsDialogMessage(hDlgDebug,      &msg))
+////			&& (hDlgFind       == NULL || !IsDialogMessage(hDlgFind,       &msg))
+////			&& (hDlgProfile    == NULL || !IsDialogMessage(hDlgProfile,    &msg))
+////			&& (hDlgRplObjView == NULL || !IsDialogMessage(hDlgRplObjView, &msg)))
+////		{
+////			TranslateMessage(&msg);
+////			DispatchMessage(&msg);
+////		}
+////	}
+////
+////	// clean up DDE server
+////	DdeNameService(idDdeInst, hszService, NULL, DNS_UNREGISTER);
+////	DdeFreeStringHandle(idDdeInst, hszService);
+////	DdeFreeStringHandle(idDdeInst, hszTopic);
+////	DdeUninitialize(idDdeInst);
+////
+////	SoundClose();							// close waveform-audio output device
+////
+////	// get full path name of szCurrentFilename
+////	if (GetFullPathName(szCurrentFilename,ARRAYSIZEOF(szBufferFilename),szBufferFilename,&lpFilePart) == 0)
+////		szBufferFilename[0] = 0;			// no last document name
+////
+////	WriteLastDocument(szBufferFilename);	// save last document setting
+////	WriteSettings();						// save emulation settings
+////
+////	CloseHandle(hThread);					// close thread handle
+////	CloseHandle(hEventShutdn);				// close event handle
+////	_ASSERT(nState == SM_RETURN);			// emulation thread down?
+////	ResetDocument();
+////	ResetBackup();
+////	MruCleanup();
+////	_ASSERT(pbyRom == NULL);				// rom file unmapped
+////	_ASSERT(pbyPort2 == NULL);				// port2 file unmapped
+////	_ASSERT(pKml == NULL);					// KML script not closed
+////	_ASSERT(szTitle == NULL);				// freed allocated memory
+////	_ASSERT(hPalette == NULL);				// freed resource memory
+////
+////	return (int) msg.wParam;
 	return 0;
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	UNREFERENCED_PARAMETER(hPrevInst);

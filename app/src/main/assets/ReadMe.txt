@@ -8,7 +8,6 @@ It can open or save the exact same state files (state.e48/e49) than the original
 
 NOT WORKING
 
-- Sound
 - Disassembler
 - Debugger
 - Macro

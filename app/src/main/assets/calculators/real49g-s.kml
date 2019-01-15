@@ -15,7 +15,7 @@ Global
 	Model  "X"
 	Rom    "ROM.49G"
 	Bitmap "real49g-s.bmp"
-	#Icon   "49g.ico"
+	Icon   "49g.ico"
 	Debug  0
 End
 

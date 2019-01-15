@@ -23,15 +23,6 @@ VOID CommTransmit(VOID) {
 VOID CommReceive(VOID) {
 }
 
-// Sound.c
-//DWORD dwWaveVol;
-//DWORD dwWaveTime;
-//VOID  SoundOut(CHIPSET* w, WORD wOut) {
-//}
-//VOID  SoundBeep(DWORD dwFrequency, DWORD dwDuration) {
-//}
-
-
 // udp.c
 TCHAR szUdpServer[1024] = _T("localhost");
 WORD  wUdpPort = 5025;						// scpi-raw

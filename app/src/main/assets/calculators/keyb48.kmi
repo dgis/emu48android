@@ -1,0 +1,314 @@
+Scancode 112	# F1
+	Map 112 11		# F1
+End
+
+Scancode 113	# F2
+	Map 113 12		# F2
+End
+
+Scancode 114	# F3
+	Map 114 13		# F3
+End
+
+Scancode 115	# F4
+	Map 115 14		# F4
+End
+
+Scancode 116	# F5
+	Map 116 15		# F5
+End
+
+Scancode 117	# F6
+	Map 117 16		# F6
+End
+
+Scancode 65 	# A
+	Map 65 11		# F1
+End
+
+Scancode 66 	# B
+	Map 66 12		# F2
+End
+
+Scancode 67 	# C
+	Map 67 13		# F3
+End
+
+Scancode 68 	# D
+	Map 68 14		# F4
+End
+
+Scancode 69 	# E
+	Map 69 15		# F5
+End
+
+Scancode 70 	# F
+	Map 70 16		# F6
+End
+
+Scancode 71 	# G
+	Map 71 21		# MTH
+End
+
+Scancode 72 	# H
+	Map 72 22		# PRG
+End
+
+Scancode 73 	# I
+	Map 73 23		# CST
+End
+
+Scancode 74 	# J
+	Map 74 24		# VAR
+End
+
+Scancode 75 	# K
+	Map 75 25		# Up Arrow
+End
+Scancode 38 	# Up Arrow
+	Map 38 25 		# Up Arrow
+End
+Scancode 33 	# PgUp
+	Map 33 81		# Right Shift
+	Map 33 25		# Up Arrow (Page Up)
+End
+
+Scancode 76 	# L
+	Map 76 26		# NXT
+End
+
+Scancode 77 	# M
+	Map 77 31		# '
+End
+Scancode 222 	# '
+	Map 222 31		# '
+End
+
+Scancode 78 	# N
+	Map 78 32		# STO
+End
+
+Scancode 79 	# O
+	Map 79 33		# EVAL
+End
+
+Scancode 80 	# P
+	Map 80 34		# P
+End
+Scancode 37 	# Left Arrow
+	Map 37 34 		# Left Arrow
+End
+Scancode 36 	# Home
+	Map 36 81		# Right Shift
+	Map 36 34		# Left Arrow (Home)
+End
+
+Scancode 81	 	# Q
+	Map 81 35		# Q
+End
+Scancode 40 	# Down Arrow
+	Map 40 35 		# Down Arrow
+End
+Scancode 34 	# PgDn
+	Map 34 81		# Right Shift
+	Map 34 35		# Down Arrow (Page Down)
+End
+
+Scancode 82 	# R
+	Map 82 36		# R
+End
+Scancode 39 	# Right Arrow
+	Map 39 36 		# Right Arrow
+End
+Scancode 35 	# End
+	Map 35 81		# Right Shift
+	Map 35 36		# Right Arrow (End)
+End
+
+Scancode 83 	# S
+	Map 83 41		# SIN
+End
+
+Scancode 84 	# T
+	Map 84 42		# COS
+End
+
+Scancode 85 	# U
+	Map 85 43		# TAN
+End
+
+Scancode 86 	# V
+	Map 86 44		# SQRT
+End
+
+Scancode 87 	# W
+	Map 87 45		# Y^X
+End
+
+Scancode 88 	# X
+	Map 88 46		# 1/X
+End
+
+Scancode 13 	# Enter
+	Map 13 51 		# ENTER
+End
+
+Scancode 89 	# Y
+	Map 89 52		# +/-
+End
+
+Scancode 90 	# Z
+	Map 90 53		# EEX
+End
+
+Scancode 46 	# Del
+	Map 46 54		# DEL
+End
+
+Scancode 8  	# Backspace
+	Map 8 55		# Backspace
+End
+
+Scancode 9  	# Tab
+	Map 9 61		# Alpha
+End
+
+Scancode 55 	# 7
+	Map 55 62		# 7
+End
+Scancode 103	# Num 7
+	Map 103 62		# 7
+End
+
+Scancode 56 	# 8
+	Map 56 63		# 8
+End
+Scancode 104	# Num 8
+	Map 104 63		# 8
+End
+
+Scancode 57 	# 9
+	Map 57 64		# 9
+End
+Scancode 105	# Num 9
+	Map 105 64		# 9
+End
+
+Scancode 111	# Num /
+	Map 111 65		# /
+End
+Scancode 191	# /
+	Map 191 65		# /
+End
+
+Scancode 16 	# Shift
+	Map 16 71		# Left Shift
+End
+
+Scancode 52 	# 4
+	Map 52 72		# 4
+End
+Scancode 100	# Num 4
+	Map 100 72		# 4
+End
+
+Scancode 53 	# 5
+	Map 53 73		# 5
+End
+Scancode 101	# Num 5
+	Map 101 73		# 5
+End
+
+Scancode 54 	# 6
+	Map 54 74		# 6
+End
+Scancode 102	# Num 6
+	Map 102 74		# 6
+End
+
+Scancode 106	# Num *
+	Map 106 75		# *
+End
+Scancode 219	# [
+	Map 219 71		# Left Shift
+	Map 219 75		# * ([ ])
+End
+
+Scancode 17 	# Ctrl
+	Map 17 81		# Right Shift
+End
+
+Scancode 49 	# 1
+	Map 49 82		# 1
+End
+Scancode 97 	# Num 1
+	Map 97 82		# 1
+End
+
+Scancode 50 	# 2
+	Map 50 83		# 2
+End
+Scancode 98 	# Num 2
+	Map 98 83		# 2
+End
+
+Scancode 51 	# 3
+	Map 51 84		# 3
+End
+Scancode 99 	# Num 3
+	Map 99 84		# 3
+End
+
+Scancode 189	# -
+	Map 189 85		# -
+End
+Scancode 109	# Num -
+	Map 109 85		# -
+End
+Scancode 220	# \
+	Map 220 71		# Left Shift
+	Map 220 65		# - (( ))
+End
+
+
+Scancode 27 	# Esc
+	Map 27 91		# ON
+End
+
+Scancode 48 	# 0
+	Map 48 92		# 0
+End
+Scancode 96 	# Num 0
+	Map 96 92		# 0
+End
+
+Scancode 190	# .
+	Map 190 93		# .
+End
+Scancode 110	# Num .
+	Map 110 93		# .
+End
+Scancode 188	# ,
+	Map 188 71		# Left Shift
+	Map 188 93		# . (,)
+End
+
+Scancode 32 	# (space)
+	Map 32 94		# SPC
+End
+
+Scancode 186	# ;
+	Map 186 81		# Right Shift
+	Map 186 95		# + (::)
+End
+
+Scancode 187	# =
+	Map 187 95		# +
+End
+Scancode 107	# Num +
+	Map 107 95		# +
+End
+Scancode 221	# ]
+	Map 221 71		# Left Shift
+	Map 221 95		# + ({ })
+End

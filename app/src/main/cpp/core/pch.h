@@ -2,44 +2,25 @@
 //	PCH.H
 //
 
-//#define DEBUG_DISPLAY 1
-
 #define _WIN32_IE 0x0200
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRTDBG_MAP_ALLOC
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-//#include <winsock2.h>
-//#include <windows.h>
-//#include <tchar.h>
-//#include <shellapi.h>
-//#include <commctrl.h>
-//#include <shlobj.h>
+#include <winsock2.h>
+#include <windows.h>
+#include <tchar.h>
+#include <shellapi.h>
+#include <commctrl.h>
+#include <shlobj.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <stddef.h>
 #include <ctype.h>
 #include <stdio.h>
-//#include <direct.h>
-//#include <conio.h>
-//#include <crtdbg.h>
-
-#include "../win32-layer.h"
-#include <android/log.h>
-#define LOG_TAG "NDK_NativeEmu48"
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
-#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
-extern void mainViewUpdateCallback();
-extern void mainViewResizeCallback(int x, int y);
-extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
-extern int closeFileFromContentResolver(int fd);
-extern int showAlert(const TCHAR * messageText, int flags);
-extern void sendMenuItemCommand(int menuItem);
-
-void clipboardCopyText(const TCHAR * text);
-const TCHAR * clipboardPasteText();
-
-
+#include <direct.h>
+#include <conio.h>
+#include <crtdbg.h>
 
 #if !defined VERIFY
 #if defined _DEBUG
@@ -74,7 +55,7 @@ const TCHAR * clipboardPasteText();
 #define GetWindowLongPtr	GetWindowLong
 #define SetClassLongPtr		SetClassLong
 #define GetClassLongPtr		GetClassLong
-//typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
+typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
 typedef ULONG  ULONG_PTR, *PULONG_PTR;
 typedef LONG   LONG_PTR,  *PLONG_PTR;
 #endif

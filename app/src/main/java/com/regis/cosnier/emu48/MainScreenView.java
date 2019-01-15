@@ -34,11 +34,12 @@ public class MainScreenView extends SurfaceView {
         bitmapMainScreen.eraseColor(Color.BLACK);
 
         vkmap = new HashMap<Integer, Integer>();
-        vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
+        //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
         vkmap.put(KeyEvent.KEYCODE_TAB, 0x09); // VK_TAB
         vkmap.put(KeyEvent.KEYCODE_ENTER, 0x0D); // VK_RETURN
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_ENTER, 0x0D); // VK_RETURN
-        vkmap.put(KeyEvent.KEYCODE_DEL, 0x2E); // VK_DELETE
+        //vkmap.put(KeyEvent.KEYCODE_DEL, 0x2E); // VK_DELETE
+        vkmap.put(KeyEvent.KEYCODE_DEL, 0x08); // VK_DELETE
         vkmap.put(KeyEvent.KEYCODE_INSERT, 0x2D); // VK_INSERT
         vkmap.put(KeyEvent.KEYCODE_SHIFT_LEFT, 0x10); // VK_SHIFT
         vkmap.put(KeyEvent.KEYCODE_SHIFT_RIGHT, 0x10); // VK_SHIFT
@@ -174,22 +175,25 @@ public class MainScreenView extends SurfaceView {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        Integer windowsKeycode = vkmap.get(keyCode);
-        if(windowsKeycode != null)
-            NativeLib.keyDown(windowsKeycode.intValue());
-        else
-            Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+        if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
+            Integer windowsKeycode = vkmap.get(keyCode);
+            if (windowsKeycode != null)
+                NativeLib.keyDown(windowsKeycode.intValue());
+            else
+                Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+        }
         return super.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        //char character = (char)event.getUnicodeChar();
-        Integer windowsKeycode = vkmap.get(keyCode);
-        if(windowsKeycode != null)
-            NativeLib.keyUp(windowsKeycode.intValue());
-        else
-            Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+        if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
+            Integer windowsKeycode = vkmap.get(keyCode);
+            if (windowsKeycode != null)
+                NativeLib.keyUp(windowsKeycode.intValue());
+            else
+                Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+        }
         return super.onKeyUp(keyCode, event);
     }
 
