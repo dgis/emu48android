@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- General -->
-        <PreferenceCategory app:title="General">
+        <PreferenceCategory android:title="General">
             <SwitchPreference
                 android:key="settings_realspeed"
                 android:title="Authentic Calculator Speed"
@@ -47,7 +47,7 @@
         </PreferenceCategory>-->
 
     <!-- Memory -->
-        <PreferenceCategory app:title="Memory Cards">
+        <PreferenceCategory android:title="Memory Cards">
             <SwitchPreference
                 android:key="settings_port1en"
                 android:title="Port 1 is Plugged"

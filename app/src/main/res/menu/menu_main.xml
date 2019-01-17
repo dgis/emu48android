@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.regis.cosnier.emu48.MainActivity">
+    tools:context="org.emulator.forty.eight.MainActivity">
 
     <item
         android:id="@+id/action_settings"

@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.regis.cosnier.emu48"
+        applicationId "org.emulator.forty.eight"
         minSdkVersion 19
         targetSdkVersion 28
         versionCode 1

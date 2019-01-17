@@ -171,7 +171,7 @@ const TCHAR * clipboardPasteText() {
     return NULL;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     szChosenCurrentKml[0] = '\0';
@@ -253,7 +253,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_start(JNIEnv *env,
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_stop(JNIEnv *env, jobject thisz) {
 
     if (hThread) SwitchToState(SM_RETURN);	// exit emulation thread
   	//ReleaseDC(hWnd, hWindowDC);
@@ -284,68 +284,68 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_stop(JNIEnv *env, 
 }
 
 
-//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
+//JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
 //
 //}
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_draw(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_draw(JNIEnv *env, jobject thisz) {
     draw();
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_buttonDown(JNIEnv *env, jobject thisz, jint x, jint y) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_buttonDown(JNIEnv *env, jobject thisz, jint x, jint y) {
     buttonDown(x, y);
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_buttonUp(JNIEnv *env, jobject thisz, jint x, jint y) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_buttonUp(JNIEnv *env, jobject thisz, jint x, jint y) {
     buttonUp(x, y);
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyDown(JNIEnv *env, jobject thisz, jint virtKey) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_keyDown(JNIEnv *env, jobject thisz, jint virtKey) {
     keyDown(virtKey);
 }
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_keyUp(JNIEnv *env, jobject thisz, jint virtKey) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_keyUp(JNIEnv *env, jobject thisz, jint virtKey) {
     keyUp(virtKey);
 }
 
 
 
-JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isDocumentAvailable(JNIEnv *env, jobject thisz) {
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_isDocumentAvailable(JNIEnv *env, jobject thisz) {
     return bDocumentAvail ? JNI_TRUE : JNI_FALSE;
 }
-JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
+JNIEXPORT jstring JNICALL Java_org_emulator_forty_eight_NativeLib_getCurrentFilename(JNIEnv *env, jobject thisz) {
     jstring result = (*env)->NewStringUTF(env, szCurrentFilename);
     return result;
 }
-//JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
+//JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
 //    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
 //    _tcscpy(szBufferFilename, newFilenameUTF8);
 //    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
 //}
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
     return cCurrentRomType;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isBackup(JNIEnv *env, jobject thisz) {
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_isBackup(JNIEnv *env, jobject thisz) {
     return (jboolean) (bBackup ? JNI_TRUE : JNI_FALSE);
 }
 
-JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLLog(JNIEnv *env, jobject thisz) {
+JNIEXPORT jstring JNICALL Java_org_emulator_forty_eight_NativeLib_getKMLLog(JNIEnv *env, jobject thisz) {
     jstring result = (*env)->NewStringUTF(env, szKmlLog);
     return result;
 }
 
-JNIEXPORT jstring JNICALL Java_com_regis_cosnier_emu48_NativeLib_getKMLTitle(JNIEnv *env, jobject thisz) {
+JNIEXPORT jstring JNICALL Java_org_emulator_forty_eight_NativeLib_getKMLTitle(JNIEnv *env, jobject thisz) {
     jstring result = (*env)->NewStringUTF(env, szKmlTitle);
     return result;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_getPort1Plugged(JNIEnv *env, jobject thisz) {
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getPort1Plugged(JNIEnv *env, jobject thisz) {
     return (jboolean) ((Chipset.cards_status & PORT1_PRESENT) != 0);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_getPort1Writable(JNIEnv *env, jobject thisz) {
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getPort1Writable(JNIEnv *env, jobject thisz) {
     return (jboolean) ((Chipset.cards_status & PORT1_WRITE) != 0);
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     //OnFileNew();
     if (bDocumentAvail)
     {
@@ -372,7 +372,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileNew(JNIEnv *
 
     return result;
 }
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
     //OnFileOpen();
     if (bDocumentAvail)
     {
@@ -395,7 +395,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileOpen(JNIEnv 
     (*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
     return result;
 }
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
     // szBufferFilename must be set before calling that!!!
     //OnFileSave();
     BOOL result = FALSE;
@@ -407,7 +407,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSave(JNIEnv 
     }
     return result;
 }
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newStateFilename) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileSaveAs(JNIEnv *env, jobject thisz, jstring newStateFilename) {
     const char *newStateFilenameUTF8 = (*env)->GetStringUTFChars(env, newStateFilename , NULL) ;
 
     BOOL result = FALSE;
@@ -428,7 +428,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileSaveAs(JNIEn
     return result;
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileClose(JNIEnv *env, jobject thisz) {
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
@@ -444,7 +444,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onFileClose(JNIEnv
     return FALSE;
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz, jstring filename) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onObjectLoad(JNIEnv *env, jobject thisz, jstring filename) {
     const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
 
     SuspendDebugger();						// suspend debugger
@@ -524,7 +524,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectLoad(JNIEn
     return TRUE;
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectSave(JNIEnv *env, jobject thisz, jstring filename) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onObjectSave(JNIEnv *env, jobject thisz, jstring filename) {
     const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
     //OnObjectSave();
 
@@ -554,7 +554,7 @@ JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_onObjectSave(JNIEn
     return TRUE;
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv *env, jobject thisz, jobject bitmapScreen) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewCopy(JNIEnv *env, jobject thisz, jobject bitmapScreen) {
 
     //jobject bitmapScreen = (*env)->NewGlobalRef(env, bitmapScreen0);
 
@@ -766,16 +766,16 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewCopy(JNIEnv 
     AndroidBitmap_unlockPixels(env, bitmapScreen);
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onStackCopy(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onStackCopy(JNIEnv *env, jobject thisz) {
     OnStackCopy();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onStackPaste(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onStackPaste(JNIEnv *env, jobject thisz) {
     //TODO Memory leak -> No GlobalFree of the paste data!!!!
     OnStackPaste();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewReset(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewReset(JNIEnv *env, jobject thisz) {
     //OnViewReset();
     if (nState != SM_RUN)
         return;
@@ -784,7 +784,7 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewReset(JNIEnv
     SwitchToState(SM_RUN);
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
 
     TCHAR szKmlFile[MAX_PATH];
     BOOL  bKMLChanged,bSucc;
@@ -850,19 +850,19 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onViewScript(JNIEn
     draw();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {
     OnBackupSave();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupRestore(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupRestore(JNIEnv *env, jobject thisz) {
     OnBackupRestore();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_onBackupDelete(JNIEnv *env, jobject thisz) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupDelete(JNIEnv *env, jobject thisz) {
     OnBackupDelete();
 }
 
-JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
     const char *configStringValue = stringValue ? (*env)->GetStringUTFChars(env, stringValue, NULL) : NULL;
 
@@ -980,23 +980,17 @@ JNIEXPORT void JNICALL Java_com_regis_cosnier_emu48_NativeLib_setConfiguration(J
         (*env)->ReleaseStringUTFChars(env, stringValue, configStringValue);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_regis_cosnier_emu48_NativeLib_isPortExtensionPossible(JNIEnv *env, jobject thisz) {
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_isPortExtensionPossible(JNIEnv *env, jobject thisz) {
     return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0 ? JNI_TRUE : JNI_FALSE);
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getState(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getState(JNIEnv *env, jobject thisz) {
     return nState;
 }
 
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getScreenWidth(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getScreenWidth(JNIEnv *env, jobject thisz) {
     return 131*nLcdZoom*nGdiXZoom;
 }
-JNIEXPORT jint JNICALL Java_com_regis_cosnier_emu48_NativeLib_getScreenHeight(JNIEnv *env, jobject thisz) {
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getScreenHeight(JNIEnv *env, jobject thisz) {
     return SCREENHEIGHT*nLcdZoom*nGdiYZoom;
 }
-
-
-//p Read5(0x7050E)
-//   -> $1 = 461076
-//p Read5(0x70914)
-//   -> 31 ?

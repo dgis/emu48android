@@ -1,4 +1,4 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import org.junit.Test;
 
