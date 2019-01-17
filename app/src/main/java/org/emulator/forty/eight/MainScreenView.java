@@ -1,9 +1,8 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;

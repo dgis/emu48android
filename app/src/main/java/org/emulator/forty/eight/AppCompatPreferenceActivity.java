@@ -1,4 +1,4 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

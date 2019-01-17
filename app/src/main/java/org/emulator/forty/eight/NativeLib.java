@@ -1,10 +1,7 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.os.ParcelFileDescriptor;
-import android.view.View;
 
 public class NativeLib {
 

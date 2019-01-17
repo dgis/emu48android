@@ -1,4 +1,4 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -17,6 +17,8 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.provider.OpenableColumns;
 import android.view.MenuItem;
+
+import org.emulator.forty.eight.R;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;

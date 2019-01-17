@@ -1,4 +1,4 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.content.Context;
 import android.content.DialogInterface;

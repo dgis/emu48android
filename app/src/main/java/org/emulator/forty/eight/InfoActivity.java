@@ -1,4 +1,4 @@
-package com.regis.cosnier.emu48;
+package org.emulator.forty.eight;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -8,6 +8,8 @@ import android.text.util.Linkify;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+
+import org.emulator.forty.eight.R;
 
 import java.io.IOException;
 import java.io.InputStream;
