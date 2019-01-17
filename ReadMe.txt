@@ -13,11 +13,10 @@ NOT WORKING
 
 TODO
 - Change the logo following the template
-- Find a new open source package name
+- Find a new open source package name (org.forty-eight.emulator)
 - Improve loading errors
 - Allows to see the errors in a log
 - Improve button support with HDC operations
-- Option to allow rotation
 - Option to auto hide the menu
 - Open Emu48 with a state file shared with it (Can not work)
 
@@ -51,3 +50,5 @@ DONE
 - Bug with android back button acts as the hp48 back button!
 - Add new KMLs and ROMs.
 - If KML not found in OpenDocument, allow to choose a new one
+- Allow to fill the screen
+- Option to allow rotation

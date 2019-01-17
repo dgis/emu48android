@@ -27,6 +27,15 @@
                 android:key="settings_alwaysdisplog"
                 android:title="Always Show KML Compilation Result"
                 android:defaultValue="true" />
+
+            <SwitchPreference
+                android:key="settings_allow_rotation"
+                android:title="Allow rotation"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_fill_screen"
+                android:title="Fill screen"
+                android:defaultValue="false" />
         </PreferenceCategory>
         <!--<PreferenceCategory app:title="Style">
             "Show Title",IDC_SHOWTITLE

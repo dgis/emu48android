@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -64,8 +65,7 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener{
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int INTENT_GETOPENFILENAME = 1;
     public static final int INTENT_GETSAVEFILENAME = 2;
@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreferences;
     private NavigationView navigationView;
     private DrawerLayout drawer;
+    private MainScreenView mainScreenView;
 
     private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity
 
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
-        MainScreenView mainScreenView = new MainScreenView(this);
+        mainScreenView = new MainScreenView(this);
 //        mainScreenView.setOnTouchListener(new View.OnTouchListener() {
 //            @Override
 //            public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -143,6 +144,8 @@ public class MainActivity extends AppCompatActivity
 //        });
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
+        mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+        settingUpdateAllowRotation();
 
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
@@ -1083,7 +1086,22 @@ public class MainActivity extends AppCompatActivity
                             sharedPreferences.getBoolean("settings_port2wr", false) ? 1 : 0,
                             sharedPreferences.getString("settings_port2load", ""));
                     break;
+
+                case "settings_allow_rotation":
+                    //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+                    settingUpdateAllowRotation();
+                    break;
+                case "settings_fill_screen":
+                    mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+                    break;
             }
         }
+    }
+
+    private void settingUpdateAllowRotation() {
+        if(sharedPreferences.getBoolean("settings_allow_rotation", false))
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        else
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 }

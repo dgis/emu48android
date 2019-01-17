@@ -21,9 +21,11 @@ public class MainScreenView extends SurfaceView {
     protected static final String TAG = "MainScreenView";
     private Bitmap bitmapMainScreen;
     private HashMap<Integer, Integer> vkmap;
-    private float screenScale = 1.0f;
+    private float screenScaleX = 1.0f;
+    private float screenScaleY = 1.0f;
     private float screenOffsetX = 0.0f;
     private float screenOffsetY= 0.0f;
+    private boolean fillScreen = false;
 
     public MainScreenView(Context context) {
         super(context);
@@ -137,14 +139,14 @@ public class MainScreenView extends SurfaceView {
         case MotionEvent.ACTION_DOWN:
         case MotionEvent.ACTION_POINTER_DOWN:
             //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
-            NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScale), (int)((event.getY(actionIndex) - screenOffsetY) / screenScale));
+            NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
             break;
 //			case MotionEvent.ACTION_MOVE:
 //				break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_POINTER_UP:
             //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
-            NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScale), (int)((event.getY(actionIndex) - screenOffsetY) / screenScale));
+            NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
             break;
 //			case MotionEvent.ACTION_CANCEL:
 //				break;
@@ -210,20 +212,26 @@ public class MainScreenView extends SurfaceView {
 
         if(imageSizeX > 0 && imageSizeY > 0 && viewWidth > 0.0f && viewHeight > 0.0f) {
             // Find the scale factor and the translate offset to fit and to center the image in the view bounds.
-            float translateX, translateY, scale;
-            float viewRatio = (float)viewHeight / (float)viewWidth;
-            float imageRatio = imageSizeY / imageSizeX;
-            if(viewRatio > imageRatio) {
-                scale = viewWidth / imageSizeX;
-                translateX = 0.0f;
-                translateY = (viewHeight - scale * imageSizeY) / 2.0f;
+            float translateX = 0.0f, translateY = 0.0f, scaleX, scaleY;
+            if(fillScreen) {
+                scaleX = viewWidth / imageSizeX;
+                scaleY = viewHeight / imageSizeY;
             } else {
-                scale = viewHeight / imageSizeY;
-                translateX = (viewWidth - scale * imageSizeX) / 2.0f;
-                translateY = 0.0f;
+                float viewRatio = (float)viewHeight / (float)viewWidth;
+                float imageRatio = imageSizeY / imageSizeX;
+                if(viewRatio > imageRatio) {
+                    scaleX = scaleY = viewWidth / imageSizeX;
+                    translateX = 0.0f;
+                    translateY = (viewHeight - scaleY * imageSizeY) / 2.0f;
+                } else {
+                    scaleX = scaleY = viewHeight / imageSizeY;
+                    translateX = (viewWidth - scaleX * imageSizeX) / 2.0f;
+                    translateY = 0.0f;
+                }
             }
 
-            screenScale = scale;
+            screenScaleX = scaleX;
+            screenScaleY = scaleY;
             screenOffsetX = translateX;
             screenOffsetY = translateY;
         }
@@ -234,7 +242,7 @@ public class MainScreenView extends SurfaceView {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
         canvas.save();
         canvas.translate(screenOffsetX, screenOffsetY);
-        canvas.scale(screenScale, screenScale);
+        canvas.scale(screenScaleX, screenScaleY);
         canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
         canvas.restore();
     }
@@ -259,5 +267,15 @@ public class MainScreenView extends SurfaceView {
 
     public Bitmap getBitmapMainScreen() {
         return bitmapMainScreen;
+    }
+
+    public boolean getFillScreen() {
+        return fillScreen;
+    }
+
+    public void setFillScreen(boolean fillScreen) {
+        this.fillScreen = fillScreen;
+        calcTranslateAndScale(getWidth(), getHeight());
+        postInvalidate();
     }
 }
