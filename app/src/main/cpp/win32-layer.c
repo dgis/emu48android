@@ -12,8 +12,7 @@
 extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
 extern AndroidBitmapInfo androidBitmapInfo;
-extern UINT nBackgroundW;
-extern UINT nBackgroundH;
+
 
 HANDLE hWnd;
 LPTSTR szTitle;
@@ -1033,8 +1032,9 @@ BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
     return TRUE;
 }
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
+extern void draw();
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) {
-    mainViewUpdateCallback();
+    draw(); //TODO Need a true WM_PAINT event!
     return 0;
 }
 BOOL AdjustWindowRect(LPRECT lpRect, DWORD dwStyle, BOOL bMenu) { return 0; }
@@ -1194,7 +1194,6 @@ BOOL LineTo(HDC hdc, int x, int y) {
     return 0;
 }
 BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
-    //TODO
     if((hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL) && w && h) {
         HBITMAP hBitmapDestination = NULL;
         void * pixelsDestination = NULL;
@@ -1235,31 +1234,38 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
 
-            destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
+            destinationBytes = hBitmapDestination->bitmapInfoHeader->biBitCount >> 3;
             destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
 
-        for (int currentY = y; currentY < y + w; currentY++) {
-            float src_curx = xSrc;
-            for (float x = xDest; x < dst_maxx; x++, parity++) {
-                // Point sampling - you can also impl as bilinear or other
+        HPALETTE palette = hdcDest->realizedPalette;
+        if(!palette)
+            palette = hdcDest->selectedPalette;
+        PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
+                                     palette->paletteLog->palPalEntry : NULL;
 
-
-                float currentXBytes = sourceBytesWithDecimal * (int)src_curx;
-                BYTE * sourcePixel = pixelsSource + (int)(sourceStride * (int)src_cury) + (int)currentXBytes;
-                BYTE * destinationPixel = pixelsDestination + (int)(destinationStride * y + 4.0 * x);
+        for (int currentY = y; currentY < y + h; currentY++) {
+            for (int currentX = x; currentX < x + w; currentX++) {
+                BYTE * destinationPixel = pixelsDestination + (int)(destinationStride * currentY + 4.0 * currentX);
 
                 // -> ARGB_8888
-                destinationPixel[0] = sourcePixel[2];
-                destinationPixel[1] = sourcePixel[1];
-                destinationPixel[2] = sourcePixel[0];
-                destinationPixel[3] = 255;
-                memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
-
-                src_curx += src_dx;
+                switch (rop) {
+                    case DSTINVERT:
+                        destinationPixel[0] = (BYTE) (255 - destinationPixel[0]);
+                        destinationPixel[1] = (BYTE) (255 - destinationPixel[1]);
+                        destinationPixel[2] = (BYTE) (255 - destinationPixel[2]);
+                        destinationPixel[3] = 255;
+                        break;
+                    case BLACKNESS:
+                        destinationPixel[0] = palPalEntry[0].peRed;
+                        destinationPixel[1] = palPalEntry[0].peGreen;
+                        destinationPixel[2] = palPalEntry[0].peBlue;
+                        destinationPixel[3] = 255;
+                        break;
+                    default:
+                        break;
+                }
             }
-
-            src_cury += src_dy;
         }
 
         if(jniEnv)
@@ -1296,7 +1302,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int destinationHeight = 0;
 
         int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
-        int sourceBytes = (sourceBitCount >> 3);
+        int sourceBytes = sourceBitCount >> 3;
         float sourceBytesWithDecimal = (float)sourceBitCount / 8.0f;
         //TODO float sourceStride = (float)(sourceBytesWithDecimal * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
         float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
@@ -1867,7 +1873,6 @@ VOID GetLocalTime(LPSYSTEMTIME lpSystemTime) {
         lpSystemTime->wSecond = tm.tm_sec;
         lpSystemTime->wMilliseconds = ts.tv_nsec / 1e6;
     }
-    return;
 }
 WORD GetTickCount(VOID) {
     //TODO

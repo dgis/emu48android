@@ -12,7 +12,6 @@ NOT WORKING
 - Debugger
 
 TODO
-- Improve button support with HDC operations
 - Improve the access to the menu
 - Change the logo following the template
 - Improve loading errors
@@ -52,3 +51,4 @@ DONE
 - Allow to fill the screen
 - Option to allow rotation
 - Find a new open source package name (org.emulator.forty.eight)
+- Improve button support with HDC operations
