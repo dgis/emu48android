@@ -4,7 +4,7 @@ It uses the Android NDK. The former Emu48 source code remains untouch because of
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
-NOT WORKING
+NOT WORKING YET
 - Macro
 - Infrared Printer
 - Serial Ports (Wire or Ir)
@@ -12,10 +12,10 @@ NOT WORKING
 - Debugger
 
 TODO
+- Allow to load external KML/BMP/ROM files
 - Improve the access to the menu
 - Change the logo following the template
-- Improve loading errors
-- Allows to see the errors in a log
+- Improve loading errors (and see the errors in a log)
 - Open Emu48 with a state file shared with it (Can not work)
 
 DONE
@@ -52,3 +52,16 @@ DONE
 - Option to allow rotation
 - Find a new open source package name (org.emulator.forty.eight)
 - Improve button support with HDC operations
+
+
+
+LICENSE
+
+Android version by Régis COSNIER.
+This program is based on Emu48 for Windows version, copyrighted by Christoph Gießelink & Sébastien Carlier, with the addition of a win32 layer to run on Android.
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
