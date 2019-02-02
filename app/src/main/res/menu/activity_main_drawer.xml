@@ -94,12 +94,12 @@ info *action
     </group>
 
     <item android:id="@+id/nav_item_recents"
-        android:title="Recent">
+        android:title="@string/nav_recents">
         <menu android:id="@+id/nav_menu_recents">
         </menu>
     </item>
 
-    <item android:title="Edit">
+    <item android:title="@string/nav_edit">
         <menu>
             <item
                 android:id="@+id/nav_load_object"
@@ -120,7 +120,7 @@ info *action
             <item
                 android:id="@+id/nav_paste_stack"
                 android:icon="@drawable/ic_file_copy_black_24dp"
-                android:title="Paste Stack" />
+                android:title="@string/nav_paste_stack" />
             <item
                 android:id="@+id/nav_reset_calculator"
                 android:icon="@drawable/ic_refresh_black_24dp"
