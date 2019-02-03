@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_OBJECT_SAVE = 4;
     public static final int INTENT_SETTINGS = 5;
     public static final int INTENT_PORT2LOAD = 6;
+    public static final int INTENT_PICK_KML_FILE = 7;
 
     public static MainActivity mainActivity;
 
@@ -555,18 +556,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if(which == lastIndex) {
-
+                                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                    intent.setType("file/*");
+                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
-                                    NativeLib.onFileNew(kmlScriptFilename);
-                                    displayFilename("");
-                                    showKMLLog();
-                                    updateNavigationDrawerItems();
+                                    newFileFromKML(kmlScriptFilename);
                                 }
                             }
                         }).show();
             }
         });
+    }
+
+    private void newFileFromKML(String kmlScriptFilename) {
+        NativeLib.onFileNew(kmlScriptFilename);
+        displayFilename("");
+        showKMLLog();
+        updateNavigationDrawerItems();
     }
 
     private void OnFileOpen() {
@@ -771,52 +778,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(resultCode == Activity.RESULT_OK) {
-
-            if(requestCode == INTENT_GETOPENFILENAME) {
-                Uri uri = data.getData();
-
-                //just as an example, I am writing a String to the Uri I received from the user:
-                Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + uri.toString());
-
-                String url = uri.toString();
-                if(onFileOpen(url) != 0) {
-                    saveLastDocument(url);
-                    makeUriPersistable(data, uri);
+        if(resultCode == Activity.RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            String url = null;
+            if(uri != null)
+                url = uri.toString();
+            if(url != null)
+                switch (requestCode) {
+                    case INTENT_GETOPENFILENAME: {
+                        Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
+                        if (onFileOpen(url) != 0) {
+                            saveLastDocument(url);
+                            makeUriPersistable(data, uri);
+                        }
+                        break;
+                    }
+                    case INTENT_GETSAVEFILENAME: {
+                        Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
+                        if (NativeLib.onFileSaveAs(url) != 0) {
+                            showAlert("State saved");
+                            saveLastDocument(url);
+                            makeUriPersistable(data, uri);
+                            displayFilename(url);
+                            if (fileSaveAsCallback != null)
+                                fileSaveAsCallback.run();
+                        }
+                        break;
+                    }
+                    case INTENT_OBJECT_LOAD: {
+                        Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
+                        NativeLib.onObjectLoad(url);
+                        break;
+                    }
+                    case INTENT_OBJECT_SAVE: {
+                        Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                        NativeLib.onObjectSave(url);
+                        break;
+                    }
+                    case INTENT_SETTINGS:
+                        break;
+                    case INTENT_PICK_KML_FILE:
+                        Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                        newFileFromKML(url);
+                        break;
+                    default:
+                        break;
                 }
-            } else if(requestCode == INTENT_GETSAVEFILENAME) {
-                Uri uri = data.getData();
-
-                //just as an example, I am writing a String to the Uri I received from the user:
-                Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + uri.toString());
-
-                String url = uri.toString();
-                if(NativeLib.onFileSaveAs(url) != 0) {
-                    showAlert("State saved");
-                    saveLastDocument(url);
-                    makeUriPersistable(data, uri);
-                    displayFilename(url);
-                    if(fileSaveAsCallback != null)
-                        fileSaveAsCallback.run();
-                }
-            } else if(requestCode == INTENT_OBJECT_LOAD) {
-                Uri uri = data.getData();
-
-                //just as an example, I am writing a String to the Uri I received from the user:
-                Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + uri.toString());
-
-                String url = uri.toString();
-                NativeLib.onObjectLoad(url);
-            } else if(requestCode == INTENT_OBJECT_SAVE) {
-                Uri uri = data.getData();
-
-                //just as an example, I am writing a String to the Uri I received from the user:
-                Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + uri.toString());
-
-                String url = uri.toString();
-                NativeLib.onObjectSave(url);
-            } else if(requestCode == INTENT_SETTINGS) {
-            }
         }
         fileSaveAsCallback = null;
         super.onActivityResult(requestCode, resultCode, data);
