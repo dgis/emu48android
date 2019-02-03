@@ -634,6 +634,8 @@ struct _HDC{
 	HBITMAP selectedBitmap;
     HPALETTE selectedPalette;
     HPALETTE realizedPalette;
+	int windowOrigineX;
+	int windowOrigineY;
 };
 //typedef HANDLE HDC;
 
@@ -1070,6 +1072,8 @@ extern int lstrcmpi(LPCWSTR lpString1, LPCWSTR lpString2);
 #define _tcsncpy    wcsncpy
 #define _tcscat     wcscat
 #define _tcsstr     wcsstr
+#define _tcsrchr    wcsrchr
+
 
 #else
 
@@ -1093,6 +1097,7 @@ extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 #define _tcsncpy    strncpy
 #define _tcscat     strcat
 #define _tcsstr     strstr
+#define _tcsrchr    strrchr
 
 
 #endif // !UNICODE

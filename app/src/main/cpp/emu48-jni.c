@@ -360,6 +360,19 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
     _tcscpy(szChosenCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
+    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, _T("content://"));
+    if(urlContentSchemeFound) {
+        _tcscpy(szEmuDirectory, szChosenCurrentKml);
+        TCHAR * filename = _tcsrchr(szChosenCurrentKml, _T('/'));
+        if(filename) {
+            *filename = _T('\0');
+        }
+        _tcscpy(szRomDirectory, szEmuDirectory);
+    } else {
+        _tcscpy(szEmuDirectory, "assets/calculators/");
+        _tcscpy(szRomDirectory, "assets/calculators/");
+    }
+
     BOOL result = NewDocument();
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;

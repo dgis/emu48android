@@ -1049,7 +1049,15 @@ BOOL InsertMenu(HMENU hMenu, UINT uPosition, UINT uFlags, UINT_PTR uIDNewItem, L
 
 BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags) { return 0; }
 BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
-BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) { return 0; }
+BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) {
+    if(lppt) {
+        lppt->x = hdc->windowOrigineX;
+        lppt->y = hdc->windowOrigineY;
+    }
+    hdc->windowOrigineX = x;
+    hdc->windowOrigineY = y;
+    return TRUE;
+}
 
 // GDI
 HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
@@ -1345,6 +1353,8 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
 
+        xDest -= hdcDest->windowOrigineX;
+        yDest -= hdcDest->windowOrigineY;
 
         //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
         float src_dx = (float)wSrc / (float)wDest;

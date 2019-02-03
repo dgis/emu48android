@@ -557,7 +557,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             public void onClick(DialogInterface dialog, int which) {
                                 if(which == lastIndex) {
                                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                                    intent.setType("file/*");
+                                    //intent.setType("file/*");
+                                    intent.setType("*/*");
                                     startActivityForResult(intent, INTENT_PICK_KML_FILE);
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
@@ -819,7 +820,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         break;
                     case INTENT_PICK_KML_FILE:
                         Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
-                        newFileFromKML(url);
+                        String filePath = Utils.getFilePath(this, url);
+                        newFileFromKML(filePath);
                         break;
                     default:
                         break;
@@ -864,7 +866,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String getFilenameFromURL(String url) {
         String displayName = "";
         try {
-            displayName = SettingsActivity.getFileName(this, url);
+            displayName = Utils.getFileName(this, url);
         } catch(Exception e) {
             // Do nothing
         }
