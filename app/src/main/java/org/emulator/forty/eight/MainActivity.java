@@ -327,12 +327,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.nav_new) {
             OnFileNew();
         } else if (id == R.id.nav_open) {
@@ -390,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -546,19 +544,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ensureDocumentSaved(new Runnable() {
             @Override
             public void run() {
-                final String[] kmlScriptTitles = new String[kmlScripts.size()];
+                final int lastIndex = kmlScripts.size();
+                final String[] kmlScriptTitles = new String[lastIndex + 1];
                 for (int i = 0; i < kmlScripts.size(); i++)
                     kmlScriptTitles[i] = kmlScripts.get(i).title;
+                kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
                 new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Pick a calculator")
+                        .setTitle(getResources().getString(R.string.pick_calculator))
                         .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                String kmlScriptFilename = kmlScripts.get(which).filename;
-                                NativeLib.onFileNew(kmlScriptFilename);
-                                displayFilename("");
-                                showKMLLog();
-                                updateNavigationDrawerItems();
+                                if(which == lastIndex) {
+
+                                } else {
+                                    String kmlScriptFilename = kmlScripts.get(which).filename;
+                                    NativeLib.onFileNew(kmlScriptFilename);
+                                    displayFilename("");
+                                    showKMLLog();
+                                    updateNavigationDrawerItems();
+                                }
                             }
                         }).show();
             }

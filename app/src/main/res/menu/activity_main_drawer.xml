@@ -124,39 +124,39 @@ info *action
             <item
                 android:id="@+id/nav_reset_calculator"
                 android:icon="@drawable/ic_refresh_black_24dp"
-                android:title="Reset Calculator" />
+                android:title="@string/nav_reset_calculator" />
             <item
                 android:id="@+id/nav_backup_save"
                 android:icon="@drawable/ic_playlist_add_black_24dp"
-                android:title="Save Backup" />
+                android:title="@string/nav_save_backup" />
             <item
                 android:id="@+id/nav_backup_restore"
                 android:icon="@drawable/ic_playlist_play_black_24dp"
-                android:title="Restore Backup" />
+                android:title="@string/nav_restore_backup" />
             <item
                 android:id="@+id/nav_backup_delete"
                 android:icon="@drawable/ic_remove_black_24dp"
-                android:title="Delete Backup" />
+                android:title="@string/nav_delete_backup" />
         </menu>
     </item>
-    <item android:title="View">
+    <item android:title="@string/nav_view">
         <menu>
             <item
                 android:id="@+id/nav_change_kml_script"
                 android:icon="@drawable/ic_wallpaper_black_24dp"
-                android:title="Change KML Script..." />
+                android:title="@string/nav_change_kml_script" />
         </menu>
     </item>
-    <item android:title="Help">
+    <item android:title="@string/nav_help">
         <menu>
             <item
                 android:id="@+id/nav_help"
                 android:icon="@drawable/ic_help_black_24dp"
-                android:title="Help" />
+                android:title="@string/nav_item_help" />
             <item
                 android:id="@+id/nav_about"
                 android:icon="@drawable/ic_info_black_24dp"
-                android:title="About Emu48..." />
+                android:title="@string/nav_about" />
         </menu>
     </item>
 </menu>
