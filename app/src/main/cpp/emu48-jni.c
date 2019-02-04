@@ -360,10 +360,20 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
     _tcscpy(szChosenCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
-    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, _T("content://"));
+//    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, _T("content://"));
+//    if(urlContentSchemeFound) {
+//        _tcscpy(szEmuDirectory, szChosenCurrentKml);
+//        TCHAR * filename = _tcsrchr(szChosenCurrentKml, _T('/'));
+//        if(filename) {
+//            *filename = _T('\0');
+//        }
+//        _tcscpy(szRomDirectory, szEmuDirectory);
+    TCHAR * fileScheme = _T("raw:");
+    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
     if(urlContentSchemeFound) {
+        _tcscpy(szChosenCurrentKml, szChosenCurrentKml + 4 * sizeof(TCHAR));
         _tcscpy(szEmuDirectory, szChosenCurrentKml);
-        TCHAR * filename = _tcsrchr(szChosenCurrentKml, _T('/'));
+        TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
         if(filename) {
             *filename = _T('\0');
         }

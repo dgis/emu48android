@@ -61,11 +61,14 @@ public class Utils {
 
 
             Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-            if (cursor.moveToFirst()) {
-                int idx = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA);
-                result = cursor.getString(idx);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(0);
+                    //result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
             }
-            cursor.close();
         }
         if (result == null)
             result = url;

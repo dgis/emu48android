@@ -558,7 +558,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 if(which == lastIndex) {
                                     Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                                     //intent.setType("file/*");
-                                    intent.setType("*/*");
+                                    //intent.setType("*/*");
+                                    intent.setType("application/vnd.google-earth.kml+xml");
+                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                                     startActivityForResult(intent, INTENT_PICK_KML_FILE);
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
