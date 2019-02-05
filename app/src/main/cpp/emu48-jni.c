@@ -408,6 +408,22 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
     _tcscpy(szBufferFilename, stateFilenameUTF8);
 
     chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
+    //TODO
+//    TCHAR * fileScheme = _T("raw:");
+//    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
+//    if(urlContentSchemeFound) {
+//        _tcscpy(szChosenCurrentKml, szChosenCurrentKml + 4 * sizeof(TCHAR));
+//        _tcscpy(szEmuDirectory, szChosenCurrentKml);
+//        TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+//        if(filename) {
+//            *filename = _T('\0');
+//        }
+//        _tcscpy(szRomDirectory, szEmuDirectory);
+//    } else {
+//        _tcscpy(szEmuDirectory, "assets/calculators/");
+//        _tcscpy(szRomDirectory, "assets/calculators/");
+//    }
+
     BOOL result = OpenDocument(szBufferFilename);
     if (result)
         MruAdd(szBufferFilename);

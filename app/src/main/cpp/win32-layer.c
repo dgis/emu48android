@@ -220,6 +220,9 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
         handle->handleType = HANDLE_TYPE_FILE_MAPPING_ASSET;
         handle->fileAsset = hFile->fileAsset;
     }
+    if(dwMaximumSizeHigh == 0 && dwMaximumSizeLow == 0) {
+        dwMaximumSizeLow = GetFileSize(hFile, &dwMaximumSizeHigh);
+    }
     handle->fileMappingSize = (dwMaximumSizeHigh << 32) | dwMaximumSizeLow;
     handle->fileMappingAddress = NULL;
     return handle;
