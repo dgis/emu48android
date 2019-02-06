@@ -81,6 +81,20 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
             return (HANDLE) INVALID_HANDLE_VALUE;
     }
+    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN && lpFileName[0] == '/') {
+        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
+        if(fileExtension && ((fileExtension[0] == 'K' && fileExtension[1] == 'M' && fileExtension[2] == 'L') ||
+                (fileExtension[0] == 'k' && fileExtension[1] == 'm' && fileExtension[2] == 'l')
+        )) {
+            _tcscpy(szEmuDirectory, lpFileName);
+            TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+            if(filename) {
+                *filename = _T('\0');
+            }
+            _tcscpy(szRomDirectory, szEmuDirectory);
+            SetCurrentDirectory(szEmuDirectory);
+        }
+    }
 
     if(!forceNormalFile && (szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)) {
         TCHAR szFileName[MAX_PATH];
