@@ -66,7 +66,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_OBJECT_SAVE = 4;
     public static final int INTENT_SETTINGS = 5;
     public static final int INTENT_PORT2LOAD = 6;
-    public static final int INTENT_PICK_KML_FILE = 7;
+    public static final int INTENT_PICK_KML_FOLDER = 7;
+    public static final int INTENT_PICK_KML_FILE = 8;
 
     public static MainActivity mainActivity;
 
@@ -556,12 +557,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if(which == lastIndex) {
-                                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+//                                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+//                                    //intent.setType("file/*");
+//                                    //intent.setType("*/*");
+//                                    intent.setType("application/vnd.google-earth.kml+xml");
+//                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+//                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
+                                    //Intent intent = new Intent(Intent.ACTION_PICK);
+                                    //Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                    //Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Files.);
                                     //intent.setType("file/*");
                                     //intent.setType("*/*");
-                                    intent.setType("application/vnd.google-earth.kml+xml");
-                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
+
+//                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+//                                    intent.setType("application/vnd.google-earth.kml+xml");
+//                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+//                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
+
+                                    //https://github.com/googlesamples/android-DirectorySelection
+                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                                    startActivityForResult(intent, INTENT_PICK_KML_FOLDER);
+
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
                                     newFileFromKML(kmlScriptFilename);
@@ -820,8 +837,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     case INTENT_SETTINGS:
                         break;
-                    case INTENT_PICK_KML_FILE:
-                        Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+//                    case INTENT_PICK_KML_FILE:
+//                        Log.d(TAG, "onActivityResult INTENT_PICK_KML_FILE " + url);
+//                        String filePath = Utils.getFilePath(this, url);
+//                        newFileFromKML(filePath);
+//                        break;
+                    case INTENT_PICK_KML_FOLDER:
+                        Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("settings_kml_default", false);
+                        editor.putString("settings_kml_folder", url);
+                        editor.apply();
+                        makeUriPersistableReadOnly(data, uri);
+
                         String filePath = Utils.getFilePath(this, url);
                         newFileFromKML(filePath);
                         break;
@@ -847,6 +875,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
+    private void makeUriPersistableReadOnly(Intent data, Uri uri) {
+        //grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+    }
+
 
     private int onFileOpen(String url) {
         int result = NativeLib.onFileOpen(url);
@@ -1065,7 +1099,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1077,6 +1111,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_grayscale":
                     NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
                     break;
+
+                case "settings_allow_rotation":
+                    //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+                    settingUpdateAllowRotation();
+                    break;
+                case "settings_fill_screen":
+                    mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+                    break;
+
+                case "settings_kml":
+                case "settings_kml_default":
+                case "settings_kml_folder":
+                    boolean useDefaultKMLFolder = sharedPreferences.getBoolean("settings_kml_default", true);
+                    if(!useDefaultKMLFolder) {
+                        String kmlFolderURL = sharedPreferences.getString("settings_kml_folder", "");
+                        // https://github.com/googlesamples/android-DirectorySelection
+                        // https://stackoverflow.com/questions/44185477/intent-action-open-document-tree-doesnt-seem-to-return-a-real-path-to-drive/44185706
+                        // https://stackoverflow.com/questions/26744842/how-to-use-the-new-sd-card-access-api-presented-for-android-5-0-lollipop
+                    }
+                    break;
+
                 case "settings_port1":
                 case "settings_port1en":
                 case "settings_port1wr":
@@ -1093,14 +1148,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             sharedPreferences.getBoolean("settings_port2en", false) ? 1 : 0,
                             sharedPreferences.getBoolean("settings_port2wr", false) ? 1 : 0,
                             sharedPreferences.getString("settings_port2load", ""));
-                    break;
-
-                case "settings_allow_rotation":
-                    //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-                    settingUpdateAllowRotation();
-                    break;
-                case "settings_fill_screen":
-                    mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
                     break;
             }
         }

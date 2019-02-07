@@ -36,7 +36,26 @@
                 android:key="settings_fill_screen"
                 android:title="Fill screen"
                 android:defaultValue="false" />
+            <Preference
+                android:key="settings_kml_folder"
+                android:title="Custom KML Folder"
+                android:summary=""
+                />
+
         </PreferenceCategory>
+
+        <PreferenceCategory android:title="General">
+            <SwitchPreference
+                android:key="settings_kml_default"
+                android:title="Default Internal KML Folder"
+                android:defaultValue="true" />
+            <Preference
+                android:key="settings_kml_folder"
+                android:title="Custom KML Folder"
+                android:summary=""
+                />
+        </PreferenceCategory>
+
         <!--<PreferenceCategory app:title="Style">
             "Show Title",IDC_SHOWTITLE
             "Show Menu",IDC_SHOWMENU
