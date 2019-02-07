@@ -83,8 +83,8 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
     }
     if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN && lpFileName[0] == '/') {
         TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
-        if(fileExtension && ((fileExtension[0] == 'K' && fileExtension[1] == 'M' && fileExtension[2] == 'L') ||
-                (fileExtension[0] == 'k' && fileExtension[1] == 'm' && fileExtension[2] == 'l')
+        if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
+                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
         )) {
             _tcscpy(szEmuDirectory, lpFileName);
             TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
