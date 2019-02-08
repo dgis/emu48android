@@ -11,12 +11,14 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,12 +29,14 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-import org.emulator.forty.eight.R;
+
+import org.w3c.dom.DocumentType;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,6 +45,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +62,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -78,6 +85,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MainScreenView mainScreenView;
 
     private final static int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+
+    private String kmlMimeType = "application/vnd.google-earth.kml+xml";
+    private boolean kmlFolderUseDefault = true;
+    private String kmlFolderURL = "";
+    private boolean kmFolderChange = true;
+
 
     private int MRU_ID_START = 10000;
     private int MAX_MRU = 5;
@@ -421,74 +434,168 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     ArrayList<KMLScriptItem> kmlScripts;
     private void extractKMLScripts() {
-        if(kmlScripts == null) {
+        if(kmlScripts == null || kmFolderChange) {
+            kmFolderChange = false;
+
             kmlScripts = new ArrayList<>();
-            AssetManager assetManager = getAssets();
-            String[] calculatorsAssetFilenames = new String[0];
-            try {
-                calculatorsAssetFilenames = assetManager.list("calculators");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            String cKmlType = null; //"S";
-            kmlScripts.clear();
-            Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
-            Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
-            Matcher m;
-            for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
-                if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
-                    BufferedReader reader = null;
-                    try {
-                        reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorsAssetFilename), "UTF-8"));
-                        // do reading, usually loop until end of file reading
-                        String mLine;
-                        boolean inGlobal = false;
-                        String title = null;
-                        String model = null;
-                        while ((mLine = reader.readLine()) != null) {
-                            //process line
-                            if (mLine.indexOf("Global") == 0) {
-                                inGlobal = true;
-                                title = null;
-                                model = null;
-                                continue;
-                            }
-                            if (inGlobal) {
-                                if (mLine.indexOf("End") == 0) {
-                                    KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                    newKMLScriptItem.filename = calculatorsAssetFilename;
-                                    newKMLScriptItem.title = title;
-                                    newKMLScriptItem.model = model;
-                                    kmlScripts.add(newKMLScriptItem);
+
+            if(kmlFolderUseDefault) {
+                AssetManager assetManager = getAssets();
+                String[] calculatorsAssetFilenames = new String[0];
+                try {
+                    calculatorsAssetFilenames = assetManager.list("calculators");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                String cKmlType = null; //"S";
+                kmlScripts.clear();
+                Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
+                Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
+                Matcher m;
+                for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
+                    if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
+                        BufferedReader reader = null;
+                        try {
+                            reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorsAssetFilename), "UTF-8"));
+                            // do reading, usually loop until end of file reading
+                            String mLine;
+                            boolean inGlobal = false;
+                            String title = null;
+                            String model = null;
+                            while ((mLine = reader.readLine()) != null) {
+                                //process line
+                                if (mLine.indexOf("Global") == 0) {
+                                    inGlobal = true;
                                     title = null;
                                     model = null;
-                                    break;
+                                    continue;
                                 }
+                                if (inGlobal) {
+                                    if (mLine.indexOf("End") == 0) {
+                                        KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+                                        newKMLScriptItem.filename = calculatorsAssetFilename;
+                                        newKMLScriptItem.title = title;
+                                        newKMLScriptItem.model = model;
+                                        kmlScripts.add(newKMLScriptItem);
+                                        title = null;
+                                        model = null;
+                                        break;
+                                    }
 
-                                m = patternGlobalTitle.matcher(mLine);
-                                if (m.find()) {
-                                    title = m.group(1);
-                                }
-                                m = patternGlobalModel.matcher(mLine);
-                                if (m.find()) {
-                                    model = m.group(1);
+                                    m = patternGlobalTitle.matcher(mLine);
+                                    if (m.find()) {
+                                        title = m.group(1);
+                                    }
+                                    m = patternGlobalModel.matcher(mLine);
+                                    if (m.find()) {
+                                        model = m.group(1);
+                                    }
                                 }
                             }
-                        }
-                    } catch (IOException e) {
-                        //log the exception
-                        e.printStackTrace();
-                    } finally {
-                        if (reader != null) {
-                            try {
-                                reader.close();
-                            } catch (IOException e) {
-                                //log the exception
+                        } catch (IOException e) {
+                            //log the exception
+                            e.printStackTrace();
+                        } finally {
+                            if (reader != null) {
+                                try {
+                                    reader.close();
+                                } catch (IOException e) {
+                                    //log the exception
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                Uri kmlFolderUri = Uri.parse(kmlFolderURL);
+                //DocumentFile.fromTreeUri(this, kmlFolderUri);
+
+                //Uri docUri = DocumentsContract.buildDocumentUriUsingTree(kmlFolderUri, DocumentsContract.getTreeDocumentId(kmlFolderUri));
+                Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(kmlFolderUri, DocumentsContract.getTreeDocumentId(kmlFolderUri));
+
+                //String[] calculatorsAssetFilenames = new String[0];
+
+                List<String> calculatorsAssetFilenames = new LinkedList<>();
+                Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null);
+                try {
+                    while (cursor.moveToNext()) {
+                        final String docId = cursor.getString(0);
+                        final String name = cursor.getString(1);
+                        final String mime = cursor.getString(2);
+                        Log.d(TAG, "docId: " + docId + ", name: " + name + ", mime: " + mime);
+                        if(kmlMimeType.equals(mime)) {
+                            calculatorsAssetFilenames.add(docId);
+                        }
+                    }
+                } finally {
+                    cursor.close();
+                }
+
+                String cKmlType = null; //"S";
+                kmlScripts.clear();
+                Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
+                Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
+                Matcher m;
+                for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
+                    if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
+                        BufferedReader reader = null;
+                        try {
+                            Uri calculatorsAssetFilenameUri = Uri.parse(calculatorsAssetFilename);
+                            DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
+                            InputStream inputStream = getContentResolver().openInputStream(documentFile.getUri());
+                            reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+                            // do reading, usually loop until end of file reading
+                            String mLine;
+                            boolean inGlobal = false;
+                            String title = null;
+                            String model = null;
+                            while ((mLine = reader.readLine()) != null) {
+                                //process line
+                                if (mLine.indexOf("Global") == 0) {
+                                    inGlobal = true;
+                                    title = null;
+                                    model = null;
+                                    continue;
+                                }
+                                if (inGlobal) {
+                                    if (mLine.indexOf("End") == 0) {
+                                        KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+                                        newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorsAssetFilename : kmlFolderURL + "|" + calculatorsAssetFilename;
+                                        newKMLScriptItem.title = title;
+                                        newKMLScriptItem.model = model;
+                                        kmlScripts.add(newKMLScriptItem);
+                                        title = null;
+                                        model = null;
+                                        break;
+                                    }
+
+                                    m = patternGlobalTitle.matcher(mLine);
+                                    if (m.find()) {
+                                        title = m.group(1);
+                                    }
+                                    m = patternGlobalModel.matcher(mLine);
+                                    if (m.find()) {
+                                        model = m.group(1);
+                                    }
+                                }
+                            }
+                        } catch (IOException e) {
+                            //log the exception
+                            e.printStackTrace();
+                        } finally {
+                            if (reader != null) {
+                                try {
+                                    reader.close();
+                                } catch (IOException e) {
+                                    //log the exception
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
+
             Collections.sort(kmlScripts, new Comparator<KMLScriptItem>() {
                 @Override
                 public int compare(KMLScriptItem lhs, KMLScriptItem rhs) {
@@ -560,7 +667,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 //                                    //intent.setType("file/*");
 //                                    //intent.setType("*/*");
-//                                    intent.setType("application/vnd.google-earth.kml+xml");
+//                                    intent.setType(kmlMimeType);
 //                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
 //                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
                                     //Intent intent = new Intent(Intent.ACTION_PICK);
@@ -571,14 +678,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 //                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 //                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                                    intent.setType("application/vnd.google-earth.kml+xml");
+//                                    intent.setType(kmlMimeType);
 //                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
 //                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
 
                                     //https://github.com/googlesamples/android-DirectorySelection
                                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                                     startActivityForResult(intent, INTENT_PICK_KML_FOLDER);
-
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
                                     newFileFromKML(kmlScriptFilename);
@@ -837,12 +943,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     case INTENT_SETTINGS:
                         break;
-//                    case INTENT_PICK_KML_FILE:
+//                    case INTENT_PICK_KML_FILE: {
 //                        Log.d(TAG, "onActivityResult INTENT_PICK_KML_FILE " + url);
-//                        String filePath = Utils.getFilePath(this, url);
-//                        newFileFromKML(filePath);
+////                        String filePath = Utils.getFilePath(this, url);
+////                        newFileFromKML(filePath);
+//                        DocumentFile documentFile = DocumentFile.fromSingleUri(this, uri);
+//                        DocumentFile parentDocumentFile = documentFile.getParentFile();
 //                        break;
-                    case INTENT_PICK_KML_FOLDER:
+//                    }
+                    case INTENT_PICK_KML_FOLDER: {
                         Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putBoolean("settings_kml_default", false);
@@ -850,9 +959,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         editor.apply();
                         makeUriPersistableReadOnly(data, uri);
 
-                        String filePath = Utils.getFilePath(this, url);
-                        newFileFromKML(filePath);
+                        OnFileNew();
+//                        String filePath = Utils.getFilePath(this, url);
+//                        newFileFromKML(filePath);
                         break;
+                    }
                     default:
                         break;
                 }
@@ -1123,13 +1234,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_kml":
                 case "settings_kml_default":
                 case "settings_kml_folder":
-                    boolean useDefaultKMLFolder = sharedPreferences.getBoolean("settings_kml_default", true);
-                    if(!useDefaultKMLFolder) {
-                        String kmlFolderURL = sharedPreferences.getString("settings_kml_folder", "");
+                    kmlFolderUseDefault = sharedPreferences.getBoolean("settings_kml_default", true);
+                    if(!kmlFolderUseDefault) {
+                        kmlFolderURL = sharedPreferences.getString("settings_kml_folder", "");
                         // https://github.com/googlesamples/android-DirectorySelection
                         // https://stackoverflow.com/questions/44185477/intent-action-open-document-tree-doesnt-seem-to-return-a-real-path-to-drive/44185706
                         // https://stackoverflow.com/questions/26744842/how-to-use-the-new-sd-card-access-api-presented-for-android-5-0-lollipop
                     }
+                    kmFolderChange = true;
                     break;
 
                 case "settings_port1":
