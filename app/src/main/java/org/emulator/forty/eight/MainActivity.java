@@ -508,29 +508,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             } else {
                 Uri kmlFolderUri = Uri.parse(kmlFolderURL);
-                //DocumentFile.fromTreeUri(this, kmlFolderUri);
-
-                //Uri docUri = DocumentsContract.buildDocumentUriUsingTree(kmlFolderUri, DocumentsContract.getTreeDocumentId(kmlFolderUri));
-                Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(kmlFolderUri, DocumentsContract.getTreeDocumentId(kmlFolderUri));
-
-                //String[] calculatorsAssetFilenames = new String[0];
-
                 List<String> calculatorsAssetFilenames = new LinkedList<>();
-                Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null);
-                try {
-                    while (cursor.moveToNext()) {
-                        final String docId = cursor.getString(0);
-                        final String name = cursor.getString(1);
-                        final String mime = cursor.getString(2);
-                        Log.d(TAG, "docId: " + docId + ", name: " + name + ", mime: " + mime);
-                        if(kmlMimeType.equals(mime)) {
-                            calculatorsAssetFilenames.add(docId);
-                        }
-                    }
-                } finally {
-                    cursor.close();
-                }
 
+//                Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(kmlFolderUri, DocumentsContract.getTreeDocumentId(kmlFolderUri));
+//                Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null);
+//                try {
+//                    while (cursor.moveToNext()) {
+//                        final String url = cursor.getString(0);
+//                        final String name = cursor.getString(1);
+//                        final String mime = cursor.getString(2);
+//                        Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
+//                        if(kmlMimeType.equals(mime)) {
+//                            calculatorsAssetFilenames.add(url);
+//                        }
+//                    }
+//                } finally {
+//                    cursor.close();
+//                }
+                DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
+                for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
+                    final String url = file.getUri().toString();
+                    final String name = file.getName();
+                    final String mime = file.getType();
+                    Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
+                    if(kmlMimeType.equals(mime)) {
+                        calculatorsAssetFilenames.add(url);
+                    }
+                }
                 String cKmlType = null; //"S";
                 kmlScripts.clear();
                 Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
@@ -542,6 +546,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             Uri calculatorsAssetFilenameUri = Uri.parse(calculatorsAssetFilename);
                             DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
+                            Uri documentFileUri = documentFile.getUri();
                             InputStream inputStream = getContentResolver().openInputStream(documentFile.getUri());
                             reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
                             // do reading, usually loop until end of file reading
