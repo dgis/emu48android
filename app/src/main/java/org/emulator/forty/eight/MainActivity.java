@@ -108,15 +108,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        FloatingActionButton fab = findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -175,46 +166,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         String documentToOpenUrl = sharedPreferences.getString("lastDocument", "");
-        Uri documentToOpenUri = null;
-        boolean isFileAndNeedPermission = false;
-        Intent intent = getIntent();
-        if(intent != null) {
-            String action = intent.getAction();
-            if(action != null) {
-                if (action.equals(Intent.ACTION_VIEW)) {
-                    documentToOpenUri = intent.getData();
-                    if (documentToOpenUri != null) {
-                        String scheme = documentToOpenUri.getScheme();
-                        if(scheme != null && scheme.compareTo("file") == 0) {
-                            documentToOpenUrl = documentToOpenUri.getPath();
-                            isFileAndNeedPermission = true;
-                        } else
-                            documentToOpenUrl = documentToOpenUri.toString();
-                    }
-                } else if (action.equals(Intent.ACTION_SEND)) {
-                    documentToOpenUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                    if (documentToOpenUri != null) {
-                        documentToOpenUrl = documentToOpenUri.toString();
-                    }
-                }
-            }
-        }
+//        Uri documentToOpenUri = null;
+//        boolean isFileAndNeedPermission = false;
+//        Intent intent = getIntent();
+//        if(intent != null) {
+//            String action = intent.getAction();
+//            if(action != null) {
+//                if (action.equals(Intent.ACTION_VIEW)) {
+//                    documentToOpenUri = intent.getData();
+//                    if (documentToOpenUri != null) {
+//                        String scheme = documentToOpenUri.getScheme();
+//                        if(scheme != null && scheme.compareTo("file") == 0) {
+//                            documentToOpenUrl = documentToOpenUri.getPath();
+//                            isFileAndNeedPermission = true;
+//                        } else
+//                            documentToOpenUrl = documentToOpenUri.toString();
+//                    }
+//                } else if (action.equals(Intent.ACTION_SEND)) {
+//                    documentToOpenUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+//                    if (documentToOpenUri != null) {
+//                        documentToOpenUrl = documentToOpenUri.toString();
+//                    }
+//                }
+//            }
+//        }
 
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
         if(documentToOpenUrl != null && documentToOpenUrl.length() > 0)
             try {
-                if(isFileAndNeedPermission
-                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-                    //return;
-                } else {
+//                if(isFileAndNeedPermission
+//                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//                    ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+//                    //return;
+//                } else {
                     if(onFileOpen(documentToOpenUrl) != 0) {
                         saveLastDocument(documentToOpenUrl);
-                        if(intent != null && documentToOpenUri != null && !isFileAndNeedPermission)
-                            makeUriPersistable(intent, documentToOpenUri);
+//                        if(intent != null && documentToOpenUri != null && !isFileAndNeedPermission)
+//                            makeUriPersistable(intent, documentToOpenUri);
                     }
-
-                }
+//                }
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -447,16 +437,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                String cKmlType = null; //"S";
                 kmlScripts.clear();
                 Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
                 Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
                 Matcher m;
-                for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
-                    if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
+                for (String calculatorFilename : calculatorsAssetFilenames) {
+                    if (calculatorFilename.toLowerCase().lastIndexOf(".kml") != -1) {
                         BufferedReader reader = null;
                         try {
-                            reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorsAssetFilename), "UTF-8"));
+                            reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorFilename), "UTF-8"));
                             // do reading, usually loop until end of file reading
                             String mLine;
                             boolean inGlobal = false;
@@ -473,12 +462,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 if (inGlobal) {
                                     if (mLine.indexOf("End") == 0) {
                                         KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                        newKMLScriptItem.filename = calculatorsAssetFilename;
+                                        newKMLScriptItem.filename = calculatorFilename;
                                         newKMLScriptItem.title = title;
                                         newKMLScriptItem.model = model;
                                         kmlScripts.add(newKMLScriptItem);
-                                        title = null;
-                                        model = null;
                                         break;
                                     }
 
@@ -535,19 +522,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         calculatorsAssetFilenames.add(url);
                     }
                 }
-                String cKmlType = null; //"S";
                 kmlScripts.clear();
                 Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
                 Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
                 Matcher m;
-                for (String calculatorsAssetFilename : calculatorsAssetFilenames) {
-                    if (calculatorsAssetFilename.toLowerCase().lastIndexOf(".kml") != -1) {
+                for (String calculatorFilename : calculatorsAssetFilenames) {
+                    if (calculatorFilename.toLowerCase().lastIndexOf(".kml") != -1) {
                         BufferedReader reader = null;
                         try {
-                            Uri calculatorsAssetFilenameUri = Uri.parse(calculatorsAssetFilename);
+                            Uri calculatorsAssetFilenameUri = Uri.parse(calculatorFilename);
                             DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
-                            Uri documentFileUri = documentFile.getUri();
-                            InputStream inputStream = getContentResolver().openInputStream(documentFile.getUri());
+                            Uri fileUri = documentFile.getUri();
+                            InputStream inputStream = getContentResolver().openInputStream(fileUri);
                             reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
                             // do reading, usually loop until end of file reading
                             String mLine;
@@ -565,12 +551,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 if (inGlobal) {
                                     if (mLine.indexOf("End") == 0) {
                                         KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                        newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorsAssetFilename : kmlFolderURL + "|" + calculatorsAssetFilename;
+                                        newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
                                         newKMLScriptItem.title = title;
                                         newKMLScriptItem.model = model;
                                         kmlScripts.add(newKMLScriptItem);
-                                        title = null;
-                                        model = null;
                                         break;
                                     }
 
@@ -1050,9 +1034,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
     Map<Integer, ParcelFileDescriptor> parcelFileDescriptorPerFd = null;
-    int openFileFromContentResolver(String url, int writeAccess) {
+    int openFileFromContentResolver(String fileURL, int writeAccess) {
         //https://stackoverflow.com/a/31677287
-        Uri uri = Uri.parse(url);
+        Uri uri = Uri.parse(fileURL);
         ParcelFileDescriptor filePfd;
         try {
             String mode = "";
@@ -1071,6 +1055,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         parcelFileDescriptorPerFd.put(fd, filePfd);
         return fd;
+    }
+    int openFileInFolderFromContentResolver(String filename, String folderURL, int writeAccess) {
+        Uri folderURI = Uri.parse(folderURL);
+        DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
+        for (DocumentFile file : folderDocumentFile.listFiles()) {
+            final String url = file.getUri().toString();
+            final String name = file.getName();
+            //Log.d(TAG, "url: " + url + ", name: " + name);
+            if(filename.equals(name)) {
+                return openFileFromContentResolver(url, writeAccess);
+            }
+        }
+        return -1;
     }
     int closeFileFromContentResolver(int fd) {
         if(parcelFileDescriptorPerFd != null) {

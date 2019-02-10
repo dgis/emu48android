@@ -100,12 +100,21 @@ void mainViewResizeCallback(int x, int y) {
 }
 
 // Must be called in the main thread
-int openFileFromContentResolver(const TCHAR * url, int writeAccess) {
+int openFileFromContentResolver(const TCHAR * fileURL, int writeAccess) {
     JNIEnv *jniEnv = getJNIEnvironment();
     jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
     jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileFromContentResolver", "(Ljava/lang/String;I)I");
-    jstring utfUrl = (*jniEnv)->NewStringUTF(jniEnv, url);
-    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfUrl, writeAccess);
+    jstring utfFileURL = (*jniEnv)->NewStringUTF(jniEnv, fileURL);
+    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFileURL, writeAccess);
+    return result;
+}
+int openFileInFolderFromContentResolver(const TCHAR * filename, const TCHAR * folderURL, int writeAccess) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileInFolderFromContentResolver", "(Ljava/lang/String;Ljava/lang/String;I)I");
+    jstring utfFilename = (*jniEnv)->NewStringUTF(jniEnv, filename);
+    jstring utfFolderURL = (*jniEnv)->NewStringUTF(jniEnv, folderURL);
+    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFilename, utfFolderURL, writeAccess);
     return result;
 }
 int closeFileFromContentResolver(int fd) {
@@ -368,12 +377,11 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
 //            *filename = _T('\0');
 //        }
 //        _tcscpy(szRomDirectory, szEmuDirectory);
-    TCHAR * fileScheme = _T("raw:");
-    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
-    if(urlContentSchemeFound) {
-        _tcscpy(szChosenCurrentKml, szChosenCurrentKml + 4 * sizeof(TCHAR));
-        _tcscpy(szEmuDirectory, szChosenCurrentKml);
-        TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+    TCHAR * fileScheme = _T("document:");
+    TCHAR * urlSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
+    if(urlSchemeFound) {
+        _tcscpy(szEmuDirectory, szChosenCurrentKml + _tcslen(fileScheme) * sizeof(TCHAR));
+        TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
         if(filename) {
             *filename = _T('\0');
         }
@@ -408,22 +416,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
     _tcscpy(szBufferFilename, stateFilenameUTF8);
 
     chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
-    //TODO
-//    TCHAR * fileScheme = _T("raw:");
-//    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
-//    if(urlContentSchemeFound) {
-//        _tcscpy(szChosenCurrentKml, szChosenCurrentKml + 4 * sizeof(TCHAR));
-//        _tcscpy(szEmuDirectory, szChosenCurrentKml);
-//        TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
-//        if(filename) {
-//            *filename = _T('\0');
-//        }
-//        _tcscpy(szRomDirectory, szEmuDirectory);
-//    } else {
-//        _tcscpy(szEmuDirectory, "assets/calculators/");
-//        _tcscpy(szRomDirectory, "assets/calculators/");
-//    }
-
     BOOL result = OpenDocument(szBufferFilename);
     if (result)
         MruAdd(szBufferFilename);

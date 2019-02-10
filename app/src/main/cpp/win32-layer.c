@@ -16,10 +16,14 @@ extern AndroidBitmapInfo androidBitmapInfo;
 
 HANDLE hWnd;
 LPTSTR szTitle;
-LPTSTR szCurrentDirectorySet = NULL;
-const TCHAR * assetsPrefix = _T("assets/"),
-        assetsPrefixLength = 7;
+LPTSTR szCurrentAssetDirectory = NULL;
+LPTSTR szCurrentContentDirectory = NULL;
 AAssetManager * assetManager;
+const TCHAR * assetsPrefix = _T("assets/");
+size_t assetsPrefixLength;
+const TCHAR * contentScheme = _T("content://");
+size_t contentSchemeLength;
+const TCHAR * documentScheme = _T("document:");
 //static HDC mainPaintDC = NULL;
 struct timerEvent {
     BOOL valid;
@@ -43,6 +47,9 @@ void win32Init() {
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
         fileMappingHandles[i] = NULL;
     }
+
+    assetsPrefixLength = _tcslen(assetsPrefix);
+    contentSchemeLength = _tcslen(contentScheme);
 }
 
 VOID OutputDebugString(LPCSTR lpOutputString) {
@@ -58,15 +65,21 @@ DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
 
 BOOL SetCurrentDirectory(LPCTSTR path)
 {
+    szCurrentContentDirectory = NULL;
+    szCurrentAssetDirectory = NULL;
+
     if(path == NULL)
         return FALSE;
 
-    if(_tcsncmp(path, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)
-        szCurrentDirectorySet = (LPTSTR) (path + assetsPrefixLength);
-    else
-        szCurrentDirectorySet = NULL;
-
-    return (BOOL) chdir(path);
+    if(_tcsncmp(path, contentScheme, contentSchemeLength) == 0) {
+        szCurrentContentDirectory = (LPTSTR) path;
+        return TRUE;
+    } else if(_tcsncmp(path, assetsPrefix, assetsPrefixLength) == 0) {
+        szCurrentAssetDirectory = (LPTSTR) (path + assetsPrefixLength * sizeof(TCHAR));
+        return TRUE;
+    } else {
+        return (BOOL) chdir(path);
+    }
 }
 
 extern BOOL settingsPort2en;
@@ -81,31 +94,33 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
             return (HANDLE) INVALID_HANDLE_VALUE;
     }
-    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN && lpFileName[0] == '/') {
-        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
-        if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
-                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
-        )) {
-            _tcscpy(szEmuDirectory, lpFileName);
-            TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
-            if(filename) {
-                *filename = _T('\0');
-            }
-            _tcscpy(szRomDirectory, szEmuDirectory);
-            SetCurrentDirectory(szEmuDirectory);
-        }
-    }
+//    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN && lpFileName[0] == '/') {
+//        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
+//        if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
+//                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
+//        )) {
+//            _tcscpy(szEmuDirectory, lpFileName);
+//            TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+//            if(filename) {
+//                *filename = _T('\0');
+//            }
+//            _tcscpy(szRomDirectory, szEmuDirectory);
+//            SetCurrentDirectory(szEmuDirectory);
+//        }
+//    }
+    TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
 
-    if(!forceNormalFile && (szCurrentDirectorySet || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength / sizeof(TCHAR)) == 0)) {
+    if(!forceNormalFile && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0) && foundDocumentScheme == NULL) {
+        // Asset file
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;
         szFileName[0] = _T('\0');
-        if(szCurrentDirectorySet) {
-            _tcscpy(szFileName, szCurrentDirectorySet);
+        if(szCurrentAssetDirectory) {
+            _tcscpy(szFileName, szCurrentAssetDirectory);
             _tcscat(szFileName, lpFileName);
             asset = AAssetManager_open(assetManager, szFileName, AASSET_MODE_STREAMING);
         } else {
-            asset = AAssetManager_open(assetManager, lpFileName + assetsPrefixLength, AASSET_MODE_STREAMING);
+            asset = AAssetManager_open(assetManager, lpFileName + assetsPrefixLength * sizeof(TCHAR), AASSET_MODE_STREAMING);
         }
         if(asset) {
             HANDLE handle = malloc(sizeof(struct _HANDLE));
@@ -115,7 +130,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             return handle;
         }
     } else {
-
+        // Normal file
         BOOL useOpenFileFromContentResolver = FALSE;
         int flags = O_RDWR;
         int fd = -1;
@@ -134,9 +149,23 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 flags |= O_CREAT;
         }
 
-        TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, _T("content://"));
+        if(foundDocumentScheme) {
+            TCHAR * filename = _tcsrchr(lpFileName, _T('|'));
+            if(filename)
+                lpFileName = filename + 1;
+        }
+
+        TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, contentScheme);
         if(urlContentSchemeFound) {
+            // Case of an absolute file with the scheme content://
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
+            useOpenFileFromContentResolver = TRUE;
+            if(fd == -1) {
+                LOGD("openFileFromContentResolver() %d", errno);
+            }
+        } else if(szCurrentContentDirectory) {
+            // Case of a relative file to a folder with the scheme content://
+            fd = openFileInFolderFromContentResolver(lpFileName, szCurrentContentDirectory, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd == -1) {
                 LOGD("openFileFromContentResolver() %d", errno);

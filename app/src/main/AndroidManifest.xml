@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="org.emulator.forty.eight">
-
-    <!--<uses-permission android:name="android.permission.MANAGE_DOCUMENTS"/>-->
-    <!--<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />-->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -26,56 +21,25 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!--<intent-filter>-->
                 <!--<action android:name="android.intent.action.VIEW" />-->
-                <!--<action android:name="android.intent.action.SEND" />-->
                 <!--<category android:name="android.intent.category.DEFAULT" />-->
-                <!--<data android:scheme="content"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e38"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="content"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e39"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="content"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e48"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="content"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e49"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e38"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e39"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e48"-->
-                    <!--android:host="*"/>-->
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" />
-                <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.kml" />
-                <data android:host="*" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="content" />
-                <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.kml" />
-                <data android:host="*" />
-            </intent-filter>
+                <!--<category android:name="android.intent.category.BROWSABLE" />-->
+                <!--<data android:scheme="file" />-->
+                <!--<data android:mimeType="*/*" />-->
+                <!--<data android:pathPattern=".*\\.kml" />-->
+                <!--<data android:host="*" />-->
+            <!--</intent-filter>-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW" />-->
+                <!--<category android:name="android.intent.category.DEFAULT" />-->
+                <!--<category android:name="android.intent.category.BROWSABLE" />-->
+                <!--<data android:scheme="content" />-->
+                <!--<data android:mimeType="*/*" />-->
+                <!--<data android:pathPattern=".*\\.kml" />-->
+                <!--<data android:host="*" />-->
+            <!--</intent-filter>-->
         </activity>
         <activity
             android:name="org.emulator.forty.eight.SettingsActivity"

@@ -1118,7 +1118,8 @@ extern int lstrcmpi(LPCSTR lpString1, LPCSTR lpString2);
 
 extern void mainViewUpdateCallback();
 extern void mainViewResizeCallback(int x, int y);
-extern int openFileFromContentResolver(const TCHAR * url, int writeAccess);
+extern int openFileFromContentResolver(const TCHAR * fileURL, int writeAccess);
+extern int openFileInFolderFromContentResolver(const TCHAR * filename, const TCHAR * folderURL, int writeAccess);
 extern int closeFileFromContentResolver(int fd);
 extern int showAlert(const TCHAR * messageText, int flags);
 extern void sendMenuItemCommand(int menuItem);
