@@ -12,10 +12,9 @@ NOT WORKING YET
 - Debugger
 
 TODO
-- Allow to load external KML/BMP/ROM files
+- Bug: custom KML/Save/ChangeKML/Close -> state not saved
 - Improve the access to the menu
 - Change the logo following the template
-- Improve loading errors (and see the errors in a log)
 - Open Emu48 with a state file shared with it (Can not work)
 
 DONE
@@ -52,6 +51,8 @@ DONE
 - Option to allow rotation
 - Find a new open source package name (org.emulator.forty.eight)
 - Improve button support with HDC operations
+- Improve loading errors (and see the errors in a log)
+- Allow to load external KML/BMP/ROM files
 
 
 

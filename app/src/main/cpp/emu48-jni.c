@@ -404,10 +404,11 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
 
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     draw();
-    if (bStartupBackup) SaveBackup();        // make a RAM backup at startup
+    if(result) {
+        if (bStartupBackup) SaveBackup();        // make a RAM backup at startup
 
-    if (pbyRom) SwitchToState(SM_RUN);
-
+        if (pbyRom) SwitchToState(SM_RUN);
+    }
     return result;
 }
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
@@ -429,7 +430,9 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
         MruAdd(szBufferFilename);
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
-    if (pbyRom) SwitchToState(SM_RUN);
+    if(result) {
+        if (pbyRom) SwitchToState(SM_RUN);
+    }
     draw();
     (*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
     return result;

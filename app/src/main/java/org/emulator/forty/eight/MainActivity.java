@@ -1,6 +1,5 @@
 package org.emulator.forty.eight;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -9,16 +8,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,8 +25,6 @@ import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-
-import org.w3c.dom.DocumentType;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,7 +53,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -74,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_SETTINGS = 5;
     public static final int INTENT_PORT2LOAD = 6;
     public static final int INTENT_PICK_KML_FOLDER = 7;
-    public static final int INTENT_PICK_KML_FILE = 8;
+    //public static final int INTENT_PICK_KML_FILE = 8;
 
     public static MainActivity mainActivity;
 
@@ -643,37 +636,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void run() {
                 final int lastIndex = kmlScripts.size();
-                final String[] kmlScriptTitles = new String[lastIndex + 1];
+                final String[] kmlScriptTitles = new String[lastIndex + 2];
                 for (int i = 0; i < kmlScripts.size(); i++)
                     kmlScriptTitles[i] = kmlScripts.get(i).title;
                 kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
+                kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle(getResources().getString(R.string.pick_calculator))
                         .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if(which == lastIndex) {
-//                                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//                                    //intent.setType("file/*");
-//                                    //intent.setType("*/*");
-//                                    intent.setType(kmlMimeType);
-//                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-//                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
-                                    //Intent intent = new Intent(Intent.ACTION_PICK);
-                                    //Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                                    //Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Files.);
-                                    //intent.setType("file/*");
-                                    //intent.setType("*/*");
-
 //                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 //                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
 //                                    intent.setType(kmlMimeType);
 //                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
 //                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
 
-                                    //https://github.com/googlesamples/android-DirectorySelection
                                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                                     startActivityForResult(intent, INTENT_PICK_KML_FOLDER);
+                                } else if(which == lastIndex + 1) {
+                                    // Reset to default KML folder
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putBoolean("settings_kml_default", true);
+                                    //editor.putString("settings_kml_folder", url);
+                                    editor.apply();
+                                    OnFileNew();
                                 } else {
                                     String kmlScriptFilename = kmlScripts.get(which).filename;
                                     newFileFromKML(kmlScriptFilename);
@@ -685,9 +673,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void newFileFromKML(String kmlScriptFilename) {
-        NativeLib.onFileNew(kmlScriptFilename);
-        displayFilename("");
-        showKMLLog();
+        int result = NativeLib.onFileNew(kmlScriptFilename);
+        if(result > 0) {
+            displayFilename("");
+            showKMLLog();
+        } else
+            showKMLLogForce();
         updateNavigationDrawerItems();
     }
 
@@ -697,7 +688,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void run() {
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
                 intent.setType("*/*");
                 intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
                 startActivityForResult(intent, INTENT_GETOPENFILENAME);
@@ -947,10 +937,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         editor.putString("settings_kml_folder", url);
                         editor.apply();
                         makeUriPersistableReadOnly(data, uri);
-
                         OnFileNew();
-//                        String filePath = Utils.getFilePath(this, url);
-//                        newFileFromKML(filePath);
                         break;
                     }
                     default:
