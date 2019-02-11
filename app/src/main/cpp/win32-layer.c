@@ -97,7 +97,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 
     TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
 
-    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN) {
+    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML) {
         // When we open a new E48 state document
         TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
         if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||

@@ -66,8 +66,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_OBJECT_SAVE = 4;
     public static final int INTENT_SETTINGS = 5;
     public static final int INTENT_PORT2LOAD = 6;
-    public static final int INTENT_PICK_KML_FOLDER = 7;
-    //public static final int INTENT_PICK_KML_FILE = 8;
+    public static final int INTENT_PICK_KML_FOLDER_FOR_NEW_FILE = 7;
+    public static final int INTENT_PICK_KML_FOLDER_FOR_CHANGING = 8;
+    public static final int INTENT_PICK_KML_FOLDER_FOR_SETTINGS = 9;
+    //public static final int INTENT_PICK_KML_FILE = 10;
 
     public static MainActivity mainActivity;
 
@@ -630,44 +632,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // By default Port1 is set
         setPort1Settings(true, true);
 
-        extractKMLScripts();
-
         ensureDocumentSaved(new Runnable() {
             @Override
             public void run() {
-                final int lastIndex = kmlScripts.size();
-                final String[] kmlScriptTitles = new String[lastIndex + 2];
-                for (int i = 0; i < kmlScripts.size(); i++)
-                    kmlScriptTitles[i] = kmlScripts.get(i).title;
-                kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
-                kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle(getResources().getString(R.string.pick_calculator))
-                        .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if(which == lastIndex) {
-//                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                                    intent.setType(kmlMimeType);
-//                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-//                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
 
-                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                                    startActivityForResult(intent, INTENT_PICK_KML_FOLDER);
-                                } else if(which == lastIndex + 1) {
-                                    // Reset to default KML folder
-                                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                                    editor.putBoolean("settings_kml_default", true);
-                                    //editor.putString("settings_kml_folder", url);
-                                    editor.apply();
-                                    OnFileNew();
-                                } else {
-                                    String kmlScriptFilename = kmlScripts.get(which).filename;
-                                    newFileFromKML(kmlScriptFilename);
-                                }
-                            }
-                        }).show();
+//                extractKMLScripts();
+//
+//                final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel = kmlScripts;
+//
+//                final int lastIndex = kmlScriptsForCurrentModel.size();
+//                final String[] kmlScriptTitles = new String[lastIndex + 2];
+//                for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
+//                    kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
+//                kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
+//                kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
+//                new AlertDialog.Builder(MainActivity.this)
+//                        .setTitle(getResources().getString(R.string.pick_calculator))
+//                        .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                if(which == lastIndex) {
+////                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+////                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+////                                    intent.setType(kmlMimeType);
+////                                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+////                                    startActivityForResult(intent, INTENT_PICK_KML_FILE);
+//
+//                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+//                                    Bundle bundle = new Bundle();
+//                                    bundle.putString("mode", "new-kml");
+//                                    intent.putExtras(bundle);
+//                                    startActivityForResult(intent, INTENT_PICK_KML_FOLDER);
+//                                } else if(which == lastIndex + 1) {
+//                                    // Reset to default KML folder
+//                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                                    editor.putBoolean("settings_kml_default", true);
+//                                    //editor.putString("settings_kml_folder", url);
+//                                    editor.apply();
+//                                    OnFileNew();
+//                                    //OnViewScript();
+//                                } else {
+//                                    String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
+//                                    newFileFromKML(kmlScriptFilename);
+//                                }
+//                            }
+//                        }).show();
+                showKMLPicker(false);
             }
         });
     }
@@ -842,38 +852,71 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
     private void OnViewScript() {
-        extractKMLScripts();
-
-        if (NativeLib.getState() != 0 /*SM_RUN*/)
-        {
+        if (NativeLib.getState() != 0 /*SM_RUN*/) {
             showAlert("You cannot change the KML script when Emu48 is not running.\n"
                     + "Use the File,New menu item to create a new calculator.");
             return;
         }
-        final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel = new ArrayList<>();
-        char m = (char)NativeLib.getCurrentModel();
-        for (int i = 0; i < kmlScripts.size(); i++) {
-            KMLScriptItem kmlScriptItem = kmlScripts.get(i);
-            if (kmlScriptItem.model.charAt(0) == m)
-                kmlScriptsForCurrentModel.add(kmlScriptItem);
-        }
 
-        final String[] kmlScriptTitles = new String[kmlScriptsForCurrentModel.size()];
+        showKMLPicker(true);
+    }
+
+    private void showKMLPicker(final boolean changeKML) {
+        extractKMLScripts();
+
+        final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel;
+        if(changeKML) {
+            kmlScriptsForCurrentModel = new ArrayList<KMLScriptItem>();
+            char m = (char) NativeLib.getCurrentModel();
+            for (int i = 0; i < kmlScripts.size(); i++) {
+                KMLScriptItem kmlScriptItem = kmlScripts.get(i);
+                if (kmlScriptItem.model.charAt(0) == m)
+                    kmlScriptsForCurrentModel.add(kmlScriptItem);
+            }
+        } else
+            kmlScriptsForCurrentModel = kmlScripts;
+
+        final int lastIndex = kmlScriptsForCurrentModel.size();
+        final String[] kmlScriptTitles = new String[lastIndex + 2];
         for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
             kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
+        kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
+        kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
         new AlertDialog.Builder(MainActivity.this)
-                .setTitle("Pick a calculator")
+                .setTitle(getResources().getString(R.string.pick_calculator))
                 .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
-                        NativeLib.onViewScript(kmlScriptFilename);
-                        displayKMLTitle();
-                        showKMLLog();
-                        updateNavigationDrawerItems();
+                        if(which == lastIndex) {
+                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                            startActivityForResult(intent, changeKML ? INTENT_PICK_KML_FOLDER_FOR_CHANGING : INTENT_PICK_KML_FOLDER_FOR_NEW_FILE);
+                        } else if(which == lastIndex + 1) {
+                            // Reset to default KML folder
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean("settings_kml_default", true);
+                            //editor.putString("settings_kml_folder", url);
+                            editor.apply();
+                            if(changeKML)
+                                OnViewScript();
+                            else
+                                OnFileNew();
+                        } else {
+                            String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
+                            if(changeKML) {
+                                int result = NativeLib.onViewScript(kmlScriptFilename);
+                                if(result > 0) {
+                                    displayKMLTitle();
+                                    showKMLLog();
+                                } else
+                                    showKMLLogForce();
+                                updateNavigationDrawerItems();
+                            } else
+                                newFileFromKML(kmlScriptFilename);
+                        }
                     }
                 }).show();
     }
+
     private void OnTopics() {
         startActivity(new Intent(this, InfoWebActivity.class));
     }
@@ -930,14 +973,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                        DocumentFile parentDocumentFile = documentFile.getParentFile();
 //                        break;
 //                    }
-                    case INTENT_PICK_KML_FOLDER: {
+                    case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                    case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                    case INTENT_PICK_KML_FOLDER_FOR_SETTINGS: {
                         Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putBoolean("settings_kml_default", false);
                         editor.putString("settings_kml_folder", url);
                         editor.apply();
                         makeUriPersistableReadOnly(data, uri);
-                        OnFileNew();
+
+                        switch (requestCode) {
+                            case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                                OnFileNew();
+                                break;
+                            case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                                OnViewScript();
+                                break;
+                            case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
+
+                                break;
+                        }
                         break;
                     }
                     default:

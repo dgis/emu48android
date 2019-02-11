@@ -21,6 +21,7 @@ AndroidBitmapInfo androidBitmapInfo;
 enum ChooseKmlMode  chooseCurrentKmlMode;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
+TCHAR szKmlLogBackup[10240];
 TCHAR szKmlTitle[10240];
 BOOL settingsPort2en;
 BOOL settingsPort2wr;
@@ -826,23 +827,25 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewReset(JNIEn
     SwitchToState(SM_RUN);
 }
 
-JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
 
     TCHAR szKmlFile[MAX_PATH];
-    BOOL  bKMLChanged,bSucc;
+//    BOOL  bKMLChanged,bSucc;
     BYTE cType = cCurrentRomType;
     SwitchToState(SM_INVALID);
-
-    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
-    _tcscpy(szCurrentKml, filenameUTF8);
-    (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
     // make a copy of the current KML script file name
     _ASSERT(sizeof(szKmlFile) == sizeof(szCurrentKml));
     lstrcpyn(szKmlFile,szCurrentKml,ARRAYSIZEOF(szKmlFile));
 
-    bKMLChanged = FALSE;					// KML script not changed
-    bSucc = TRUE;							// KML script successful loaded
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
+    _tcscpy(szCurrentKml, filenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
+
+//    bKMLChanged = FALSE;					// KML script not changed
+    BOOL bSucc = TRUE;							// KML script successful loaded
+
+    chooseCurrentKmlMode = ChooseKmlMode_CHANGE_KML;
 
 //    do
 //    {
@@ -866,11 +869,26 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIE
 //        }
 //        else								// quit with Ok
 //        {
-            bKMLChanged = TRUE;				// KML script changed
+//            bKMLChanged = TRUE;				// KML script changed
             bSucc = InitKML(szCurrentKml,FALSE);
 //        }
 //    }
 //    while (!bSucc);							// retry if KML script is invalid
+
+    BOOL result = bSucc;
+
+    if(!bSucc) {
+        // restore KML script file name
+        lstrcpyn(szCurrentKml,szKmlFile,ARRAYSIZEOF(szCurrentKml));
+
+        _tcsncpy(szKmlLogBackup, szKmlLog, sizeof(szKmlLog) / sizeof(TCHAR));
+
+        // try to restore old KML script
+        bSucc = InitKML(szCurrentKml,FALSE);
+
+        _tcsncpy(szKmlLog, szKmlLogBackup, sizeof(szKmlLog) / sizeof(TCHAR));
+    }
+    chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
 
     if (bSucc)
     {
@@ -890,6 +908,8 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIE
     }
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     draw();
+
+    return result;
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {

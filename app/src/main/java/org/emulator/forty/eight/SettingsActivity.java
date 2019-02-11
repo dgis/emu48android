@@ -305,7 +305,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                    startActivityForResult(intent, MainActivity.INTENT_PICK_KML_FOLDER);
+                    startActivityForResult(intent, MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS);
                     return true;
                 }
             });
@@ -413,22 +413,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(resultCode == Activity.RESULT_OK) {
+        if(resultCode == Activity.RESULT_OK && data != null) {
             if(requestCode == MainActivity.INTENT_PORT2LOAD) {
                 Uri uri = data.getData();
                 //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
-                String url = uri.toString();
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("settings_port2load", url);
-                editor.apply();
-                makeUriPersistable(data, uri);
-            } else if(requestCode == MainActivity.INTENT_PICK_KML_FOLDER) {
+                String url = null;
+                if (uri != null) {
+                    url = uri.toString();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("settings_port2load", url);
+                    editor.apply();
+                    makeUriPersistable(data, uri);
+                }
+            } else if(requestCode == MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS) {
                 Uri uri = data.getData();
-                String url = uri.toString();
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("settings_kml_folder", url);
-                editor.apply();
-                makeUriPersistableReadOnly(data, uri);
+                String url = null;
+                if (uri != null) {
+                    url = uri.toString();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("settings_kml_folder", url);
+                    editor.apply();
+                    makeUriPersistableReadOnly(data, uri);
+                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

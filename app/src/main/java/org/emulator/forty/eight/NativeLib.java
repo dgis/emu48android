@@ -38,7 +38,7 @@ public class NativeLib {
     public static native void onStackCopy();
     public static native void onStackPaste();
     public static native void onViewReset();
-    public static native void onViewScript(String kmlFilename);
+    public static native int onViewScript(String kmlFilename);
     public static native void onBackupSave();
     public static native void onBackupRestore();
     public static native void onBackupDelete();

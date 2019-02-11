@@ -1128,7 +1128,8 @@ extern TCHAR szChosenCurrentKml[MAX_PATH];
 enum ChooseKmlMode {
     ChooseKmlMode_UNKNOWN,
     ChooseKmlMode_FILE_NEW,
-    ChooseKmlMode_FILE_OPEN
+    ChooseKmlMode_FILE_OPEN,
+	ChooseKmlMode_CHANGE_KML
 };
 extern enum ChooseKmlMode chooseCurrentKmlMode;
 BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize);
