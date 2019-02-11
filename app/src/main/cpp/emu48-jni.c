@@ -141,6 +141,8 @@ void sendMenuItemCommand(int menuItem) {
     (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, menuItem);
 }
 
+TCHAR lastKMLFilename[MAX_PATH];
+
 BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize) {
     if(firstKMLFilename) {
         JNIEnv *jniEnv = getJNIEnvironment();
@@ -149,6 +151,11 @@ BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size
         jobject resultString = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr, (char)chipsetType);
         if (resultString) {
             const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, resultString, 0);
+            if(_tcscmp(lastKMLFilename, strReturn) == 0) {
+                (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
+                return FALSE;
+            }
+            _tcscpy(lastKMLFilename, strReturn);
             _tcsncpy(firstKMLFilename, strReturn, firstKMLFilenameSize);
             (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
             return TRUE;
@@ -416,6 +423,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
     _tcscpy(szBufferFilename, stateFilenameUTF8);
 
     chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
+    lastKMLFilename[0] = '\0';
     BOOL result = OpenDocument(szBufferFilename);
     if (result)
         MruAdd(szBufferFilename);

@@ -984,9 +984,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private int onFileOpen(String url) {
         int result = NativeLib.onFileOpen(url);
-        setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable());
-        displayFilename(url);
-        showKMLLog();
+        if(result > 0) {
+            setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable());
+            displayFilename(url);
+            showKMLLog();
+        } else
+            showKMLLogForce();
         updateNavigationDrawerItems();
         return result;
     }
@@ -1020,15 +1023,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void showKMLLog() {
         if(sharedPreferences.getBoolean("settings_alwaysdisplog", true)) {
-            String kmlLog = NativeLib.getKMLLog();
-            new AlertDialog.Builder(this)
-                    .setTitle("KML Script Compilation Result")
-                    .setMessage(kmlLog)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    }).show();
+            showKMLLogForce();
         }
+    }
+
+    private void showKMLLogForce() {
+        String kmlLog = NativeLib.getKMLLog();
+        new AlertDialog.Builder(this)
+                .setTitle("KML Script Compilation Result")
+                .setMessage(kmlLog)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                }).show();
     }
 
     final int GENERIC_READ   = 1;

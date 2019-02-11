@@ -94,21 +94,37 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
             return (HANDLE) INVALID_HANDLE_VALUE;
     }
-//    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN && lpFileName[0] == '/') {
-//        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
-//        if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
-//                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
-//        )) {
-//            _tcscpy(szEmuDirectory, lpFileName);
-//            TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
-//            if(filename) {
-//                *filename = _T('\0');
-//            }
-//            _tcscpy(szRomDirectory, szEmuDirectory);
-//            SetCurrentDirectory(szEmuDirectory);
-//        }
-//    }
+
     TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
+
+    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN) {
+        // When we open a new E48 state document
+        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
+        if(fileExtension && ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
+                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
+        )) {
+            // And opening a KML file
+            if(lpFileName[0] == '/') {
+                // With a recorded standard file
+                _tcscpy(szEmuDirectory, lpFileName);
+                TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+                if(filename) {
+                    *filename = _T('\0');
+                }
+                _tcscpy(szRomDirectory, szEmuDirectory);
+                SetCurrentDirectory(szEmuDirectory);
+            } else if(foundDocumentScheme) {
+                // With a recorded "document:" scheme, extract the folder URL with content:// scheme
+                _tcscpy(szEmuDirectory, lpFileName + _tcslen(documentScheme) * sizeof(TCHAR));
+                TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
+                if(filename) {
+                    *filename = _T('\0');
+                }
+                _tcscpy(szRomDirectory, szEmuDirectory);
+                SetCurrentDirectory(szEmuDirectory);
+            }
+        }
+    }
 
     if(!forceNormalFile && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0) && foundDocumentScheme == NULL) {
         // Asset file
@@ -2009,15 +2025,18 @@ INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndPar
         } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_NEW) {
             lstrcpy(szCurrentKml, szChosenCurrentKml);
         } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN) {
-            if(getFirstKMLFilenameForType(Chipset.type, szCurrentKml, sizeof(szCurrentKml) / sizeof(szCurrentKml[0])))
-                showAlert(_T("Cannot find the KML template file, so, try another one."), 0);
-            else
+            if(!getFirstKMLFilenameForType(Chipset.type, szCurrentKml, sizeof(szCurrentKml) / sizeof(szCurrentKml[0]))) {
                 showAlert(_T("Cannot find the KML template file, sorry."), 0);
+                return -1;
+            }
+//            else {
+//                showAlert(_T("Cannot find the KML template file, so, try another one."), 0); //TODO is it right?
+//            }
         }
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
     }
-    return NULL;
+    return IDOK;
 }
 HCURSOR SetCursor(HCURSOR hCursor) {
     //TODO
