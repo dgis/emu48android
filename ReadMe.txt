@@ -12,7 +12,7 @@ NOT WORKING YET
 - Debugger
 
 TODO
-- Bug: custom KML/Save/ChangeKML/Close -> state not saved
+- Add sound switch settings
 - Improve the access to the menu
 - Change the logo following the template
 - Open Emu48 with a state file shared with it (Can not work)

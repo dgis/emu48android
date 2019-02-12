@@ -270,45 +270,45 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             // KML settings
 
-            final Preference preferenceKMLDefault = findPreference("settings_kml_default");
-            final Preference preferenceKMLFolder = findPreference("settings_kml_folder");
-
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLDefault = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    Boolean booleanValue = (Boolean)value;
-                    String stringValue = value.toString();
-                    preference.setSummary(stringValue);
-                    preferenceKMLFolder.setEnabled(booleanValue);
-                    return true;
-                }
-            };
-            preferenceKMLDefault.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLDefault);
-            onPreferenceChangeListenerKMLDefault.onPreferenceChange(preferenceKMLDefault, sharedPreferences.getBoolean(preferenceKMLDefault.getKey(), true));
-
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLFolder = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    String stringValue = value.toString();
-                    String displayName = stringValue;
-                    try {
-                        displayName = Utils.getFileName(getActivity(), stringValue);
-                    } catch(Exception e) {
-                    }
-                    preference.setSummary(displayName);
-                    return true;
-                }
-            };
-            preferenceKMLFolder.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLFolder);
-            onPreferenceChangeListenerKMLFolder.onPreferenceChange(preferenceKMLFolder, sharedPreferences.getString(preferenceKMLFolder.getKey(), ""));
-            preferenceKMLFolder.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                    startActivityForResult(intent, MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS);
-                    return true;
-                }
-            });
+//            final Preference preferenceKMLDefault = findPreference("settings_kml_default");
+//            final Preference preferenceKMLFolder = findPreference("settings_kml_folder");
+//
+//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLDefault = new Preference.OnPreferenceChangeListener() {
+//                @Override
+//                public boolean onPreferenceChange(Preference preference, Object value) {
+//                    Boolean booleanValue = (Boolean)value;
+//                    String stringValue = value.toString();
+//                    preference.setSummary(stringValue);
+//                    preferenceKMLFolder.setEnabled(booleanValue);
+//                    return true;
+//                }
+//            };
+//            preferenceKMLDefault.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLDefault);
+//            onPreferenceChangeListenerKMLDefault.onPreferenceChange(preferenceKMLDefault, sharedPreferences.getBoolean(preferenceKMLDefault.getKey(), true));
+//
+//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLFolder = new Preference.OnPreferenceChangeListener() {
+//                @Override
+//                public boolean onPreferenceChange(Preference preference, Object value) {
+//                    String stringValue = value.toString();
+//                    String displayName = stringValue;
+//                    try {
+//                        displayName = Utils.getFileName(getActivity(), stringValue);
+//                    } catch(Exception e) {
+//                    }
+//                    preference.setSummary(displayName);
+//                    return true;
+//                }
+//            };
+//            preferenceKMLFolder.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLFolder);
+//            onPreferenceChangeListenerKMLFolder.onPreferenceChange(preferenceKMLFolder, sharedPreferences.getString(preferenceKMLFolder.getKey(), ""));
+//            preferenceKMLFolder.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//                @Override
+//                public boolean onPreferenceClick(Preference preference) {
+//                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+//                    startActivityForResult(intent, MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS);
+//                    return true;
+//                }
+//            });
 
             // Ports 1 & 2 settings
 
@@ -425,16 +425,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     editor.apply();
                     makeUriPersistable(data, uri);
                 }
-            } else if(requestCode == MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS) {
-                Uri uri = data.getData();
-                String url = null;
-                if (uri != null) {
-                    url = uri.toString();
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("settings_kml_folder", url);
-                    editor.apply();
-                    makeUriPersistableReadOnly(data, uri);
-                }
+//            } else if(requestCode == MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS) {
+//                Uri uri = data.getData();
+//                String url = null;
+//                if (uri != null) {
+//                    url = uri.toString();
+//                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                    editor.putString("settings_kml_folder", url);
+//                    editor.apply();
+//                    makeUriPersistableReadOnly(data, uri);
+//                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

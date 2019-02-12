@@ -3,18 +3,21 @@ package org.emulator.forty.eight;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -160,31 +163,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateNavigationDrawerItems();
 
 
+
+
+        android.os.Debug.waitForDebugger();
+
+
         String documentToOpenUrl = sharedPreferences.getString("lastDocument", "");
-//        Uri documentToOpenUri = null;
-//        boolean isFileAndNeedPermission = false;
-//        Intent intent = getIntent();
-//        if(intent != null) {
-//            String action = intent.getAction();
-//            if(action != null) {
-//                if (action.equals(Intent.ACTION_VIEW)) {
-//                    documentToOpenUri = intent.getData();
-//                    if (documentToOpenUri != null) {
-//                        String scheme = documentToOpenUri.getScheme();
-//                        if(scheme != null && scheme.compareTo("file") == 0) {
+        Uri documentToOpenUri = null;
+        boolean isFileAndNeedPermission = false;
+        Intent intent = getIntent();
+        if(intent != null) {
+            String action = intent.getAction();
+            if(action != null) {
+                if (action.equals(Intent.ACTION_VIEW)) {
+                    documentToOpenUri = intent.getData();
+                    if (documentToOpenUri != null) {
+                        String scheme = documentToOpenUri.getScheme();
+                        if(scheme != null && scheme.compareTo("file") == 0) {
 //                            documentToOpenUrl = documentToOpenUri.getPath();
 //                            isFileAndNeedPermission = true;
-//                        } else
-//                            documentToOpenUrl = documentToOpenUri.toString();
-//                    }
-//                } else if (action.equals(Intent.ACTION_SEND)) {
-//                    documentToOpenUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-//                    if (documentToOpenUri != null) {
-//                        documentToOpenUrl = documentToOpenUri.toString();
-//                    }
-//                }
-//            }
-//        }
+
+                            File file = new File(documentToOpenUri.toString());
+                            //Uri uri = FileProvider.getUriForFile(this, "androidx.core.content.FileProvider", file /* file whose Uri is required */);
+                            Uri uri = getImageContentUri(this, file);
+                            documentToOpenUrl = uri.getPath();
+                        } else
+                            documentToOpenUrl = documentToOpenUri.toString();
+                    }
+                } else if (action.equals(Intent.ACTION_SEND)) {
+                    documentToOpenUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                    if (documentToOpenUri != null) {
+                        documentToOpenUrl = documentToOpenUri.toString();
+                    }
+                }
+            }
+        }
 
         //https://developer.android.com/guide/topics/providers/document-provider#permissions
         if(documentToOpenUrl != null && documentToOpenUrl.length() > 0)
@@ -196,8 +209,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                } else {
                     if(onFileOpen(documentToOpenUrl) != 0) {
                         saveLastDocument(documentToOpenUrl);
-//                        if(intent != null && documentToOpenUri != null && !isFileAndNeedPermission)
-//                            makeUriPersistable(intent, documentToOpenUri);
+                        if(intent != null && documentToOpenUri != null && !isFileAndNeedPermission)
+                            makeUriPersistable(intent, documentToOpenUri);
                     }
 //                }
             } catch (Exception e) {
@@ -206,6 +219,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
     }
+
+    public static Uri getImageContentUri(Context context, File imageFile) {
+        String filePath = imageFile.getAbsolutePath();
+        String filePath = imageFile.getAbsolutePath();
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Images.Media._ID },
+                MediaStore.Images.Media.DATA + "=? ",
+                new String[] { filePath }, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int id = cursor.getInt(cursor
+                    .getColumnIndex(MediaStore.MediaColumns._ID));
+            Uri baseUri = Uri.parse("content://media/external/images/media");
+            return Uri.withAppendedPath(baseUri, "" + id);
+        } else {
+            if (imageFile.exists()) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DATA, filePath);
+                return context.getContentResolver().insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            } else {
+                return null;
+            }
+        }}
 
     private void updateMRU() {
         Menu menu = navigationView.getMenu();

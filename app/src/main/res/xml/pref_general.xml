@@ -15,10 +15,6 @@
                 android:key="settings_autosave"
                 android:title="Automatically Save Files"
                 android:defaultValue="true" />
-            <!--<SwitchPreference-->
-                <!--android:key="settings_autosaveonexit"-->
-                <!--android:title="Automatically Save Files On Exit"-->
-                <!--android:defaultValue="true" />-->
             <SwitchPreference
                 android:key="settings_objectloadwarning"
                 android:title="Show Load Object Warning"
@@ -36,25 +32,19 @@
                 android:key="settings_fill_screen"
                 android:title="Fill screen"
                 android:defaultValue="false" />
-            <Preference
-                android:key="settings_kml_folder"
-                android:title="Custom KML Folder"
-                android:summary=""
-                />
-
         </PreferenceCategory>
 
-        <PreferenceCategory android:title="General">
-            <SwitchPreference
-                android:key="settings_kml_default"
-                android:title="Default Internal KML Folder"
-                android:defaultValue="true" />
-            <Preference
-                android:key="settings_kml_folder"
-                android:title="Custom KML Folder"
-                android:summary=""
-                />
-        </PreferenceCategory>
+        <!--<PreferenceCategory android:title="General">-->
+            <!--<SwitchPreference-->
+                <!--android:key="settings_kml_default"-->
+                <!--android:title="Default Internal KML Folder"-->
+                <!--android:defaultValue="true" />-->
+            <!--<Preference-->
+                <!--android:key="settings_kml_folder"-->
+                <!--android:title="Custom KML Folder"-->
+                <!--android:summary=""-->
+                <!--/>-->
+        <!--</PreferenceCategory>-->
 
         <!--<PreferenceCategory app:title="Style">
             "Show Title",IDC_SHOWTITLE

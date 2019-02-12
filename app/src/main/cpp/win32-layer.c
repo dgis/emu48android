@@ -122,6 +122,10 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 }
                 _tcscpy(szRomDirectory, szEmuDirectory);
                 SetCurrentDirectory(szEmuDirectory);
+            } else {
+                _tcscpy(szEmuDirectory, "assets/calculators/");
+                _tcscpy(szRomDirectory, "assets/calculators/");
+                SetCurrentDirectory(szEmuDirectory);
             }
         }
     }
