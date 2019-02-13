@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-        android.os.Debug.waitForDebugger();
+        //android.os.Debug.waitForDebugger();
 
 
         String documentToOpenUrl = sharedPreferences.getString("lastDocument", "");
@@ -180,13 +180,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (documentToOpenUri != null) {
                         String scheme = documentToOpenUri.getScheme();
                         if(scheme != null && scheme.compareTo("file") == 0) {
-//                            documentToOpenUrl = documentToOpenUri.getPath();
 //                            isFileAndNeedPermission = true;
-
-                            File file = new File(documentToOpenUri.toString());
-                            //Uri uri = FileProvider.getUriForFile(this, "androidx.core.content.FileProvider", file /* file whose Uri is required */);
-                            Uri uri = getImageContentUri(this, file);
-                            documentToOpenUrl = uri.getPath();
+//                            File file = new File(documentToOpenUri.toString());
+//                            //Uri uri = FileProvider.getUriForFile(this, "androidx.core.content.FileProvider", file /* file whose Uri is required */);
+//                            documentToOpenUrl = uri.getPath();
+                            documentToOpenUrl = null;
                         } else
                             documentToOpenUrl = documentToOpenUri.toString();
                     }
@@ -219,31 +217,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
     }
-
-    public static Uri getImageContentUri(Context context, File imageFile) {
-        String filePath = imageFile.getAbsolutePath();
-        String filePath = imageFile.getAbsolutePath();
-        Cursor cursor = context.getContentResolver().query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Images.Media._ID },
-                MediaStore.Images.Media.DATA + "=? ",
-                new String[] { filePath }, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int id = cursor.getInt(cursor
-                    .getColumnIndex(MediaStore.MediaColumns._ID));
-            Uri baseUri = Uri.parse("content://media/external/images/media");
-            return Uri.withAppendedPath(baseUri, "" + id);
-        } else {
-            if (imageFile.exists()) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Images.Media.DATA, filePath);
-                return context.getContentResolver().insert(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-            } else {
-                return null;
-            }
-        }}
 
     private void updateMRU() {
         Menu menu = navigationView.getMenu();
