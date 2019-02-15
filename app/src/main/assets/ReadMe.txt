@@ -5,13 +5,20 @@ It uses the Android NDK. The former Emu48 source code remains untouch because of
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
+Some KML files with theirs faceplates are embedded in the application but it is still possible to open a KML file and its dependencies by selecting a folder.
+
+The application does not request any permission (because it opens the files or the folders using the content:// scheme).
+
+The application is distributed with the same license under GPL and you can find the source code here:
+https://github.com/dgis/emu48android
+
 
 QUICK START
 
-1. Touch the top left button and select "Open a new image".
-2. The image is analyzed and should appear with the numbered areas.
-3. To check the result, you can zoom with two fingers or pan with one.
-4. The top right button opens the parameters panel which allows changing the number of color, the size of the numbers, etc...
+1. From the left side, slide your finger to open the menu.
+2. Touche the "New..." menu item.
+3. Select a predefined faceplate (or select a custom KML script folder).
+4.
 5. To print the result, touch the top left button and select "Export to PDF".
 
 

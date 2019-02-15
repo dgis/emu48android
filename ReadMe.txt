@@ -4,6 +4,10 @@ It uses the Android NDK. The former Emu48 source code remains untouch because of
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
+The application is distributed with the same license under GPL and you can find the source code here:
+https://github.com/dgis/emu48android
+
+
 NOT WORKING YET
 - Macro
 - Infrared Printer

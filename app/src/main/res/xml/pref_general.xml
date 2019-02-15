@@ -32,6 +32,10 @@
                 android:key="settings_fill_screen"
                 android:title="Fill screen"
                 android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_allow_sound"
+                android:title="Allow sounds"
+                android:defaultValue="true" />
         </PreferenceCategory>
 
         <!--<PreferenceCategory android:title="General">-->

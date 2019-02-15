@@ -74,13 +74,18 @@ enum CALLBACK_TYPE {
 int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, const TCHAR * param4) {
     if (viewToUpdate) {
         JNIEnv *jniEnv = getJNIEnvironment();
-        jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
-        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
-        jstring utfParam3 = (*jniEnv)->NewStringUTF(jniEnv, param3);
-        jstring utfParam4 = (*jniEnv)->NewStringUTF(jniEnv, param4);
-        int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
-//      if(needDetach) ret = (*java_machine)->DetachCurrentThread(java_machine);
-        return result;
+        if(jniEnv) {
+            jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
+            if(viewToUpdateClass) {
+                jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
+                jstring utfParam3 = (*jniEnv)->NewStringUTF(jniEnv, param3);
+                jstring utfParam4 = (*jniEnv)->NewStringUTF(jniEnv, param4);
+                int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
+                (*jniEnv)->DeleteLocalRef(jniEnv, viewToUpdateClass);
+                //if(needDetach) ret = (*java_machine)->DetachCurrentThread(java_machine);
+                return result;
+            }
+        }
     }
     return 0;
 }
@@ -94,52 +99,82 @@ void mainViewResizeCallback(int x, int y) {
 
     JNIEnv * jniEnv;
     int ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
-    ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo);
-    if (ret < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+    if(jniEnv) {
+        ret = AndroidBitmap_getInfo(jniEnv, bitmapMainScreen, &androidBitmapInfo);
+        if (ret < 0) {
+            LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        }
     }
 }
 
 // Must be called in the main thread
 int openFileFromContentResolver(const TCHAR * fileURL, int writeAccess) {
+    int result = -1;
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileFromContentResolver", "(Ljava/lang/String;I)I");
-    jstring utfFileURL = (*jniEnv)->NewStringUTF(jniEnv, fileURL);
-    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFileURL, writeAccess);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileFromContentResolver", "(Ljava/lang/String;I)I");
+            jstring utfFileURL = (*jniEnv)->NewStringUTF(jniEnv, fileURL);
+            result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFileURL, writeAccess);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
     return result;
 }
 int openFileInFolderFromContentResolver(const TCHAR * filename, const TCHAR * folderURL, int writeAccess) {
+    int result = -1;
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileInFolderFromContentResolver", "(Ljava/lang/String;Ljava/lang/String;I)I");
-    jstring utfFilename = (*jniEnv)->NewStringUTF(jniEnv, filename);
-    jstring utfFolderURL = (*jniEnv)->NewStringUTF(jniEnv, folderURL);
-    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFilename, utfFolderURL, writeAccess);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openFileInFolderFromContentResolver", "(Ljava/lang/String;Ljava/lang/String;I)I");
+            jstring utfFilename = (*jniEnv)->NewStringUTF(jniEnv, filename);
+            jstring utfFolderURL = (*jniEnv)->NewStringUTF(jniEnv, folderURL);
+            result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFilename, utfFolderURL, writeAccess);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
     return result;
 }
 int closeFileFromContentResolver(int fd) {
+    int result = -1;
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "closeFileFromContentResolver", "(I)I");
-    int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, fd);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "closeFileFromContentResolver", "(I)I");
+            result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, fd);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
     return result;
 }
 
 int showAlert(const TCHAR * messageText, int flags) {
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "showAlert", "(Ljava/lang/String;)V");
-    jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, messageText);
-    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "showAlert", "(Ljava/lang/String;)V");
+            jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, messageText);
+            (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
     return IDOK;
 }
 
 void sendMenuItemCommand(int menuItem) {
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "sendMenuItemCommand", "(I)V");
-    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, menuItem);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "sendMenuItemCommand", "(I)V");
+            (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, menuItem);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
 }
 
 TCHAR lastKMLFilename[MAX_PATH];
@@ -147,19 +182,24 @@ TCHAR lastKMLFilename[MAX_PATH];
 BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize) {
     if(firstKMLFilename) {
         JNIEnv *jniEnv = getJNIEnvironment();
-        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-        jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "getFirstKMLFilenameForType", "(C)Ljava/lang/String;");
-        jobject resultString = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr, (char)chipsetType);
-        if (resultString) {
-            const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, resultString, 0);
-            if(_tcscmp(lastKMLFilename, strReturn) == 0) {
-                (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
-                return FALSE;
+        if(jniEnv) {
+            jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+            if(mainActivityClass) {
+                jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "getFirstKMLFilenameForType", "(C)Ljava/lang/String;");
+                jobject resultString = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr, (char)chipsetType);
+                (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+                if (resultString) {
+                    const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, resultString, 0);
+                    if(_tcscmp(lastKMLFilename, strReturn) == 0) {
+                        (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
+                        return FALSE;
+                    }
+                    _tcscpy(lastKMLFilename, strReturn);
+                    _tcsncpy(firstKMLFilename, strReturn, firstKMLFilenameSize);
+                    (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
+                    return TRUE;
+                }
             }
-            _tcscpy(lastKMLFilename, strReturn);
-            _tcsncpy(firstKMLFilename, strReturn, firstKMLFilenameSize);
-            (*jniEnv)->ReleaseStringUTFChars(jniEnv, resultString, strReturn);
-            return TRUE;
         }
     }
     return FALSE;
@@ -167,23 +207,33 @@ BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size
 
 void clipboardCopyText(const TCHAR * text) {
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardCopyText", "(Ljava/lang/String;)V");
-    jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, text);
-    (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardCopyText", "(Ljava/lang/String;)V");
+            jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, text);
+            (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
 }
 const TCHAR * clipboardPasteText() {
     JNIEnv *jniEnv = getJNIEnvironment();
-    jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
-    jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardPasteText", "()Ljava/lang/String;");
-    jobject result = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr);
-    if(result) {
-        const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, result, 0);
-        size_t length = _tcslen(strReturn);
-        TCHAR * pasteText = (TCHAR *) GlobalAlloc(0, length + 2);
-        _tcscpy(pasteText, strReturn);
-        (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
-        return pasteText;
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardPasteText", "()Ljava/lang/String;");
+            jobject result = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+            if(result) {
+                const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, result, 0);
+                size_t length = _tcslen(strReturn);
+                TCHAR * pasteText = (TCHAR *) GlobalAlloc(0, length + 2);
+                _tcscpy(pasteText, strReturn);
+                (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
+                return pasteText;
+            }
+        }
     }
     return NULL;
 }
@@ -944,8 +994,8 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
             SetLcdMode(!bGrayscale);	// set new display mode
             SwitchToState(nOldState);
         }
-//    } else if(_tcscmp(_T("settings_alwaysdisplog"), configKey) == 0) {
-//        bAlwaysDisplayLog = intValue1;
+    } else if(_tcscmp(_T("settings_sound_volume"), configKey) == 0) {
+        dwWaveVol = intValue1;
     } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
         BOOL settingsPort1en = intValue1;
         BOOL settingsPort1wr = intValue2;

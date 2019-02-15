@@ -1300,6 +1300,7 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
 
             if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
                 LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+                return FALSE;
             }
         } else {
             hBitmapDestination = hdcDest->selectedBitmap;
@@ -1407,6 +1408,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
             if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
                 LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+                return FALSE;
             }
         } else {
             hBitmapDestination = hdcDest->selectedBitmap;

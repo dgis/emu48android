@@ -1273,7 +1273,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_kml", "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1292,6 +1292,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 case "settings_fill_screen":
                     mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+                    break;
+
+                case "settings_allow_sound":
+                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue,
+                            sharedPreferences.getBoolean("settings_allow_sound", true) ? 64 : 0, 0, null);
                     break;
 
                 case "settings_kml":
