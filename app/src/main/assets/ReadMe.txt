@@ -7,7 +7,7 @@ It can open or save the exact same state files (state.e48/e49) than the original
 
 Some KML files with theirs faceplates are embedded in the application but it is still possible to open a KML file and its dependencies by selecting a folder.
 
-The application does not request any permission (because it opens the files or the folders using the content:// scheme).
+The application does not request any permission (because it opens the files or the KML folders using the content:// scheme).
 
 The application is distributed with the same license under GPL and you can find the source code here:
 https://github.com/dgis/emu48android
@@ -18,8 +18,7 @@ QUICK START
 1. From the left side, slide your finger to open the menu.
 2. Touche the "New..." menu item.
 3. Select a predefined faceplate (or select a custom KML script folder).
-4.
-5. To print the result, touch the top left button and select "Export to PDF".
+4. And the calculator should now be opened.
 
 
 NOT WORKING YET

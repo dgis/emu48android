@@ -26,6 +26,7 @@ public class NativeLib {
     public static native String getKMLTitle();
     public static native boolean getPort1Plugged();
     public static native boolean getPort1Writable();
+    public static native boolean getSoundEnabled();
 
     public static native int onFileNew(String kmlFilename);
     public static native int onFileOpen(String filename);

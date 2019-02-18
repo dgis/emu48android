@@ -853,9 +853,9 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     handle->uDeviceID = uDeviceID;
 
 
-    SLObjectItf engineObject = NULL;
-    SLObjectItf outputMixObject = NULL;
-    SLObjectItf bqPlayerObject = NULL;
+    //SLObjectItf engineObject = NULL;
+    //SLObjectItf outputMixObject = NULL;
+    //SLObjectItf bqPlayerObject = NULL;
     //pthread_mutex_t  audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
     //handle->audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -863,23 +863,41 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     SLresult result;
 
     // create engine
-    result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
+    result = slCreateEngine(&handle->engineObject, 0, NULL, 0, NULL, NULL);
     //_ASSERT(SL_RESULT_SUCCESS == result);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // realize the engine
-    result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
+    result = (*handle->engineObject)->Realize(handle->engineObject, SL_BOOLEAN_FALSE);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // get the engine interface, which is needed in order to create other objects
-    result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &handle->engineEngine);
+    result = (*handle->engineObject)->GetInterface(handle->engineObject, SL_IID_ENGINE, &handle->engineEngine);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // create output mix, with environmental reverb specified as a non-required interface
     const SLInterfaceID ids[1] = { SL_IID_ENVIRONMENTALREVERB };
     const SLboolean req[1] = { SL_BOOLEAN_FALSE };
-    result = (*handle->engineEngine)->CreateOutputMix(handle->engineEngine, &outputMixObject, 1, ids, req);
-
+    result = (*handle->engineEngine)->CreateOutputMix(handle->engineEngine, &handle->outputMixObject, 1, ids, req);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
     // realize the output mix
-    result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
-
+    result = (*handle->outputMixObject)->Realize(handle->outputMixObject, SL_BOOLEAN_FALSE);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
             SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,   // locatorType
@@ -911,7 +929,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // configure audio sink
     SLDataLocator_OutputMix loc_outmix = {
             SL_DATALOCATOR_OUTPUTMIX, // locatorType
-            outputMixObject           // outputMix
+            handle->outputMixObject           // outputMix
     };
     SLDataSink audioSnk = {
             &loc_outmix,  // pLocator
@@ -936,27 +954,53 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
             //SL_BOOLEAN_TRUE,
     };
 
-    result = (*handle->engineEngine)->CreateAudioPlayer(handle->engineEngine, &bqPlayerObject, &audioSrc, &audioSnk, 2, ids2, req2);
+    result = (*handle->engineEngine)->CreateAudioPlayer(handle->engineEngine, &handle->bqPlayerObject, &audioSrc, &audioSnk, 2, ids2, req2);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // realize the player
-    result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE);
+    result = (*handle->bqPlayerObject)->Realize(handle->bqPlayerObject, SL_BOOLEAN_FALSE);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // get the play interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &handle->bqPlayerPlay);
+    result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_PLAY, &handle->bqPlayerPlay);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // get the buffer queue interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE, &handle->bqPlayerBufferQueue);
+    result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_BUFFERQUEUE, &handle->bqPlayerBufferQueue);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // register callback on the buffer queue
     result = (*handle->bqPlayerBufferQueue)->RegisterCallback(handle->bqPlayerBufferQueue, bqPlayerCallback, handle);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // get the volume interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_VOLUME, &handle->bqPlayerVolume);
+    result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_VOLUME, &handle->bqPlayerVolume);
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
     // set the player's state to playing
     result = (*handle->bqPlayerPlay)->SetPlayState(handle->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
-
-
+    if(result != SL_RESULT_SUCCESS) {
+        waveOutClose(handle);
+        return MMSYSERR_ERROR;
+    }
 
 
     *phwo = handle;
@@ -992,7 +1036,7 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
         handle->engineEngine = NULL;
     }
 
-    pthread_mutex_destroy(&handle->audioEngineLock);
+    //pthread_mutex_destroy(&handle->audioEngineLock);
 
 
     memset(handle, 0, sizeof(struct _HWAVEOUT));

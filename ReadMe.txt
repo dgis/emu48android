@@ -57,6 +57,7 @@ DONE
 - Improve button support with HDC operations
 - Improve loading errors (and see the errors in a log)
 - Allow to load external KML/BMP/ROM files
+- Fix sound error at the initialization.
 
 
 

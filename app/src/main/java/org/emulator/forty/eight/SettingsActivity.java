@@ -267,6 +267,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             preferenceAlwaysdisplog.setOnPreferenceChangeListener(onPreferenceChangeListenerAlwaysdisplog);
             onPreferenceChangeListenerAlwaysdisplog.onPreferenceChange(preferenceAlwaysdisplog, sharedPreferences.getBoolean(preferenceAlwaysdisplog.getKey(), false));
 
+            Preference preferenceAllowSound = findPreference("settings_allow_sound");
+            if(preferenceAllowSound != null && !NativeLib.getSoundEnabled()) {
+                preferenceAllowSound.setSummary("Cannot initialize the sound engine.");
+                preferenceAllowSound.setEnabled(false);
+            }
+
 
             // KML settings
 

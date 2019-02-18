@@ -3,21 +3,18 @@ package org.emulator.forty.eight;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,9 +22,9 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -1147,7 +1144,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     void showAlert(String text) {
-        Snackbar.make(findViewById(R.id.main_coordinator), text, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
+        Toast toast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
+        View view = toast.getView();
+        //view.setBackgroundColor(0x80000000);
+        toast.show();
     }
 
     void sendMenuItemCommand(int menuItem) {

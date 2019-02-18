@@ -25,6 +25,7 @@ TCHAR szKmlLogBackup[10240];
 TCHAR szKmlTitle[10240];
 BOOL settingsPort2en;
 BOOL settingsPort2wr;
+BOOL soundEnabled = FALSE;
 
 
 
@@ -314,7 +315,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
         return;
     }
 
-    SoundOpen(uWaveDevId);					// open waveform-audio output device
+    soundEnabled = SoundOpen(uWaveDevId);					// open waveform-audio output device
 
     ResumeThread(hThread);					// start thread
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized
@@ -411,6 +412,11 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getPort1Plugg
 JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getPort1Writable(JNIEnv *env, jobject thisz) {
     return (jboolean) ((Chipset.cards_status & PORT1_WRITE) != 0);
 }
+
+JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getSoundEnabled(JNIEnv *env, jobject thisz) {
+    return (jboolean) soundEnabled;
+}
+
 
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     //OnFileNew();
