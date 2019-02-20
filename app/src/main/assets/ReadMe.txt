@@ -1,7 +1,7 @@
 DESCRIPTION
 
 This project ports the Windows application Emu48 written in C to Android.
-It uses the Android NDK. The former Emu48 source code remains untouch because of a thin win32 emulation layer above Linux/NDK!
+It uses the Android NDK. The former Emu48 source code remains untouched because of a thin win32 emulation layer above Linux/NDK!
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 

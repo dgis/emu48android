@@ -1,25 +1,57 @@
-ABOUT
+DESCRIPTION
+
 This project ports the Windows application Emu48 written in C to Android.
-It uses the Android NDK. The former Emu48 source code remains untouch because of a thin win32 emulation layer above Linux/NDK!
+It uses the Android NDK. The former Emu48 source code remains untouched because of a thin win32 emulation layer above Linux/NDK!
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
+
+Some KML files with theirs faceplates are embedded in the application but it is still possible to open a KML file and its dependencies by selecting a folder.
+
+The application does not request any permission (because it opens the files or the KML folders using the content:// scheme).
 
 The application is distributed with the same license under GPL and you can find the source code here:
 https://github.com/dgis/emu48android
 
 
+QUICK START
+
+1. From the left side, slide your finger to open the menu.
+2. Touch the "New..." menu item.
+3. Select a predefined faceplate (or select a custom KML script folder).
+4. And the calculator should now be opened.
+
+
 NOT WORKING YET
+
+- Disassembler
+- Debugger
 - Macro
 - Infrared Printer
 - Serial Ports (Wire or Ir)
-- Disassembler
-- Debugger
+
+
+CHANGES
+
+Version 1.0 (2019-02-XX)
+
+- First public version available on the store.
+
+
+LICENSES
+
+Android version by Régis COSNIER.
+This program is based on Emu48 for Windows version, copyrighted by Christoph Gießelink & Sébastien Carlier, with the addition of a win32 layer to run on Android.
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
+
 
 TODO
-- Add sound switch settings
 - Improve the access to the menu
 - Change the logo following the template
-- Open Emu48 with a state file shared with it (Can not work)
 
 DONE
 - Bug Red and Blue seems inverted.
@@ -57,17 +89,6 @@ DONE
 - Improve button support with HDC operations
 - Improve loading errors (and see the errors in a log)
 - Allow to load external KML/BMP/ROM files
-- Fix sound error at the initialization.
-
-
-
-LICENSE
-
-Android version by Régis COSNIER.
-This program is based on Emu48 for Windows version, copyrighted by Christoph Gießelink & Sébastien Carlier, with the addition of a win32 layer to run on Android.
-
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
+- Fix sound error at the initialization
+- Open Emu48 with a state (content://) file shared with it
+- Add sound switch settings
