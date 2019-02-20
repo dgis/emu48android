@@ -16,7 +16,7 @@ https://github.com/dgis/emu48android
 QUICK START
 
 1. From the left side, slide your finger to open the menu.
-2. Touche the "New..." menu item.
+2. Touch the "New..." menu item.
 3. Select a predefined faceplate (or select a custom KML script folder).
 4. And the calculator should now be opened.
 
