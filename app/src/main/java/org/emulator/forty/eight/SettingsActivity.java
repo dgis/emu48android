@@ -37,7 +37,7 @@ import androidx.core.app.NavUtils;
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    private static final String TAG = "SettingsActivity";
+    //private static final String TAG = "SettingsActivity";
     private static SharedPreferences sharedPreferences;
 
 
@@ -70,36 +70,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
-
-            if (preference instanceof ListPreference) {
-                // For list preferences, look up the correct display value in
-                // the preference's 'entries' list.
-                ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
-
-                // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
-
-            } else {
-                // For all other preferences, set the summary to the value's
-                // simple string representation.
-                preference.setSummary(stringValue);
-            }
-            return true;
-        }
-    };
-
-    /**
      * Helper method to determine if the device has an extra-large screen. For
      * example, 10" tablets are extra-large.
      */
@@ -107,49 +77,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
-
-//    /**
-//     * Binds a preference's summary to its value. More specifically, when the
-//     * preference's value is changed, its summary (line of text below the
-//     * preference title) is updated to reflect the value. The summary is also
-//     * immediately updated upon calling this method. The exact display format is
-//     * dependent on the type of preference.
-//     *
-//     * @see #sBindPreferenceSummaryToValueListener
-//     */
-//    private static void bindPreferenceSummaryToStringValue(Preference preference) {
-//        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-//        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sharedPreferences.getString(preference.getKey(), ""));
-//    }
-//
-//    /**
-//     * Binds a preference's summary to its value. More specifically, when the
-//     * preference's value is changed, its summary (line of text below the
-//     * preference title) is updated to reflect the value. The summary is also
-//     * immediately updated upon calling this method. The exact display format is
-//     * dependent on the type of preference.
-//     *
-//     * @see #sBindPreferenceSummaryToValueListener
-//     */
-//    private static void bindPreferenceSummaryToIntValue(Preference preference) {
-//        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-//        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sharedPreferences.getInt(preference.getKey(), 0));
-//    }
-//
-//    /**
-//     * Binds a preference's summary to its value. More specifically, when the
-//     * preference's value is changed, its summary (line of text below the
-//     * preference title) is updated to reflect the value. The summary is also
-//     * immediately updated upon calling this method. The exact display format is
-//     * dependent on the type of preference.
-//     *
-//     * @see #sBindPreferenceSummaryToValueListener
-//     */
-//    private static void bindPreferenceSummaryToBoolValue(Preference preference) {
-//        // Set the listener to watch for value changes.
-//        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-//        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sharedPreferences.getBoolean(preference.getKey(), false));
-//    }
 
     /**
      * {@inheritDoc}
@@ -159,15 +86,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return isXLargeTablet(this);
     }
 
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-//    public void onBuildHeaders(List<Header> target) {
-//        loadHeadersFromResource(R.xml.pref_headers, target);
-//    }
-
     /**
      * This method stops fragment injection in malicious applications.
      * Make sure to deny any unknown fragments here.
@@ -175,8 +93,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-//                || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-//                || NotificationPreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -231,18 +147,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             preferenceAutosave.setOnPreferenceChangeListener(onPreferenceChangeListenerAutosave);
             onPreferenceChangeListenerAutosave.onPreferenceChange(preferenceAutosave, sharedPreferences.getBoolean(preferenceAutosave.getKey(), false));
 
-//            Preference preferenceAutosaveonexit = findPreference("settings_autosaveonexit");
-//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerAutosaveonexit = new Preference.OnPreferenceChangeListener() {
-//                @Override
-//                public boolean onPreferenceChange(Preference preference, Object value) {
-//                    String stringValue = value.toString();
-//                    preference.setSummary(stringValue);
-//                    return true;
-//                }
-//            };
-//            preferenceAutosaveonexit.setOnPreferenceChangeListener(onPreferenceChangeListenerAutosaveonexit);
-//            onPreferenceChangeListenerAutosaveonexit.onPreferenceChange(preferenceAutosaveonexit, sharedPreferences.getBoolean(preferenceAutosaveonexit.getKey(), false));
-
             Preference preferenceObjectloadwarning = findPreference("settings_objectloadwarning");
             Preference.OnPreferenceChangeListener onPreferenceChangeListenerObjectloadwarning = new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -272,49 +176,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 preferenceAllowSound.setSummary("Cannot initialize the sound engine.");
                 preferenceAllowSound.setEnabled(false);
             }
-
-
-            // KML settings
-
-//            final Preference preferenceKMLDefault = findPreference("settings_kml_default");
-//            final Preference preferenceKMLFolder = findPreference("settings_kml_folder");
-//
-//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLDefault = new Preference.OnPreferenceChangeListener() {
-//                @Override
-//                public boolean onPreferenceChange(Preference preference, Object value) {
-//                    Boolean booleanValue = (Boolean)value;
-//                    String stringValue = value.toString();
-//                    preference.setSummary(stringValue);
-//                    preferenceKMLFolder.setEnabled(booleanValue);
-//                    return true;
-//                }
-//            };
-//            preferenceKMLDefault.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLDefault);
-//            onPreferenceChangeListenerKMLDefault.onPreferenceChange(preferenceKMLDefault, sharedPreferences.getBoolean(preferenceKMLDefault.getKey(), true));
-//
-//            Preference.OnPreferenceChangeListener onPreferenceChangeListenerKMLFolder = new Preference.OnPreferenceChangeListener() {
-//                @Override
-//                public boolean onPreferenceChange(Preference preference, Object value) {
-//                    String stringValue = value.toString();
-//                    String displayName = stringValue;
-//                    try {
-//                        displayName = Utils.getFileName(getActivity(), stringValue);
-//                    } catch(Exception e) {
-//                    }
-//                    preference.setSummary(displayName);
-//                    return true;
-//                }
-//            };
-//            preferenceKMLFolder.setOnPreferenceChangeListener(onPreferenceChangeListenerKMLFolder);
-//            onPreferenceChangeListenerKMLFolder.onPreferenceChange(preferenceKMLFolder, sharedPreferences.getString(preferenceKMLFolder.getKey(), ""));
-//            preferenceKMLFolder.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-//                @Override
-//                public boolean onPreferenceClick(Preference preference) {
-//                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-//                    startActivityForResult(intent, MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS);
-//                    return true;
-//                }
-//            });
 
             // Ports 1 & 2 settings
 
@@ -354,12 +215,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort2en = new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object value) {
-                    Boolean booleanValue = (Boolean)value;
                     String stringValue = value.toString();
                     preference.setSummary(stringValue);
                     preferencePort2en.setEnabled(enablePortPreferences);
-                    preferencePort2wr.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
-                    preferencePort2load.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
+                    preferencePort2wr.setEnabled(enablePortPreferences);
+                    preferencePort2load.setEnabled(enablePortPreferences);
                     return true;
                 }
             };
@@ -397,7 +257,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public boolean onPreferenceClick(Preference preference) {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    //intent.setType("YOUR FILETYPE"); //not needed, but maybe usefull
                     intent.setType("*/*");
                     intent.putExtra(Intent.EXTRA_TITLE, "shared.bin");
                     getActivity().startActivityForResult(intent, MainActivity.INTENT_PORT2LOAD);
@@ -431,29 +290,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     editor.apply();
                     makeUriPersistable(data, uri);
                 }
-//            } else if(requestCode == MainActivity.INTENT_PICK_KML_FOLDER_FOR_SETTINGS) {
-//                Uri uri = data.getData();
-//                String url = null;
-//                if (uri != null) {
-//                    url = uri.toString();
-//                    SharedPreferences.Editor editor = sharedPreferences.edit();
-//                    editor.putString("settings_kml_folder", url);
-//                    editor.apply();
-//                    makeUriPersistableReadOnly(data, uri);
-//                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
-        //grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        getContentResolver().takePersistableUriPermission(uri, takeFlags);
-    }
-    private void makeUriPersistableReadOnly(Intent data, Uri uri) {
-        //grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 }

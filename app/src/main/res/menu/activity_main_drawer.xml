@@ -3,67 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-<!--
-https://material.io/tools/icons/?icon=insert_drive_file&style=baseline
-https://github.com/google/material-design-icons/tree/master/action/drawable-anydpi-v21
-
-NEW
-++insert_drive_file *editor
-
-OPEN
-++ description *action
-open_in_new *action
-
-SAVEs
-save *content
-
-CLOSE
-close *navigation
-
-
-LOAD OBJECT
-open_in_browser *action
-
-SAVE OBJECT
-save_alt     *content-
-
-COPY SCREEN
-tv *hardware
-
-COPY STACK
-filter_none *image
-
-PASTE STACK
-file_copy *content-
-
-
-RESET CALCULATOR
-refresh *navigation
-
-SAVE BACKUP
-++playlist_add *av
-input *action
-subdirectory_arrow_right *navigation
-
-RESTORE BACKUP
-++playlist_play *av
-subdirectory_arrow_left *navigation
-restore_page *action
-
-DELETE BACKUP
-remove *content
-
-KML
-wallpaper *device
-art_track *av
-
-
-HELP
-help *action
-
-ABOUT
-info *action
--->
+    <!--
+        https://material.io/tools/icons/?icon=insert_drive_file&style=baseline
+        https://github.com/google/material-design-icons/tree/master/action/drawable-anydpi-v21
+    -->
 
     <group android:checkableBehavior="single">
         <item

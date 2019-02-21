@@ -352,10 +352,6 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_stop(JNIEnv *env,
 }
 
 
-//JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_resize(JNIEnv *env, jobject thisz, jint width, jint height) {
-//
-//}
-
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_draw(JNIEnv *env, jobject thisz) {
     draw();
 }
@@ -381,11 +377,6 @@ JNIEXPORT jstring JNICALL Java_org_emulator_forty_eight_NativeLib_getCurrentFile
     jstring result = (*env)->NewStringUTF(env, szCurrentFilename);
     return result;
 }
-//JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setCurrentFilename(JNIEnv *env, jobject thisz, jstring newFilename) {
-//    const char *newFilenameUTF8 = (*env)->GetStringUTFChars(env, newFilename , NULL) ;
-//    _tcscpy(szBufferFilename, newFilenameUTF8);
-//    (*env)->ReleaseStringUTFChars(env, newFilename, newFilenameUTF8);
-//}
 
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getCurrentModel(JNIEnv *env, jobject thisz) {
     return cCurrentRomType;
@@ -419,7 +410,6 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getSoundEnabl
 
 
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
-    //OnFileNew();
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
@@ -433,14 +423,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
     _tcscpy(szChosenCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
-//    TCHAR * urlContentSchemeFound = _tcsstr(szChosenCurrentKml, _T("content://"));
-//    if(urlContentSchemeFound) {
-//        _tcscpy(szEmuDirectory, szChosenCurrentKml);
-//        TCHAR * filename = _tcsrchr(szChosenCurrentKml, _T('/'));
-//        if(filename) {
-//            *filename = _T('\0');
-//        }
-//        _tcscpy(szRomDirectory, szEmuDirectory);
     TCHAR * fileScheme = _T("document:");
     TCHAR * urlSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
     if(urlSchemeFound) {
@@ -469,7 +451,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
     return result;
 }
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
-    //OnFileOpen();
     if (bDocumentAvail)
     {
         SwitchToState(SM_INVALID);
@@ -496,7 +477,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
 }
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileSave(JNIEnv *env, jobject thisz) {
     // szBufferFilename must be set before calling that!!!
-    //OnFileSave();
     BOOL result = FALSE;
     if (bDocumentAvail)
     {
@@ -669,78 +649,6 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewCopy(JNIEnv
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
     }
 
-//    void * pixelsSource = hBitmap->bitmapBits;
-//
-//    int sourceWidth = hBitmap->bitmapInfoHeader->biWidth;
-//    int sourceHeight = abs(hBitmap->bitmapInfoHeader->biHeight);
-//    int destinationWidth = bitmapScreenInfo.width;
-//    int destinationHeight = bitmapScreenInfo.height;
-//
-//    //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
-//    float src_dx = (float)wSrc / (float)wDest;
-//    float src_dy = (float)hSrc / (float)hDest;
-//    float src_maxx = xSrc + wSrc;
-//    float src_maxy = ySrc + hSrc;
-//    float dst_maxx = xDest + wDest;
-//    float dst_maxy = yDest + hDest;
-//    float src_cury = ySrc;
-//
-//    int sourceBytes = (hBitmap->bitmapInfoHeader->biBitCount >> 3);
-//    float sourceStride = sourceWidth * sourceBytes;
-//    sourceStride = (float)(4 * ((sourceWidth * hBitmap->bitmapInfoHeader->biBitCount + 31) / 32));
-//    float destinationStride = bitmapScreenInfo.stride; // Destination always 4 bytes RGBA
-//    //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytes);
-//
-//    PALETTEENTRY * palPalEntry = hdcSrc->selectedPalette && hdcSrc->selectedPalette->paletteLog && hdcSrc->selectedPalette->paletteLog->palPalEntry ?
-//                                 hdcSrc->selectedPalette->paletteLog->palPalEntry : NULL;
-//
-//    for (float y = yDest; y < dst_maxy; y++)
-//    {
-//        float src_curx = xSrc;
-//        for (float x = xDest; x < dst_maxx; x++)
-//        {
-//            // Point sampling - you can also impl as bilinear or other
-//            //dst.bmp[x,y] = src.bmp[src_curx, src_cury];
-//
-//            BYTE * destinationPixel = pixelsDestination + (int)(4.0 * x + destinationStride * y);
-//            BYTE * sourcePixel = pixelsSource + (int)(sourceBytes * (int)src_curx) + (int)(sourceStride * (int)src_cury);
-//
-//            // -> ARGB_8888
-//            switch (sourceBytes) {
-//                case 1:
-//                    if(palPalEntry) {
-//                        BYTE colorIndex = sourcePixel[0];
-//                        destinationPixel[0] = palPalEntry[colorIndex].peBlue;
-//                        destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-//                        destinationPixel[2] = palPalEntry[colorIndex].peRed;
-//                        destinationPixel[3] = 255;
-//                    } else {
-//                        destinationPixel[0] = sourcePixel[0];
-//                        destinationPixel[1] = sourcePixel[0];
-//                        destinationPixel[2] = sourcePixel[0];
-//                        destinationPixel[3] = 255;
-//                    }
-//                    break;
-//                case 3:
-//                    destinationPixel[0] = sourcePixel[2];
-//                    destinationPixel[1] = sourcePixel[1];
-//                    destinationPixel[2] = sourcePixel[0];
-//                    destinationPixel[3] = 255;
-//                    break;
-//                case 4:
-//                    memcpy(destinationPixel, sourcePixel, sourceBytes);
-//                    break;
-//                default:
-//                    break;
-//            }
-//
-//            src_curx += src_dx;
-//        }
-//
-//        src_cury += src_dy;
-//    }
-
-
     // DIB bitmap
     #define WIDTHBYTES(bits) (((bits) + 31) / 32 * 4)
     #define PALVERSION       0x300
@@ -821,41 +729,6 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewCopy(JNIEnv
     }
 
 
-//    // memory allocation for clipboard data
-//    if ((hClipObj = GlobalAlloc(GMEM_MOVEABLE, dwLen)) != NULL)
-//    {
-//        lpbi = (LPBITMAPINFOHEADER ) GlobalLock(hClipObj);
-//        // initialize BITMAPINFOHEADER
-//        lpbi->biSize = sizeof(BITMAPINFOHEADER);
-//        lpbi->biWidth = bm.bmWidth;
-//        lpbi->biHeight = bm.bmHeight;
-//        lpbi->biPlanes = 1;
-//        lpbi->biBitCount = wBits;
-//        lpbi->biCompression = BI_RGB;
-//        lpbi->biSizeImage = dwSizeImage;
-//        lpbi->biXPelsPerMeter = 0;
-//        lpbi->biYPelsPerMeter = 0;
-//        lpbi->biClrUsed = 0;
-//        lpbi->biClrImportant = 0;
-//        // get bitmap color table and bitmap data
-//        GetDIBits(hBmpDC, hBmp, 0, lpbi->biHeight, (LPBYTE)lpbi + dwLen - dwSizeImage,
-//                  (LPBITMAPINFO)lpbi, DIB_RGB_COLORS);
-//        GlobalUnlock(hClipObj);
-//        SetClipboardData(CF_DIB, hClipObj);
-//
-//        // get number of entries in the logical palette
-//        GetObject(hPalette,sizeof(WORD),&wBits);
-//
-//        // memory allocation for temporary palette data
-//        if ((ppal = (PLOGPALETTE) calloc(sizeof(LOGPALETTE) + wBits * sizeof(PALETTEENTRY),1)) != NULL)
-//        {
-//            ppal->palVersion    = PALVERSION;
-//            ppal->palNumEntries = wBits;
-//            GetPaletteEntries(hPalette, 0, wBits, ppal->palPalEntry);
-//            SetClipboardData(CF_PALETTE, CreatePalette(ppal));
-//            free(ppal);
-//        }
-//    }
     DeleteDC(hBmpDC);
     DeleteObject(hBmp);
     #undef WIDTHBYTES
@@ -875,7 +748,6 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onStackPaste(JNIE
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onViewReset(JNIEnv *env, jobject thisz) {
-    //OnViewReset();
     if (nState != SM_RUN)
         return;
     SwitchToState(SM_SLEEP);
@@ -969,15 +841,21 @@ JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEn
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {
-    OnBackupSave();
+    UINT nOldState;
+    if (pbyRom == NULL) return;
+    nOldState = SwitchToState(SM_INVALID);
+    SaveBackup();
+    SwitchToState(nOldState);
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupRestore(JNIEnv *env, jobject thisz) {
-    OnBackupRestore();
+    SwitchToState(SM_INVALID);
+    RestoreBackup();
+    if (pbyRom) SwitchToState(SM_RUN);
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupDelete(JNIEnv *env, jobject thisz) {
-    OnBackupDelete();
+    ResetBackup();
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {

@@ -52,16 +52,16 @@ public class MainScreenView extends SurfaceView {
         vkmap.put(KeyEvent.KEYCODE_DPAD_UP, 0x26); // VK_UP
         vkmap.put(KeyEvent.KEYCODE_DPAD_RIGHT, 0x27); // VK_RIGHT
         vkmap.put(KeyEvent.KEYCODE_DPAD_DOWN, 0x28); // VK_DOWN
-        vkmap.put(KeyEvent.KEYCODE_0, 0x30); // 0
-        vkmap.put(KeyEvent.KEYCODE_1, 0x31); // 1
-        vkmap.put(KeyEvent.KEYCODE_2, 0x32); // 2
-        vkmap.put(KeyEvent.KEYCODE_3, 0x33); // 3
-        vkmap.put(KeyEvent.KEYCODE_4, 0x34); // 4
-        vkmap.put(KeyEvent.KEYCODE_5, 0x35); // 5
-        vkmap.put(KeyEvent.KEYCODE_6, 0x36); // 6
-        vkmap.put(KeyEvent.KEYCODE_7, 0x37); // 7
-        vkmap.put(KeyEvent.KEYCODE_8, 0x38); // 8
-        vkmap.put(KeyEvent.KEYCODE_9, 0x39); // 9
+//        vkmap.put(KeyEvent.KEYCODE_0, 0x30); // 0
+//        vkmap.put(KeyEvent.KEYCODE_1, 0x31); // 1
+//        vkmap.put(KeyEvent.KEYCODE_2, 0x32); // 2
+//        vkmap.put(KeyEvent.KEYCODE_3, 0x33); // 3
+//        vkmap.put(KeyEvent.KEYCODE_4, 0x34); // 4
+//        vkmap.put(KeyEvent.KEYCODE_5, 0x35); // 5
+//        vkmap.put(KeyEvent.KEYCODE_6, 0x36); // 6
+//        vkmap.put(KeyEvent.KEYCODE_7, 0x37); // 7
+//        vkmap.put(KeyEvent.KEYCODE_8, 0x38); // 8
+//        vkmap.put(KeyEvent.KEYCODE_9, 0x39); // 9
         vkmap.put(KeyEvent.KEYCODE_A, 0x41); // A
         vkmap.put(KeyEvent.KEYCODE_B, 0x42); // B
         vkmap.put(KeyEvent.KEYCODE_C, 0x43); // C
@@ -140,46 +140,23 @@ public class MainScreenView extends SurfaceView {
             //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
             NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
             break;
-//			case MotionEvent.ACTION_MOVE:
-//				break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_POINTER_UP:
             //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
             NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
             break;
-//			case MotionEvent.ACTION_CANCEL:
-//				break;
-//			case MotionEvent.ACTION_OUTSIDE:
-//				break;
-            default:
+        default:
+            break;
         }
         return true;
     }
-
-//    @Override
-//    public boolean onGenericMotionEvent(MotionEvent event) {
-//        if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
-//            switch (event.getAction()) {
-//                case MotionEvent.ACTION_SCROLL:
-//                    float wheelDelta = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-//                    if(wheelDelta > 0f)
-//                        scaleByStep(mScaleStep, event.getX(), event.getY());
-//                    else if(wheelDelta < 0f)
-//                        scaleByStep(1.0f / mScaleStep, event.getX(), event.getY());
-//
-//                    return true;
-//            }
-//        }
-//        return super.onGenericMotionEvent(event);
-//    }
-
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             Integer windowsKeycode = vkmap.get(keyCode);
             if (windowsKeycode != null)
-                NativeLib.keyDown(windowsKeycode.intValue());
+                NativeLib.keyDown(windowsKeycode);
             else
                 Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
@@ -191,7 +168,7 @@ public class MainScreenView extends SurfaceView {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             Integer windowsKeycode = vkmap.get(keyCode);
             if (windowsKeycode != null)
-                NativeLib.keyUp(windowsKeycode.intValue());
+                NativeLib.keyUp(windowsKeycode);
             else
                 Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
