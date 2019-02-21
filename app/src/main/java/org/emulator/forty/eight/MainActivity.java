@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -183,6 +184,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
     }
+
+//    private View.OnLongClickListener onLongClickListener = new View.OnLongClickListener() {
+//        @Override
+//        public boolean onLongClick(View v) {
+//            return false;
+//        }
+//    };
 
     private void updateMRU() {
         Menu menu = navigationView.getMenu();
