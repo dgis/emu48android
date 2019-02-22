@@ -1,24 +1,24 @@
 package org.emulator.forty.eight;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.provider.OpenableColumns;
+import android.util.ArraySet;
 import android.view.MenuItem;
 
-import org.emulator.forty.eight.R;
+import com.google.android.material.navigation.NavigationView;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -35,10 +35,13 @@ import androidx.core.app.NavUtils;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     //private static final String TAG = "SettingsActivity";
     private static SharedPreferences sharedPreferences;
+    private HashSet<String> settingsKeyChanged = new HashSet<>();
+
+    private GeneralPreferenceFragment generalPreferenceFragment;
 
 
     @Override
@@ -46,6 +49,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         super.onCreate(savedInstanceState);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -53,8 +57,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new GeneralPreferenceFragment()).commit();
+        generalPreferenceFragment = new GeneralPreferenceFragment();
+        getFragmentManager().beginTransaction().replace(android.R.id.content, generalPreferenceFragment).commit();
+    }
 
+    @Override
+    protected void onDestroy() {
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        super.onDestroy();
     }
 
     @Override
@@ -67,6 +77,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return true;
         }
         return super.onMenuItemSelected(featureId, item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("changedKeys", settingsKeyChanged.toArray(new String[0]));
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
+        super.onBackPressed();
     }
 
     /**
@@ -96,12 +115,45 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 ;
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        settingsKeyChanged.add(key);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(resultCode == Activity.RESULT_OK && data != null) {
+            if(requestCode == MainActivity.INTENT_PORT2LOAD) {
+                Uri uri = data.getData();
+                //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
+                String url = null;
+                if (uri != null) {
+                    url = uri.toString();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("settings_port2load", url);
+                    editor.apply();
+                    makeUriPersistable(data, uri);
+                    if(generalPreferenceFragment != null)
+                        generalPreferenceFragment.updatePort2LoadFilename(url);
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void makeUriPersistable(Intent data, Uri uri) {
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+    }
+
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
+
+        Preference preferencePort2load = null;
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -183,18 +235,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             final Preference preferencePort1wr = findPreference("settings_port1wr");
             final Preference preferencePort2en = findPreference("settings_port2en");
             final Preference preferencePort2wr = findPreference("settings_port2wr");
-            final Preference preferencePort2load = findPreference("settings_port2load");
+            preferencePort2load = findPreference("settings_port2load");
 
             final boolean enablePortPreferences = NativeLib.isPortExtensionPossible();
 
             Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort1en = new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object value) {
-                    Boolean booleanValue = (Boolean)value;
                     String stringValue = value.toString();
                     preference.setSummary(stringValue);
                     preferencePort1en.setEnabled(enablePortPreferences);
-                    preferencePort1wr.setEnabled(enablePortPreferences /*&& booleanValue.booleanValue()*/);
+                    preferencePort1wr.setEnabled(enablePortPreferences);
                     return true;
                 }
             };
@@ -237,21 +288,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             preferencePort2wr.setOnPreferenceChangeListener(onPreferenceChangeListenerPort2wr);
             onPreferenceChangeListenerPort2wr.onPreferenceChange(preferencePort2wr, sharedPreferences.getBoolean(preferencePort2wr.getKey(), false));
 
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort2load = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    String stringValue = value.toString();
-                    String displayName = stringValue;
-                    try {
-                        displayName = Utils.getFileName(getActivity(), stringValue);
-                    } catch(Exception e) {
-                    }
-                    preference.setSummary(displayName);
-                    return true;
-                }
-            };
-            preferencePort2load.setOnPreferenceChangeListener(onPreferenceChangeListenerPort2load);
-            onPreferenceChangeListenerPort2load.onPreferenceChange(preferencePort2load, sharedPreferences.getString(preferencePort2load.getKey(), ""));
+            updatePort2LoadFilename(sharedPreferences.getString(preferencePort2load.getKey(), ""));
             preferencePort2load.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -274,29 +311,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
-    }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(resultCode == Activity.RESULT_OK && data != null) {
-            if(requestCode == MainActivity.INTENT_PORT2LOAD) {
-                Uri uri = data.getData();
-                //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
-                String url = null;
-                if (uri != null) {
-                    url = uri.toString();
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("settings_port2load", url);
-                    editor.apply();
-                    makeUriPersistable(data, uri);
+        public void updatePort2LoadFilename(String port2Filename) {
+            if(preferencePort2load != null) {
+                String displayName = port2Filename;
+                try {
+                    displayName = Utils.getFileName(getActivity(), port2Filename);
+                } catch (Exception e) {
                 }
+                preferencePort2load.setSummary(displayName);
             }
         }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void makeUriPersistable(Intent data, Uri uri) {
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 }

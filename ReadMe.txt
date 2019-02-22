@@ -50,11 +50,12 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 
 
 TODO
+- Change embedded BMP into PNG
 - Improve the access to the menu
 - Change the logo following the template
 
 DONE
-- Bug Red and Blue seems inverted.
+- Bug Red and Blue seems inverted
 - Multitouch
 - Choose KML/Change KML/NewDocument
 - Load/Save object

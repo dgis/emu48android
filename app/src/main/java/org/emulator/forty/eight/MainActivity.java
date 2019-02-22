@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,7 +60,7 @@ import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener /*, SharedPreferences.OnSharedPreferenceChangeListener*/ {
 
     private static final String TAG = "MainActivity";
     public static MainActivity mainActivity;
@@ -120,8 +121,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
-        mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
-        settingUpdateAllowRotation();
+        //mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+        //settingUpdateAllowRotation();
 
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
@@ -137,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         updateMRU();
         updateFromPreferences(null, false);
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        //sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         updateNavigationDrawerItems();
 
@@ -244,14 +245,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onDestroy() {
         //onDestroy is never called!
         NativeLib.stop();
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        //sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        updateFromPreferences(key, true);
-    }
+//    @Override
+//    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+//        updateFromPreferences(key, true);
+//    }
 
     @Override
     public void onBackPressed() {
@@ -789,6 +790,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             editor.putBoolean("settings_kml_default", true);
                             //editor.putString("settings_kml_folder", url);
                             editor.apply();
+                            updateFromPreferences("settings_kml", true);
                             if(changeKML)
                                 OnViewScript();
                             else
@@ -820,70 +822,96 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if(resultCode == Activity.RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            String url = null;
-            if(uri != null)
-                url = uri.toString();
-            if(url != null)
-                switch (requestCode) {
-                    case INTENT_GETOPENFILENAME: {
-                        Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
-                        if (onFileOpen(url) != 0) {
-                            saveLastDocument(url);
-                            makeUriPersistable(data, uri);
-                        }
-                        break;
-                    }
-                    case INTENT_GETSAVEFILENAME: {
-                        Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
-                        if (NativeLib.onFileSaveAs(url) != 0) {
-                            showAlert(getString(R.string.message_state_saved));
-                            saveLastDocument(url);
-                            makeUriPersistable(data, uri);
-                            displayFilename(url);
-                            if (fileSaveAsCallback != null)
-                                fileSaveAsCallback.run();
-                        }
-                        break;
-                    }
-                    case INTENT_OBJECT_LOAD: {
-                        Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
-                        NativeLib.onObjectLoad(url);
-                        break;
-                    }
-                    case INTENT_OBJECT_SAVE: {
-                        Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
-                        NativeLib.onObjectSave(url);
-                        break;
-                    }
-                    case INTENT_SETTINGS:
-                        break;
-                    case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
-                    case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
-                    case INTENT_PICK_KML_FOLDER_FOR_SETTINGS: {
-                        Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putBoolean("settings_kml_default", false);
-                        editor.putString("settings_kml_folder", url);
-                        editor.apply();
-                        makeUriPersistableReadOnly(data, uri);
-
-                        switch (requestCode) {
-                            case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
-                                OnFileNew();
+            if(requestCode == INTENT_SETTINGS) {
+                String[] changedKeys = data.getStringArrayExtra("changedKeys");
+                if(changedKeys != null) {
+                    HashSet<String> changedKeysCleaned = new HashSet<>();
+                    for (String key : changedKeys) {
+                        switch (key) {
+                            case "settings_port1en":
+                            case "settings_port1wr":
+                                changedKeysCleaned.add("settings_port1");
                                 break;
-                            case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
-                                OnViewScript();
+                            case "settings_port2en":
+                            case "settings_port2wr":
+                            case "settings_port2load":
+                                changedKeysCleaned.add("settings_port2");
                                 break;
-                            case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
-
+                            default:
+                                changedKeysCleaned.add(key);
                                 break;
                         }
-                        break;
                     }
-                    default:
-                        break;
+                    for (String key : changedKeysCleaned) {
+                        updateFromPreferences(key, true);
+                    }
                 }
+            } else {
+                Uri uri = data.getData();
+                String url = null;
+                if (uri != null)
+                    url = uri.toString();
+                if (url != null) {
+                    switch (requestCode) {
+                        case INTENT_GETOPENFILENAME: {
+                            Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
+                            if (onFileOpen(url) != 0) {
+                                saveLastDocument(url);
+                                makeUriPersistable(data, uri);
+                            }
+                            break;
+                        }
+                        case INTENT_GETSAVEFILENAME: {
+                            Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
+                            if (NativeLib.onFileSaveAs(url) != 0) {
+                                showAlert(getString(R.string.message_state_saved));
+                                saveLastDocument(url);
+                                makeUriPersistable(data, uri);
+                                displayFilename(url);
+                                if (fileSaveAsCallback != null)
+                                    fileSaveAsCallback.run();
+                            }
+                            break;
+                        }
+                        case INTENT_OBJECT_LOAD: {
+                            Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
+                            NativeLib.onObjectLoad(url);
+                            break;
+                        }
+                        case INTENT_OBJECT_SAVE: {
+                            Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                            NativeLib.onObjectSave(url);
+                            break;
+                        }
+                        case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                        case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                        case INTENT_PICK_KML_FOLDER_FOR_SETTINGS: {
+                            Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean("settings_kml_default", false);
+                            editor.putString("settings_kml_folder", url);
+                            editor.apply();
+                            updateFromPreferences("settings_kml", true);
+                            makeUriPersistableReadOnly(data, uri);
+
+                            switch (requestCode) {
+                                case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                                    OnFileNew();
+                                    break;
+                                case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                                    OnViewScript();
+                                    break;
+                                case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
+
+                                    break;
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
         }
         fileSaveAsCallback = null;
         super.onActivityResult(requestCode, resultCode, data);
@@ -1143,12 +1171,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.putBoolean("settings_port1en", port1Plugged);
         editor.putBoolean("settings_port1wr", port1Writable);
         editor.apply();
+        updateFromPreferences("settings_port1", true);
     }
 
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1162,8 +1191,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
 
                 case "settings_allow_rotation":
-                    //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-                    settingUpdateAllowRotation();
+                    if(sharedPreferences.getBoolean("settings_allow_rotation", false))
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                    else
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     break;
                 case "settings_fill_screen":
                     mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
@@ -1206,12 +1237,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
             }
         }
-    }
-
-    private void settingUpdateAllowRotation() {
-        if(sharedPreferences.getBoolean("settings_allow_rotation", false))
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-        else
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 }
