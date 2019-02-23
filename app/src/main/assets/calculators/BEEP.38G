@@ -1,2 +1,0 @@
-;014A1:6300; disable 10 min auto off (internal, undocumented)
-017D0:81B1; =makebeep (internal, undocumented)
