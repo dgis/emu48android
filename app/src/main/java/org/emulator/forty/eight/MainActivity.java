@@ -60,7 +60,7 @@ import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener /*, SharedPreferences.OnSharedPreferenceChangeListener*/ {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
     public static MainActivity mainActivity;
@@ -121,8 +121,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
-        //mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
-        //settingUpdateAllowRotation();
 
         AssetManager assetManager = getResources().getAssets();
         NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
@@ -138,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         updateMRU();
         updateFromPreferences(null, false);
-        //sharedPreferences.registerOnSharedPreferenceChangeListener(this);
 
         updateNavigationDrawerItems();
 
@@ -185,13 +182,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
     }
-
-//    private View.OnLongClickListener onLongClickListener = new View.OnLongClickListener() {
-//        @Override
-//        public boolean onLongClick(View v) {
-//            return false;
-//        }
-//    };
 
     private void updateMRU() {
         Menu menu = navigationView.getMenu();
@@ -245,14 +235,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onDestroy() {
         //onDestroy is never called!
         NativeLib.stop();
-        //sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
     }
-
-//    @Override
-//    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-//        updateFromPreferences(key, true);
-//    }
 
     @Override
     public void onBackPressed() {

@@ -50,7 +50,6 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 
 
 TODO
-- Change embedded BMP into PNG
 - Improve the access to the menu
 - Change the logo following the template
 

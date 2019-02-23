@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 
+import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 public class MainScreenView extends SurfaceView {
 
     protected static final String TAG = "MainScreenView";
+    private Paint paint = new Paint();
     private Bitmap bitmapMainScreen;
     private HashMap<Integer, Integer> vkmap;
     private float screenScaleX = 1.0f;
@@ -29,12 +31,15 @@ public class MainScreenView extends SurfaceView {
     public MainScreenView(Context context) {
         super(context);
 
+        paint.setFilterBitmap(true);
+        paint.setAntiAlias(true);
+
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.BLACK);
 
-        vkmap = new HashMap<Integer, Integer>();
+        vkmap = new HashMap<>();
         //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
         vkmap.put(KeyEvent.KEYCODE_TAB, 0x09); // VK_TAB
         vkmap.put(KeyEvent.KEYCODE_ENTER, 0x0D); // VK_RETURN
@@ -131,7 +136,6 @@ public class MainScreenView extends SurfaceView {
 
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
-        int touchCount = event.getPointerCount();
         int actionIndex = event.getActionIndex();
         int action = event.getActionMasked();
         switch (action) {
@@ -219,7 +223,7 @@ public class MainScreenView extends SurfaceView {
         canvas.save();
         canvas.translate(screenOffsetX, screenOffsetY);
         canvas.scale(screenScaleX, screenScaleY);
-        canvas.drawBitmap(bitmapMainScreen, 0, 0, null);
+        canvas.drawBitmap(bitmapMainScreen, 0, 0, paint);
         canvas.restore();
     }
 
@@ -243,10 +247,6 @@ public class MainScreenView extends SurfaceView {
 
     public Bitmap getBitmapMainScreen() {
         return bitmapMainScreen;
-    }
-
-    public boolean getFillScreen() {
-        return fillScreen;
     }
 
     public void setFillScreen(boolean fillScreen) {

@@ -9,8 +9,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import org.emulator.forty.eight.R;
-
 import java.io.IOException;
 import java.io.InputStream;
 

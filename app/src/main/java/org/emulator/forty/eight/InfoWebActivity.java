@@ -6,8 +6,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 
-import org.emulator.forty.eight.R;
-
 public class InfoWebActivity extends Activity {
 
 	@Override
