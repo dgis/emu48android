@@ -868,7 +868,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
     bAlwaysDisplayLog = TRUE;
 
     if(_tcscmp(_T("settings_realspeed"), configKey) == 0) {
-        bRealSpeed = intValue1;
+        bRealSpeed = (BOOL) intValue1;
         if(isDynamic)
             SetSpeed(bRealSpeed);			// set speed
     } else if(_tcscmp(_T("settings_grayscale"), configKey) == 0) {
@@ -879,10 +879,10 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
             SwitchToState(nOldState);
         }
     } else if(_tcscmp(_T("settings_sound_volume"), configKey) == 0) {
-        dwWaveVol = intValue1;
+        dwWaveVol = (DWORD)intValue1;
     } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
-        BOOL settingsPort1en = intValue1;
-        BOOL settingsPort1wr = intValue2;
+        BOOL settingsPort1en = (BOOL) intValue1;
+        BOOL settingsPort1wr = (BOOL) intValue2;
         // port1
         if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
         {
