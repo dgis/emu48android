@@ -32,7 +32,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.0 (2019-02-XX)
+Version 1.0 (2019-02-28)
 
 - First public version available on the store.
 
@@ -47,7 +47,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
-
+The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
 - Improve the access to the menu
