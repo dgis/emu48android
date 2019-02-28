@@ -32,6 +32,13 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.1 (2019-03-01)
+
+- Update the KML spripts and the images from Eric Rechlin.
+- Fix crash when changing the main image.
+- Fix an issue when KML file is not found.
+
+
 Version 1.0 (2019-02-28)
 
 - First public version available on the store.

@@ -27,6 +27,7 @@ public class MainScreenView extends SurfaceView {
     private float screenOffsetX = 0.0f;
     private float screenOffsetY= 0.0f;
     private boolean fillScreen = false;
+    private int backgroundColor = 0;
 
     public MainScreenView(Context context) {
         super(context);
@@ -220,6 +221,9 @@ public class MainScreenView extends SurfaceView {
     @Override
     protected void onDraw(Canvas canvas) {
         //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
+
+        canvas.drawColor(backgroundColor);
+
         canvas.save();
         canvas.translate(screenOffsetX, screenOffsetY);
         canvas.scale(screenScaleX, screenScaleY);
@@ -237,8 +241,22 @@ public class MainScreenView extends SurfaceView {
                 break;
             case CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size
-                bitmapMainScreen.reconfigure(/* x */ Math.max(1, param1), /* y */ Math.max(1, param2), Bitmap.Config.ARGB_8888);
-                bitmapMainScreen.eraseColor(Color.BLACK);
+                if(bitmapMainScreen == null || bitmapMainScreen.getWidth() != param1 || bitmapMainScreen.getHeight() != param2) {
+
+                    Bitmap  oldBitmapMainScreen = bitmapMainScreen;
+
+                    //bitmapMainScreen.reconfigure(/* x */ Math.max(1, param1), /* y */ Math.max(1, param2), Bitmap.Config.ARGB_8888);
+                    bitmapMainScreen = Bitmap.createBitmap(Math.max(1, param1), Math.max(1, param2), Bitmap.Config.ARGB_8888);
+//                    int globalColor = NativeLib.getGlobalColor();
+//                    backgroundColor = Color.argb(255, (globalColor & 0x00FF0000) >> 16, (globalColor & 0x0000FF00) >> 8, globalColor & 0x000000FF);
+                    backgroundColor = Color.BLACK;
+                    bitmapMainScreen.eraseColor(backgroundColor);
+                    NativeLib.changeBitmap(bitmapMainScreen);
+
+                    if(oldBitmapMainScreen != null) {
+                        oldBitmapMainScreen.recycle();
+                    }
+                }
                 calcTranslateAndScale(getWidth(), getHeight());
                 break;
         }

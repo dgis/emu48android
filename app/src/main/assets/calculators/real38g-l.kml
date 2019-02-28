@@ -11,11 +11,11 @@ Global
 	Print "screen are implemented."
 	Print ""
 	Print "=========================================================="
-	Title  "Eric's Real 38G (Large)"
+	Title  "Eric's Real 38G (Large Full)"
 	Author "Eric Rechlin"
 	Model  "6" # 6 for 64K RAM, A for 32K RAM
-	Rom    "ROM.38G"
-	Bitmap "real38g-l.bmp"
+	Rom    "rom.38g"
+	Bitmap "real38g-l.png"
 	Icon   "38g.ico"
 	Color  0 190 190 190
 	Debug  0
@@ -28,7 +28,7 @@ End
 
 Lcd
 	Zoom 3
-	Offset	55  144
+	Offset 55  144
 	Color  0 168 192 176
 	Color  1 168 192 176
 	Color  2 168 192 176
@@ -495,10 +495,9 @@ Button 95
 End
 
 Button 101
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 55 315
-	Virtual
 	OnDown
 		Press 11
 	End
@@ -508,10 +507,9 @@ Button 101
 End
 
 Button 102
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 121 315
-	Virtual
 	OnDown
 		Press 12
 	End
@@ -521,10 +519,9 @@ Button 102
 End
 
 Button 103
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 187 315
-	Virtual
 	OnDown
 		Press 13
 	End
@@ -534,10 +531,9 @@ Button 103
 End
 
 Button 104
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 253 315
-	Virtual
 	OnDown
 		Press 14
 	End
@@ -547,10 +543,9 @@ Button 104
 End
 
 Button 105
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 319 315
-	Virtual
 	OnDown
 		Press 15
 	End
@@ -560,10 +555,9 @@ Button 105
 End
 
 Button 106
-	Type 3
+	Type 2
 	Size 63 21
 	Offset 385 315
-	Virtual
 	OnDown
 		Press 16
 	End

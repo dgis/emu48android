@@ -1412,8 +1412,9 @@ int SetStretchBltMode(HDC hdc, int mode) {
     return 0;
 }
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-    if((hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL)
-              && hdcSrc->selectedBitmap && hDest && hSrc) {
+    if(hdcDest && hdcSrc
+    && (hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL)
+    && hdcSrc->selectedBitmap && hDest && hSrc) {
 
         HBITMAP hBitmapSource = hdcSrc->selectedBitmap;
         void * pixelsSource = (void *) hBitmapSource->bitmapBits;

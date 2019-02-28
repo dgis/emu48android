@@ -8,7 +8,7 @@ Global
 	Title  "Emu48's Default Faceplate for HP38G"
 	Author "Christoph Giesselink"
 	Model  "A"
-	Rom    "ROM.38G"
+	Rom    "rom.38g"
 	Patch  "BEEP.38G"
 	Debug  0
 	Bitmap "DEFAUL38.BMP"

@@ -12,7 +12,7 @@ Global
 	Title  "Casey's Sx with Toolbar and Touch Screen"
 	Author "Casey Patterson"
 	Model   "S"
-	Rom    "ROM.48S"
+	Rom    "rom.48s"
 	Patch  "BEEP.48"
 	Bitmap "cp_48s3.bmp"
 	Debug  0

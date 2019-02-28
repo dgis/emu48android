@@ -32,6 +32,13 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.1 (2019-03-01)
+
+- Update the KML spripts and the images from Eric Rechlin.
+- Fix crash when changing the main image.
+- Fix an issue when KML file is not found.
+
+
 Version 1.0 (2019-02-28)
 
 - First public version available on the store.
@@ -50,6 +57,8 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
+- Add haptic feedback when touch a button
+- Add a true fullscreen mode under the status bar and the bottom buttons
 - Improve the access to the menu
 - Change the logo following the template
 

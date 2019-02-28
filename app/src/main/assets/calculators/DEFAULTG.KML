@@ -2,7 +2,7 @@ Global
 	Title  "Emu48's Default Faceplate for HP48G/GX"
 	Author "Sebastien Carlier"
 	Model   "G"
-	Rom    "ROM.48G"
+	Rom    "rom.48g"
 	Patch  "BEEP.48"
 	Debug  0
 	Bitmap "DEFAULTG.BMP"

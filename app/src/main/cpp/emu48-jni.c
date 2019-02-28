@@ -352,6 +352,21 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_stop(JNIEnv *env,
 }
 
 
+JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_changeBitmap(JNIEnv *env, jobject thisz, jobject bitmapMainScreen0) {
+
+    if(bitmapMainScreen) {
+        (*env)->DeleteGlobalRef(env, bitmapMainScreen);
+        bitmapMainScreen = NULL;
+    }
+
+    bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
+    int ret = AndroidBitmap_getInfo(env, bitmapMainScreen, &androidBitmapInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+    }
+}
+
+
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_draw(JNIEnv *env, jobject thisz) {
     draw();
 }
@@ -408,6 +423,10 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getSoundEnabl
     return (jboolean) soundEnabled;
 }
 
+JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getGlobalColor(JNIEnv *env, jobject thisz) {
+    return (jint) dwTColor;
+}
+
 
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     if (bDocumentAvail)
@@ -441,9 +460,10 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
 
-    mainViewResizeCallback(nBackgroundW, nBackgroundH);
-    draw();
     if(result) {
+        mainViewResizeCallback(nBackgroundW, nBackgroundH);
+        draw();
+
         if (bStartupBackup) SaveBackup();        // make a RAM backup at startup
 
         if (pbyRom) SwitchToState(SM_RUN);

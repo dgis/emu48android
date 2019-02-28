@@ -10,11 +10,11 @@ Global
 	Print "and left of the menu are implemented."
 	Print ""
 	Print "=========================================================="
-	Title  "Eric's Real 49g+ (Large)"
+	Title  "Eric's Real 49g+ (Large Full)"
 	Author "Eric Rechlin"
 	Model  "Q"
-	Rom    "ROM.49G"
-	Bitmap "real49gp-l.bmp"
+	Rom    "rom.49g"
+	Bitmap "real49gp-l.png"
 	Icon   "49gp.ico"
 	Color  0 190 190 190
 	Debug  0
@@ -189,7 +189,6 @@ Button 23
 	OutIn 3 128
 End
 
-
 Button 31
 	Type 0
 	Size 56 42
@@ -213,7 +212,6 @@ Button 33
 	Down 690 570
 	OutIn 0 128
 End
-
 
 Button 41
 	Type 0
@@ -255,7 +253,6 @@ Button 45
 	OutIn 0 64
 End
 
-
 Button 51
 	Type 0
 	Size 69 42
@@ -296,7 +293,6 @@ Button 55
 	OutIn 0 32
 End
 
-
 Button 61
 	Type 0
 	Size 69 42
@@ -336,7 +332,6 @@ Button 65
 	Down 897 763
 	OutIn 0 16
 End
-
 
 Button 71
 	Type 0
@@ -498,7 +493,6 @@ Button 105
 	OutIn 0 1
 End
 
-
 Button 110
 	Type 0
 	Size 53 54
@@ -534,7 +528,7 @@ End
 Button 121
 	Type 2
 	Size 63 24
-	Offset 72 342
+	Offset 72 339
 	OnDown
 		Press 11
 	End
@@ -546,7 +540,7 @@ End
 Button 122
 	Type 2
 	Size 63 24
-	Offset 138 342
+	Offset 138 339
 	OnDown
 		Press 12
 	End
@@ -554,10 +548,11 @@ Button 122
 		Release 12
 	End
 End
+
 Button 123
 	Type 2
 	Size 63 24
-	Offset 204 342
+	Offset 204 339
 	OnDown
 		Press 13
 	End
@@ -565,10 +560,11 @@ Button 123
 		Release 13
 	End
 End
+
 Button 124
 	Type 2
 	Size 63 24
-	Offset 270 342
+	Offset 270 339
 	OnDown
 		Press 14
 	End
@@ -576,10 +572,11 @@ Button 124
 		Release 14
 	End
 End
+
 Button 125
 	Type 2
 	Size 63 24
-	Offset 336 342
+	Offset 336 339
 	OnDown
 		Press 15
 	End
@@ -591,7 +588,7 @@ End
 Button 126
 	Type 2
 	Size 63 24
-	Offset 402 342
+	Offset 402 339
 	OnDown
 		Press 16
 	End
@@ -601,9 +598,9 @@ Button 126
 End
 
 Button 127
-	Type 3
+	Type 2
 	Size 63 24
-	Offset 0 342
+	Offset 0 339
 	Down 305 156
 	OnDown
 		Press 81
@@ -616,9 +613,9 @@ Button 127
 End
 
 Button 128
-	Type 3
+	Type 2
 	Size 63 24
-	Offset 478 342
+	Offset 478 339
 	Down 593 156
 	OnDown
 		Press 33

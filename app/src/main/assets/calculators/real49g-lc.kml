@@ -1,0 +1,624 @@
+Global
+	Print "=========================================================="
+	Print ""
+	Print "This Real 49G graphic is by Eric Rechlin."
+	Print "eric@hpcalc.org   http://www.hpcalc.org"
+	Print "Graphic based on a scan by Hewlett-Packard."
+	Print ""
+	Print "Note that contrast support, a touch-sensitive"
+	Print "screen, and NXT and PREV buttons to the right"
+	Print "and left of the menu are implemented."
+	Print ""
+	Print "=========================================================="
+	Title  "Eric's Real 49G (Large Cropped)"
+	Author "Eric Rechlin"
+	Model  "X"
+	Rom    "rom.49g"
+	Bitmap "real49g-lc.png"
+	Icon   "49g.ico"
+	Color  0 190 190 190
+	Debug  0
+End
+
+Background
+	Offset   0   0
+	Size   459 915
+End
+
+Lcd
+	Zoom 3
+	Offset 33 24
+	Color  0 168 192 176
+	Color  1 168 192 176
+	Color  2 168 192 176
+	Color  3 155 177 163
+	Color  4 140 160 147
+	Color  5 127 145 133
+	Color  6 113 129 119
+	Color  7  98 112 103
+	Color  8  85  97  89
+	Color  9  72  82  75 # lightest foreground allowed
+	Color 10  56  64  59
+	Color 11  43  49  45
+	Color 12  29  34  31
+	Color 13  14  16  15
+	Color 14   0   0   0 # default foreground
+	Color 15   0   0   0
+	Color 16   0   0   0
+	Color 17   0   0   0
+	Color 18   0   0   0
+	Color 19   0   0   0
+	Color 20   0   0   0
+	Color 21   0   0   0
+	Color 22   0   0   0
+	Color 23   0   0   0
+	Color 24   0   0   0 # darkest foreground allowed
+	Color 25   0   0   0
+	Color 26   0   0   0
+	Color 27   0   0   0
+	Color 28   0   0   0
+	Color 29   0   0   0
+	Color 30   0   0   0
+	Color 31   0   0   0
+
+	Color 48 168 192 176 # default background
+	Color 49 155 177 163
+	Color 50 140 160 147
+	Color 51 127 145 133
+	Color 52 113 129 119
+	Color 53  98 112 103
+	Color 54  85  97  89
+	Color 55  72  82  75
+	Color 56  56  64  59 # darkest background allowed
+	Color 57  43  49  45
+	Color 58  29  34  31
+	Color 59  14  16  15
+	Color 60   0   0   0
+	Color 61   0   0   0
+	Color 62   0   0   0
+	Color 63   0   0   0
+End
+
+Annunciator 1
+	Size 24 17
+	Offset 46 2
+	Down 459 898
+End
+
+Annunciator 2
+	Size 24 17
+	Offset 109 2
+	Down 483 898
+End
+
+Annunciator 3
+	Size 24 17
+	Offset 182 2
+	Down 507 898
+End
+
+Annunciator 4
+	Size 24 17
+	Offset 252 2
+	Down 531 898
+End
+
+Annunciator 5
+	Size 24 17
+	Offset 317 2
+	Down 555 898
+End
+
+Annunciator 6
+	Size 24 17
+	Offset 386 2
+	Down 579 898
+End
+
+Button 11
+	Type 0
+	Size 61 35
+	Offset 4 237
+	Down 461 237
+	OutIn 5 1
+End
+
+Button 12
+	Type 0
+	Size 61 35
+	Offset 82 237
+	Down 539 237
+	OutIn 5 2
+End
+
+Button 13
+	Type 0
+	Size 61 35
+	Offset 161 237
+	Down 618 237
+	OutIn 5 4
+End
+
+Button 14
+	Type 0
+	Size 61 35
+	Offset 239 237
+	Down 696 237
+	OutIn 5 8
+End
+
+Button 15
+	Type 0
+	Size 61 35
+	Offset 317 237
+	Down 774 237
+	OutIn 5 16
+End
+
+Button 16
+	Type 0
+	Size 61 35
+	Offset 396 237
+	Down 853 237
+	OutIn 5 32
+End
+
+Button 21
+	Type 0
+	Size 71 38
+	Offset 15 316
+	Down 472 316
+	OutIn 5 128
+End
+
+Button 22
+	Type 0
+	Size 71 38
+	Offset 105 316
+	Down 562 316
+	OutIn 4 128
+End
+
+Button 23
+	Type 0
+	Size 71 38
+	Offset 194 316
+	Down 651 316
+	OutIn 3 128
+End
+
+Button 31
+	Type 0
+	Size 71 38
+	Offset 15 376
+	Down 472 376
+	OutIn 2 128
+End
+
+Button 32
+	Type 0
+	Size 71 38
+	Offset 105 376
+	Down 562 376
+	OutIn 1 128
+End
+
+Button 33
+	Type 0
+	Size 71 38
+	Offset 194 376
+	Down 651 376
+	OutIn 0 128
+End
+
+Button 41
+	Type 0
+	Size 72 36
+	Offset 15 461
+	Down 472 461
+	OutIn 4 64
+End
+
+Button 42
+	Type 0
+	Size 72 36
+	Offset 105 461
+	Down 562 461
+	OutIn 3 64
+End
+
+Button 43
+	Type 0
+	Size 72 36
+	Offset 194 461
+	Down 651 461
+	OutIn 2 64
+End
+
+Button 44
+	Type 0
+	Size 72 36
+	Offset 285 461
+	Down 742 461
+	OutIn 1 64
+End
+
+Button 45
+	Type 0
+	Size 72 36
+	Offset 373 461
+	Down 830 461
+	OutIn 0 64
+End
+
+Button 51
+	Type 0
+	Size 72 36
+	Offset 15 520
+	Down 472 520
+	OutIn 4 32
+End
+
+Button 52
+	Type 0
+	Size 72 36
+	Offset 105 520
+	Down 562 520
+	OutIn 3 32
+End
+
+Button 53
+	Type 0
+	Size 72 36
+	Offset 194 520
+	Down 651 520
+	OutIn 2 32
+End
+
+Button 54
+	Type 0
+	Size 72 36
+	Offset 285 520
+	Down 742 520
+	OutIn 1 32
+End
+
+Button 55
+	Type 0
+	Size 72 36
+	Offset 373 520
+	Down 830 520
+	OutIn 0 32
+End
+
+Button 61
+	Type 0
+	Size 72 45
+	Offset 15 580
+	Down 472 580
+	OutIn 4 16
+End
+
+Button 62
+	Type 0
+	Size 72 45
+	Offset 105 580
+	Down 562 580
+	OutIn 3 16
+End
+
+Button 63
+	Type 0
+	Size 72 45
+	Offset 194 580
+	Down 651 580
+	OutIn 2 16
+End
+
+Button 64
+	Type 0
+	Size 72 45
+	Offset 285 580
+	Down 742 580
+	OutIn 1 16
+End
+
+Button 65
+	Type 0
+	Size 72 45
+	Offset 373 580
+	Down 830 580
+	OutIn 0 16
+End
+
+Button 71
+	Type 0
+	Size 72 45
+	Offset 15 647
+	Down 472 647
+	OutIn 7 8
+End
+
+Button 72
+	Type 0
+	Size 72 45
+	Offset 105 647
+	Down 562 647
+	OutIn 3 8
+End
+
+Button 73
+	Type 0
+	Size 72 45
+	Offset 194 647
+	Down 651 647
+	OutIn 2 8
+End
+
+Button 74
+	Type 0
+	Size 72 45
+	Offset 285 647
+	Down 742 647
+	OutIn 1 8
+End
+
+Button 75
+	Type 0
+	Size 72 45
+	Offset 373 647
+	Down 830 647
+	OutIn 0 8
+End
+
+Button 81
+	Type 0
+	Size 72 45
+	Offset 15 712
+	Down 472 712
+	OutIn 7 4
+End
+
+Button 82
+	Type 0
+	Size 72 45
+	Offset 105 712
+	Down 562 712
+	OutIn 3 4
+End
+
+Button 83
+	Type 0
+	Size 72 45
+	Offset 194 712
+	Down 651 712
+	OutIn 2 4
+End
+
+Button 84
+	Type 0
+	Size 72 45
+	Offset 285 712
+	Down 742 712
+	OutIn 1 4
+End
+
+Button 85
+	Type 0
+	Size 72 45
+	Offset 373 712
+	Down 830 712
+	OutIn 0 4
+End
+
+Button 91
+	Type 0
+	Size 72 45
+	Offset 15 779
+	Down 472 779
+	OutIn 7 2
+End
+
+Button 92
+	Type 0
+	Size 72 45
+	Offset 105 779
+	Down 562 779
+	OutIn 3 2
+End
+
+Button 93
+	Type 0
+	Size 72 45
+	Offset 194 779
+	Down 651 779
+	OutIn 2 2
+End
+
+Button 94
+	Type 0
+	Size 72 45
+	Offset 285 779
+	Down 742 779
+	OutIn 1 2
+End
+
+Button 95
+	Type 0
+	Size 72 45
+	Offset 373 779
+	Down 830 779
+	OutIn 0 2
+End
+
+Button 101
+	Type 0
+	Size 72 45
+	Offset 15 845
+	Down 472 845
+	OutIn 0 32768
+End
+
+Button 102
+	Type 0
+	Size 72 45
+	Offset 105 845
+	Down 562 845
+	OutIn 3 1
+End
+
+Button 103
+	Type 0
+	Size 72 45
+	Offset 194 845
+	Down 651 845
+	OutIn 2 1
+End
+
+Button 104
+	Type 0
+	Size 72 45
+	Offset 285 845
+	Down 742 845
+	OutIn 1 1
+End
+
+Button 105
+	Type 0
+	Size 72 45
+	Offset 373 845
+	Down 830 845
+	OutIn 0 1
+End
+
+Button 110
+	Type 0
+	Size 68 44
+	Offset 379 345
+	Down 836 345
+	OutIn 6 1
+End
+
+Button 111
+	Type 0
+	Size 71 41
+	Offset 329 405
+	Down 786 405
+	OutIn 6 2
+End
+
+Button 112
+	Type 0
+	Size 68 44
+	Offset 282 345
+	Down 739 345
+	OutIn 6 4
+End
+
+Button 113
+	Type 0
+	Size 71 41
+	Offset 329 286
+	Down 786 286
+	OutIn 6 8
+End
+
+Button 121
+	Type 2
+	Size 63 24
+	Offset 33 192
+	OnDown
+		Press 11
+	End
+	OnUp
+		Release 11
+	End
+End
+
+Button 122
+	Type 2
+	Size 63 24
+	Offset 99 192
+	OnDown
+		Press 12
+	End
+	OnUp
+		Release 12
+	End
+End
+
+Button 123
+	Type 2
+	Size 63 24
+	Offset 165 192
+	OnDown
+		Press 13
+	End
+	OnUp
+		Release 13
+	End
+End
+
+Button 124
+	Type 2
+	Size 63 24
+	Offset 231 192
+	OnDown
+		Press 14
+	End
+	OnUp
+		Release 14
+	End
+End
+
+Button 125
+	Type 2
+	Size 63 24
+	Offset 297 192
+	OnDown
+		Press 15
+	End
+	OnUp
+		Release 15
+	End
+End
+
+Button 126
+	Type 2
+	Size 63 24
+	Offset 363 192
+	OnDown
+		Press 16
+	End
+	OnUp
+		Release 16
+	End
+End
+
+Button 127
+	Type 2
+	Size 28 28
+	Offset 0 190
+	OnDown
+		Press 81
+		Release 81
+	End
+	OnUp
+		Press 33
+		Release 33
+	End
+End
+
+Button 128
+	Type 2
+	Size 28 28
+	Offset 433 190
+	OnDown
+		Press 33
+	End
+	OnUp
+		Release 33
+	End
+End
+
+Include "keyb49g.kmi"

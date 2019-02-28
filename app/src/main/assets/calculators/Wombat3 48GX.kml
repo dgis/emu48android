@@ -9,7 +9,7 @@ Global
 	Author   "Christoph Giesselink"
 	Hardware "Yorke"
 	Model    "G"
-	Rom      "ROM.48G"
+	Rom      "rom.48g"
 	Patch    "BEEP.48"
 	Bitmap   "Wombat3 48GX.bmp"
 	Debug    0

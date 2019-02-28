@@ -1,0 +1,849 @@
+Scancode 16			# Shift
+	IfPressed 16
+		SetFlag 0
+	Else
+		ResetFlag 0
+	End
+End
+
+Scancode 17			# Ctrl
+	IfPressed 17
+		SetFlag 1
+	Else
+		ResetFlag 1
+	End
+End
+
+Scancode 20			# ShLock
+	IfPressed 20
+		NotFlag 1
+	End
+End
+
+
+Scancode 8
+	IfFlag 0
+		Map 8 71
+		Map 8 81
+	Else
+		Map 8 81
+	End
+End
+
+Scancode 9
+	Map 9 71
+End
+
+Scancode 13
+	IfFlag 0
+		Map 13 71
+		Map 13 51
+	Else
+		Map 13 51
+	End
+End
+
+Scancode 27
+	IfFlag 0
+		Map 27 71
+		Map 27 91
+	Else
+		Map 27 91
+	End
+End
+
+Scancode 32
+	Map 32 71
+	Map 32 83
+End
+
+Scancode 220
+	IfFlag 0
+		Map 220 71
+		Map 220 61
+	Else
+		Map 220 61
+	End
+End
+
+Scancode 37
+	IfFlag 0
+		Map 37 71
+		Map 37 34
+	Else
+		Map 37 34
+	End
+End
+
+Scancode 38
+	IfFlag 0
+		Map 38 71
+		Map 38 25
+	Else
+		Map 38 25
+	End
+End
+
+Scancode 39
+	IfFlag 0
+		Map 39 71
+		Map 39 36
+	Else
+		Map 39 36
+	End
+End
+
+Scancode 40
+	IfFlag 0
+		Map 40 71
+		Map 40 35
+	Else
+		Map 40 35
+	End
+End
+
+
+Scancode 115
+	IfFlag 0
+		Map 115 71
+		Map 115 11
+	Else
+		Map 115 11
+	End
+End
+
+Scancode 116
+	IfFlag 0
+		Map 116 71
+		Map 116 12
+	Else
+		Map 116 12
+	End
+End
+
+Scancode 117
+	IfFlag 0
+		Map 117 71
+		Map 117 13
+	Else
+		Map 117 13
+	End
+End
+
+Scancode 118
+	IfFlag 0
+		Map 118 71
+		Map 118 14
+	Else
+		Map 118 14
+	End
+End
+
+Scancode 119
+	IfFlag 0
+		Map 119 71
+		Map 119 15
+	Else
+		Map 119 15
+	End
+End
+
+Scancode 120
+	IfFlag 0
+		Map 120 71
+		Map 120 16
+	Else
+		Map 120 16
+	End
+End
+
+
+Scancode 45
+	IfFlag 0
+		Map 45 71
+		Map 45 21
+	Else
+		Map 45 21
+	End
+End
+
+Scancode 36
+	IfFlag 0
+		Map 36 71
+		Map 36 22
+	Else
+		Map 36 22
+	End
+End
+
+Scancode 33
+	IfFlag 0
+		Map 33 71
+		Map 33 23
+	Else
+		Map 33 23
+	End
+End
+
+Scancode 46
+	IfFlag 0
+		Map 46 71
+		Map 46 31
+	Else
+		Map 46 31
+	End
+End
+
+Scancode 35
+	IfFlag 0
+		Map 35 71
+		Map 35 32
+	Else
+		Map 35 32
+	End
+End
+
+Scancode 34
+	IfFlag 0
+		Map 34 71
+		Map 34 33
+	Else
+		Map 34 33
+	End
+End
+
+
+Scancode 96
+	IfFlag 1
+		Map 96 61
+		Map 96 92
+	Else
+		Map 96 92
+	End
+End
+
+Scancode 97
+	IfFlag 1
+		Map 97 61
+		Map 97 82
+	Else
+		Map 97 82
+	End
+End
+
+Scancode 98
+	IfFlag 1
+		Map 98 61
+		Map 98 83
+	Else
+		Map 98 83
+	End
+End
+
+Scancode 99
+	IfFlag 1
+		Map 98 61
+		Map 99 84
+	Else
+		Map 99 84
+	End
+End
+
+Scancode 100
+	IfFlag 1
+		Map 100 61
+		Map 100 72
+	Else
+		Map 100 72
+	End
+End
+
+Scancode 101
+	IfFlag 1
+		Map 101 61
+		Map 101 73
+	Else
+		Map 101 73
+	End
+End
+
+Scancode 102
+	IfFlag 1
+		Map 102 61
+		Map 102 74
+	Else
+		Map 102 74
+	End
+End
+
+Scancode 103
+	IfFlag 1
+		Map 103 61
+		Map 103 62
+	Else
+		Map 103 62
+	End
+End
+
+Scancode 104
+	IfFlag 1
+		Map 104 61
+		Map 104 63
+	Else
+		Map 104 63
+	End
+End
+
+Scancode 105
+	IfFlag 1
+		Map 105 61
+		Map 105 64
+	Else
+		Map 105 64
+	End
+End
+
+Scancode 110
+	IfFlag 1
+		Map 110 61
+		Map 110 93
+	Else
+		IfFlag 0
+			Map 110 71
+			Map 110 93
+		Else
+			Map 110 93
+		End
+	End
+End
+
+Scancode 106
+	IfFlag 1
+		Map 106 61
+		Map 106 75
+	Else
+		IfFlag 0
+			Map 106 71
+			Map 106 75
+		Else
+			Map 106 75
+		End
+	End
+End
+
+Scancode 107
+	IfFlag 1
+		Map 107 61
+		Map 107 95
+	Else
+		IfFlag 0
+			Map 107 71
+			Map 107 95
+		Else
+			Map 107 95
+		End
+	End
+End
+
+Scancode 109
+	IfFlag 1
+		Map 109 61
+		Map 109 85
+	Else
+		IfFlag 0
+			Map 109 71
+			Map 109 85
+		Else
+			Map 109 85
+		End
+	End
+End
+
+Scancode 111
+	IfFlag 1
+		Map 111 61
+		Map 111 65
+	Else
+		IfFlag 0
+			Map 111 71
+			Map 111 65
+		Else
+			Map 111 65
+		End
+	End
+End
+
+
+Scancode 188
+	IfFlag 0
+		Map 188 71
+		Map 188 94
+	Else
+		Map 188 94
+	End
+End
+
+Scancode 190
+	IfFlag 0
+		Map 190 71
+		Map 190 93
+	Else
+		Map 190 93
+	End
+End
+
+
+Scancode 48
+	IfFlag 0
+		Map 48 71
+		Map 48 92
+	Else
+		Map 48 92
+	End
+End
+
+Scancode 49
+	IfFlag 0
+		Map 49 71
+		Map 49 82
+	Else
+		Map 49 82
+	End
+End
+
+Scancode 50
+	IfFlag 0
+		Map 50 71
+		Map 50 83
+	Else
+		Map 50 83
+	End
+End
+
+Scancode 51
+	IfFlag 0
+		Map 51 71
+		Map 51 84
+	Else
+		Map 51 84
+	End
+End
+
+Scancode 52
+	IfFlag 0
+		Map 52 71
+		Map 52 72
+	Else
+		Map 52 72
+	End
+End
+
+Scancode 53
+	IfFlag 0
+		Map 53 71
+		Map 53 73
+	Else
+		Map 53 73
+	End
+End
+
+Scancode 54
+	IfFlag 0
+		Map 54 71
+		Map 54 74
+	Else
+		Map 54 74
+	End
+End
+
+Scancode 55
+	IfFlag 0
+		Map 55 71
+		Map 55 62
+	Else
+		Map 55 62
+	End
+End
+
+Scancode 56
+	IfFlag 0
+		Map 56 71
+		Map 56 63
+	Else
+		Map 56 63
+	End
+End
+
+Scancode 57
+	IfFlag 0
+		Map 57 71
+		Map 57 64
+	Else
+		Map 57 64
+	End
+End
+
+
+Scancode 65
+	IfFlag 1
+		Map 65 61
+		Map 65 41
+	Else
+		IfFlag 0
+			Map 65 71
+			Map 65 41
+		Else
+			Map 65 41
+		End
+	End
+End
+
+Scancode 66
+	IfFlag 1
+		Map 66 61
+		Map 66 42
+	Else
+		IfFlag 0
+			Map 66 71
+			Map 66 42
+		Else
+			Map 66 42
+		End
+	End
+End
+
+Scancode 67
+	IfFlag 1
+		Map 67 61
+		Map 67 43
+	Else
+		IfFlag 0
+			Map 67 71
+			Map 67 43
+		Else
+			Map 67 43
+		End
+	End
+End
+
+Scancode 68
+	IfFlag 1
+		Map 68 61
+		Map 68 44
+	Else
+		IfFlag 0
+			Map 68 71
+			Map 68 44
+		Else
+			Map 68 44
+		End
+	End
+End
+
+Scancode 69
+	IfFlag 1
+		Map 69 61
+		Map 69 45
+	Else
+		IfFlag 0
+			Map 69 71
+			Map 69 45
+		Else
+			Map 69 45
+		End
+	End
+End
+
+Scancode 70
+	IfFlag 1
+		Map 70 61
+		Map 70 46
+	Else
+		IfFlag 0
+			Map 70 71
+			Map 70 46
+		Else
+			Map 70 46
+		End
+	End
+End
+
+Scancode 71
+	IfFlag 1
+		Map 71 61
+		Map 71 52
+	Else
+		IfFlag 0
+			Map 71 71
+			Map 71 52
+		Else
+			Map 71 52
+		End
+	End
+End
+
+Scancode 72
+	IfFlag 1
+		Map 72 61
+		Map 72 53
+	Else
+		IfFlag 0
+			Map 72 71
+			Map 72 53
+		Else
+			Map 72 53
+		End
+	End
+End
+
+Scancode 73
+	IfFlag 1
+		Map 73 61
+		Map 73 54
+	Else
+		IfFlag 0
+			Map 73 71
+			Map 73 54
+		Else
+			Map 73 54
+		End
+	End
+End
+
+Scancode 74
+	IfFlag 1
+		Map 74 61
+		Map 74 55
+	Else
+		IfFlag 0
+			Map 74 71
+			Map 74 55
+		Else
+			Map 74 55
+		End
+	End
+End
+
+Scancode 75
+	IfFlag 1
+		Map 75 61
+		Map 75 62
+	Else
+		IfFlag 0
+			Map 75 71
+			Map 75 62
+		Else
+			Map 75 62
+		End
+	End
+End
+
+Scancode 76
+	IfFlag 1
+		Map 76 61
+		Map 76 63
+	Else
+		IfFlag 0
+			Map 76 63
+			Map 76 55
+		Else
+			Map 76 63
+		End
+	End
+End
+
+Scancode 77
+	IfFlag 1
+		Map 77 61
+		Map 77 64
+	Else
+		IfFlag 0
+			Map 77 71
+			Map 77 64
+		Else
+			Map 77 64
+		End
+	End
+End
+
+Scancode 78
+	IfFlag 1
+		Map 78 61
+		Map 78 65
+	Else
+		IfFlag 0
+			Map 78 71
+			Map 78 65
+		Else
+			Map 78 65
+		End
+	End
+End
+
+Scancode 79
+	IfFlag 1
+		Map 79 61
+		Map 79 72
+	Else
+		IfFlag 0
+			Map 79 71
+			Map 79 72
+		Else
+			Map 79 72
+		End
+	End
+End
+
+Scancode 80
+	IfFlag 1
+		Map 80 61
+		Map 80 73
+	Else
+		IfFlag 0
+			Map 80 71
+			Map 80 73
+		Else
+			Map 80 73
+		End
+	End
+End
+
+Scancode 81
+	IfFlag 1
+		Map 81 61
+		Map 81 74
+	Else
+		IfFlag 0
+			Map 81 71
+			Map 81 74
+		Else
+			Map 81 74
+		End
+	End
+End
+
+Scancode 82
+	IfFlag 1
+		Map 82 61
+		Map 82 75
+	Else
+		IfFlag 0
+			Map 82 71
+			Map 82 75
+		Else
+			Map 82 75
+		End
+	End
+End
+
+Scancode 83
+	IfFlag 1
+		Map 83 61
+		Map 83 82
+	Else
+		IfFlag 0
+			Map 83 71
+			Map 83 82
+		Else
+			Map 83 82
+		End
+	End
+End
+
+Scancode 84
+	IfFlag 1
+		Map 84 61
+		Map 84 83
+	Else
+		IfFlag 0
+			Map 84 71
+			Map 84 83
+		Else
+			Map 84 83
+		End
+	End
+End
+
+Scancode 85
+	IfFlag 1
+		Map 85 61
+		Map 85 84
+	Else
+		IfFlag 0
+			Map 85 71
+			Map 85 84
+		Else
+			Map 85 84
+		End
+	End
+End
+
+Scancode 86
+	IfFlag 1
+		Map 86 61
+		Map 86 85
+	Else
+		IfFlag 0
+			Map 86 71
+			Map 86 85
+		Else
+			Map 86 85
+		End
+	End
+End
+
+Scancode 87
+	IfFlag 1
+		Map 87 61
+		Map 87 92
+	Else
+		IfFlag 0
+			Map 87 71
+			Map 87 92
+		Else
+			Map 87 92
+		End
+	End
+End
+
+Scancode 88
+	IfFlag 1
+		Map 88 61
+		Map 88 93
+	Else
+		IfFlag 0
+			Map 88 71
+			Map 88 93
+		Else
+			Map 88 93
+		End
+	End
+End
+
+Scancode 89
+	IfFlag 1
+		Map 89 61
+		Map 89 94
+	Else
+		IfFlag 0
+			Map 89 71
+			Map 89 94
+		Else
+			Map 89 94
+		End
+	End
+End
+
+Scancode 90
+	IfFlag 1
+		Map 90 61
+		Map 90 95
+	Else
+		IfFlag 0
+			Map 90 71
+			Map 90 95
+		Else
+			Map 90 95
+		End
+	End
+End

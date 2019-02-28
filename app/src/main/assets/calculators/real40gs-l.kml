@@ -9,12 +9,12 @@ Global
 	Print "screen are implemented."
 	Print ""
 	Print "=========================================================="
-	Title  "Eric's Real 40gs (Large)"
+	Title  "Eric's Real 40gs (Large Full)"
 	Author "Eric Rechlin"
 	Model  "E"
 	Class  40
-	Rom    "ROM.39G"
-	Bitmap "real40gs-l.bmp"
+	Rom    "rom.39g"
+	Bitmap "real40gs-l.png"
 	Icon   "40gs.ico"
 	Color  0 190 190 190
 	Debug  0
@@ -191,7 +191,6 @@ Button 23
 	OutIn 3 128
 End
 
-
 Button 31
 	Type 0
 	Size 55 42
@@ -215,7 +214,6 @@ Button 33
 	Down 687 561
 	OutIn 0 128
 End
-
 
 Button 41
 	Type 0
@@ -257,7 +255,6 @@ Button 45
 	OutIn 0 64
 End
 
-
 Button 51
 	Type 0
 	Size 71 43
@@ -298,7 +295,6 @@ Button 55
 	OutIn 0 32
 End
 
-
 Button 61
 	Type 0
 	Size 71 43
@@ -338,7 +334,6 @@ Button 65
 	Down 893 753
 	OutIn 0 16
 End
-
 
 Button 71
 	Type 0
@@ -500,7 +495,6 @@ Button 105
 	OutIn 0 1
 End
 
-
 Button 110
 	Type 0
 	Size 54 53
@@ -536,7 +530,7 @@ End
 Button 121
 	Type 2
 	Size 63 24
-	Offset 72 309
+	Offset 72 306
 	OnDown
 		Press 11
 	End
@@ -548,7 +542,7 @@ End
 Button 122
 	Type 2
 	Size 63 24
-	Offset 138 309
+	Offset 138 306
 	OnDown
 		Press 12
 	End
@@ -560,7 +554,7 @@ End
 Button 123
 	Type 2
 	Size 63 24
-	Offset 204 309
+	Offset 204 306
 	OnDown
 		Press 13
 	End
@@ -572,7 +566,7 @@ End
 Button 124
 	Type 2
 	Size 63 24
-	Offset 270 309
+	Offset 270 306
 	OnDown
 		Press 14
 	End
@@ -584,7 +578,7 @@ End
 Button 125
 	Type 2
 	Size 63 24
-	Offset 336 309
+	Offset 336 306
 	OnDown
 		Press 15
 	End
@@ -596,7 +590,7 @@ End
 Button 126
 	Type 2
 	Size 63 24
-	Offset 402 309
+	Offset 402 306
 	OnDown
 		Press 16
 	End

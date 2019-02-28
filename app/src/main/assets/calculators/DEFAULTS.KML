@@ -2,7 +2,7 @@ Global
 	Title  "Emu48's Default Faceplate for HP48S/SX"
 	Author "Sebastien Carlier"
 	Model   "S"
-	Rom    "ROM.48S"
+	Rom    "rom.48s"
 	Patch  "BEEP.48"
 	Debug  0
 	Bitmap "DEFAULTS.BMP"

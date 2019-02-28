@@ -1123,6 +1123,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return kmlScriptItem.filename;
             }
         }
+
+        // Not found, so we search in the default KML asset folder
+        kmlFolderUseDefault = true;
+        kmFolderChange = true;
+
+        extractKMLScripts();
+
+        for (int i = 0; i < kmlScripts.size(); i++) {
+            KMLScriptItem kmlScriptItem = kmlScripts.get(i);
+            if (kmlScriptItem.model.charAt(0) == chipsetType) {
+                return kmlScriptItem.filename;
+            }
+        }
+
         return null;
     }
 

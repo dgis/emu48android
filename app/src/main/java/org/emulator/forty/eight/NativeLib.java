@@ -11,6 +11,7 @@ public class NativeLib {
 
     public static native void start(AssetManager mgr, Bitmap bitmapMainScreen, MainActivity activity, MainScreenView view);
     public static native void stop();
+    public static native void changeBitmap(Bitmap bitmapMainScreen);
     public static native void draw();
     public static native void buttonDown(int x, int y);
     public static native void buttonUp(int x, int y);
@@ -27,6 +28,7 @@ public class NativeLib {
     public static native boolean getPort1Plugged();
     public static native boolean getPort1Writable();
     public static native boolean getSoundEnabled();
+    public static native int getGlobalColor();
 
     public static native int onFileNew(String kmlFilename);
     public static native int onFileOpen(String filename);
