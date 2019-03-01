@@ -483,9 +483,9 @@ static DWORD ThreadStart(LPVOID lpThreadParameter) {
 
 
 // Should be protected by mutex
-#define MAX_CREATED_THREAD 20
-static HANDLE threads[MAX_CREATED_THREAD];
-static int threadsNextIndex = 0;
+//#define MAX_CREATED_THREAD 20
+//static HANDLE threads[MAX_CREATED_THREAD];
+//static int threadsNextIndex = 0;
 
 HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
     pthread_attr_t  attr;
@@ -499,7 +499,7 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
     handle->threadStartAddress = lpStartAddress;
     handle->threadParameter = lpParameter;
     handle->threadEventMessage = CreateEvent(NULL, FALSE, FALSE, NULL);
-    threads[threadsNextIndex] = handle;
+    //threads[threadsNextIndex] = handle;
 
     //Suspended
     //https://stackoverflow.com/questions/3140867/suspend-pthreads-without-using-condition
@@ -507,13 +507,15 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
     //http://man7.org/linux/man-pages/man3/pthread_create.3.html
     int pthreadResult = pthread_create(&handle->threadId, &attr, (void *(*)(void *)) ThreadStart, handle);
     if(pthreadResult == 0) {
-        threadsNextIndex++;
+        //threadsNextIndex++;
         if(lpThreadId)
             *lpThreadId = (DWORD) handle->threadId;
+        LOGD("CreateThread() 0x%lx", handle->threadId);
         return handle;
     } else {
-        threads[threadsNextIndex] = NULL;
-        CloseHandle(handle->threadEventMessage);
+        //threads[threadsNextIndex] = NULL;
+        if(handle->threadEventMessage)
+            CloseHandle(handle->threadEventMessage);
         free(handle);
     }
     return NULL;
@@ -623,8 +625,15 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             return TRUE;
         }
         case HANDLE_TYPE_THREAD:
+            LOGD("CloseHandle() THREAD 0x%lx", hObject->threadId);
+            if(hObject->threadEventMessage) {
+                CloseHandle(hObject->threadEventMessage);
+                hObject->threadEventMessage = NULL;
+            }
             hObject->handleType = HANDLE_TYPE_INVALID;
             hObject->threadId = 0;
+            hObject->threadStartAddress = NULL;
+            hObject->threadParameter = NULL;
             free(hObject);
             return TRUE;
         default:
@@ -761,42 +770,6 @@ BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 
 int MessageBox(HANDLE h, LPCTSTR szMessage, LPCTSTR title, int flags)
 {
-//    int result = IDOK;
-//#if !TARGET_OS_IPHONE
-//    NSAlert *alert = [[NSAlert alloc] init];
-//    [alert setMessageText: NSLocalizedString([NSString stringWithUTF8String: szMessage],@"")];
-//    if (0 != (flags & MB_OK))
-//    {
-//        [alert addButtonWithTitle: NSLocalizedString(@"OK",@"")];
-//    }
-//    else if (0 != (flags & MB_YESNO))
-//    {
-//        [alert addButtonWithTitle: NSLocalizedString(@"Yes",@"")];
-//        [alert addButtonWithTitle: NSLocalizedString(@"No",@"")];
-//    }
-//    else if (0 != (flags & MB_YESNOCANCEL))
-//    {
-//        [alert addButtonWithTitle: NSLocalizedString(@"Yes",@"")];
-//        [alert addButtonWithTitle: NSLocalizedString(@"Cancel",@"")];
-//        [alert addButtonWithTitle: NSLocalizedString(@"No",@"")];
-//    }
-//
-//    if (0 != (flags & MB_ICONSTOP))
-//    [alert setAlertStyle: NSAlertStyleCritical];
-//    else if (0 != (flags & MB_ICONINFORMATION))
-//    [alert setAlertStyle: NSAlertStyleInformational];
-//
-//    result = (int)[alert runModal];
-//    [alert release];
-//
-//    if (0 != (flags & MB_OK))
-//        result = IDOK;
-//    else if (0 != (flags & MB_YESNO))
-//        result = NSAlertFirstButtonReturn ? IDYES : IDNO;
-//    else if (0 != (flags & MB_YESNOCANCEL))
-//        result = NSAlertFirstButtonReturn ? IDYES :
-//                 NSAlertSecondButtonReturn ? IDCANCEL : IDNO;
-//#endif
     if(flags & MB_YESNO) {
         return IDOK;
     }

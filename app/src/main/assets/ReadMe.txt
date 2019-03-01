@@ -43,6 +43,7 @@ Version 1.1 (2019-03-01)
 - Update the KML spripts and the images from Eric Rechlin.
 - Fix crash when changing the main image.
 - Fix an issue when KML file is not found.
+- Fix a crash after opening several times a state file.
 
 
 Version 1.0 (2019-02-28)
