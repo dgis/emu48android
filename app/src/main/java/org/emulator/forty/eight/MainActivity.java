@@ -601,7 +601,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         int model = NativeLib.getCurrentModel();
-        String extension = "e48"; // HP48SX/GX
+        String extension = "e48"; // HP48SX/GX // model 'S' 'G'
         switch (model) {
             case '6':
             case 'A':
@@ -610,6 +610,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case 'E':
                 extension = "e39"; // HP39/40G
                 break;
+            case '2':
+            case 'Q':
             case 'X':
                 extension = "e49"; // HP49G
                 break;

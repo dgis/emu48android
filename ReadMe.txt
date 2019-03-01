@@ -32,6 +32,12 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.2 (2019-03-XX)
+
+- Use the KML Global color as background color.
+- Set the extension .e49 when "Saving as" a state file with model 'Q'.
+
+
 Version 1.1 (2019-03-01)
 
 - Update the KML spripts and the images from Eric Rechlin.
@@ -57,6 +63,10 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
+- Sometimes the "busy" annunciator gets stuck
+- On-D diagnostic does not work for 48gII/49G/49g+/50g (rom.e49 v2.15 not good or not well supported)
+- Pixel alignment (pixel squeeze?) issue
+- Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
 - Add haptic feedback when touch a button
 - Add a true fullscreen mode under the status bar and the bottom buttons
 - Improve the access to the menu
