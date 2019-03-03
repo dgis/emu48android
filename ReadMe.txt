@@ -37,11 +37,13 @@ Version 1.2 (2019-03-XX)
 - Use the KML Global color as background color.
 - Set the extension .e49 when "Saving as" a state file with model 'Q'.
 - Fix a crash after opening several times a state file.
+- Fix On-D diagnostic not working for 48gII/49G/49g+/50g (rom 2.15 not good, change for 2.10).
+- Fix the scrolling issue found in Emu48 1.59+
 
 
 Version 1.1 (2019-03-01)
 
-- Update the KML spripts and the images from Eric Rechlin.
+- Update the KML scripts and the images from Eric Rechlin.
 - Fix crash when changing the main image.
 - Fix an issue when KML file is not found.
 
@@ -64,8 +66,8 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
+- Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
-- On-D diagnostic does not work for 48gII/49G/49g+/50g (rom.e49 v2.15 not good or not well supported)
 - Pixel alignment (pixel squeeze?) issue
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
 - Add haptic feedback when touch a button

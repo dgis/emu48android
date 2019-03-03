@@ -445,35 +445,37 @@ VOID RefreshDisp0()
 
 VOID WriteToMainDisplay(LPBYTE a, DWORD d, UINT s)
 {
-	UINT x0, x;
-	UINT y0, y;
+	UINT   x0, x;
+	UINT   y0, y;
 	DWORD *p;
 
-	INT  lWidth = abs(Chipset.width);		// display width
+	INT lWidth = abs(Chipset.width);			// display width
 
 	if (bGrayscale) return;					// no direct writing in grayscale mode
 
-	#if defined DEBUG_DISPLAY
+#if defined DEBUG_DISPLAY
 	{
 		TCHAR buffer[256];
-		wsprintf(buffer,_T("%.5lx: Write Main Display %x,%u\n"),Chipset.pc,d,s);
+		wsprintf(buffer, _T("%.5lx: Write Main Display %x,%u\n"), Chipset.pc, d, s);
 		OutputDebugString(buffer);
 	}
-	#endif
+#endif
 
-	if (!(Chipset.IORam[BITOFFSET]&DON))	// display off
+	if (!(Chipset.IORam[BITOFFSET] & DON))	// display off
 		return;								// no drawing
 
 	if (MAINSCREENHEIGHT == 0) return;				// menu disabled
 
 	d -= Chipset.start1;					// nibble offset to DISPADDR (start of display)
-	y0 = y = (d / lWidth) + Chipset.d0size;		// bitmap row
-	x0 = x = d % lWidth;					// bitmap coloumn
-	p = (DWORD*)(pbyLcd + y0*LCD_ROW + x0*sizeof(*p));
+	d += SCREENHEIGHTREAL * lWidth;						// make positive offset
+	y0 = y = abs((INT)d / lWidth - SCREENHEIGHTREAL);			// bitmap row
+	x0 = x = (INT)d % lWidth;					// bitmap column
+	p = (DWORD*)(pbyLcd + y0 * LCD_ROW + x0 * sizeof(*p));
+
 
 	// outside main display area
-//	_ASSERT(y0 >= (INT)Chipset.d0size && y0 < (INT)(MAINSCREENHEIGHT+Chipset.d0size));
-	if (!(y0 >= (INT)Chipset.d0size && y0 < (INT)(MAINSCREENHEIGHT+Chipset.d0size))) return;
+	//	_ASSERT(y0 >= (INT)Chipset.d0size && y0 < (INT)(MAINSCREENHEIGHT+Chipset.d0size));
+	if (!(y0 >= (INT)Chipset.d0size && y0 < (INT)(MAINSCREENHEIGHT + Chipset.d0size))) return;
 
 	while (s--)								// loop for nibbles to write
 	{
@@ -483,23 +485,48 @@ VOID WriteToMainDisplay(LPBYTE a, DWORD d, UINT s)
 		}
 		++a;								// next value to write
 		++x;								// next x position
-		if (((INT) x==lWidth)&&s)			// end of display line
+		if (((INT)x == lWidth) && s)			// end of display line
 		{
+			// end of main display area
+			if (y == (INT)MAINSCREENHEIGHT + Chipset.d0size - 1) break;
 			x = 0;							// first coloumn
 			++y;							// next row
-			if (y == (INT) MAINSCREENHEIGHT+Chipset.d0size) break;
+
 			// recalculate bitmap memory position of new line
-			p = (DWORD*) (pbyLcd+y*LCD_ROW);  // CdB for HP: add 64/80 line display for apples
+			p = (DWORD*)(pbyLcd + y * LCD_ROW);  // CdB for HP: add 64/80 line display for apples
 		}
 		else
 			p++;
 	}
-	if (y==y0) y++;
+
+	// update window region
+	if (y0 != y)							// changed more than one line
+	{
+		x0 = 0;								// no x-position offset
+		x = 131;							// redraw complete lines
+
+		++y;								// redraw this line as well
+	}
+	else
+	{
+		x0 <<= 2; x <<= 2;					// x-position in pixel
+		_ASSERT(x >= x0);					// can't draw negative number of pixel
+		x -= x0;							// number of pixels to update
+
+		x0 -= Chipset.boffset;				// adjust x-position with left margin
+		if (x0 < 0) x0 = 0;
+
+		if (x0   > 131) x0 = 131;			// cut right borders
+		if (x + x0 > 131) x = 131 - x0;
+
+		y = y0 + 1;							// draw one line
+	}
+
 	EnterCriticalSection(&csGDILock);	// solving NT GDI problems
 	{
-		StretchBlt(hWindowDC, nLcdX, nLcdY+y0*nLcdZoom*nGdiYZoom, 
-			   131*nLcdZoom*nGdiXZoom, (y-y0)*nLcdZoom*nGdiYZoom,
-			   hLcdDC, Chipset.boffset, y0, 131, y-y0, SRCCOPY);  // CdB for HP: add 64/80 line display for apples
+		StretchBlt(hWindowDC, nLcdX + x0*nLcdZoom*nGdiXZoom, nLcdY+y0*nLcdZoom*nGdiYZoom,
+				   x*nLcdZoom*nGdiXZoom, (y-y0)*nLcdZoom*nGdiYZoom,
+				   hLcdDC, x0 + Chipset.boffset, y0, x, y-y0, SRCCOPY);  // CdB for HP: add 64/80 line display for apples
 		GdiFlush();
 	}
 	LeaveCriticalSection(&csGDILock);
