@@ -41,6 +41,8 @@ Version 1.2alpha (2019-03-XX)
 - Improve the scrolling issue found in Emu48 1.59+.
 - Rewrite the StretchBlt() function to improve the pixel rendering.
 - Allow to build the project with "gradlew build".
+- Fix issues with back button in the Settings, Help and About.
+- Build with Android 4.4 support.
 
 
 Version 1.1 (2019-03-01)

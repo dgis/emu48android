@@ -85,7 +85,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         resultIntent.putExtra("changedKeys", settingsKeyChanged.toArray(new String[0]));
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
-        super.onBackPressed();
+        //super.onBackPressed();
     }
 
     /**
@@ -126,7 +126,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             if(requestCode == MainActivity.INTENT_PORT2LOAD) {
                 Uri uri = data.getData();
                 //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
-                String url = null;
+                String url;
                 if (uri != null) {
                     url = uri.toString();
                     SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -302,15 +302,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             });
         }
 
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
+//        @Override
+//        public boolean onOptionsItemSelected(MenuItem item) {
+//            int id = item.getItemId();
+//            if (id == android.R.id.home) {
+//                startActivity(new Intent(getActivity(), SettingsActivity.class));
+//                return true;
+//            }
+//            return super.onOptionsItemSelected(item);
+//        }
 
         public void updatePort2LoadFilename(String port2Filename) {
             if(preferencePort2load != null) {
@@ -318,6 +318,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 try {
                     displayName = Utils.getFileName(getActivity(), port2Filename);
                 } catch (Exception e) {
+                    // Do nothing
                 }
                 preferencePort2load.setSummary(displayName);
             }

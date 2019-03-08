@@ -13,7 +13,7 @@
         <!--android:icon="@mipmap/ic_launcher"-->
         <!--android:roundIcon="@mipmap/ic_launcher_round"-->
         <activity
-            android:name="org.emulator.forty.eight.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:launchMode="singleTop"
@@ -43,36 +43,19 @@
                     android:mimeType="*/*"
                     android:pathPattern=".*\\.e49"
                     android:host="*"/>
-
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e38"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e39"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e48"-->
-                    <!--android:host="*"/>-->
-                <!--<data android:scheme="file"-->
-                    <!--android:mimeType="*/*"-->
-                    <!--android:pathPattern=".*\\.e49"-->
-                    <!--android:host="*"/>-->
             </intent-filter>
         </activity>
         <activity
-            android:name="org.emulator.forty.eight.SettingsActivity"
+            android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_activity_settings"
-            android:parentActivityName="org.emulator.forty.eight.MainActivity">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.emulator.forty.eight.MainActivity"/>
         </activity>
         <activity
-            android:name="org.emulator.forty.eight.InfoWebActivity"
+            android:name=".InfoWebActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_web_activity_info">
             <meta-data
@@ -80,7 +63,7 @@
                 android:value="org.emulator.forty.eight.MainActivity" />
         </activity>
         <activity
-            android:name="org.emulator.forty.eight.InfoActivity"
+            android:name=".InfoActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_activity_info">
             <meta-data

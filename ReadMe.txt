@@ -41,6 +41,8 @@ Version 1.2alpha (2019-03-XX)
 - Improve the scrolling issue found in Emu48 1.59+.
 - Rewrite the StretchBlt() function to improve the pixel rendering.
 - Allow to build the project with "gradlew build".
+- Fix issues with back button in the Settings, Help and About.
+- Build with Android 4.4 support.
 
 
 Version 1.1 (2019-03-01)
@@ -68,7 +70,7 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
-- Build with Android 4.0
+- Issue with random settings in Android 4.4
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
@@ -117,3 +119,4 @@ DONE
 - Open Emu48 with a state (content://) file shared with it
 - Add sound switch settings
 - Pixel alignment (pixel squeeze?) issue
+- Build with Android 4.4
