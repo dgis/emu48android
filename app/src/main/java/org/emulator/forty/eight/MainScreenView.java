@@ -27,6 +27,7 @@ public class MainScreenView extends SurfaceView {
     private float screenOffsetX = 0.0f;
     private float screenOffsetY= 0.0f;
     private boolean fillScreen = false;
+    private float fixScale = 0.0f;
     private int backgroundColor = Color.BLACK;
 
     public MainScreenView(Context context) {
@@ -201,13 +202,13 @@ public class MainScreenView extends SurfaceView {
                 float viewRatio = (float)viewHeight / (float)viewWidth;
                 float imageRatio = imageSizeY / imageSizeX;
                 if(viewRatio > imageRatio) {
-                    scaleX = scaleY = viewWidth / imageSizeX;
-                    translateX = 0.0f;
+                    scaleX = scaleY = this.fixScale != 0.0f ? this.fixScale : viewWidth / imageSizeX;
+                    translateX = (viewWidth - scaleX * imageSizeX) / 2.0f; //0.0f;
                     translateY = (viewHeight - scaleY * imageSizeY) / 2.0f;
                 } else {
-                    scaleX = scaleY = viewHeight / imageSizeY;
+                    scaleX = scaleY = this.fixScale != 0.0f ? this.fixScale : viewHeight / imageSizeY;
                     translateX = (viewWidth - scaleX * imageSizeX) / 2.0f;
-                    translateY = 0.0f;
+                    translateY = (viewHeight - scaleY * imageSizeY) / 2.0f; //0.0f;
                 }
             }
 
@@ -268,6 +269,12 @@ public class MainScreenView extends SurfaceView {
 
     public void setFillScreen(boolean fillScreen) {
         this.fillScreen = fillScreen;
+        calcTranslateAndScale(getWidth(), getHeight());
+        postInvalidate();
+    }
+
+    public void setScale(float scale) {
+        this.fixScale = scale;
         calcTranslateAndScale(getWidth(), getHeight());
         postInvalidate();
     }

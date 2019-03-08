@@ -1177,7 +1177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
+            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen", "settings_scale", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1198,6 +1198,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 case "settings_fill_screen":
                     mainScreenView.setFillScreen(sharedPreferences.getBoolean("settings_fill_screen", false));
+                    break;
+                case "settings_scale":
+                    //mainScreenView.setScale(1.0f); //sharedPreferences.getFloat("settings_scale", 0.0f));
                     break;
 
                 case "settings_allow_sound":

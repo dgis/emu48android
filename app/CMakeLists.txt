@@ -5,6 +5,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+#add_compile_options(-D DEBUG_DISPLAY)
+
 include_directories(src/main/cpp/win32)
 
 # Creates and names a library, sets it as either STATIC

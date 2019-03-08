@@ -32,13 +32,15 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.2 (2019-03-XX)
+Version 1.2alpha (2019-03-XX)
 
 - Use the KML Global color as background color.
 - Set the extension .e49 when "Saving as" a state file with model 'Q'.
 - Fix a crash after opening several times a state file.
 - Fix On-D diagnostic not working for 48gII/49G/49g+/50g (rom 2.15 not good, change for 2.10).
-- Improve the scrolling issue found in Emu48 1.59+
+- Improve the scrolling issue found in Emu48 1.59+.
+- Rewrite the StretchBlt() function to improve the pixel rendering.
+- Allow to build the project with "gradlew build".
 
 
 Version 1.1 (2019-03-01)

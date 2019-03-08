@@ -73,6 +73,7 @@
         </activity>
         <activity
             android:name="org.emulator.forty.eight.InfoWebActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_web_activity_info">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -80,6 +81,7 @@
         </activity>
         <activity
             android:name="org.emulator.forty.eight.InfoActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_activity_info">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

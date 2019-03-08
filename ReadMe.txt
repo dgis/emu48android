@@ -32,13 +32,15 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.2 (2019-03-XX)
+Version 1.2alpha (2019-03-XX)
 
 - Use the KML Global color as background color.
 - Set the extension .e49 when "Saving as" a state file with model 'Q'.
 - Fix a crash after opening several times a state file.
 - Fix On-D diagnostic not working for 48gII/49G/49g+/50g (rom 2.15 not good, change for 2.10).
-- Fix the scrolling issue found in Emu48 1.59+
+- Improve the scrolling issue found in Emu48 1.59+.
+- Rewrite the StretchBlt() function to improve the pixel rendering.
+- Allow to build the project with "gradlew build".
 
 
 Version 1.1 (2019-03-01)
@@ -66,9 +68,9 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
+- Build with Android 4.0
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
-- Pixel alignment (pixel squeeze?) issue
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
 - Add haptic feedback when touch a button
 - Add a true fullscreen mode under the status bar and the bottom buttons
@@ -114,3 +116,4 @@ DONE
 - Fix sound error at the initialization
 - Open Emu48 with a state (content://) file shared with it
 - Add sound switch settings
+- Pixel alignment (pixel squeeze?) issue

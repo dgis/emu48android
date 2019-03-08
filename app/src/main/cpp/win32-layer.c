@@ -1333,7 +1333,7 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
 
             destinationBytes = hBitmapDestination->bitmapInfoHeader->biBitCount >> 3;
-            destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+            destinationStride = (float)(4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
 
         HPALETTE palette = hdcDest->realizedPalette;
@@ -1404,11 +1404,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
         int sourceBytes = sourceBitCount >> 3;
-        float sourceBytesWithDecimal = (float)sourceBitCount / 8.0f;
-        //TODO float sourceStride = (float)(sourceBytesWithDecimal * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
-        float sourceStride = (float)(4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32));
+        int sourceStride = 4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32);
         int destinationBytes = 0;
-        float destinationStride = 0;
+        int destinationStride = 0;
 
         JNIEnv * jniEnv = NULL;
 
@@ -1444,23 +1442,11 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
 
             destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
-            destinationStride = (float)(destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
+            destinationStride = destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32);
         }
 
         xDest -= hdcDest->windowOrigineX;
         yDest -= hdcDest->windowOrigineY;
-
-        //https://softwareengineering.stackexchange.com/questions/148123/what-is-the-algorithm-to-copy-a-region-of-one-bitmap-into-a-region-in-another
-        float src_dx = (float)wSrc / (float)wDest;
-        float src_dy = (float)hSrc / (float)hDest;
-        float dst_maxx = xDest + wDest;
-        float dst_maxy = yDest + hDest;
-        float src_cury = ySrc;
-
-        if(reverseHeight == FALSE) {
-            src_dy = -src_dy;
-            src_cury = sourceHeight - 1 - src_cury;
-        }
 
         //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytesWithDecimal);
         HPALETTE palette = hdcSrc->realizedPalette;
@@ -1469,16 +1455,21 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
                                      palette->paletteLog->palPalEntry : NULL;
 
-        for (float y = yDest; y < dst_maxy; y++) {
-            float src_curx = xSrc;
-            BYTE parity = xSrc;
-            for (float x = xDest; x < dst_maxx; x++, parity++) {
-                // Point sampling - you can also impl as bilinear or other
+        int dst_maxx = xDest + wDest;
+        int dst_maxy = yDest + hDest;
+        for (int y = yDest; y < dst_maxy; y++) {
+            int src_cury = ySrc + (y - yDest) * hSrc / hDest;
+            if(!reverseHeight)
+                src_cury = sourceHeight - 1 - src_cury;
+            BYTE parity = (BYTE) xSrc;
+            for (int x = xDest; x < dst_maxx; x++, parity++) {
+                int src_curx = xSrc + (x - xDest) * wSrc / wDest;
+                if (src_curx < 0 || src_cury < 0 || src_curx >= sourceWidth || src_cury >= sourceHeight)
+                    continue;
 
-
-                float currentXBytes = sourceBytesWithDecimal * (int)src_curx;
-                BYTE * sourcePixel = pixelsSource + (int)(sourceStride * (int)src_cury) + (int)currentXBytes;
-                BYTE * destinationPixel = pixelsDestination + (int)(destinationStride * y + 4.0 * x);
+                int currentXBytes = ((sourceBitCount >> 2) * src_curx) >> 1;
+                BYTE * sourcePixel = pixelsSource + sourceStride * src_cury + currentXBytes;
+                BYTE * destinationPixel = pixelsDestination + destinationStride * y + 4 * x;
 
                 // -> ARGB_8888
                 switch (sourceBitCount) {
@@ -1486,7 +1477,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
                         //BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] >> 4 : sourcePixel[0] & (BYTE)0x0F);
                         if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peRed; //TODO Exchange Blue and Red?
+                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
                             destinationPixel[2] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[3] = 255;
@@ -1501,7 +1492,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                     case 8: {
                         BYTE colorIndex = sourcePixel[0];
                         if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peRed; //TODO Exchange Blue and Red?
+                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
                             destinationPixel[2] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[3] = 255;
@@ -1525,11 +1516,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                     default:
                         break;
                 }
-
-                src_curx += src_dx;
             }
-
-            src_cury += src_dy;
         }
 
         if(jniEnv)
