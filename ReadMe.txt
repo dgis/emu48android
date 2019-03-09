@@ -21,6 +21,11 @@ QUICK START
 4. And the calculator should now be opened.
 
 
+NOTES
+
+- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependencies.
+
+
 NOT WORKING YET
 
 - Disassembler
@@ -43,6 +48,8 @@ Version 1.2alpha (2019-03-XX)
 - Allow to build the project with "gradlew build".
 - Fix issues with back button in the Settings, Help and About.
 - Build with Android 4.4 support.
+- Prevent empty MRU.
+- Allow to go back from the settings in Android 4.4 and may be more recent versions.
 
 
 Version 1.1 (2019-03-01)
@@ -70,7 +77,7 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
-- Issue with random settings in Android 4.4
+- Issue with random settings in Android 4.4 emulator
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)

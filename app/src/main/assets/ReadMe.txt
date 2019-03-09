@@ -21,6 +21,11 @@ QUICK START
 4. And the calculator should now be opened.
 
 
+NOTES
+
+- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependencies.
+
+
 NOT WORKING YET
 
 - Disassembler
@@ -43,6 +48,8 @@ Version 1.2alpha (2019-03-XX)
 - Allow to build the project with "gradlew build".
 - Fix issues with back button in the Settings, Help and About.
 - Build with Android 4.4 support.
+- Prevent empty MRU.
+- Allow to go back from the settings in Android 4.4 and may be more recent versions.
 
 
 Version 1.1 (2019-03-01)

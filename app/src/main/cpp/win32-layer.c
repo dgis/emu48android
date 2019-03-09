@@ -472,11 +472,16 @@ int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
     return result;
 }
 
+extern int jniDetachCurrentThread();
+
 static DWORD ThreadStart(LPVOID lpThreadParameter) {
     HANDLE handle = (HANDLE)lpThreadParameter;
     if(handle) {
         handle->threadStartAddress(handle->threadParameter);
     }
+
+    //
+    jniDetachCurrentThread();
 
     CloseHandle(handle->threadEventMessage);
 }

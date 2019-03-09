@@ -12,6 +12,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
@@ -131,7 +132,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Set<String> savedMRU = sharedPreferences.getStringSet("MRU", null);
         if(savedMRU != null) {
             for (String url : savedMRU) {
-                mruLinkedHashMap.put(url, null);
+                if(url != null & !url.isEmpty())
+                    mruLinkedHashMap.put(url, null);
             }
         }
         updateMRU();
@@ -698,6 +700,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(Intent.createChooser(intent, getString(R.string.message_share_screenshot)));
         } catch (Exception e) {
             e.printStackTrace();
+            showAlert(e.getMessage());
         }
     }
     private void OnStackCopy() {
@@ -813,6 +816,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if(changedKeys != null) {
                     HashSet<String> changedKeysCleaned = new HashSet<>();
                     for (String key : changedKeys) {
+                        //Log.d(TAG, "ChangedKey): " + key);
                         switch (key) {
                             case "settings_port1en":
                             case "settings_port1wr":
@@ -840,7 +844,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (url != null) {
                     switch (requestCode) {
                         case INTENT_GETOPENFILENAME: {
-                            Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
+                            //Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
                             if (onFileOpen(url) != 0) {
                                 saveLastDocument(url);
                                 makeUriPersistable(data, uri);
@@ -848,7 +852,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             break;
                         }
                         case INTENT_GETSAVEFILENAME: {
-                            Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
+                            //Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
                             if (NativeLib.onFileSaveAs(url) != 0) {
                                 showAlert(getString(R.string.message_state_saved));
                                 saveLastDocument(url);
@@ -860,19 +864,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             break;
                         }
                         case INTENT_OBJECT_LOAD: {
-                            Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
+                            //Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
                             NativeLib.onObjectLoad(url);
                             break;
                         }
                         case INTENT_OBJECT_SAVE: {
-                            Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                            //Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
                             NativeLib.onObjectSave(url);
                             break;
                         }
                         case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
                         case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
                         case INTENT_PICK_KML_FOLDER_FOR_SETTINGS: {
-                            Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
+                            //Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putBoolean("settings_kml_default", false);
                             editor.putString("settings_kml_folder", url);
@@ -908,17 +912,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.putString("lastDocument", url);
         editor.apply();
 
-        mruLinkedHashMap.put(url, null);
+        if(url != null & !url.isEmpty())
+            mruLinkedHashMap.put(url, null);
         updateMRU();
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
         final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
     private void makeUriPersistableReadOnly(Intent data, Uri uri) {
         final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 
 

@@ -42,7 +42,7 @@ extern void OnBackupRestore();
 extern void OnBackupDelete();
 
 
-JNIEnv *getJNIEnvironment();
+//JNIEnv *getJNIEnvironment();
 
 JavaVM *java_machine;
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -64,6 +64,11 @@ JNIEnv *getJNIEnvironment() {
         }
     }
     return jniEnv;
+}
+
+int jniDetachCurrentThread() {
+    jint ret = (*java_machine)->DetachCurrentThread(java_machine);
+    return ret;
 }
 
 enum CALLBACK_TYPE {
