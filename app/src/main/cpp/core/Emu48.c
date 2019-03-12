@@ -13,7 +13,7 @@
 #include "kml.h"
 #include "debugger.h"
 
-#define VERSION   "1.59+"
+#define VERSION   "1.60+"
 
 #ifdef _DEBUG
 LPCTSTR szNoTitle = _T("Emu48 ")_T(VERSION)_T(" Debug");

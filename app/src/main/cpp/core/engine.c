@@ -34,6 +34,8 @@ DWORD   dwGXCycles = 123;					// GX cpu cycles in interval
 DWORD   dwGPCycles = 123*3;			    	// g+ cpu cycles in interval    // CdB for HP: add apples display management
 DWORD   dwG2Cycles = 123*2;					// gII cpu cycles in interval    // CdB for HP: add apples display management
 
+DWORD   dwT2Cycles = 0xFFFFFFFF;			// CPU cycles in 16384 Hz time frame
+
 // variables for debugger engine
 HANDLE  hEventDebug;						// event handle to stop cpu thread
 
@@ -201,11 +203,11 @@ static __inline VOID Debugger(VOID)			// debugger part
 			{
 				// cpu cycles for one timer2 tick elapsed
 				if ((DWORD) (Chipset.cycles & 0xFFFFFFFF) - dwEDbgCycles
-					>= (SAMPLE / 8192) * (DWORD) T2CYCLES)
+					>= (SAMPLE / 8192) * dwT2Cycles)
 				{
 					--Chipset.t2;
 					// adjust cycles reference
-					dwEDbgCycles += (SAMPLE / 8192) * T2CYCLES;
+					dwEDbgCycles += (SAMPLE / 8192) * dwT2Cycles;
 				}
 			}
 			else							// new timer2 value
@@ -293,7 +295,7 @@ static __inline VOID AdjustSpeed(VOID)		// adjust emulation speed
 		EnterCriticalSection(&csSlowLock);
 		{
 			// cycles elapsed for next check
-			if ((dwCycles = (DWORD) (Chipset.cycles & 0xFFFFFFFF)-dwOldCyc) >= (DWORD) T2CYCLES)
+			if ((dwCycles = (DWORD) (Chipset.cycles & 0xFFFFFFFF)-dwOldCyc) >= dwT2Cycles)
 			{
 				LARGE_INTEGER lAct;
 				do
@@ -306,13 +308,39 @@ static __inline VOID AdjustSpeed(VOID)		// adjust emulation speed
 				// ticks elapsed or negative number (workaround for QueryPerformanceCounter() in Win2k)
 				while (dwTicks <= dwTickRef || (dwTicks & 0x80000000) != 0);
 
-				dwOldCyc += T2CYCLES;		// adjust cycles reference
+				dwOldCyc += dwT2Cycles;		// adjust cycles reference
 				dwSpeedRef += dwTickRef;	// adjust reference time
 			}
 
 			if (nOpcSlow > 0) --nOpcSlow;	// decr. slow down opcode counter
 		}
 		LeaveCriticalSection(&csSlowLock);
+	}
+	return;
+}
+
+static __inline VOID SetT2Cycles(VOID)		// set device specific cpu cycles in interval
+{
+	switch (cCurrentRomType)
+	{
+	case 'S': // HP48SX
+		dwT2Cycles = dwSXCycles;
+		break;
+	case '6': // HP38G with 64KB RAM
+	case 'A': // HP38G
+	case 'E': // HP39/40G
+	case 'G': // HP48GX
+	case 'X': // HP49G
+	default:
+		dwT2Cycles = dwGXCycles;
+		break;
+	case 'P': // HP39G+
+	case 'Q': // HP49G+
+		dwT2Cycles = dwGPCycles;
+		break;
+	case '2': // HP48GII
+		dwT2Cycles = dwG2Cycles;
+		break;
 	}
 	return;
 }
@@ -387,7 +415,7 @@ VOID UpdateKdnBit(VOID)						// update KDN bit
 {
 	if (   Chipset.intk
 		&& (Chipset.IORam[TIMER2_CTRL]&RUN) != 0
-		&& (DWORD) (Chipset.cycles & 0xFFFFFFFF) - Chipset.dwKdnCycles > (DWORD) T2CYCLES * 16)
+		&& (DWORD) (Chipset.cycles & 0xFFFFFFFF) - Chipset.dwKdnCycles > dwT2Cycles * 16)
 		IOBit(SRQ2,KDN,Chipset.in != 0);
 	return;
 }
@@ -570,6 +598,7 @@ loop:
 			dwOldCyc = (DWORD) (Chipset.cycles & 0xFFFFFFFF);
 			QueryPerformanceCounter(&lDummyInt);
 			dwSpeedRef = lDummyInt.LowPart;
+			SetT2Cycles();					// set device specific cpu cycles in interval
 			SetHP48Time();					// update HP48 time & date
 			// start display counter/update engine
 			StartDisplay((BYTE)(((Chipset.IORam[LINECOUNT+1]<<4)|Chipset.IORam[LINECOUNT])&0x3F));

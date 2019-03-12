@@ -196,6 +196,71 @@ VOID SetWindowPathTitle(LPCTSTR szFileName)
 
 //################
 //#
+//#    BEEP Patch check
+//#
+//################
+
+BOOL CheckForBeepPatch(VOID)
+{
+	typedef struct beeppatch
+	{
+		const DWORD dwAddress;				// patch address
+		const BYTE  byPattern[4];			// patch pattern
+	} BEEPPATCH, *PBEEPPATCH;
+
+	// known beep patches
+	const BEEPPATCH s38[] =	{ { 0x017D0, { 0x8, 0x1, 0xB, 0x1 } } };
+	const BEEPPATCH s39[] = { { 0x017BC, { 0x8, 0x1, 0xB, 0x1 } } };
+	const BEEPPATCH s48[] = { { 0x017A6, { 0x8, 0x1, 0xB, 0x1 } } };
+	const BEEPPATCH s49[] = { { 0x4157A, { 0x8, 0x1, 0xB, 0x1 } },		// 1.18/1.19-5/1.19-6
+							  { 0x41609, { 0x8, 0x1, 0xB, 0x1 } } };	// 1.24/2.01/2.09
+
+	const BEEPPATCH *psData;
+	UINT nDataItems;
+	BOOL bMatch;
+
+	switch (cCurrentRomType)
+	{
+	case '6':
+	case 'A':								// HP38G
+		psData = s38;
+		nDataItems = ARRAYSIZEOF(s38);
+		break;
+	case 'E':								// HP39/40G
+		psData = s39;
+		nDataItems = ARRAYSIZEOF(s39);
+		break;
+	case 'S':								// HP48SX
+	case 'G':								// HP48GX
+		psData = s48;
+		nDataItems = ARRAYSIZEOF(s48);
+		break;
+	case 'X':								// HP49G
+		psData = s49;
+		nDataItems = ARRAYSIZEOF(s49);
+		break;
+	default:
+		psData = NULL;
+		nDataItems = 0;
+	}
+
+	// check if one data set match
+	for (bMatch = FALSE; !bMatch && nDataItems > 0; --nDataItems)
+	{
+		_ASSERT(pbyRom != NULL && psData != NULL);
+
+		// pattern matching?
+		bMatch =  (psData->dwAddress + ARRAYSIZEOF(psData->byPattern) < dwRomSize)
+			   && (memcmp(&pbyRom[psData->dwAddress],psData->byPattern,ARRAYSIZEOF(psData->byPattern))) == 0;
+		++psData;							// next data set
+	}
+	return bMatch;
+}
+
+
+
+//################
+//#
 //#    Patch
 //#
 //################
@@ -1698,9 +1763,9 @@ static HPALETTE CreateBIPalette(BITMAPINFOHEADER CONST *lpbi)
 		// create a logical color palette.
 		for (i = 0; i < pPal->palNumEntries; i++)
 		{
-			pPal->palPalEntry[i].peRed   = pRgb[i].rgbBlue;
+			pPal->palPalEntry[i].peRed   = pRgb[i].rgbRed;
 			pPal->palPalEntry[i].peGreen = pRgb[i].rgbGreen;
-			pPal->palPalEntry[i].peBlue  = pRgb[i].rgbRed;
+			pPal->palPalEntry[i].peBlue  = pRgb[i].rgbBlue;
 			pPal->palPalEntry[i].peFlags = 0;
 		}
 		hpal = CreatePalette(pPal);

@@ -50,7 +50,7 @@ static DWORD CalcT2(VOID)					// calculate timer2 value
 		DWORD         dwT2Dif;
 
 		// timer should run a little bit faster (10%) than maschine in authentic speed mode
-		DWORD dwCycPerTick = (9 * T2CYCLES) / 5;
+		DWORD dwCycPerTick = (9 * dwT2Cycles) / 5;
 
 		QueryPerformanceCounter(&lT2Act);	// actual time
 		// calculate realtime timer2 ticks since reference point

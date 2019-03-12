@@ -54,6 +54,7 @@ Version 1.2alpha (2019-03-XX)
 - Change the name from "Emu48 for Android" for "Emu48".
 - Always prompt to save when closing.
 - Fix MostRecentUsed file issue.
+- Update the core source code to Emu48 1.60+.
 
 
 Version 1.1 (2019-03-01)
@@ -81,8 +82,7 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
-- But in the MRU (the MRU is not always well refreshed)
-- Issue with random settings in Android 4.4 emulator
+- Sometimes, it seems in authentic calculator slow speed (with 48GX?) and it should not be.
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)

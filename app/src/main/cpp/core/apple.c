@@ -4,7 +4,7 @@
  *   This file is part of Emu48
  *
  *   Copyright (C) 2005 CdB for HP
- *   Copyright (C) 2006 Christoph Gie√üelink
+ *   Copyright (C) 2006 Christoph Gieﬂelink
  *
  */
 #include "pch.h"

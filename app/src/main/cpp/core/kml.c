@@ -2614,8 +2614,13 @@ BOOL InitKML(LPCTSTR szFilename, BOOL bNoLog)
 	if (!CrcRom(&wRomCrc))					// build patched ROM fingerprint and check for unpacked data
 	{
 		AddToLog(_T("Error, packed ROM image detected."));
-		UnmapRom();							// free memory
 		goto quit;
+	}
+	if (CheckForBeepPatch())				// check if ROM contain beep patches
+	{
+		AddToLog(_T("Warning, ROM beep patch detected. Remove beep patches please."));
+		bNoLog = FALSE;
+		bAlwaysDisplayLog = TRUE;
 	}
 
 	ResizeMainBitmap(nScaleMul,nScaleDiv);	// resize main picture

@@ -4,7 +4,7 @@
  *   This file is part of Emu48
  *
  *   Copyright (C) 1995 Sebastien Carlier
- *   Copyright (C) 1999 Christoph Gie√üelink
+ *   Copyright (C) 1999 Christoph Gieﬂelink
  *
  */
 #include "pch.h"
@@ -1086,7 +1086,7 @@ VOID o80810(LPBYTE I) // RSI
 	ScanKeyboard(TRUE,TRUE);				// one input bit high (direct)?
 
 	// enable KDN update
-	w.dwKdnCycles = (DWORD) (w.cycles & 0xFFFFFFFF) - (DWORD) T2CYCLES * 16;
+	w.dwKdnCycles = (DWORD) (w.cycles & 0xFFFFFFFF) - dwT2Cycles * 16;
 
 	if (w.in && w.inte == FALSE)			// key interrupt pending
 		w.intd = TRUE;						// keyboard interrupt pending

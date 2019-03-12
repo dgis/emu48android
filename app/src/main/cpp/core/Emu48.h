@@ -28,9 +28,6 @@
 
 #define CF_HPOBJ		"CF_HPOBJ"			// clipboard format for DDE
 
-// CPU cycles in 16384 Hz time frame
-#define T2CYCLES		((cCurrentRomType=='S')?dwSXCycles:(cCurrentRomType=='G')?dwGXCycles:(cCurrentRomType=='P')?dwGPCycles:(cCurrentRomType=='Q')?dwGPCycles:dwG2Cycles)  // CdB for HP: add apples
-
 #define SM_RUN			0					// states of cpu emulation thread
 #define SM_INVALID		1
 #define SM_RETURN		2
@@ -205,6 +202,7 @@ extern DWORD   dwSXCycles;
 extern DWORD   dwGXCycles;
 extern DWORD   dwGPCycles;    // CdB for HP: add apples speed
 extern DWORD   dwG2Cycles;    // CdB for HP: add apples speed
+extern DWORD   dwT2Cycles;
 extern HANDLE  hEventDebug;
 extern BOOL    bDbgAutoStateCtrl;
 extern INT     nDbgState;
@@ -266,6 +264,7 @@ extern BOOL    bBackup;
 extern VOID    SetWindowLocation(HWND hWnd,INT nPosX,INT nPosY);
 extern DWORD   GetCutPathName(LPCTSTR szFileName,LPTSTR szBuffer,DWORD dwBufferLength,INT nCutLength);
 extern VOID    SetWindowPathTitle(LPCTSTR szFileName);
+extern BOOL    CheckForBeepPatch(VOID);
 extern VOID    UpdatePatches(BOOL bPatch);
 extern BOOL    PatchRom(LPCTSTR szFilename);
 extern BOOL    CrcRom(WORD *pwChk);

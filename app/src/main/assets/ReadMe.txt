@@ -54,6 +54,7 @@ Version 1.2alpha (2019-03-XX)
 - Change the name from "Emu48 for Android" for "Emu48".
 - Always prompt to save when closing.
 - Fix MostRecentUsed file issue.
+- Update the core source code to Emu48 1.60+.
 
 
 Version 1.1 (2019-03-01)

@@ -3,7 +3,7 @@
  *
  *   This file is part of Emu48
  *
- *   Copyright (C) 2000 Christoph Gie√üelink
+ *   Copyright (C) 2000 Christoph Gieﬂelink
  *
  */
 

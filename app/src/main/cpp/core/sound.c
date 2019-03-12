@@ -3,7 +3,7 @@
  *
  *   This file is part of Emu48
  *
- *   Copyright (C) 2013 Christoph GieÃŸelink
+ *   Copyright (C) 2013 Christoph Gießelink
  *
  */
 #include "pch.h"
@@ -448,7 +448,7 @@ VOID SoundOut(CHIPSET* w, WORD wOut)
 	dwDiffSatCycles = dwCycles - dwLastCyc;	// time difference from syncpoint in original Saturn cycles
 
 	// theoretical CPU frequency from given T2CYCLES
-	dwCpuFreq = T2CYCLES * 16384;
+	dwCpuFreq = dwT2Cycles * 16384;
 
 	if (dwDiffSatCycles > dwCpuFreq / 2)	// frequency < 1 Hz
 	{
