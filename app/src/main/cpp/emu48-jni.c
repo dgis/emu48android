@@ -507,6 +507,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileSave(JNIEnv
     {
         SwitchToState(SM_INVALID);
         result = SaveDocument();
+        SaveMapViewToFile(pbyPort2);
         SwitchToState(SM_RUN);
     }
     return result;
@@ -520,11 +521,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileSaveAs(JNIE
         SwitchToState(SM_INVALID);
         _tcscpy(szBufferFilename, newStateFilenameUTF8);
         result = SaveDocumentAs(szBufferFilename);
-        if (result)
-            MruAdd(szCurrentFilename);
-        else {
-            //TODO ERROR !!!!!!!!!
-        }
+        SaveMapViewToFile(pbyPort2);
         SwitchToState(SM_RUN);
     }
 

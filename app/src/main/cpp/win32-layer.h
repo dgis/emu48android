@@ -348,7 +348,8 @@ enum HANDLE_TYPE {
     HANDLE_TYPE_FILE,
     HANDLE_TYPE_FILE_ASSET,
     HANDLE_TYPE_FILE_MAPPING,
-    HANDLE_TYPE_FILE_MAPPING_ASSET,
+	HANDLE_TYPE_FILE_MAPPING_CONTENT,
+	HANDLE_TYPE_FILE_MAPPING_ASSET,
     HANDLE_TYPE_EVENT,
     HANDLE_TYPE_THREAD,
 };
@@ -360,6 +361,7 @@ struct _HANDLE {
 
     AAsset* fileAsset;
 
+    off_t fileMappingOffset;
     size_t fileMappingSize;
     void* fileMappingAddress;
 
@@ -417,6 +419,9 @@ extern HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappin
 extern LPVOID MapViewOfFile(HANDLE hFileMappingObject,DWORD dwDesiredAccess, DWORD dwFileOffsetHigh,DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap);
 extern BOOL UnmapViewOfFile(LPCVOID lpBaseAddress);
 extern BOOL SetEndOfFile(HANDLE hFile);
+
+// This is not a Win32 function
+extern BOOL SaveMapViewToFile(LPCVOID lpBaseAddress);
 
 typedef UINT_PTR (CALLBACK *LPOFNHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef struct tagOFNA {

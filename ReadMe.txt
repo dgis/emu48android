@@ -50,6 +50,7 @@ Version 1.2alpha (2019-03-XX)
 - Build with Android 4.4 support.
 - Prevent empty MRU.
 - Allow to go back from the settings in Android 4.4 and may be more recent versions.
+- Save the Port 2 at the same time we save the state file.
 
 
 Version 1.1 (2019-03-01)
@@ -77,6 +78,7 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
 TODO
+- But in the MRU (the MRU is not always well refreshed)
 - Issue with random settings in Android 4.4 emulator
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck

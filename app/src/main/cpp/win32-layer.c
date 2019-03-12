@@ -277,7 +277,10 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
     HANDLE handle = malloc(sizeof(struct _HANDLE));
     memset(handle, 0, sizeof(struct _HANDLE));
     if(hFile->handleType == HANDLE_TYPE_FILE) {
-        handle->handleType = HANDLE_TYPE_FILE_MAPPING;
+        if(hFile->fileOpenFileFromContentResolver)
+            handle->handleType = HANDLE_TYPE_FILE_MAPPING_CONTENT;
+        else
+            handle->handleType = HANDLE_TYPE_FILE_MAPPING;
         handle->fileDescriptor = hFile->fileDescriptor;
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
         handle->handleType = HANDLE_TYPE_FILE_MAPPING_ASSET;
@@ -293,7 +296,7 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
 
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) {
-    off_t offset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
+    hFileMappingObject->fileMappingOffset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
     LPVOID result = NULL;
     if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING) {
         int prot = PROT_NONE;
@@ -303,11 +306,18 @@ LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwF
             prot |= PROT_WRITE;
         hFileMappingObject->fileMappingAddress = mmap(NULL, hFileMappingObject->fileMappingSize,
                                                       prot, MAP_PRIVATE,
-                                                      hFileMappingObject->fileDescriptor, offset);
+                                                      hFileMappingObject->fileDescriptor, hFileMappingObject->fileMappingOffset);
+    } else if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
+        size_t numberOfBytesToRead = hFileMappingObject->fileMappingSize - hFileMappingObject->fileMappingOffset;
+        hFileMappingObject->fileMappingAddress = malloc(numberOfBytesToRead);
+        off_t currentPosition = lseek(hFileMappingObject->fileDescriptor, 0, SEEK_CUR);
+        lseek(hFileMappingObject->fileDescriptor, hFileMappingObject->fileMappingOffset, SEEK_SET);
+        DWORD readByteCount = (DWORD) read(hFileMappingObject->fileDescriptor, hFileMappingObject->fileMappingAddress, numberOfBytesToRead);
+        lseek(hFileMappingObject->fileDescriptor, currentPosition, SEEK_SET);
     } else if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
         if (dwDesiredAccess & FILE_MAP_WRITE)
             return NULL;
-        hFileMappingObject->fileMappingAddress = (LPVOID) (AAsset_getBuffer(hFileMappingObject->fileAsset) + offset);
+        hFileMappingObject->fileMappingAddress = (LPVOID) (AAsset_getBuffer(hFileMappingObject->fileAsset) + hFileMappingObject->fileMappingOffset);
     }
     if(hFileMappingObject->fileMappingAddress) {
         for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
@@ -330,15 +340,44 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
             if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING) {
                 // munmap does not seem to work, so:
                 off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-                lseek(fileMappingHandle->fileDescriptor, 0, SEEK_SET);
-                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize);
+                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
                 lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
                 result = munmap(lpBaseAddress, fileMappingHandle->fileMappingSize);
+            } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
+                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
+                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
             } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
                 // No need to unmap
                 result = 0;
             }
             fileMappingHandles[i] = NULL;
+            break;
+        }
+    }
+
+    return result == 0;
+}
+
+// This is not a Win32 function
+BOOL SaveMapViewToFile(LPCVOID lpBaseAddress) {
+    int result = -1;
+    for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
+        HANDLE fileMappingHandle = fileMappingHandles[i];
+        if(fileMappingHandle && lpBaseAddress == fileMappingHandle->fileMappingAddress) {
+            if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING
+            || fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
+                // munmap does not seem to work, so:
+                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
+                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+            } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
+                // No need to unmap
+                result = 0;
+            }
             break;
         }
     }
@@ -601,16 +640,11 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             free(hObject);
             return TRUE;
         }
-        case HANDLE_TYPE_FILE_MAPPING: {
-            hObject->handleType = HANDLE_TYPE_INVALID;
-            hObject->fileDescriptor = 0;
-            hObject->fileMappingSize = 0;
-            hObject->fileMappingAddress = NULL;
-            free(hObject);
-            return TRUE;
-        }
+        case HANDLE_TYPE_FILE_MAPPING:
+        case HANDLE_TYPE_FILE_MAPPING_CONTENT:
         case HANDLE_TYPE_FILE_MAPPING_ASSET: {
             hObject->handleType = HANDLE_TYPE_INVALID;
+            hObject->fileDescriptor = 0;
             hObject->fileAsset = NULL;
             hObject->fileMappingSize = 0;
             hObject->fileMappingAddress = NULL;

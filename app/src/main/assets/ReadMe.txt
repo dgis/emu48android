@@ -50,6 +50,7 @@ Version 1.2alpha (2019-03-XX)
 - Build with Android 4.4 support.
 - Prevent empty MRU.
 - Allow to go back from the settings in Android 4.4 and may be more recent versions.
+- Save the Port 2 at the same time we save the state file.
 
 
 Version 1.1 (2019-03-01)
