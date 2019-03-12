@@ -47,10 +47,13 @@ Version 1.2alpha (2019-03-XX)
 - Rewrite the StretchBlt() function to improve the pixel rendering.
 - Allow to build the project with "gradlew build".
 - Fix issues with back button in the Settings, Help and About.
-- Build with Android 4.4 support.
+- Build with Android 4.4 support (Not sure the settings work).
 - Prevent empty MRU.
 - Allow to go back from the settings in Android 4.4 and may be more recent versions.
 - Save the Port 2 at the same time we save the state file.
+- Change the name from "Emu48 for Android" for "Emu48".
+- Always prompt to save when closing.
+- Fix MostRecentUsed file issue.
 
 
 Version 1.1 (2019-03-01)

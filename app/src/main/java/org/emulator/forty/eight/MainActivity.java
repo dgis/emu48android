@@ -522,8 +522,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private Runnable fileSaveAsCallback = null;
     private void ensureDocumentSaved(final Runnable continueCallback) {
+        ensureDocumentSaved(continueCallback, false);
+    }
+
+    private Runnable fileSaveAsCallback = null;
+    private void ensureDocumentSaved(final Runnable continueCallback, boolean forceRequest) {
         if(NativeLib.isDocumentAvailable()) {
             final String currentFilename = NativeLib.getCurrentFilename();
             final boolean hasFilename = (currentFilename != null && currentFilename.length() > 0);
@@ -548,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             };
 
-            if(hasFilename && sharedPreferences.getBoolean("settings_autosave", true)) {
+            if(!forceRequest && hasFilename && sharedPreferences.getBoolean("settings_autosave", true)) {
                 onClickListener.onClick(null, DialogInterface.BUTTON_POSITIVE);
             } else {
                 new AlertDialog.Builder(this)
@@ -637,7 +641,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }, 300);
                 }
             }
-        });
+        }, true);
     }
     private void OnSettings() {
         startActivityForResult(new Intent(this, SettingsActivity.class), INTENT_SETTINGS);
@@ -912,9 +916,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.putString("lastDocument", url);
         editor.apply();
 
-        if(url != null & !url.isEmpty())
+        if(url != null && !url.isEmpty())
             mruLinkedHashMap.put(url, null);
-        updateMRU();
+        navigationView.post(new Runnable() {
+            public void run() {
+                updateMRU();
+            }
+        });
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
