@@ -364,6 +364,7 @@ struct _HANDLE {
     off_t fileMappingOffset;
     size_t fileMappingSize;
     void* fileMappingAddress;
+	DWORD fileMappingProtect;
 
     pthread_t threadId;
     DWORD (*threadStartAddress)(LPVOID);

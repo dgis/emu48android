@@ -289,14 +289,15 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
     if(dwMaximumSizeHigh == 0 && dwMaximumSizeLow == 0) {
         dwMaximumSizeLow = GetFileSize(hFile, &dwMaximumSizeHigh);
     }
-    handle->fileMappingSize = (dwMaximumSizeHigh << 32) | dwMaximumSizeLow;
+    handle->fileMappingSize = /*(dwMaximumSizeHigh << 32) |*/ dwMaximumSizeLow;
     handle->fileMappingAddress = NULL;
+    handle->fileMappingProtect = flProtect;
     return handle;
 }
 
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) {
-    hFileMappingObject->fileMappingOffset = (dwFileOffsetHigh << 32) & dwFileOffsetLow;
+    hFileMappingObject->fileMappingOffset = /*(dwFileOffsetHigh << 32) |*/ dwFileOffsetLow;
     LPVOID result = NULL;
     if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING) {
         int prot = PROT_NONE;
@@ -337,22 +338,27 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
         HANDLE fileMappingHandle = fileMappingHandles[i];
         if(fileMappingHandle && lpBaseAddress == fileMappingHandle->fileMappingAddress) {
-            if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING) {
-                // munmap does not seem to work, so:
-                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
-                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
-                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
-                result = munmap(lpBaseAddress, fileMappingHandle->fileMappingSize);
-            } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
-                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
-                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
-                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
-            } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
-                // No need to unmap
-                result = 0;
-            }
+// Only save the file manually (for Port2 actually)
+//            if(fileMappingHandle->fileMappingProtect == PAGE_READWRITE) {
+//                if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING) {
+//                    // munmap does not seem to work, so:
+//                    size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset;
+//                    off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+//                    lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+//                    write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, numberOfBytesToWrite);
+//                    lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+//                    result = munmap(lpBaseAddress, fileMappingHandle->fileMappingSize);
+//                } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
+//                    size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset;
+//                    off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+//                    lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+//                    write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, numberOfBytesToWrite);
+//                    lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+//                } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
+//                    // No need to unmap
+//                    result = 0;
+//                }
+//            }
             fileMappingHandles[i] = NULL;
             break;
         }
@@ -369,11 +375,17 @@ BOOL SaveMapViewToFile(LPCVOID lpBaseAddress) {
         if(fileMappingHandle && lpBaseAddress == fileMappingHandle->fileMappingAddress) {
             if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING
             || fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
-                // munmap does not seem to work, so:
-                off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-                lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
-                write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset);
-                lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+                //size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset;
+                size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize;
+                if(numberOfBytesToWrite > 0) {
+                    off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
+                    //lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
+                    lseek(fileMappingHandle->fileDescriptor, 0, SEEK_SET);
+                    write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, numberOfBytesToWrite);
+                    lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
+                } else {
+                    // BUG
+                }
             } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
                 // No need to unmap
                 result = 0;
@@ -665,7 +677,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
         }
         case HANDLE_TYPE_THREAD:
             LOGD("CloseHandle() THREAD 0x%lx", hObject->threadId);
-            if(hObject->threadEventMessage) {
+            if(hObject->threadEventMessage && hObject->threadEventMessage->handleType == HANDLE_TYPE_EVENT) {
                 CloseHandle(hObject->threadEventMessage);
                 hObject->threadEventMessage = NULL;
             }
