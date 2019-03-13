@@ -37,7 +37,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.2alpha (2019-03-XX)
+Version 1.2 (2019-03-14)
 
 - Use the KML Global color as background color.
 - Set the extension .e49 when "Saving as" a state file with model 'Q'.
