@@ -1583,9 +1583,9 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
        && hdc->realizedPalette->paletteLog->palNumEntries > 0 && iStart < hdc->realizedPalette->paletteLog->palNumEntries) {
         PALETTEENTRY * palPalEntry = hdc->realizedPalette->paletteLog->palPalEntry;
         for (int i = iStart, j = 0; i < cEntries; i++, j++) {
-            palPalEntry[i].peRed = prgbq[j].rgbBlue;
+            palPalEntry[i].peRed = prgbq[j].rgbRed;
             palPalEntry[i].peGreen = prgbq[j].rgbGreen;
-            palPalEntry[i].peBlue = prgbq[j].rgbRed;
+            palPalEntry[i].peBlue = prgbq[j].rgbBlue;
             palPalEntry[i].peFlags = 0;
         }
     }
