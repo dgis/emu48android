@@ -1528,9 +1528,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
                         //BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] >> 4 : sourcePixel[0] & (BYTE)0x0F);
                         if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
                             destinationPixel[3] = 255;
                         } else {
                             destinationPixel[0] = colorIndex;
@@ -1543,9 +1543,9 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                     case 8: {
                         BYTE colorIndex = sourcePixel[0];
                         if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peRed;
+                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
                             destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peBlue;
+                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
                             destinationPixel[3] = 255;
                         } else {
                             destinationPixel[0] = sourcePixel[0];

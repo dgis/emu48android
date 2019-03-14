@@ -37,6 +37,11 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.3 (2019-03-14)
+
+- Fix the red and blue color inversion.
+
+
 Version 1.2 (2019-03-14)
 
 - Use the KML Global color as background color.
