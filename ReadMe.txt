@@ -23,7 +23,7 @@ QUICK START
 
 NOTES
 
-- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependencies.
+- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependency files.
 
 
 NOT WORKING YET
@@ -86,8 +86,10 @@ You should have received a copy of the GNU General Public License along with thi
 Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
 The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
 
+
 TODO
-- Sometimes, it seems in authentic calculator slow speed and it should not be.
+
+- Sometimes, it seems to be in authentic calculator slow speed and it should not be.
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
@@ -95,3 +97,34 @@ TODO
 - Add a true fullscreen mode under the status bar and the bottom buttons
 - Improve the access to the menu
 - Change the logo following the template
+
+
+BUILD
+
+Emu48 for Android is built with Android Studio 3.3 (2019).
+And to generate a installable APK file with a real Android device, it MUST be signed.
+
+Either use Android Studio:
+* In menu "Build"
+* Select "Generate Signed Bundle / APK..."
+* Select "APK", then "Next"
+* "Create new..." (or use an existing key store file)
+* Enter "Key store password", "Key alias" and "Key password", then "Next"
+* Select a "Destination folder:"
+* Select the "Build Variants:" "release"
+* Select the "Signature Versions:" "V1" (V1 only)
+* Finish
+
+Or in the command line, build the signed APK:
+* In the root folder, create a keystore.jks file with:
+** keytool -genkey -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0
+** keytool -genkeypair -v -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0
+* create the file ./keystore.properties , with the following properties:
+    storeFile=../keystore.jks
+    storePassword=myPassword
+    keyAlias=key0
+    keyPassword=myPassword
+* gradlew build
+* The APK should be in the folder app/build/outputs/apk/release
+
+Then, you should be able to use this fresh APK file with an Android device.

@@ -37,12 +37,6 @@ extern void buttonUp(int x, int y);
 extern void keyDown(int virtKey);
 extern void keyUp(int virtKey);
 
-extern void OnBackupSave();
-extern void OnBackupRestore();
-extern void OnBackupDelete();
-
-
-//JNIEnv *getJNIEnvironment();
 
 JavaVM *java_machine;
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -283,7 +277,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
 
     // read emulator settings
     GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
-    ReadSettings();
+    //ReadSettings();
 
     _tcscpy(szCurrentDirectory, "");
     _tcscpy(szEmuDirectory, "assets/calculators/");

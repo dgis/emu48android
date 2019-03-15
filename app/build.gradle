@@ -1,5 +1,32 @@
 apply plugin: 'com.android.application'
 
+// Create a variable called keystorePropertiesFile, and initialize it to your
+// keystore.properties file, in the rootProject folder.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def canSign = false
+if(keystorePropertiesFile.exists()) {
+    canSign = true
+    println("The release flavor will signed in app/build/outputs/apk/release/app-release.apk")
+
+    // Load your keystore.properties file into the keystoreProperties object.
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    println("""
+            The keystore.properties file is not found, so, you will not be able to install an unsigned APK in an Android device.
+            Please, in the root folder, create a keystore.jks file with the command:
+            
+            keytool -genkey -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0
+            
+            and create the file ./keystore.properties , with the following properties:
+            
+            storeFile=../keystore.jks
+            storePassword=myPassword
+            keyAlias=key0
+            keyPassword=myPassword
+            """)
+}
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -17,10 +44,29 @@ android {
             }
         }
     }
+//    if(project.hasProperty("MyProject.properties")
+//            && new File(project.property("MyProject.properties")).exists()) {
+
+    if(canSign) {
+        signingConfigs {
+            release {
+//                storeFile new File(keystoreProperties['storeFile'])
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                v1SigningEnabled true
+                v2SigningEnabled false
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if(canSign) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     externalNativeBuild {

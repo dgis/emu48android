@@ -24,7 +24,6 @@ size_t assetsPrefixLength;
 const TCHAR * contentScheme = _T("content://");
 size_t contentSchemeLength;
 const TCHAR * documentScheme = _T("document:");
-//static HDC mainPaintDC = NULL;
 struct timerEvent {
     BOOL valid;
     int timerId;
@@ -208,7 +207,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             return handle;
         }
     }
-    return INVALID_HANDLE_VALUE;
+    return (HANDLE) INVALID_HANDLE_VALUE;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
@@ -338,27 +337,7 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
         HANDLE fileMappingHandle = fileMappingHandles[i];
         if(fileMappingHandle && lpBaseAddress == fileMappingHandle->fileMappingAddress) {
-// Only save the file manually (for Port2 actually)
-//            if(fileMappingHandle->fileMappingProtect == PAGE_READWRITE) {
-//                if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING) {
-//                    // munmap does not seem to work, so:
-//                    size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset;
-//                    off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-//                    lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
-//                    write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, numberOfBytesToWrite);
-//                    lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
-//                    result = munmap(lpBaseAddress, fileMappingHandle->fileMappingSize);
-//                } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_CONTENT) {
-//                    size_t numberOfBytesToWrite = fileMappingHandle->fileMappingSize - fileMappingHandle->fileMappingOffset;
-//                    off_t currentPosition = lseek(fileMappingHandle->fileDescriptor, 0, SEEK_CUR);
-//                    lseek(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingOffset, SEEK_SET);
-//                    write(fileMappingHandle->fileDescriptor, fileMappingHandle->fileMappingAddress, numberOfBytesToWrite);
-//                    lseek(fileMappingHandle->fileDescriptor, currentPosition, SEEK_SET);
-//                } else if(fileMappingHandle->handleType == HANDLE_TYPE_FILE_MAPPING_ASSET) {
-//                    // No need to unmap
-//                    result = 0;
-//                }
-//            }
+            // Only save the file manually (for Port2 actually)
             fileMappingHandles[i] = NULL;
             break;
         }
@@ -761,21 +740,6 @@ BOOL WritePrivateProfileString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpS
     return 0;
 }
 
-/*
-void SetTimer(void *, TimerType id, int msec, void *)
-{
-  switch(id) {
-  case TIME_SHOW:
-    doc_manager->getCurrent()->SetShowTimer(msec);
-    break;
-  case TIME_NEXT:
-    doc_manager->getCurrent()->SetNextTimer(msec);
-    break;
-  }
-}
-*/
-
-
 HGLOBAL WINAPI GlobalAlloc(UINT uFlags, SIZE_T dwBytes) {
     return malloc(dwBytes);
 }
@@ -875,14 +839,6 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     memset(handle, 0, sizeof(struct _HWAVEOUT));
     handle->pwfx = (WAVEFORMATEX *) pwfx;
     handle->uDeviceID = uDeviceID;
-
-
-    //SLObjectItf engineObject = NULL;
-    //SLObjectItf outputMixObject = NULL;
-    //SLObjectItf bqPlayerObject = NULL;
-    //pthread_mutex_t  audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
-    //handle->audioEngineLock = PTHREAD_MUTEX_INITIALIZER;
-
 
     SLresult result;
 
@@ -1674,17 +1630,14 @@ BOOL GdiFlush(void) {
     return 0;
 }
 HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
-    //hWindowDC;
-//    if(!mainPaintDC)
-//        mainPaintDC = CreateCompatibleDC(NULL);
     if(lpPaint) {
         memset(lpPaint, 0, sizeof(PAINTSTRUCT));
         lpPaint->fErase = TRUE;
-        lpPaint->hdc = hWindowDC; //mainPaintDC;
-        lpPaint->rcPaint.right = (short) nBackgroundW; //androidBitmapInfo.width; // - 1;
-        lpPaint->rcPaint.bottom = (short) nBackgroundH; //androidBitmapInfo.height; // - 1;
+        lpPaint->hdc = hWindowDC;
+        lpPaint->rcPaint.right = (short) nBackgroundW;
+        lpPaint->rcPaint.bottom = (short) nBackgroundH;
     }
-    return hWindowDC; //mainPaintDC;
+    return hWindowDC;
 }
 BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     mainViewUpdateCallback();
