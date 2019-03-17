@@ -37,7 +37,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.3 (2019-03-14)
+Version 1.3alpha (2019-03-xx)
 
 - Fix the red and blue color inversion.
 

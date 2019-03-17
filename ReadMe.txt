@@ -37,7 +37,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.3 (2019-03-14)
+Version 1.3alpha (2019-03-xx)
 
 - Fix the red and blue color inversion.
 
@@ -102,7 +102,7 @@ TODO
 BUILD
 
 Emu48 for Android is built with Android Studio 3.3 (2019).
-And to generate a installable APK file with a real Android device, it MUST be signed.
+And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:
 * In menu "Build"
