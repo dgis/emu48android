@@ -684,11 +684,7 @@ void Sleep(int ms)
 
 BOOL QueryPerformanceFrequency(PLARGE_INTEGER l) {
     //https://msdn.microsoft.com/en-us/library/windows/desktop/ms644904(v=vs.85).aspx
-//    static struct mach_timebase_info timebase = { 0, 0 };
-//    if (0 == timebase.denom)
-//        mach_timebase_info(&timebase);
-////    l->LowPart  = 1e9 * timebase.denom / timebase.numer;
-    l->QuadPart = 1000000;
+    l->QuadPart = 10000000;
     return TRUE;
 }
 
@@ -698,8 +694,8 @@ BOOL QueryPerformanceCounter(PLARGE_INTEGER l)
         time_t   tv_sec;
         long     tv_nsec;
     } */ time;
-    int result = clock_gettime(CLOCK_MONOTONIC, &time);
-    l->QuadPart = (uint64_t) ((1e9 * time.tv_sec + time.tv_nsec) / 1000);
+    clock_gettime(CLOCK_MONOTONIC, &time);
+    l->QuadPart = (uint64_t) ((1e9 * time.tv_sec + time.tv_nsec) / 100);
     return TRUE;
 }
 void InitializeCriticalSection(CRITICAL_SECTION * lpCriticalSection) {
