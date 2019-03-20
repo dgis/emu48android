@@ -2,53 +2,45 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- General -->
-        <PreferenceCategory android:title="General">
+        <PreferenceCategory android:title="@string/settings_category_general_title">
             <SwitchPreference
                 android:key="settings_realspeed"
-                android:title="Authentic Calculator Speed"
+                android:title="@string/settings_realspeed_title"
                 android:defaultValue="false" />
             <SwitchPreference
                 android:key="settings_grayscale"
-                android:title="Enable Virtual LCD Delay"
+                android:title="@string/settings_grayscale_title"
                 android:defaultValue="false" />
             <SwitchPreference
                 android:key="settings_autosave"
-                android:title="Automatically Save Files"
+                android:title="@string/settings_autosave_title"
                 android:defaultValue="true" />
             <SwitchPreference
                 android:key="settings_objectloadwarning"
-                android:title="Show Load Object Warning"
+                android:title="@string/settings_objectloadwarning_title"
                 android:defaultValue="true" />
             <SwitchPreference
                 android:key="settings_alwaysdisplog"
-                android:title="Always Show KML Compilation Result"
+                android:title="@string/settings_alwaysdisplog_title"
                 android:defaultValue="true" />
 
             <SwitchPreference
                 android:key="settings_allow_rotation"
-                android:title="Allow rotation"
+                android:title="@string/settings_allow_rotation_title"
                 android:defaultValue="false" />
             <SwitchPreference
                 android:key="settings_fill_screen"
-                android:title="Fill screen"
+                android:title="@string/settings_fill_screen_title"
                 android:defaultValue="false" />
             <SwitchPreference
                 android:key="settings_allow_sound"
-                android:title="Allow sounds"
+                android:title="@string/settings_allow_sound_title"
+                android:defaultValue="true" />
+            <SwitchPreference
+                android:key="settings_haptic_feedback"
+                android:title="@string/settings_haptic_feedback_title"
                 android:defaultValue="true" />
         </PreferenceCategory>
-
-        <!--<PreferenceCategory android:title="General">-->
-            <!--<SwitchPreference-->
-                <!--android:key="settings_kml_default"-->
-                <!--android:title="Default Internal KML Folder"-->
-                <!--android:defaultValue="true" />-->
-            <!--<Preference-->
-                <!--android:key="settings_kml_folder"-->
-                <!--android:title="Custom KML Folder"-->
-                <!--android:summary=""-->
-                <!--/>-->
-        <!--</PreferenceCategory>-->
 
         <!--<PreferenceCategory app:title="Style">
             "Show Title",IDC_SHOWTITLE
@@ -60,30 +52,30 @@
         </PreferenceCategory>-->
 
     <!-- Memory -->
-        <PreferenceCategory android:title="Memory Cards">
+        <PreferenceCategory android:title="@string/settings_category_memory_cards_title">
             <SwitchPreference
                 android:key="settings_port1en"
-                android:title="Port 1 is Plugged"
+                android:title="@string/settings_port1en_title"
                 android:defaultValue="false"
                 />
             <SwitchPreference
                 android:key="settings_port1wr"
-                android:title="Port 1 is Writeable"
+                android:title="@string/settings_port1wr_title"
                 android:defaultValue="false"
                 />
             <SwitchPreference
                 android:key="settings_port2en"
-                android:title="Port 2 is Plugged"
+                android:title="@string/settings_port2en_title"
                 android:defaultValue="false"
                 />
             <SwitchPreference
                 android:key="settings_port2wr"
-                android:title="Port 2 is Writeable"
+                android:title="@string/settings_port2wr_title"
                 android:defaultValue="false"
                 />
             <Preference
                 android:key="settings_port2load"
-                android:title="Port 2 File"
+                android:title="@string/settings_port2load_title"
                 android:summary=""
                 />
         </PreferenceCategory>

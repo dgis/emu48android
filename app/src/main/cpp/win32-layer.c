@@ -1679,6 +1679,9 @@ HANDLE WINAPI GetClipboardData(UINT uFormat) {
     return szText;
 }
 
+//#define TIMER_LOGD LOGD
+#define TIMER_LOGD
+
 void deleteTimeEvent(UINT uTimerID) {
     timer_delete(timerEvents[uTimerID - 1].timer);
     timerEvents[uTimerID - 1].valid = FALSE;
@@ -1688,13 +1691,13 @@ void timerCallback(int timerId) {
         timerEvents[timerId].fptc((UINT) (timerId + 1), 0, (DWORD) timerEvents[timerId].dwUser, 0, 0);
 
         if(timerEvents[timerId].fuEvent == TIME_ONESHOT) {
-            //LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
+            TIMER_LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
             deleteTimeEvent((UINT) (timerId + 1));
         }
     }
 }
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
-    //LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
+    TIMER_LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
 
     // Find a timer id
     int timerId = -1;
@@ -1705,7 +1708,7 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
         }
     }
     if(timerId == -1) {
-        //LOGD("timeSetEvent() ERROR: No more timer available");
+        TIMER_LOGD("timeSetEvent() ERROR: No more timer available");
         return NULL;
     }
     timerEvents[timerId].timerId = timerId;
@@ -1721,11 +1724,11 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     sev.sigev_notify_attributes = NULL;
     timer_t * timer = &(timerEvents[timerId].timer);
     if (timer_create(CLOCK_REALTIME, &sev, timer) == -1) {
-        //LOGD("timeSetEvent() ERROR in timer_create");
+        TIMER_LOGD("timeSetEvent() ERROR in timer_create");
         return NULL;
     }
 
-    long long freq_nanosecs = uDelay * 1000000;
+    long long freq_nanosecs = uDelay * 1000000L;
     struct itimerspec its;
     its.it_value.tv_sec = freq_nanosecs / 1000000000;
     its.it_value.tv_nsec = freq_nanosecs % 1000000000;
@@ -1738,15 +1741,15 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     }
     if (timer_settime(timerEvents[timerId].timer, 0, &its, NULL) == -1) {
         timer_delete(timerEvents[timerId].timer);
-        //LOGD("timeSetEvent() ERROR in timer_settime");
+        TIMER_LOGD("timeSetEvent() ERROR in timer_settime");
         return NULL;
     }
     timerEvents[timerId].valid = TRUE;
-    //LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
+    TIMER_LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
     return (MMRESULT) (timerId + 1); // No error
 }
 MMRESULT timeKillEvent(UINT uTimerID) {
-    //LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
+    TIMER_LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
     deleteTimeEvent(uTimerID);
     return 0; //No error
 }

@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -1181,6 +1182,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return "";
     }
 
+    void performHapticFeedback() {
+        if(sharedPreferences.getBoolean("settings_haptic_feedback", true))
+            mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+    }
+
     private void setPort1Settings(boolean port1Plugged, boolean port1Writable) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("settings_port1en", port1Plugged);
@@ -1192,7 +1198,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
-            String[] settingKeys = { "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen", "settings_scale", "settings_allow_sound", "settings_kml", "settings_port1", "settings_port2" };
+            String[] settingKeys = {
+                    "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen",
+                    "settings_scale", "settings_allow_sound", "settings_haptic_feedback",
+                    "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
             }
@@ -1221,6 +1230,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_allow_sound":
                     NativeLib.setConfiguration("settings_sound_volume", isDynamicValue,
                             sharedPreferences.getBoolean("settings_allow_sound", true) ? 64 : 0, 0, null);
+                    break;
+
+                case "settings_haptic_feedback":
+                    // Nothing to do
                     break;
 
                 case "settings_kml":

@@ -238,6 +238,19 @@ const TCHAR * clipboardPasteText() {
     return NULL;
 }
 
+void performHapticFeedback() {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "performHapticFeedback", "()V");
+            (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
+}
+
+
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;

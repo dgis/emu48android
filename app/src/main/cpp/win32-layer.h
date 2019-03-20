@@ -1141,3 +1141,4 @@ extern enum ChooseKmlMode chooseCurrentKmlMode;
 BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize);
 void clipboardCopyText(const TCHAR * text);
 const TCHAR * clipboardPasteText();
+void performHapticFeedback();

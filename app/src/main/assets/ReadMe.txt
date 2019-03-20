@@ -23,7 +23,7 @@ QUICK START
 
 NOTES
 
-- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependencies.
+- When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependency files.
 
 
 NOT WORKING YET
@@ -40,6 +40,10 @@ CHANGES
 Version 1.3alpha (2019-03-xx)
 
 - Fix the red and blue color inversion.
+- Add the HP 50g (Calypso 2K/4K) KML script from Carl Reinke (4K is a slow because there is no hardware acceleration).
+- Fix a bug about the timer delay in timeSetEvent(). I hope it fix the slow down.
+- Fix deprecated classes in the settings.
+- Add a haptic feedback when touching a button.
 
 
 Version 1.2 (2019-03-14)

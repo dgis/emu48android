@@ -6,9 +6,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
 import java.util.HashSet;
@@ -16,6 +13,9 @@ import java.util.HashSet;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceManager;
 
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -40,7 +40,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         }
 
         generalPreferenceFragment = new GeneralPreferenceFragment();
-        getFragmentManager().beginTransaction().replace(android.R.id.content, generalPreferenceFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, generalPreferenceFragment).commit();
     }
 
     @Override
@@ -104,13 +104,14 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
+    public static class GeneralPreferenceFragment extends PreferenceFragmentCompat {
 
         Preference preferencePort2load = null;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
@@ -165,6 +166,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     return true;
                 }
             });
+        }
+
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+
         }
 
         public void updatePort2LoadFilename(String port2Filename) {

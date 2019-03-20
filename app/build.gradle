@@ -7,7 +7,7 @@ def keystoreProperties = new Properties()
 def canSign = false
 if(keystorePropertiesFile.exists()) {
     canSign = true
-    println("The release flavor will signed in app/build/outputs/apk/release/app-release.apk")
+    println("The release flavor will signed in the folder app/build/outputs/apk/release/")
 
     // Load your keystore.properties file into the keystoreProperties object.
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
@@ -35,6 +35,7 @@ android {
         targetSdkVersion 28
         versionCode 4
         versionName "1.3"
+        setProperty("archivesBaseName", "Emu48-v$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
@@ -44,13 +45,10 @@ android {
             }
         }
     }
-//    if(project.hasProperty("MyProject.properties")
-//            && new File(project.property("MyProject.properties")).exists()) {
 
     if(canSign) {
         signingConfigs {
             release {
-//                storeFile new File(keystoreProperties['storeFile'])
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
                 keyAlias keystoreProperties['keyAlias']
@@ -78,11 +76,11 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0-alpha02'
+    implementation 'androidx.appcompat:appcompat:1.1.0-alpha03'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    implementation 'androidx.preference:preference:1.0.0'
     implementation 'com.google.android.material:material:1.1.0-alpha04'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.1.2-alpha01'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.2-alpha01'
+    androidTestImplementation 'androidx.test:runner:1.1.2-alpha02'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0-alpha02'
 }

@@ -40,6 +40,10 @@ CHANGES
 Version 1.3alpha (2019-03-xx)
 
 - Fix the red and blue color inversion.
+- Add the HP 50g (Calypso 2K/4K) KML script from Carl Reinke (4K is a slow because there is no hardware acceleration).
+- Fix a bug about the timer delay in timeSetEvent(). I hope it fix the slow down.
+- Fix deprecated classes in the settings.
+- Add a haptic feedback when touching a button.
 
 
 Version 1.2 (2019-03-14)
@@ -93,7 +97,6 @@ TODO
 - Add a separation between the pixels (Suggestion from Jaime Meza)
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
-- Add haptic feedback when touch a button
 - Add a true fullscreen mode under the status bar and the bottom buttons
 - Improve the access to the menu
 - Change the logo following the template

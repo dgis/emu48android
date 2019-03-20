@@ -141,7 +141,11 @@ static LRESULT OnPaint(HWND hWindow)
 static LRESULT OnLButtonDown(UINT nFlags, WORD x, WORD y)
 {
 	if (nMacroState == MACRO_PLAY) return 0; // playing macro
-	if (nState == SM_RUN) MouseButtonDownAt(nFlags, x,y);
+	if (nState == SM_RUN) {
+		MouseButtonDownAt(nFlags, x,y);
+		if(MouseIsButton(x,y))
+            performHapticFeedback();
+	}
 	return 0;
 }
 

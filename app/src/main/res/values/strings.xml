@@ -56,6 +56,22 @@
     <string name="message_press_reset">Are you sure you want to press the Reset Button?</string>
     <string name="message_change_kml">You cannot change the KML script when Emu48 is not running. Use the File, New menu item to create a new calculator.</string>
     <string name="message_kml_script_compilation_result">KML Script Compilation Result</string>
+    <string name="settings_category_general_title">General</string>
+    <string name="settings_realspeed_title">Authentic Calculator Speed</string>
+    <string name="settings_grayscale_title">Enable Virtual LCD Delay</string>
+    <string name="settings_autosave_title">Automatically Save Files</string>
+    <string name="settings_objectloadwarning_title">Show Load Object Warning</string>
+    <string name="settings_alwaysdisplog_title">Always Show KML Compilation Result</string>
+    <string name="settings_allow_rotation_title">Allow rotation</string>
+    <string name="settings_fill_screen_title">Fill screen</string>
+    <string name="settings_allow_sound_title">Allow sounds</string>
+    <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
+    <string name="settings_category_memory_cards_title">Memory Cards</string>
+    <string name="settings_port1en_title">Port 1 is Plugged</string>
+    <string name="settings_port1wr_title">Port 1 is Writable</string>
+    <string name="settings_port2en_title">Port 2 is Plugged</string>
+    <string name="settings_port2wr_title">Port 2 is Writable</string>
+    <string name="settings_port2load_title">Port 2 File</string>
 
 
 </resources>
