@@ -192,8 +192,7 @@ static VOID RescheduleT2(BOOL bRefPoint)
 	uDelay = __max(tc.wPeriodMin,uDelay);	// wait minimum delay of timer
 	_ASSERT(uDelay <= tc.wPeriodMax);		// inside maximum event delay
 	// start timer2; schedule event, when Chipset.t2 will be zero
-    LOGD("EMU48-timeSetEvent(uDelay: %d, 0, TimeProc, 2, TIME_ONESHOT)\r\n", uDelay);
-    VERIFY(uT2TimerId = timeSetEvent(uDelay,0,&TimeProc,2,TIME_ONESHOT));
+	VERIFY(uT2TimerId = timeSetEvent(uDelay,0,&TimeProc,2,TIME_ONESHOT));
 	return;
 }
 
@@ -205,11 +204,8 @@ static VOID AbortT2(VOID)
 	return;
 }
 
-//static int TimeProcCounter = 0;
 static void CALLBACK TimeProc(UINT uEventId, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
-//    LOGD("EMU48-time TimeProc(uEventId: %d, uMsg: %d, dwUser: 0x%08x, dw1: 0x%08x, dw2: 0x%08x) %d\r\n", uEventId, uMsg, dwUser, dw1, dw2, TimeProcCounter++);
-
 	if (uEventId == 0) return;				// illegal EventId
 
 	if (uEventId == uT1TimerId)				// called from timer1 event (default period 16 Hz)
@@ -333,7 +329,6 @@ VOID StartTimers(VOID)
 		// set timer resolution to greatest possible one
 		bAccurateTimer = (timeBeginPeriod(tc.wPeriodMin) == TIMERR_NOERROR);
 		// set timer1 with given period
-        LOGD("EMU48-timeSetEvent(uDelay: %d, 0, TimeProc, 1, TIME_PERIODIC)\r\n", T1_FREQ);
 		VERIFY(uT1TimerId = timeSetEvent(T1_FREQ,0,&TimeProc,1,TIME_PERIODIC));
 		RescheduleT2(TRUE);					// start timer2
 	}
@@ -434,8 +429,7 @@ VOID SetT1(BYTE byValue)
 	if (bStarted)							// timer running
 	{
 		// restart timer1 to get full period of frequency
-        LOGD("EMU48-timeSetEvent(uDelay: %d, 0, TimeProc, 1, TIME_PERIODIC)\r\n", T1_FREQ);
-        VERIFY(uT1TimerId = timeSetEvent(T1_FREQ,0,&TimeProc,1,TIME_PERIODIC));
+		VERIFY(uT1TimerId = timeSetEvent(T1_FREQ,0,&TimeProc,1,TIME_PERIODIC));
 	}
 	return;
 }
