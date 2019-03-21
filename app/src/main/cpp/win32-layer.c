@@ -805,26 +805,34 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 
 
 
+void onPlayerDone() {
+    //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
+    // Artificially replace the post message MM_WOM_DONE
+    bSoundSlow = FALSE;			// no sound slow down
+    bEnableSlow = TRUE;			// reenable CPU slow down possibility
+}
 
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     HWAVEOUT hwo = context;
     if (hwo->pWaveHeaderNext != NULL) {
         LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext->lpNext;
-        //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
         free(hwo->pWaveHeaderNext->lpData);
         free(hwo->pWaveHeaderNext);
         hwo->pWaveHeaderNext = pWaveHeaderNext;
         if(pWaveHeaderNext != NULL) {
             SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pWaveHeaderNext->lpData, pWaveHeaderNext->dwBufferLength);
             if (SL_RESULT_SUCCESS != result) {
+                onPlayerDone();
                 // Error
                 //pthread_mutex_unlock(&hwo->audioEngineLock);
 //                return;
             }
 //            return;
-        }
-    }
+        } else
+            onPlayerDone();
+    } else
+        onPlayerDone();
 //    pthread_mutex_unlock(&hwo->audioEngineLock);
 }
 
@@ -1723,15 +1731,15 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     sev.sigev_value.sival_int = timerEvents[timerId].timerId; //this argument will be passed to cbf
     sev.sigev_notify_attributes = NULL;
     timer_t * timer = &(timerEvents[timerId].timer);
-    if (timer_create(CLOCK_REALTIME, &sev, timer) == -1) {
+    if (timer_create(CLOCK_MONOTONIC, &sev, timer) == -1) {
         TIMER_LOGD("timeSetEvent() ERROR in timer_create");
         return NULL;
     }
 
-    long long freq_nanosecs = uDelay * 1000000L;
+    long freq_nanosecs = uDelay;
     struct itimerspec its;
-    its.it_value.tv_sec = freq_nanosecs / 1000000000;
-    its.it_value.tv_nsec = freq_nanosecs % 1000000000;
+    its.it_value.tv_sec = freq_nanosecs / 1000;
+    its.it_value.tv_nsec = (freq_nanosecs % 1000) * 1000000;
     if(fuEvent == TIME_PERIODIC) {
         its.it_interval.tv_sec = its.it_value.tv_sec;
         its.it_interval.tv_nsec = its.it_value.tv_nsec;

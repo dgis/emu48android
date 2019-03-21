@@ -41,9 +41,10 @@ Version 1.3alpha (2019-03-xx)
 
 - Fix the red and blue color inversion.
 - Add the HP 50g (Calypso 2K/4K) KML script from Carl Reinke (4K is a slow because there is no hardware acceleration).
-- Fix a bug about the timer delay in timeSetEvent(). I hope it fix the slow down.
+- Fix a bug about the timer delay in timeSetEvent().
 - Fix deprecated classes in the settings.
-- Add a haptic feedback when touching a button.
+- Add an optional haptic feedback when touching a button.
+- Fix the intermittent slow down due to the end of playing a sound.
 
 
 Version 1.2 (2019-03-14)
