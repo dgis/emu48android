@@ -90,6 +90,8 @@ static LRESULT OnPaint(HWND hWindow)
 	PAINTSTRUCT Paint;
 	HDC hPaintDC;
 
+	PAINT_LOGD("Emu48-PAINT OnPaint()");
+
 	//UpdateWindowBars();						// update visibility of title and menu bar
 
 	hPaintDC = BeginPaint(hWindow, &Paint);
@@ -106,6 +108,7 @@ static LRESULT OnPaint(HWND hWindow)
 			UINT nLines = MAINSCREENHEIGHT;
 
 			// redraw background bitmap
+			PAINT_LOGD("Emu48-PAINT OnPaint() BitBlt()");
 			BitBlt(hPaintDC, Paint.rcPaint.left, Paint.rcPaint.top,
 				   Paint.rcPaint.right-Paint.rcPaint.left, Paint.rcPaint.bottom-Paint.rcPaint.top,
 				   hMainDC, rcMainPaint.left, rcMainPaint.top, SRCCOPY);

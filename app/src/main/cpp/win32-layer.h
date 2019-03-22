@@ -13,8 +13,24 @@
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 
-//#define DEBUG_DISPLAY 1
 
+#if defined DEBUG_ANDROID_TIMER
+#   define TIMER_LOGD LOGD
+#else
+#   define TIMER_LOGD
+#endif
+
+#if defined DEBUG_ANDROID_WAVE_OUT
+#   define WAVE_OUT_LOGD LOGD
+#else
+#   define WAVE_OUT_LOGD
+#endif
+
+#if defined DEBUG_ANDROID_PAINT
+#   define PAINT_LOGD LOGD
+#else
+#   define PAINT_LOGD
+#endif
 
 
 #ifndef __OBJC__

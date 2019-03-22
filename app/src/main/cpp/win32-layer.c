@@ -803,9 +803,8 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 
 // Wave API
 
-
-
 void onPlayerDone() {
+    WAVE_OUT_LOGD("waveOut onPlayerDone()");
     //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
     // Artificially replace the post message MM_WOM_DONE
     bSoundSlow = FALSE;			// no sound slow down
@@ -814,6 +813,7 @@ void onPlayerDone() {
 
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
+    WAVE_OUT_LOGD("waveOut bqPlayerCallback()");
     HWAVEOUT hwo = context;
     if (hwo->pWaveHeaderNext != NULL) {
         LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext->lpNext;
@@ -821,23 +821,30 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
         free(hwo->pWaveHeaderNext);
         hwo->pWaveHeaderNext = pWaveHeaderNext;
         if(pWaveHeaderNext != NULL) {
+            WAVE_OUT_LOGD("waveOut bqPlayerCallback() bqPlayerBufferQueue->Enqueue");
             SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pWaveHeaderNext->lpData, pWaveHeaderNext->dwBufferLength);
             if (SL_RESULT_SUCCESS != result) {
+                WAVE_OUT_LOGD("waveOut bqPlayerCallback() Enqueue Error %d", result);
                 onPlayerDone();
                 // Error
                 //pthread_mutex_unlock(&hwo->audioEngineLock);
 //                return;
             }
 //            return;
-        } else
+        } else {
+            WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing next, so, this is the end");
             onPlayerDone();
-    } else
+        }
+    } else {
+        WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing to play? So, this is the end");
         onPlayerDone();
+    }
 //    pthread_mutex_unlock(&hwo->audioEngineLock);
 }
 
 
 MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen) {
+    WAVE_OUT_LOGD("waveOutOpen()");
 
     HWAVEOUT handle = (HWAVEOUT)malloc(sizeof(struct _HWAVEOUT));
     memset(handle, 0, sizeof(struct _HWAVEOUT));
@@ -850,6 +857,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     result = slCreateEngine(&handle->engineObject, 0, NULL, 0, NULL, NULL);
     //_ASSERT(SL_RESULT_SUCCESS == result);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() slCreateEngine error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -857,6 +865,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // realize the engine
     result = (*handle->engineObject)->Realize(handle->engineObject, SL_BOOLEAN_FALSE);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() engineObject->Realize error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -864,6 +873,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // get the engine interface, which is needed in order to create other objects
     result = (*handle->engineObject)->GetInterface(handle->engineObject, SL_IID_ENGINE, &handle->engineEngine);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() engineObject->GetInterface error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -873,12 +883,14 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     const SLboolean req[1] = { SL_BOOLEAN_FALSE };
     result = (*handle->engineEngine)->CreateOutputMix(handle->engineEngine, &handle->outputMixObject, 1, ids, req);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() engineObject->CreateOutputMix error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
     // realize the output mix
     result = (*handle->outputMixObject)->Realize(handle->outputMixObject, SL_BOOLEAN_FALSE);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() outputMixObject->Realize error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -940,6 +952,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
 
     result = (*handle->engineEngine)->CreateAudioPlayer(handle->engineEngine, &handle->bqPlayerObject, &audioSrc, &audioSnk, 2, ids2, req2);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() engineEngine->CreateAudioPlayer error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -947,6 +960,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // realize the player
     result = (*handle->bqPlayerObject)->Realize(handle->bqPlayerObject, SL_BOOLEAN_FALSE);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerObject->Realize error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -954,6 +968,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // get the play interface
     result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_PLAY, &handle->bqPlayerPlay);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerObject->GetInterface SL_IID_PLAY error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -961,6 +976,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // get the buffer queue interface
     result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_BUFFERQUEUE, &handle->bqPlayerBufferQueue);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerObject->GetInterface SL_IID_BUFFERQUEUE error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -968,6 +984,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // register callback on the buffer queue
     result = (*handle->bqPlayerBufferQueue)->RegisterCallback(handle->bqPlayerBufferQueue, bqPlayerCallback, handle);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerBufferQueue->RegisterCallback error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -975,6 +992,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // get the volume interface
     result = (*handle->bqPlayerObject)->GetInterface(handle->bqPlayerObject, SL_IID_VOLUME, &handle->bqPlayerVolume);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerObject->GetInterface SL_IID_VOLUME error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -982,6 +1000,7 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // set the player's state to playing
     result = (*handle->bqPlayerPlay)->SetPlayState(handle->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     if(result != SL_RESULT_SUCCESS) {
+        WAVE_OUT_LOGD("waveOutOpen() bqPlayerObject->SetPlayState error: %d", result);
         waveOutClose(handle);
         return MMSYSERR_ERROR;
     }
@@ -992,11 +1011,13 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
 }
 
 MMRESULT waveOutReset(HWAVEOUT hwo) {
+    WAVE_OUT_LOGD("waveOutReset()");
     //TODO
     return 0;
 }
 
 MMRESULT waveOutClose(HWAVEOUT handle) {
+    WAVE_OUT_LOGD("waveOutClose()");
 
     // destroy buffer queue audio player object, and invalidate all associated interfaces
     if (handle->bqPlayerObject != NULL) {
@@ -1021,7 +1042,7 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
     }
 
     //pthread_mutex_destroy(&handle->audioEngineLock);
-
+    onPlayerDone();
 
     memset(handle, 0, sizeof(struct _HWAVEOUT));
     free(handle);
@@ -1029,17 +1050,19 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
 }
 
 MMRESULT waveOutPrepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
+    WAVE_OUT_LOGD("waveOutPrepareHeader()");
     //TODO
     return 0;
 }
 
 MMRESULT waveOutUnprepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
+    WAVE_OUT_LOGD("waveOutUnprepareHeader()");
     //TODO
     return 0;
 }
 
 MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
-
+    WAVE_OUT_LOGD("waveOutWrite()");
 //    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
 //        // If we could not acquire audio engine lock, reject this request and client should re-try
 //        return MMSYSERR_ERROR;
@@ -1047,8 +1070,11 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
     pwh->lpNext = NULL;
     if(hwo->pWaveHeaderNext == NULL) {
         hwo->pWaveHeaderNext = pwh;
+        WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() play right now");
         SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pwh->lpData, pwh->dwBufferLength);
         if (SL_RESULT_SUCCESS != result) {
+            WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d", result);
+            onPlayerDone();
             // SL_RESULT_BUFFER_INSUFFICIENT?
             //pthread_mutex_unlock(&hwo->audioEngineLock);
             return MMSYSERR_ERROR;
@@ -1057,6 +1083,7 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
         LPWAVEHDR pWaveHeaderNext = hwo->pWaveHeaderNext;
         while (pWaveHeaderNext->lpNext)
             pWaveHeaderNext = pWaveHeaderNext->lpNext;
+        WAVE_OUT_LOGD("waveOutWrite() play when finishing the current one");
         pWaveHeaderNext->lpNext = pwh;
     }
 
@@ -1064,6 +1091,7 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
 }
 
 MMRESULT waveOutGetDevCaps(UINT_PTR uDeviceID, LPWAVEOUTCAPS pwoc, UINT cbwoc) {
+    WAVE_OUT_LOGD("waveOutGetDevCaps()");
     if(pwoc) {
         pwoc->dwFormats = WAVE_FORMAT_4M08;
     }
@@ -1071,6 +1099,7 @@ MMRESULT waveOutGetDevCaps(UINT_PTR uDeviceID, LPWAVEOUTCAPS pwoc, UINT cbwoc) {
 }
 
 MMRESULT waveOutGetID(HWAVEOUT hwo, LPUINT puDeviceID) {
+    WAVE_OUT_LOGD("waveOutGetID()");
     //TODO
     return 0;
 }
@@ -1396,6 +1425,9 @@ int SetStretchBltMode(HDC hdc, int mode) {
     return 0;
 }
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
+//    PAINT_LOGD("Emu48-PAINT StretchBlt(hdcDest: 0x%08x, xDest: %d, yDest: %d, wDest: %d, hDest: %d, hdcSrc: 0x%08x, xSrc: %d, ySrc: %d, wSrc: %d, hSrc: %d, rop: 0x%08x)",
+//            hdcDest, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, rop);
+
     if(hdcDest && hdcSrc
     && (hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL)
     && hdcSrc->selectedBitmap && hDest && hSrc) {
@@ -1552,6 +1584,8 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
     return 0;
 }
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
+    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
     newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
@@ -1571,6 +1605,8 @@ HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CO
     return newHBITMAP;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
+    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
     newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
@@ -1592,6 +1628,8 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     return newHBITMAP;
 }
 HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
+    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
     newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
@@ -1686,9 +1724,6 @@ HANDLE WINAPI GetClipboardData(UINT uFormat) {
     TCHAR * szText = clipboardPasteText();
     return szText;
 }
-
-//#define TIMER_LOGD LOGD
-#define TIMER_LOGD
 
 void deleteTimeEvent(UINT uTimerID) {
     timer_delete(timerEvents[uTimerID - 1].timer);

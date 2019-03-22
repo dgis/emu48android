@@ -6,6 +6,14 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 #add_compile_options(-D DEBUG_DISPLAY)
+#add_compile_options(-D DEBUG_SOUND)
+#add_compile_options(-D DEBUG_DEBUGGER)
+#add_compile_options(-D DEBUG_FLASH)
+#add_compile_options(-D DEBUG_IO)
+#add_compile_options(-D DEBUG_SERIAL)
+#add_compile_options(-D DEBUG_ANDROID_WAVE_OUT)
+#add_compile_options(-D DEBUG_ANDROID_TIMER)
+#add_compile_options(-D DEBUG_ANDROID_PAINT)
 
 include_directories(src/main/cpp/win32)
 
