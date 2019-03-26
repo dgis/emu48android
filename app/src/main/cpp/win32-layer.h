@@ -32,6 +32,17 @@
 #   define PAINT_LOGD
 #endif
 
+#if defined DEBUG_ANDROID_THREAD
+#   define THREAD_LOGD LOGD
+#else
+#   define THREAD_LOGD
+#endif
+
+#if defined DEBUG_ANDROID_FILE
+#   define FILE_LOGD LOGD
+#else
+#   define FILE_LOGD
+#endif
 
 #ifndef __OBJC__
 typedef signed char BOOL;   // deliberately same type as defined in objc

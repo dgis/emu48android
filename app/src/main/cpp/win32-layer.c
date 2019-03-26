@@ -86,6 +86,7 @@ extern BOOL settingsPort2wr;
 
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
 {
+    FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
     BOOL forceNormalFile = FALSE;
     if(_tcscmp(lpFileName, szPort2Filename) == 0) {
         // Special case for Port2 filename
@@ -180,14 +181,14 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd == -1) {
-                LOGD("openFileFromContentResolver() %d", errno);
+                FILE_LOGD("CreateFile() openFileFromContentResolver() %d", errno);
             }
         } else if(szCurrentContentDirectory) {
             // Case of a relative file to a folder with the scheme content://
             fd = openFileInFolderFromContentResolver(lpFileName, szCurrentContentDirectory, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd == -1) {
-                LOGD("openFileFromContentResolver() %d", errno);
+                FILE_LOGD("CreateFile() openFileFromContentResolver() %d", errno);
             }
         } else {
             TCHAR * urlFileSchemeFound = _tcsstr(lpFileName, _T("file://"));
@@ -195,7 +196,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 lpFileName = urlFileSchemeFound + 7;
             fd = open(lpFileName, flags, perm);
             if(fd == -1) {
-                LOGD("open() %d", errno);
+                FILE_LOGD("CreateFile() open() %d", errno);
             }
         }
         if (fd != -1) {
@@ -207,10 +208,12 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             return handle;
         }
     }
+    FILE_LOGD("CreateFile() INVALID_HANDLE_VALUE");
     return (HANDLE) INVALID_HANDLE_VALUE;
 }
 
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
+    FILE_LOGD("ReadFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToRead: %d)", hFile, lpBuffer, nNumberOfBytesToRead);
     DWORD readByteCount = 0;
     if(hFile->handleType == HANDLE_TYPE_FILE) {
         readByteCount = (DWORD) read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
@@ -223,6 +226,7 @@ BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD
 }
 
 BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) {
+    FILE_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d)", hFile, lpBuffer, nNumberOfBytesToWrite);
     if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
         return FALSE;
     ssize_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
@@ -232,6 +236,7 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 }
 
 DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) {
+    FILE_LOGD("SetFilePointer(hFile: %p, lDistanceToMove: %d, dwMoveMethod: %d)", hFile, lDistanceToMove, dwMoveMethod);
     int moveMode = FILE_BEGIN;
     if(dwMoveMethod == FILE_BEGIN)
         moveMode = SEEK_SET;
@@ -249,6 +254,7 @@ DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveH
 }
 
 BOOL SetEndOfFile(HANDLE hFile) {
+    FILE_LOGD("SetEndOfFile(hFile: %p)", hFile);
     if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
         return FALSE;
     off_t currentPosition = lseek(hFile->fileDescriptor, 0, SEEK_CUR);
@@ -257,6 +263,7 @@ BOOL SetEndOfFile(HANDLE hFile) {
 }
 
 DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
+    FILE_LOGD("GetFileSize(hFile: %p)", hFile);
     if(lpFileSizeHigh)
         *lpFileSizeHigh = 0;
     if(hFile->handleType == HANDLE_TYPE_FILE) {
@@ -273,6 +280,7 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
 //https://www.ibm.com/developerworks/systems/library/es-win32linux.html
 //https://www.ibm.com/developerworks/systems/library/es-win32linux-sem.html
 HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) {
+    FILE_LOGD("CreateFileMapping(hFile: %p, flProtect: 0x08x, dwMaximumSizeLow: %d)", hFile, flProtect, dwMaximumSizeLow);
     HANDLE handle = malloc(sizeof(struct _HANDLE));
     memset(handle, 0, sizeof(struct _HANDLE));
     if(hFile->handleType == HANDLE_TYPE_FILE) {
@@ -296,6 +304,7 @@ HANDLE CreateFileMapping(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttrib
 
 //https://msdn.microsoft.com/en-us/library/Aa366761(v=VS.85).aspx
 LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, SIZE_T dwNumberOfBytesToMap) {
+    FILE_LOGD("MapViewOfFile(hFileMappingObject: %p, dwDesiredAccess: 0x%08x, dwFileOffsetLow: %d)", hFileMappingObject, dwDesiredAccess, dwFileOffsetLow);
     hFileMappingObject->fileMappingOffset = /*(dwFileOffsetHigh << 32) |*/ dwFileOffsetLow;
     LPVOID result = NULL;
     if(hFileMappingObject->handleType == HANDLE_TYPE_FILE_MAPPING) {
@@ -333,6 +342,7 @@ LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess, DWORD dwF
 
 // https://msdn.microsoft.com/en-us/library/aa366882(v=vs.85).aspx
 BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
+    FILE_LOGD("UnmapViewOfFile(lpBaseAddress: %p)", lpBaseAddress);
     int result = -1;
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
         HANDLE fileMappingHandle = fileMappingHandles[i];
@@ -348,6 +358,7 @@ BOOL UnmapViewOfFile(LPCVOID lpBaseAddress) {
 
 // This is not a Win32 function
 BOOL SaveMapViewToFile(LPCVOID lpBaseAddress) {
+    FILE_LOGD("SaveMapViewToFile(lpBaseAddress: %p)", lpBaseAddress);
     int result = -1;
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
         HANDLE fileMappingHandle = fileMappingHandles[i];
@@ -523,6 +534,7 @@ static DWORD ThreadStart(LPVOID lpThreadParameter) {
 //static int threadsNextIndex = 0;
 
 HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
+    THREAD_LOGD("CreateThread()");
     pthread_attr_t  attr;
     pthread_attr_init(&attr);
     if(dwStackSize)
@@ -545,7 +557,7 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
         //threadsNextIndex++;
         if(lpThreadId)
             *lpThreadId = (DWORD) handle->threadId;
-        LOGD("CreateThread() 0x%lx", handle->threadId);
+        THREAD_LOGD("CreateThread() 0x%lx", handle->threadId);
         return handle;
     } else {
         //threads[threadsNextIndex] = NULL;
@@ -557,6 +569,7 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
 }
 
 DWORD ResumeThread(HANDLE hThread) {
+    THREAD_LOGD("ResumeThread()");
     //TODO
     return 0;
 }
@@ -602,10 +615,12 @@ DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 }
 
 BOOL WINAPI CloseHandle(HANDLE hObject) {
+    FILE_LOGD("CloseHandle(hObject: %p)", hObject);
     //https://msdn.microsoft.com/en-us/9b84891d-62ca-4ddc-97b7-c4c79482abd9
     // Can be a thread/event/file handle!
     switch(hObject->handleType) {
         case HANDLE_TYPE_FILE: {
+            FILE_LOGD("CloseHandle() HANDLE_TYPE_FILE");
             int closeResult;
             if(hObject->fileOpenFileFromContentResolver) {
                 closeResult = closeFileFromContentResolver(hObject->fileDescriptor);
@@ -625,6 +640,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             break;
         }
         case HANDLE_TYPE_FILE_ASSET: {
+            FILE_LOGD("CloseHandle() HANDLE_TYPE_FILE_ASSET");
             AAsset_close(hObject->fileAsset);
             hObject->handleType = HANDLE_TYPE_INVALID;
             hObject->fileAsset = NULL;
@@ -634,6 +650,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
         case HANDLE_TYPE_FILE_MAPPING:
         case HANDLE_TYPE_FILE_MAPPING_CONTENT:
         case HANDLE_TYPE_FILE_MAPPING_ASSET: {
+            FILE_LOGD("CloseHandle() HANDLE_TYPE_FILE_MAPPING");
             hObject->handleType = HANDLE_TYPE_INVALID;
             hObject->fileDescriptor = 0;
             hObject->fileAsset = NULL;
@@ -643,6 +660,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             return TRUE;
         }
         case HANDLE_TYPE_EVENT: {
+            FILE_LOGD("CloseHandle() HANDLE_TYPE_EVENT");
             hObject->handleType = HANDLE_TYPE_INVALID;
             int result = 0;
             result = pthread_cond_destroy(&hObject->eventCVariable);
@@ -655,7 +673,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             return TRUE;
         }
         case HANDLE_TYPE_THREAD:
-            LOGD("CloseHandle() THREAD 0x%lx", hObject->threadId);
+            THREAD_LOGD("CloseHandle() THREAD 0x%lx", hObject->threadId);
             if(hObject->threadEventMessage && hObject->threadEventMessage->handleType == HANDLE_TYPE_EVENT) {
                 CloseHandle(hObject->threadEventMessage);
                 hObject->threadEventMessage = NULL;
@@ -1247,9 +1265,11 @@ HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
     return NULL;
 }
 BOOL DeleteObject(HGDIOBJ ho) {
+    PAINT_LOGD("Emu48-PAINT DeleteObject(ho: %p)", ho);
     if(ho) {
         switch(ho->handleType) {
             case HGDIOBJ_TYPE_PALETTE: {
+                PAINT_LOGD("Emu48-PAINT DeleteObject() HGDIOBJ_TYPE_PALETTE");
                 ho->handleType = HGDIOBJ_TYPE_INVALID;
                 if(ho->paletteLog)
                     free(ho->paletteLog);
@@ -1258,6 +1278,7 @@ BOOL DeleteObject(HGDIOBJ ho) {
                 return TRUE;
             }
             case HGDIOBJ_TYPE_BITMAP: {
+                PAINT_LOGD("Emu48-PAINT DeleteObject() HGDIOBJ_TYPE_BITMAP");
                 ho->handleType = HGDIOBJ_TYPE_INVALID;
                 if(ho->bitmapInfo)
                     free((void *) ho->bitmapInfo);
@@ -1331,6 +1352,8 @@ BOOL LineTo(HDC hdc, int x, int y) {
     return 0;
 }
 BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
+    PAINT_LOGD("Emu48-PAINT PatBlt(hdcDest: %p, x: %d, y: %d, w: %d, h: %d, rop: 0x%08x)", hdcDest, x, y, w, h, rop);
+
     if((hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL) && w && h) {
         HBITMAP hBitmapDestination = NULL;
         void * pixelsDestination = NULL;
@@ -1424,9 +1447,10 @@ int SetStretchBltMode(HDC hdc, int mode) {
     //TODO
     return 0;
 }
+
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-//    PAINT_LOGD("Emu48-PAINT StretchBlt(hdcDest: 0x%08x, xDest: %d, yDest: %d, wDest: %d, hDest: %d, hdcSrc: 0x%08x, xSrc: %d, ySrc: %d, wSrc: %d, hSrc: %d, rop: 0x%08x)",
-//            hdcDest, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, rop);
+    PAINT_LOGD("Emu48-PAINT StretchBlt(hdcDest: %p, xDest: %d, yDest: %d, wDest: %d, hDest: %d, hdcSrc: %p, xSrc: %d, ySrc: %d, wSrc: %d, hSrc: %d, rop: 0x%08x)",
+            hdcDest, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, rop);
 
     if(hdcDest && hdcSrc
     && (hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL)
@@ -1452,11 +1476,11 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int destinationStride = 0;
 
         JNIEnv * jniEnv = NULL;
+        jint ret;
 
         if(hdcDest->hdcCompatible == NULL) {
             // We update the main window
 
-            jint ret;
             BOOL needDetach = FALSE;
             ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
             if (ret == JNI_EDETACHED) {
@@ -1491,7 +1515,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         xDest -= hdcDest->windowOrigineX;
         yDest -= hdcDest->windowOrigineY;
 
-        //LOGD("StretchBlt(%08x, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytesWithDecimal);
+        //LOGD("StretchBlt(%p, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytesWithDecimal);
         HPALETTE palette = hdcSrc->realizedPalette;
         if(!palette)
             palette = hdcSrc->selectedPalette;
@@ -1562,8 +1586,10 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             }
         }
 
-        if(jniEnv)
-            AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen);
+        if(jniEnv && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
+            LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+            return FALSE;
+        }
 
         return TRUE;
     }

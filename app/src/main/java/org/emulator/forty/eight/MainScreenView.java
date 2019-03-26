@@ -221,7 +221,7 @@ public class MainScreenView extends SurfaceView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //Log.d(TAG, "onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
+        //Log.d(TAG, "Emu48-PAINT onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
 
         canvas.drawColor(backgroundColor);
 
@@ -244,7 +244,7 @@ public class MainScreenView extends SurfaceView {
             case CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size
                 if(bitmapMainScreen == null || bitmapMainScreen.getWidth() != param1 || bitmapMainScreen.getHeight() != param2) {
-                    //Log.d(TAG, "Emu48-PAINT updateCallback() Bitmap.createBitmap()");
+                    //Log.d(TAG, "Emu48-PAINT updateCallback() Bitmap.createBitmap(x: " + Math.max(1, param1) + ", y: " + Math.max(1, param2) + ")");
                     Bitmap  oldBitmapMainScreen = bitmapMainScreen;
                     bitmapMainScreen = Bitmap.createBitmap(Math.max(1, param1), Math.max(1, param2), Bitmap.Config.ARGB_8888);
                     int globalColor = NativeLib.getGlobalColor();

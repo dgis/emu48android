@@ -45,6 +45,8 @@ Version 1.3alpha (2019-03-xx)
 - Fix deprecated classes in the settings.
 - Add an optional haptic feedback when touching a button.
 - Fix the intermittent slow down due to the end of playing a sound.
+- Fix blank screen when switching the KML faceplate.
+- Add more traces in the win32 log.
 
 
 Version 1.2 (2019-03-14)

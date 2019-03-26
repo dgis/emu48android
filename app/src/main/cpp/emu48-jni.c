@@ -849,6 +849,7 @@ JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEn
 
     if (bSucc)
     {
+        mainViewResizeCallback(nBackgroundW, nBackgroundH);
         if (Chipset.wRomCrc != wRomCrc)		// ROM changed
         {
             CpuReset();
@@ -863,7 +864,7 @@ JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEn
         ResetDocument();					// close document
         SetWindowTitle(NULL);
     }
-    mainViewResizeCallback(nBackgroundW, nBackgroundH);
+//    mainViewResizeCallback(nBackgroundW, nBackgroundH);
     draw();
 
     return result;
