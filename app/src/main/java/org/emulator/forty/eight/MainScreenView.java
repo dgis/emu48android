@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 
 import android.graphics.Paint;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -28,7 +29,10 @@ public class MainScreenView extends SurfaceView {
     private float screenOffsetY= 0.0f;
     private boolean fillScreen = false;
     private float fixScale = 0.0f;
-    private int backgroundColor = Color.BLACK;
+    private int kmlBackgroundColor = Color.BLACK;
+    private boolean useKmlBackgroundColor = false;
+    private int fallbackBackgroundColorType = 0;
+    private int statusBarColor = 0;
 
     public MainScreenView(Context context) {
         super(context);
@@ -223,7 +227,7 @@ public class MainScreenView extends SurfaceView {
     protected void onDraw(Canvas canvas) {
         //Log.d(TAG, "Emu48-PAINT onDraw() mIsScaling: " + mIsScaling + ", mIsPanning: " + mIsPanning + ", mIsFlinging: " + mIsFlinging);
 
-        canvas.drawColor(backgroundColor);
+        canvas.drawColor(getBackgroundColor());
 
         canvas.save();
         canvas.translate(screenOffsetX, screenOffsetY);
@@ -248,8 +252,9 @@ public class MainScreenView extends SurfaceView {
                     Bitmap  oldBitmapMainScreen = bitmapMainScreen;
                     bitmapMainScreen = Bitmap.createBitmap(Math.max(1, param1), Math.max(1, param2), Bitmap.Config.ARGB_8888);
                     int globalColor = NativeLib.getGlobalColor();
-                    backgroundColor = Color.argb(255, (globalColor & 0x00FF0000) >> 16, (globalColor & 0x0000FF00) >> 8, globalColor & 0x000000FF);
-                    bitmapMainScreen.eraseColor(backgroundColor);
+                    kmlBackgroundColor = Color.argb(255, (globalColor & 0x00FF0000) >> 16, (globalColor & 0x0000FF00) >> 8, globalColor & 0x000000FF);
+
+                    bitmapMainScreen.eraseColor(getBackgroundColor());
                     NativeLib.changeBitmap(bitmapMainScreen);
 
                     if(oldBitmapMainScreen != null) {
@@ -276,5 +281,33 @@ public class MainScreenView extends SurfaceView {
         this.fixScale = scale;
         calcTranslateAndScale(getWidth(), getHeight());
         postInvalidate();
+    }
+
+    public void setBackgroundKmlColor(boolean useKmlBackgroundColor) {
+        this.useKmlBackgroundColor = useKmlBackgroundColor;
+        postInvalidate();
+    }
+
+    public void setBackgroundFallbackColor(int fallbackBackgroundColorType) {
+        this.fallbackBackgroundColorType = fallbackBackgroundColorType;
+        postInvalidate();
+    }
+
+    public void setStatusBarColor(int statusBarColor) {
+        this.statusBarColor = statusBarColor;
+    }
+
+
+
+    private int getBackgroundColor() {
+        if(useKmlBackgroundColor) {
+            return kmlBackgroundColor;
+        } else switch(fallbackBackgroundColorType) {
+            case 0:
+                return 0;
+            case 1:
+                return statusBarColor;
+        }
+        return 0;
     }
 }

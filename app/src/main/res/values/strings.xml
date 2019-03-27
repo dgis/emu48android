@@ -66,12 +66,18 @@
     <string name="settings_fill_screen_title">Fill screen</string>
     <string name="settings_allow_sound_title">Allow sounds</string>
     <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
+    <string name="settings_category_background_title">Background Color</string>
+    <string name="settings_background_kml_color_title">Use KML color</string>
+    <string name="settings_background_kml_color_summary">Use default KML transparency color of the background bitmap (if exist)</string>
+    <string name="settings_background_fallback_color_title">Other possible colors</string>
+    <string name="settings_background_fallback_color_summary">Else if the KML color is not used</string>
+    <string name="settings_background_custom_color_title">Custom color</string>
+    <string name="settings_background_custom_color_summary">Used when selecting the \'Custom color\' in the \'Other possible colors\'</string>
     <string name="settings_category_memory_cards_title">Memory Cards</string>
     <string name="settings_port1en_title">Port 1 is Plugged</string>
     <string name="settings_port1wr_title">Port 1 is Writable</string>
     <string name="settings_port2en_title">Port 2 is Plugged</string>
     <string name="settings_port2wr_title">Port 2 is Writable</string>
     <string name="settings_port2load_title">Port 2 File</string>
-
 
 </resources>

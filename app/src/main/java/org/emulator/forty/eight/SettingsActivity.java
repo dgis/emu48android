@@ -115,10 +115,54 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
+            // Sound settings
+
             Preference preferenceAllowSound = findPreference("settings_allow_sound");
             if(preferenceAllowSound != null && !NativeLib.getSoundEnabled()) {
                 preferenceAllowSound.setSummary("Cannot initialize the sound engine.");
                 preferenceAllowSound.setEnabled(false);
+            }
+
+            // Background color settings
+
+            Preference preferenceBackgroundFallbackColor = findPreference("settings_background_fallback_color");
+//            final ColorPickerPreferenceCompat preferenceBackgroundCustomColor = (ColorPickerPreferenceCompat)findPreference("settings_background_custom_color");
+            if(preferenceBackgroundFallbackColor != null /*&& preferenceBackgroundCustomColor != null*/) {
+                final String[] stringArrayBackgroundFallbackColor = getResources().getStringArray(R.array.settings_background_fallback_color_item);
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerBackgroundFallbackColor = new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object value) {
+                        if(value != null) {
+                            String stringValue = value.toString();
+                            int backgroundFallbackColor = -1;
+                            try {
+                                backgroundFallbackColor = Integer.parseInt(stringValue);
+                            } catch (NumberFormatException ex) {}
+                            if(backgroundFallbackColor >= 0 && backgroundFallbackColor < stringArrayBackgroundFallbackColor.length)
+                                preference.setSummary(stringArrayBackgroundFallbackColor[backgroundFallbackColor]);
+//                            preferenceBackgroundCustomColor.setEnabled(backgroundFallbackColor == 2);
+                        }
+                        return true;
+                    }
+                };
+                preferenceBackgroundFallbackColor.setOnPreferenceChangeListener(onPreferenceChangeListenerBackgroundFallbackColor);
+                onPreferenceChangeListenerBackgroundFallbackColor.onPreferenceChange(preferenceBackgroundFallbackColor,
+                        sharedPreferences.getString(preferenceBackgroundFallbackColor.getKey(), "0"));
+
+
+                //preferenceBackgroundCustomColor.setColorValue(customColor);
+
+//                Preference.OnPreferenceChangeListener onPreferenceChangeListenerBackgroundCustomColor = new Preference.OnPreferenceChangeListener() {
+//                    @Override
+//                    public boolean onPreferenceChange(Preference preference, Object value) {
+//                        if(value != null) {
+//                            int customColor = (Integer)value;
+//                        }
+//                        return true;
+//                    }
+//                };
+//                preferenceBackgroundCustomColor.setOnPreferenceChangeListener(onPreferenceChangeListenerBackgroundCustomColor);
+//                onPreferenceChangeListenerBackgroundCustomColor.onPreferenceChange(preferenceBackgroundCustomColor, sharedPreferences.getBoolean(preferenceBackgroundCustomColor.getKey(), false));
             }
 
             // Ports 1 & 2 settings

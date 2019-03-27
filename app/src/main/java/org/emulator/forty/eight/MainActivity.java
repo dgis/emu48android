@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -112,14 +113,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+       sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mainActivity = this;
 
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mainScreenView.setStatusBarColor(getWindow().getStatusBarColor());
+        }
 
         toolbar.setVisibility(View.GONE);
         mainScreenContainer.addView(mainScreenView, 0);
@@ -1201,6 +1203,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String[] settingKeys = {
                     "settings_realspeed", "settings_grayscale", "settings_allow_rotation", "settings_fill_screen",
                     "settings_scale", "settings_allow_sound", "settings_haptic_feedback",
+                    "settings_background_kml_color", "settings_background_fallback_color",
                     "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
@@ -1234,6 +1237,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 case "settings_haptic_feedback":
                     // Nothing to do
+                    break;
+
+                case "settings_background_kml_color":
+                    mainScreenView.setBackgroundKmlColor(sharedPreferences.getBoolean("settings_background_kml_color", false));
+                    break;
+                case "settings_background_fallback_color":
+                    String fallbackColor = sharedPreferences.getString("settings_background_fallback_color", "0");
+                    try {
+                        mainScreenView.setBackgroundFallbackColor(Integer.parseInt(fallbackColor));
+                    } catch (NumberFormatException ex) {}
                     break;
 
                 case "settings_kml":
