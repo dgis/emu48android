@@ -37,7 +37,10 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.3alpha (2019-03-xx)
+Version 1.3alpha (2019-04-xx)
+
+WARNING: WITH VERSION 1.3, THE STATUS FILE HAS BEEN MODIFIED AND IS NOW FULLY COMPATIBLE WITH THE WINDOWS VERSION AS IT SHOULD HAVE BEEN.
+HOWEVER, BEFORE THE UPDATE, BACK UP YOUR DATA BECAUSE YOU COULD LOSE THEM.
 
 - Fix the red and blue color inversion.
 - Add the HP 50g (Calypso 2K/4K) KML script from Carl Reinke (4K is a slow because there is no hardware acceleration).
@@ -47,6 +50,9 @@ Version 1.3alpha (2019-03-xx)
 - Fix the intermittent slow down due to the end of playing a sound.
 - Fix blank screen when switching the KML faceplate.
 - Add more traces in the win32 log.
+- Allow to select the background color (missing a custom color).
+- Thanks to Christoph Giesselink about the state file compatibility issue (sizeof(BOOL) should be 4 and not 1).
+- Change the sound engine.
 
 
 Version 1.2 (2019-03-14)

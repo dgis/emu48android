@@ -18,6 +18,9 @@ cmake_minimum_required(VERSION 3.4.1)
 #add_compile_options(-DDEBUG_ANDROID_THREAD)
 #add_compile_options(-DDEBUG_ANDROID_FILE)
 
+#add_compile_options(-DNEW_WIN32_SOUND_ENGINE)
+
+
 include_directories(src/main/cpp/win32)
 
 # Creates and names a library, sets it as either STATIC

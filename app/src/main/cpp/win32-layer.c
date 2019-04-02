@@ -515,23 +515,20 @@ int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
 
 extern int jniDetachCurrentThread();
 
+// Should be protected by mutex
+#define MAX_CREATED_THREAD 30
+static HANDLE threads[MAX_CREATED_THREAD];
+
 static DWORD ThreadStart(LPVOID lpThreadParameter) {
     HANDLE handle = (HANDLE)lpThreadParameter;
     if(handle) {
         handle->threadStartAddress(handle->threadParameter);
     }
 
-    //
+    threads[handle->threadIndex] = NULL;
     jniDetachCurrentThread();
-
     CloseHandle(handle->threadEventMessage);
 }
-
-
-// Should be protected by mutex
-//#define MAX_CREATED_THREAD 20
-//static HANDLE threads[MAX_CREATED_THREAD];
-//static int threadsNextIndex = 0;
 
 HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
     THREAD_LOGD("CreateThread()");
@@ -546,7 +543,13 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
     handle->threadStartAddress = lpStartAddress;
     handle->threadParameter = lpParameter;
     handle->threadEventMessage = CreateEvent(NULL, FALSE, FALSE, NULL);
-    //threads[threadsNextIndex] = handle;
+    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+        if(threads[i] == NULL) {
+            handle->threadIndex = i;
+            threads[handle->threadIndex] = handle;
+            break;
+        }
+    }
 
     //Suspended
     //https://stackoverflow.com/questions/3140867/suspend-pthreads-without-using-condition
@@ -554,13 +557,12 @@ HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize
     //http://man7.org/linux/man-pages/man3/pthread_create.3.html
     int pthreadResult = pthread_create(&handle->threadId, &attr, (void *(*)(void *)) ThreadStart, handle);
     if(pthreadResult == 0) {
-        //threadsNextIndex++;
         if(lpThreadId)
-            *lpThreadId = (DWORD) handle->threadId;
-        THREAD_LOGD("CreateThread() 0x%lx", handle->threadId);
+            *lpThreadId = (DWORD) handle->threadIndex; //handle->threadId;
+        THREAD_LOGD("CreateThread() threadId: 0x%lx, threadIndex: %d", handle->threadId, handle->threadIndex);
         return handle;
     } else {
-        //threads[threadsNextIndex] = NULL;
+        threads[handle->threadIndex] = NULL;
         if(handle->threadEventMessage)
             CloseHandle(handle->threadEventMessage);
         free(handle);
@@ -821,6 +823,30 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 
 // Wave API
 
+#if defined NEW_WIN32_SOUND_ENGINE
+// this callback handler is called every time a buffer finishes playing
+void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
+    WAVE_OUT_LOGD("waveOut bqPlayerCallback()");
+    HWAVEOUT hwo = context;
+    LPWAVEHDR pWaveHeaderNextToRead = NULL;
+
+    //TODO mutex+
+    if (hwo->pWaveHeaderNextToRead) {
+        pWaveHeaderNextToRead = hwo->pWaveHeaderNextToRead;
+        hwo->pWaveHeaderNextToRead = hwo->pWaveHeaderNextToRead->lpNext;
+        if(!hwo->pWaveHeaderNextToRead) {
+            hwo->pWaveHeaderNextToWrite = NULL;
+        }
+    }
+    //TODO mutex-
+    if(pWaveHeaderNextToRead) {
+        PostThreadMessage(1, MM_WOM_DONE, hwo, pWaveHeaderNextToRead);
+    } else {
+        WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing to play?");
+    }
+    //pthread_mutex_unlock(&hwo->audioEngineLock);
+}
+#else
 void onPlayerDone() {
     WAVE_OUT_LOGD("waveOut onPlayerDone()");
     //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
@@ -859,7 +885,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     }
 //    pthread_mutex_unlock(&hwo->audioEngineLock);
 }
-
+#endif
 
 MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen) {
     WAVE_OUT_LOGD("waveOutOpen()");
@@ -915,7 +941,13 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     // configure audio source
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
             SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,   // locatorType
+#if defined NEW_WIN32_SOUND_ENGINE
+    1                                          // numBuffers
+            //2                                          // numBuffers
+            //3                                          // numBuffers
+#else
             20                                          // numBuffers
+#endif
     };
     SLDataFormat_PCM format_pcm = {
             SL_DATAFORMAT_PCM,             // formatType
@@ -1060,7 +1092,10 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
     }
 
     //pthread_mutex_destroy(&handle->audioEngineLock);
-    onPlayerDone();
+#if defined NEW_WIN32_SOUND_ENGINE
+#else
+    onPlayerDone(handle);
+#endif
 
     memset(handle, 0, sizeof(struct _HWAVEOUT));
     free(handle);
@@ -1081,6 +1116,37 @@ MMRESULT waveOutUnprepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
 
 MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
     WAVE_OUT_LOGD("waveOutWrite()");
+
+#if defined NEW_WIN32_SOUND_ENGINE
+
+//    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
+//        // If we could not acquire audio engine lock, reject this request and client should re-try
+//        WAVE_OUT_LOGD("waveOutWrite() pthread_mutex_trylock() -> MMSYSERR_ERROR");
+//        return MMSYSERR_ERROR;
+//    }
+
+    //TODO mutex+
+    if(hwo->pWaveHeaderNextToWrite) {
+        hwo->pWaveHeaderNextToWrite->lpNext = pwh;
+    } else {
+        hwo->pWaveHeaderNextToRead = pwh;
+    }
+    hwo->pWaveHeaderNextToWrite = pwh;
+    pwh->lpNext = NULL;
+    //TODO mutex-
+
+    WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() play right now");
+    SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pwh->lpData, pwh->dwBufferLength);
+    if (SL_RESULT_SUCCESS != result) {
+        WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d", result);
+        PostThreadMessage(1, MM_WOM_DONE, hwo, pwh); //TODO Cleanup pWaveHeaderNextToRead/pWaveHeaderNextToWrite
+        // SL_RESULT_BUFFER_INSUFFICIENT?
+        //pthread_mutex_unlock(&hwo->audioEngineLock);
+        return MMSYSERR_ERROR;
+    }
+
+#else
+
 //    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
 //        // If we could not acquire audio engine lock, reject this request and client should re-try
 //        return MMSYSERR_ERROR;
@@ -1105,8 +1171,11 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
         pWaveHeaderNext->lpNext = pwh;
     }
 
+#endif
+
     return MMSYSERR_NOERROR;
 }
+
 
 MMRESULT waveOutGetDevCaps(UINT_PTR uDeviceID, LPWAVEOUTCAPS pwoc, UINT cbwoc) {
     WAVE_OUT_LOGD("waveOutGetDevCaps()");
@@ -1126,38 +1195,46 @@ MMRESULT waveOutGetID(HWAVEOUT hwo, LPUINT puDeviceID) {
 
 
 BOOL GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax) {
-    //TODO
-//    pthread_t thId = pthread_self();
-//    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
-//        HANDLE threadHandle = threads[i];
-//        if(threadHandle && threadHandle->threadId == thId) {
-//            WaitForSingleObject(threadHandle->threadEventMessage, INFINITE);
-//            if(lpMsg)
-//                memcpy(lpMsg, &threadHandle->threadMessage, sizeof(MSG));
-//            if(lpMsg->message == WM_QUIT)
-//                return FALSE;
-//            return TRUE;
-//        }
-//    }
+#if defined NEW_WIN32_SOUND_ENGINE
+    pthread_t thId = pthread_self();
+    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+        HANDLE threadHandle = threads[i];
+        if(threadHandle && threadHandle->threadId == thId) {
+            WaitForSingleObject(threadHandle->threadEventMessage, INFINITE);
+            if(lpMsg)
+                memcpy(lpMsg, &threadHandle->threadMessage, sizeof(MSG));
+            if(lpMsg->message == WM_QUIT)
+                return FALSE;
+            return TRUE;
+        }
+    }
 
     return FALSE;
+#else
+    return FALSE;
+#endif
 }
 
 BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam) {
-    //TODO not working because idThread is uint32_t (4 bytes) and threadId if a long (8 bytes)
-//    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
-//        HANDLE threadHandle = threads[i];
-//        if(threadHandle && threadHandle->threadId == idThread) {
-//            threadHandle->threadMessage.hwnd = NULL;
-//            threadHandle->threadMessage.message = Msg;
-//            threadHandle->threadMessage.wParam = wParam;
-//            threadHandle->threadMessage.lParam = lParam;
-//            SetEvent(threadHandle->threadEventMessage);
-//            return TRUE;
-//        }
-//    }
+    WAVE_OUT_LOGD("waveOut PostThreadMessage()");
+#if defined NEW_WIN32_SOUND_ENGINE
+    for(int i = 0; i < MAX_CREATED_THREAD; i++) {
+        HANDLE threadHandle = threads[i];
+        if(threadHandle && threadHandle->threadIndex == idThread) {
+            threadHandle->threadMessage.hwnd = NULL;
+            threadHandle->threadMessage.message = Msg;
+            threadHandle->threadMessage.wParam = wParam;
+            threadHandle->threadMessage.lParam = lParam;
+            WAVE_OUT_LOGD("waveOut SetEvent()");
+            SetEvent(threadHandle->threadEventMessage);
+            return TRUE;
+        }
+    }
     return TRUE;
     //return FALSE;
+#else
+    return TRUE;
+#endif
 }
 
 BOOL DestroyWindow(HWND hWnd) {

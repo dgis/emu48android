@@ -15,38 +15,40 @@
 
 
 #if defined DEBUG_ANDROID_TIMER
-#   define TIMER_LOGD LOGD
+#   define TIMER_LOGD(...) LOGD(__VA_ARGS__)
 #else
-#   define TIMER_LOGD
+#   define TIMER_LOGD(...)
 #endif
 
 #if defined DEBUG_ANDROID_WAVE_OUT
-#   define WAVE_OUT_LOGD LOGD
+#   define WAVE_OUT_LOGD(...) LOGD(__VA_ARGS__)
 #else
-#   define WAVE_OUT_LOGD
+#   define WAVE_OUT_LOGD(...)
 #endif
 
 #if defined DEBUG_ANDROID_PAINT
-#   define PAINT_LOGD LOGD
+#   define PAINT_LOGD(...) LOGD(__VA_ARGS__)
 #else
-#   define PAINT_LOGD
+#   define PAINT_LOGD(...)
 #endif
 
 #if defined DEBUG_ANDROID_THREAD
-#   define THREAD_LOGD LOGD
+#   define THREAD_LOGD(...) LOGD(__VA_ARGS__)
 #else
-#   define THREAD_LOGD
+#   define THREAD_LOGD(...)
 #endif
 
 #if defined DEBUG_ANDROID_FILE
-#   define FILE_LOGD LOGD
+#   define FILE_LOGD(...) LOGD(__VA_ARGS__)
 #else
-#   define FILE_LOGD
+#   define FILE_LOGD(...)
 #endif
 
-#ifndef __OBJC__
-typedef signed char BOOL;   // deliberately same type as defined in objc
-#endif
+
+#define _MSC_VER 1914
+#define GetWindowLongPtr	GetWindowLong
+
+
 #define TRUE    1
 #define FALSE   0
 #define MAX_PATH PATH_MAX
@@ -54,8 +56,8 @@ typedef signed char BOOL;   // deliberately same type as defined in objc
 #define FAR
 #define NEAR
 
+typedef int BOOL;
 typedef unsigned long ULONG;
-//typedef	unsigned long ulong;	// ushort is already in types.h
 typedef short SHORT;
 typedef unsigned short USHORT;
 typedef uint64_t ULONGLONG;
@@ -74,21 +76,31 @@ typedef uint16_t WORD;
 typedef uint32_t UINT;
 typedef UINT * LPUINT;
 typedef int32_t INT;
-typedef int INT_PTR, *PINT_PTR;
 typedef char CHAR;
 typedef void VOID;
 typedef void *LPVOID;
 typedef void *PVOID;
-//typedef long LONG;
 typedef int32_t LONG;
 typedef LONG *PLONG;
-typedef unsigned int UINT_PTR, *PUINT_PTR;
-//typedef long LONG_PTR, *PLONG_PTR;
-typedef LONG   LONG_PTR,  *PLONG_PTR;
-typedef size_t SIZE_T;
-typedef /*_W64*/ unsigned long ULONG_PTR, *PULONG_PTR;
-//typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
-typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
+
+#if INTPTR_MAX == INT32_MAX
+    // 32 bits environment
+    typedef int INT_PTR, *PINT_PTR;
+    typedef unsigned int UINT_PTR, *PUINT_PTR;
+    typedef int LONG_PTR, *PLONG_PTR;
+    typedef unsigned long ULONG_PTR, *PULONG_PTR;
+#elif INTPTR_MAX == INT64_MAX
+    // 64 bits environment
+    typedef int64_t INT_PTR, *PINT_PTR;
+    typedef uint64_t UINT_PTR, *PUINT_PTR;
+    typedef int64_t LONG_PTR, *PLONG_PTR;
+    typedef uint64_t ULONG_PTR, *PULONG_PTR;
+#endif
+
+typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+//typedef size_t SIZE_T;
+typedef ULONG_PTR SIZE_T, *PSIZE_T;
+
 
 #define MAXLONG     0x7fffffff
 
@@ -108,8 +120,7 @@ typedef SIZE_T DWORD_PTR, *PDWORD_PTR;
 typedef void *TIMECALLBACK ;
 #define CALLBACK
 typedef void(*LPTIMECALLBACK)(UINT uEventId, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2) ;
-//typedef TIMECALLBACK *LPTIMECALLBACK;
-//typedef long LRESULT;
+
 typedef UINT_PTR            WPARAM;
 typedef LONG_PTR            LPARAM;
 typedef LONG_PTR            LRESULT;
@@ -398,6 +409,7 @@ struct _HANDLE {
     LPVOID threadParameter;
     struct _HANDLE * threadEventMessage;
     struct tagMSG threadMessage;
+	int threadIndex;
 
     pthread_cond_t eventCVariable;
     pthread_mutex_t eventMutex;
@@ -825,7 +837,12 @@ struct _HWAVEOUT{
 // The action: when recording/playing back is not finished, ignore the new request
     pthread_mutex_t  audioEngineLock;
 
-    LPWAVEHDR pWaveHeaderNext;
+#if defined(NEW_WIN32_SOUND_ENGINE)
+	LPWAVEHDR pWaveHeaderNextToRead;
+	LPWAVEHDR pWaveHeaderNextToWrite;
+#else
+	LPWAVEHDR pWaveHeaderNext;
+#endif
 };
 
 extern MMRESULT waveOutPrepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh);
