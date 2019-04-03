@@ -1072,6 +1072,14 @@ BOOL OpenDocument(LPCTSTR szFilename)
 		goto restore;
 	}
 
+    // Temporary patch for going from v1.2 with sizeof(BOOL)==1 to v1.3 with sizeof(BOOL)==4!
+	//--> begin of modification by cg
+	if (lSizeofChipset == 8632) // fix for Emu48 for Android v1.2 or earlier
+	{
+		ZeroMemory(&((BYTE *)&Chipset)[offsetof(CHIPSET,SoftInt)],sizeof(Chipset) - offsetof(CHIPSET,SoftInt));
+	}
+	//<-- end of modification
+
 	SetWindowLocation(hWnd,Chipset.nPosX,Chipset.nPosY);
 
 	while (TRUE)
