@@ -25,6 +25,7 @@ TCHAR szKmlLogBackup[10240];
 TCHAR szKmlTitle[10240];
 BOOL settingsPort2en;
 BOOL settingsPort2wr;
+BOOL soundAvailable = FALSE;
 BOOL soundEnabled = FALSE;
 
 
@@ -327,7 +328,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
         return;
     }
 
-    soundEnabled = SoundOpen(uWaveDevId);					// open waveform-audio output device
+    soundEnabled = soundAvailable = SoundOpen(uWaveDevId);					// open waveform-audio output device
 
     ResumeThread(hThread);					// start thread
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized
@@ -352,6 +353,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_stop(JNIEnv *env,
 	DeleteCriticalSection(&csDbgLock);
 
     SoundClose();							// close waveform-audio output device
+    soundEnabled = FALSE;
 
     if (viewToUpdate) {
         (*env)->DeleteGlobalRef(env, viewToUpdate);
@@ -432,7 +434,7 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getPort1Writa
 }
 
 JNIEXPORT jboolean JNICALL Java_org_emulator_forty_eight_NativeLib_getSoundEnabled(JNIEnv *env, jobject thisz) {
-    return (jboolean) soundEnabled;
+    return (jboolean) soundAvailable;
 }
 
 JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_getGlobalColor(JNIEnv *env, jobject thisz) {
@@ -910,6 +912,13 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
         }
     } else if(_tcscmp(_T("settings_sound_volume"), configKey) == 0) {
         dwWaveVol = (DWORD)intValue1;
+        if(soundEnabled && intValue1 == 0) {
+            SoundClose();
+            soundEnabled = FALSE;
+        } else if(!soundEnabled && intValue1 > 0) {
+            SoundOpen(uWaveDevId);
+            soundEnabled = TRUE;
+        }
     } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
         BOOL settingsPort1en = (BOOL) intValue1;
         BOOL settingsPort1wr = (BOOL) intValue2;

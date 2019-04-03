@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <wchar.h>
 #include <stdio.h>
 #include <string.h>
@@ -829,19 +830,22 @@ struct _HWAVEOUT{
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
     SLVolumeItf bqPlayerVolume;
 
-// a mutext to guard against re-entrance to record & playback
-// as well as make recording and playing back to be mutually exclusive
-// this is to avoid crash at situations like:
-//    recording is in session [not finished]
-//    user presses record button and another recording coming in
-// The action: when recording/playing back is not finished, ignore the new request
     pthread_mutex_t  audioEngineLock;
 
+    sem_t waveOutLock;
 #if defined(NEW_WIN32_SOUND_ENGINE)
+    // Linked list of buffers to read (take advantage of the field lpNext!)
 	LPWAVEHDR pWaveHeaderNextToRead;
+	// Last element of the linked list of buffers to read.
+	// The next buffer can be wrote easily.
 	LPWAVEHDR pWaveHeaderNextToWrite;
+
+	// Mutex to lock the sound
+	//pthread_mutex_t waveOutLock;
 #else
 	LPWAVEHDR pWaveHeaderNext;
+    timer_t playerDoneTimer;
+    struct itimerspec playerDoneTimerSetTimes;
 #endif
 };
 

@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <android/bitmap.h>
 #include "core/resource.h"
 #include "win32-layer.h"
@@ -827,10 +828,11 @@ BOOL GetSystemPowerStatus(LPSYSTEM_POWER_STATUS status)
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     WAVE_OUT_LOGD("waveOut bqPlayerCallback()");
+
     HWAVEOUT hwo = context;
     LPWAVEHDR pWaveHeaderNextToRead = NULL;
 
-    //TODO mutex+
+    pthread_mutex_lock(&hwo->audioEngineLock);
     if (hwo->pWaveHeaderNextToRead) {
         pWaveHeaderNextToRead = hwo->pWaveHeaderNextToRead;
         hwo->pWaveHeaderNextToRead = hwo->pWaveHeaderNextToRead->lpNext;
@@ -838,16 +840,21 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
             hwo->pWaveHeaderNextToWrite = NULL;
         }
     }
-    //TODO mutex-
+    pthread_mutex_unlock(&hwo->audioEngineLock);
+
     if(pWaveHeaderNextToRead) {
         PostThreadMessage(1, MM_WOM_DONE, hwo, pWaveHeaderNextToRead);
     } else {
         WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing to play?");
     }
-    //pthread_mutex_unlock(&hwo->audioEngineLock);
+
+    WAVE_OUT_LOGD("bqPlayerCallback() before sem_post() +1");
+    sem_post(&hwo->waveOutLock); // Increment
+    WAVE_OUT_LOGD("bqPlayerCallback() after sem_post() +1");
 }
 #else
-void onPlayerDone() {
+
+void onPlayerDone(HWAVEOUT hwo) {
     WAVE_OUT_LOGD("waveOut onPlayerDone()");
     //PostThreadMessage(0, MM_WOM_DONE, hwo, hwo->pWaveHeaderNext);
     // Artificially replace the post message MM_WOM_DONE
@@ -869,7 +876,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
             SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pWaveHeaderNext->lpData, pWaveHeaderNext->dwBufferLength);
             if (SL_RESULT_SUCCESS != result) {
                 WAVE_OUT_LOGD("waveOut bqPlayerCallback() Enqueue Error %d", result);
-                onPlayerDone();
+                onPlayerDone(hwo);
                 // Error
                 //pthread_mutex_unlock(&hwo->audioEngineLock);
 //                return;
@@ -877,14 +884,21 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
 //            return;
         } else {
             WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing next, so, this is the end");
-            onPlayerDone();
+            onPlayerDone(hwo);
         }
     } else {
         WAVE_OUT_LOGD("waveOut bqPlayerCallback() Nothing to play? So, this is the end");
-        onPlayerDone();
+        onPlayerDone(hwo);
     }
-//    pthread_mutex_unlock(&hwo->audioEngineLock);
 }
+
+// Timer to replace the missing bqPlayerCallback
+void onPlayerDoneTimerCallback(void *context) {
+    WAVE_OUT_LOGD("waveOut onPlayerDoneTimerCallback()");
+    HWAVEOUT hwo = context;
+    onPlayerDone(hwo);
+}
+
 #endif
 
 MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen) {
@@ -942,9 +956,9 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
     SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
             SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,   // locatorType
 #if defined NEW_WIN32_SOUND_ENGINE
-    1                                          // numBuffers
+            //1                                          // numBuffers
             //2                                          // numBuffers
-            //3                                          // numBuffers
+            20                                          // numBuffers
 #else
             20                                          // numBuffers
 #endif
@@ -1055,6 +1069,26 @@ MMRESULT waveOutOpen(LPHWAVEOUT phwo, UINT uDeviceID, LPCWAVEFORMATEX pwfx, DWOR
         return MMSYSERR_ERROR;
     }
 
+#if defined NEW_WIN32_SOUND_ENGINE
+    sem_init(&handle->waveOutLock, 0, 1);
+#else
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_notify_function = (void (*)(sigval_t)) onPlayerDoneTimerCallback; //this function will be called when timer expires
+    sev.sigev_value.sival_ptr = handle; //this argument will be passed to cbf
+    sev.sigev_notify_attributes = NULL;
+    timer_t * timer = &(handle->playerDoneTimer);
+    if (timer_create(CLOCK_MONOTONIC, &sev, timer) == -1) {
+        TIMER_LOGD("timeSetEvent() ERROR in timer_create");
+        return NULL;
+    }
+
+    long delayInMilliseconds = 1000; // msecs
+    handle->playerDoneTimerSetTimes.it_value.tv_sec = delayInMilliseconds / 1000;
+    handle->playerDoneTimerSetTimes.it_value.tv_nsec = (delayInMilliseconds % 1000) * 1000000;
+    handle->playerDoneTimerSetTimes.it_interval.tv_sec = 0;
+    handle->playerDoneTimerSetTimes.it_interval.tv_nsec = 0;
+#endif
 
     *phwo = handle;
     return MMSYSERR_NOERROR;
@@ -1091,10 +1125,13 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
         handle->engineEngine = NULL;
     }
 
-    //pthread_mutex_destroy(&handle->audioEngineLock);
+    pthread_mutex_destroy(&handle->audioEngineLock);
+
 #if defined NEW_WIN32_SOUND_ENGINE
+    sem_destroy(&handle->waveOutLock);
 #else
     onPlayerDone(handle);
+    timer_delete(handle->playerDoneTimer);
 #endif
 
     memset(handle, 0, sizeof(struct _HWAVEOUT));
@@ -1119,13 +1156,14 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
 
 #if defined NEW_WIN32_SOUND_ENGINE
 
-//    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
-//        // If we could not acquire audio engine lock, reject this request and client should re-try
-//        WAVE_OUT_LOGD("waveOutWrite() pthread_mutex_trylock() -> MMSYSERR_ERROR");
-//        return MMSYSERR_ERROR;
-//    }
+    WAVE_OUT_LOGD("waveOutWrite() before sem_wait() -1");
+    sem_wait(&hwo->waveOutLock); // Decrement, lock if 0
+    WAVE_OUT_LOGD("waveOutWrite() after sem_wait() -1");
 
-    //TODO mutex+
+
+    LPWAVEHDR pWaveHeaderNextToWriteBackup = hwo->pWaveHeaderNextToWrite;
+
+    pthread_mutex_lock(&hwo->audioEngineLock);
     if(hwo->pWaveHeaderNextToWrite) {
         hwo->pWaveHeaderNextToWrite->lpNext = pwh;
     } else {
@@ -1133,33 +1171,41 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
     }
     hwo->pWaveHeaderNextToWrite = pwh;
     pwh->lpNext = NULL;
-    //TODO mutex-
+    pthread_mutex_unlock(&hwo->audioEngineLock);
 
     WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() play right now");
     SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pwh->lpData, pwh->dwBufferLength);
     if (SL_RESULT_SUCCESS != result) {
-        WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d", result);
-        PostThreadMessage(1, MM_WOM_DONE, hwo, pwh); //TODO Cleanup pWaveHeaderNextToRead/pWaveHeaderNextToWrite
-        // SL_RESULT_BUFFER_INSUFFICIENT?
-        //pthread_mutex_unlock(&hwo->audioEngineLock);
+        WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d (SL_RESULT_BUFFER_INSUFFICIENT=7)", result);
+
+        pthread_mutex_lock(&hwo->audioEngineLock);
+        if(pWaveHeaderNextToWriteBackup) {
+            hwo->pWaveHeaderNextToWrite = pWaveHeaderNextToWriteBackup;
+            hwo->pWaveHeaderNextToWrite->lpNext = NULL;
+            if(hwo->pWaveHeaderNextToRead == pwh) {
+                hwo->pWaveHeaderNextToRead = pWaveHeaderNextToWriteBackup;
+            }
+        } else {
+            hwo->pWaveHeaderNextToWrite = NULL;
+            hwo->pWaveHeaderNextToRead = NULL;
+        }
+        pthread_mutex_unlock(&hwo->audioEngineLock);
+
+        PostThreadMessage(1, MM_WOM_DONE, hwo, pwh);
+
         return MMSYSERR_ERROR;
     }
 
 #else
 
-//    if (pthread_mutex_trylock(&hwo->audioEngineLock)) {
-//        // If we could not acquire audio engine lock, reject this request and client should re-try
-//        return MMSYSERR_ERROR;
-//    }
     pwh->lpNext = NULL;
     if(hwo->pWaveHeaderNext == NULL) {
         hwo->pWaveHeaderNext = pwh;
         WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() play right now");
         SLresult result = (*hwo->bqPlayerBufferQueue)->Enqueue(hwo->bqPlayerBufferQueue, pwh->lpData, pwh->dwBufferLength);
         if (SL_RESULT_SUCCESS != result) {
-            WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d", result);
-            onPlayerDone();
-            // SL_RESULT_BUFFER_INSUFFICIENT?
+            WAVE_OUT_LOGD("waveOutWrite() bqPlayerBufferQueue->Enqueue() error: %d (SL_RESULT_BUFFER_INSUFFICIENT=7)", result);
+            //onPlayerDone(hwo);
             //pthread_mutex_unlock(&hwo->audioEngineLock);
             return MMSYSERR_ERROR;
         }
@@ -1169,6 +1215,10 @@ MMRESULT waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh, UINT cbwh) {
             pWaveHeaderNext = pWaveHeaderNext->lpNext;
         WAVE_OUT_LOGD("waveOutWrite() play when finishing the current one");
         pWaveHeaderNext->lpNext = pwh;
+    }
+
+    if (timer_settime(hwo->playerDoneTimer, 0, &(hwo->playerDoneTimerSetTimes), NULL) == -1) {
+        TIMER_LOGD("timeSetEvent() ERROR in timer_settime (playerDoneTimerSetTimes)");
     }
 
 #endif

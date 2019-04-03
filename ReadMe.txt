@@ -52,7 +52,7 @@ HOWEVER, BEFORE THE UPDATE, BACK UP YOUR DATA BECAUSE YOU COULD LOSE THEM.
 - Add more traces in the win32 log.
 - Allow to select the background color (missing a custom color).
 - Thanks to Christoph Giesselink about the state file compatibility issue (sizeof(BOOL) should be 4 and not 1).
-- Change the sound engine.
+- Allow to fully switch the sound off.
 
 
 Version 1.2 (2019-03-14)
