@@ -292,9 +292,7 @@ static __inline VOID AdjustSpeed(VOID)		// adjust emulation speed
 	{
 		DWORD dwCycles,dwTicks;
 
-        LOGD("bEnableSlow: %d, bCpuSlow: %d, bKeySlow: %d, bSoundSlow: %d, nOpcSlow: %d", bEnableSlow, bCpuSlow, bKeySlow, bSoundSlow, nOpcSlow);
-
-        EnterCriticalSection(&csSlowLock);
+		EnterCriticalSection(&csSlowLock);
 		{
 			// cycles elapsed for next check
 			if ((dwCycles = (DWORD) (Chipset.cycles & 0xFFFFFFFF)-dwOldCyc) >= dwT2Cycles)
