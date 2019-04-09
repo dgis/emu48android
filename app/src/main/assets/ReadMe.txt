@@ -27,7 +27,11 @@ QUICK START
 NOTES
 
 - When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependency files.
-
+- By default, in Emu48 for Windows with the HP49/50, the "HKEY_CURRENT_USER\Software\Emu48\ROM[Writeable]=1",
+which allows to write the port2 (128KB) in the ROM! Because in Android, it is not possible to write in the embedded ROM,
+we have the same behavior as under Windows with "HKEY_CURRENT_USER\Software\Emu48\ROM[Writeable]=0".
+The port 2 is well saved in the state file "*.e49", but once this state file is reloaded,
+this causes a warmstart and the port 2 is never loaded.
 
 NOT WORKING YET
 
