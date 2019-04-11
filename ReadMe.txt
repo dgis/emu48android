@@ -107,10 +107,10 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
-- Sometimes, it seems to be in authentic calculator slow speed and it should not be.
-- Add a separation between the pixels (Suggestion from Jaime Meza)
+- Allow to generate empty memory card in the port 2 for 48SX/GX
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
+- Add a separation between the pixels (Suggestion from Jaime Meza)
 - Add a true fullscreen mode under the status bar and the bottom buttons
 - Improve the access to the menu
 - Change the logo following the template
