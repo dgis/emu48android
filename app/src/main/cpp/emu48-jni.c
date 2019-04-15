@@ -292,7 +292,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
     // read emulator settings
     GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
     //ReadSettings();
-    bRomWriteable = FALSE;
+    //bRomWriteable = FALSE;
 
     _tcscpy(szCurrentDirectory, "");
     _tcscpy(szEmuDirectory, "assets/calculators/");

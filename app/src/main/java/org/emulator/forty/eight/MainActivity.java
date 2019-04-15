@@ -610,19 +610,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         int model = NativeLib.getCurrentModel();
-        String extension = "e48"; // HP48SX/GX // model 'S' 'G'
+        String extension = "e48";
         switch (model) {
-            case '6':
-            case 'A':
-                extension = "e38"; // HP38G
+            case 'S': //HP48SX
+            case 'G': //HP48GX
+                extension = "e48";
+            case '6': //HP38G 64K RAM
+            case 'A': //HP38G 32K RAM
+                extension = "e38";
                 break;
-            case 'E':
-                extension = "e39"; // HP39/40G
+            case 'E': // HP39G/(HP39G+/HP39GS)/HP40G/HP40GS
+                extension = "e39";
                 break;
-            case '2':
-            case 'Q':
-            case 'X':
-                extension = "e49"; // HP49G
+            case 'P': // HP39G+/HP39GS
+                extension = "e39";
+                break;
+            case '2': // HP48GII
+            case 'Q': // HP49G+/HP50G
+            case 'X': // HP49G
+                extension = "e49";
                 break;
         }
         intent.putExtra(Intent.EXTRA_TITLE, "emu48-state." + extension);
