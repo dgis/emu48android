@@ -45,6 +45,7 @@ CHANGES
 Version 1.4 (2019-04-xx)
 
 - Fix the authentic speed issue at the first start.
+- Fix the non working Restore/Delete backup.
 
 
 Version 1.3 (2019-04-04)

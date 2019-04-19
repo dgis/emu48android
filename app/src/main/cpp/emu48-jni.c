@@ -904,7 +904,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
         bRealSpeed = (BOOL) intValue1;
         SetSpeed(bRealSpeed);			// set speed
     } else if(_tcscmp(_T("settings_grayscale"), configKey) == 0) {
-        // LCD grayscale checkbox has been changed
+        // LCD grayscale checkOnBackupDeletebox has been changed
         if (bGrayscale != (BOOL)intValue1) {
             UINT nOldState = SwitchToState(SM_INVALID);
             SetLcdMode(!bGrayscale);	// set new display mode

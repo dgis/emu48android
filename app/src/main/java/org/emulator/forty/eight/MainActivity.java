@@ -738,15 +738,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     private void OnBackupSave() {
         NativeLib.onBackupSave();
-
+        updateNavigationDrawerItems();
     }
     private void OnBackupRestore() {
         NativeLib.onBackupRestore();
-
+        updateNavigationDrawerItems();
     }
     private void OnBackupDelete() {
         NativeLib.onBackupDelete();
-
+        updateNavigationDrawerItems();
     }
     private void OnViewScript() {
         if (NativeLib.getState() != 0 /*SM_RUN*/) {
