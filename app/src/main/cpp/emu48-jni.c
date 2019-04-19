@@ -902,8 +902,7 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_setConfiguration(
 
     if(_tcscmp(_T("settings_realspeed"), configKey) == 0) {
         bRealSpeed = (BOOL) intValue1;
-        if(isDynamic)
-            SetSpeed(bRealSpeed);			// set speed
+        SetSpeed(bRealSpeed);			// set speed
     } else if(_tcscmp(_T("settings_grayscale"), configKey) == 0) {
         // LCD grayscale checkbox has been changed
         if (bGrayscale != (BOOL)intValue1) {
