@@ -52,6 +52,11 @@ void win32Init() {
     contentSchemeLength = _tcslen(contentScheme);
 }
 
+int abs (int i) {
+    return i < 0 ? -i : i;
+}
+
+
 VOID OutputDebugString(LPCSTR lpOutputString) {
     LOGD("%s", lpOutputString);
 }
@@ -89,12 +94,12 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 {
     FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
     BOOL forceNormalFile = FALSE;
-    if(_tcscmp(lpFileName, szPort2Filename) == 0) {
-        // Special case for Port2 filename
-        forceNormalFile = TRUE;
-        if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
-            return (HANDLE) INVALID_HANDLE_VALUE;
-    }
+//    if(_tcscmp(lpFileName, szPort2Filename) == 0) {
+//        // Special case for Port2 filename
+//        forceNormalFile = TRUE;
+//        if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
+//            return (HANDLE) INVALID_HANDLE_VALUE;
+//    }
 
     TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
 
@@ -112,7 +117,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 if(filename) {
                     *filename = _T('\0');
                 }
-                _tcscpy(szRomDirectory, szEmuDirectory);
+                //_tcscpy(szRomDirectory, szEmuDirectory);
                 SetCurrentDirectory(szEmuDirectory);
             } else if(foundDocumentScheme) {
                 // With a recorded "document:" scheme, extract the folder URL with content:// scheme
@@ -121,11 +126,11 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 if(filename) {
                     *filename = _T('\0');
                 }
-                _tcscpy(szRomDirectory, szEmuDirectory);
+                //_tcscpy(szRomDirectory, szEmuDirectory);
                 SetCurrentDirectory(szEmuDirectory);
             } else {
                 _tcscpy(szEmuDirectory, "assets/calculators/");
-                _tcscpy(szRomDirectory, "assets/calculators/");
+                //_tcscpy(szRomDirectory, "assets/calculators/");
                 SetCurrentDirectory(szEmuDirectory);
             }
         }
@@ -1287,9 +1292,18 @@ BOOL PostThreadMessage(DWORD idThread, UINT Msg, WPARAM wParam, LPARAM lParam) {
 #endif
 }
 
+HWND CreateWindow() {
+    HANDLE handle = malloc(sizeof(struct _HANDLE));
+    memset(handle, 0, sizeof(struct _HANDLE));
+    handle->handleType = HANDLE_TYPE_WINDOW;
+    handle->windowDC = CreateCompatibleDC(NULL);
+    return handle;
+}
+
 BOOL DestroyWindow(HWND hWnd) {
-    //TODO
-    return 0;
+    memset(hWnd, 0, sizeof(struct _HANDLE));
+    free(hWnd);
+    return TRUE;
 }
 
 BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
@@ -1302,6 +1316,7 @@ BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 extern void draw();
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) {
+    // Update when switch the screen off
     draw(); //TODO Need a true WM_PAINT event!
     return 0;
 }
@@ -1319,11 +1334,11 @@ BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy,
 BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
 BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) {
     if(lppt) {
-        lppt->x = hdc->windowOrigineX;
-        lppt->y = hdc->windowOrigineY;
+        lppt->x = hdc->windowOriginX;
+        lppt->y = hdc->windowOriginY;
     }
-    hdc->windowOrigineX = x;
-    hdc->windowOrigineY = y;
+    hdc->windowOriginX = x;
+    hdc->windowOriginY = y;
     return TRUE;
 }
 
@@ -1333,8 +1348,11 @@ HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
         switch (h->handleType) {
             case HGDIOBJ_TYPE_PEN:
                 break;
-            case HGDIOBJ_TYPE_BRUSH:
-                break;
+            case HGDIOBJ_TYPE_BRUSH: {
+                HBRUSH oldSelectedBrushColor = hdc->selectedBrushColor;
+                hdc->selectedBrushColor = h;
+                return oldSelectedBrushColor; //h;
+            }
             case HGDIOBJ_TYPE_FONT:
                 break;
             case HGDIOBJ_TYPE_BITMAP: {
@@ -1392,11 +1410,11 @@ HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
     return NULL;
 }
 BOOL DeleteObject(HGDIOBJ ho) {
-    PAINT_LOGD("Emu48-PAINT DeleteObject(ho: %p)", ho);
+    PAINT_LOGD("PAINT DeleteObject(ho: %p)", ho);
     if(ho) {
         switch(ho->handleType) {
             case HGDIOBJ_TYPE_PALETTE: {
-                PAINT_LOGD("Emu48-PAINT DeleteObject() HGDIOBJ_TYPE_PALETTE");
+                PAINT_LOGD("PAINT DeleteObject() HGDIOBJ_TYPE_PALETTE");
                 ho->handleType = HGDIOBJ_TYPE_INVALID;
                 if(ho->paletteLog)
                     free(ho->paletteLog);
@@ -1405,7 +1423,7 @@ BOOL DeleteObject(HGDIOBJ ho) {
                 return TRUE;
             }
             case HGDIOBJ_TYPE_BITMAP: {
-                PAINT_LOGD("Emu48-PAINT DeleteObject() HGDIOBJ_TYPE_BITMAP");
+                PAINT_LOGD("PAINT DeleteObject() HGDIOBJ_TYPE_BITMAP");
                 ho->handleType = HGDIOBJ_TYPE_INVALID;
                 if(ho->bitmapInfo)
                     free((void *) ho->bitmapInfo);
@@ -1456,6 +1474,13 @@ UINT RealizePalette(HDC hdc) {
     return 0;
 }
 
+COLORREF SetBkColor(HDC hdc, COLORREF color) {
+    COLORREF backgroundColorBackup = hdc->backgroundColor;
+    hdc->backgroundColor = color;
+    hdc->isBackgroundColorSet = TRUE;
+    return backgroundColorBackup;
+}
+
 // DC
 
 HDC CreateCompatibleDC(HDC hdc) {
@@ -1465,11 +1490,28 @@ HDC CreateCompatibleDC(HDC hdc) {
     handle->hdcCompatible = hdc;
     return handle;
 }
+HDC GetDC(HWND hWnd) {
+    return hWnd->windowDC;
+}
+int ReleaseDC(HWND hWnd, HDC hDC) {
+    hWnd->windowDC = NULL; //?
+    return TRUE;
+}
+
 BOOL DeleteDC(HDC hdc) {
     memset(hdc, 0, sizeof(struct _HDC));
     free(hdc);
     return TRUE;
 }
+
+HBRUSH  WINAPI CreateSolidBrush(COLORREF color) {
+    HGDIOBJ handle = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(handle, 0, sizeof(_HGDIOBJ));
+    handle->handleType = HGDIOBJ_TYPE_BRUSH;
+    handle->brushColor = color;
+    return handle;
+}
+
 BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt) {
     //TODO
     return 0;
@@ -1479,14 +1521,13 @@ BOOL LineTo(HDC hdc, int x, int y) {
     return 0;
 }
 BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
-    PAINT_LOGD("Emu48-PAINT PatBlt(hdcDest: %p, x: %d, y: %d, w: %d, h: %d, rop: 0x%08x)", hdcDest, x, y, w, h, rop);
+    PAINT_LOGD("PAINT PatBlt(hdcDest: %p, x: %d, y: %d, w: %d, h: %d, rop: 0x%08x)", hdcDest, x, y, w, h, rop);
 
     if((hdcDest->selectedBitmap || hdcDest->hdcCompatible == NULL) && w && h) {
         HBITMAP hBitmapDestination = NULL;
         void * pixelsDestination = NULL;
         int destinationWidth = 0;
         int destinationHeight = 0;
-        int destinationBytes = 0;
         float destinationStride = 0;
 
         JNIEnv * jniEnv = NULL;
@@ -1508,7 +1549,6 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             destinationWidth = androidBitmapInfo.width;
             destinationHeight = androidBitmapInfo.height;
 
-            destinationBytes = 4;
             destinationStride = androidBitmapInfo.stride;
 
             if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
@@ -1522,7 +1562,6 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
 
-            destinationBytes = hBitmapDestination->bitmapInfoHeader->biBitCount >> 3;
             destinationStride = (float)(4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
 
@@ -1531,6 +1570,11 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             palette = hdcDest->selectedPalette;
         PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
                                      palette->paletteLog->palPalEntry : NULL;
+
+        COLORREF brushColor = 0xFF000000; // 0xAABBGGRR
+        if(hdcDest->selectedBrushColor) {
+            brushColor = hdcDest->selectedBrushColor->brushColor;
+        }
 
         for (int currentY = y; currentY < y + h; currentY++) {
             for (int currentX = x; currentX < x + w; currentX++) {
@@ -1550,6 +1594,10 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
                         destinationPixel[2] = palPalEntry[0].peBlue;
                         destinationPixel[3] = 255;
                         break;
+                    case PATCOPY:
+                        // 0xAABBGGRR
+                        *((UINT *)destinationPixel) = brushColor;
+                        break;
                     default:
                         break;
                 }
@@ -1561,6 +1609,8 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
     }
     return 0;
 }
+#define ROP_PSDPxax 0x00B8074A				// ternary ROP
+#define ROP_PDSPxax 0x00D80745
 BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
     if(hdcSrc && hdcSrc->selectedBitmap) {
         HBITMAP hBitmap = hdcSrc->selectedBitmap;
@@ -1576,7 +1626,7 @@ int SetStretchBltMode(HDC hdc, int mode) {
 }
 
 BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
-    PAINT_LOGD("Emu48-PAINT StretchBlt(hdcDest: %p, xDest: %d, yDest: %d, wDest: %d, hDest: %d, hdcSrc: %p, xSrc: %d, ySrc: %d, wSrc: %d, hSrc: %d, rop: 0x%08x)",
+    PAINT_LOGD("PAINT StretchBlt(hdcDest: %p, xDest: %d, yDest: %d, wDest: %d, hDest: %d, hdcSrc: %p, xSrc: %d, ySrc: %d, wSrc: %d, hSrc: %d, rop: 0x%08x)",
             hdcDest, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, rop);
 
     if(hdcDest && hdcSrc
@@ -1588,6 +1638,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
         HBITMAP hBitmapDestination = NULL;
         void * pixelsDestination = NULL;
+        int destinationBitCount = 8;
 
         BOOL reverseHeight = hBitmapSource->bitmapInfoHeader->biHeight < 0;
 
@@ -1596,10 +1647,8 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         int destinationWidth = 0;
         int destinationHeight = 0;
 
-        int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
-        int sourceBytes = sourceBitCount >> 3;
+        UINT sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
         int sourceStride = 4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32);
-        int destinationBytes = 0;
         int destinationStride = 0;
 
         JNIEnv * jniEnv = NULL;
@@ -1620,8 +1669,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
             destinationWidth = androidBitmapInfo.width;
             destinationHeight = androidBitmapInfo.height;
-
-            destinationBytes = 4;
+            destinationBitCount = 32;
             destinationStride = androidBitmapInfo.stride;
 
             if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
@@ -1634,79 +1682,183 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
             destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
-
-            destinationBytes = (hBitmapDestination->bitmapInfoHeader->biBitCount >> 3);
-            destinationStride = destinationBytes * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32);
+            destinationBitCount = hBitmapDestination->bitmapInfoHeader->biBitCount;
+            destinationStride = 4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32);
         }
 
-        xDest -= hdcDest->windowOrigineX;
-        yDest -= hdcDest->windowOrigineY;
+        xDest -= hdcDest->windowOriginX;
+        yDest -= hdcDest->windowOriginY;
 
-        //LOGD("StretchBlt(%p, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBytes: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBytesWithDecimal);
+        //LOGD("StretchBlt(%p, x:%d, y:%d, w:%d, h:%d, %08x, x:%d, y:%d, w:%d, h:%d) -> sourceBitCount: %d", hdcDest->hdcCompatible, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc, wSrc, hSrc, sourceBitCount);
+
         HPALETTE palette = hdcSrc->realizedPalette;
         if(!palette)
             palette = hdcSrc->selectedPalette;
         PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
                                      palette->paletteLog->palPalEntry : NULL;
+        if(!palPalEntry && sourceBitCount <= 8 && hBitmapSource->bitmapInfoHeader->biClrUsed > 0) {
+            palPalEntry = (PALETTEENTRY *)hBitmapSource->bitmapInfo->bmiColors;
+        }
+        COLORREF brushColor = 0xFF000000; // 0xAABBGGRR
+        if(hdcDest->selectedBrushColor) {
+            brushColor = hdcDest->selectedBrushColor->brushColor;
+        }
+        COLORREF backgroundColor = 0xFF000000; // 0xAABBGGRR
+        if(hdcDest->isBackgroundColorSet) {
+            brushColor = hdcDest->backgroundColor;
+        }
 
         int dst_maxx = xDest + wDest;
         int dst_maxy = yDest + hDest;
+
+        if(xDest < 0) {
+            wDest += xDest;
+            xDest = 0;
+        }
+        if(yDest < 0) {
+            hDest += yDest;
+            yDest = 0;
+        }
+        if(dst_maxx > destinationWidth)
+            dst_maxx = destinationWidth;
+        if(dst_maxy > destinationHeight)
+            dst_maxy = destinationHeight;
+
         for (int y = yDest; y < dst_maxy; y++) {
             int src_cury = ySrc + (y - yDest) * hSrc / hDest;
             if(!reverseHeight)
                 src_cury = sourceHeight - 1 - src_cury;
+            if (src_cury < 0 || src_cury >= sourceHeight)
+                continue;
             BYTE parity = (BYTE) xSrc;
             for (int x = xDest; x < dst_maxx; x++, parity++) {
                 int src_curx = xSrc + (x - xDest) * wSrc / wDest;
-                if (src_curx < 0 || src_cury < 0 || src_curx >= sourceWidth || src_cury >= sourceHeight)
+                if (src_curx < 0 || src_curx >= sourceWidth)
                     continue;
 
-                int currentXBytes = ((sourceBitCount >> 2) * src_curx) >> 1;
-                BYTE * sourcePixel = pixelsSource + sourceStride * src_cury + currentXBytes;
-                BYTE * destinationPixel = pixelsDestination + destinationStride * y + 4 * x;
+                BYTE * sourcePixelBase = pixelsSource + sourceStride * src_cury;
+                BYTE * destinationPixelBase = pixelsDestination + destinationStride * y;
 
-                // -> ARGB_8888
+                COLORREF sourceColor = 0xFF000000;
+                BYTE * sourceColorPointer = (BYTE *) &sourceColor;
+
                 switch (sourceBitCount) {
-                    case 4: {
-                        BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
-                        //BYTE colorIndex = (parity & 0x1 ? sourcePixel[0] >> 4 : sourcePixel[0] & (BYTE)0x0F);
-                        if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
-                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
-                            destinationPixel[3] = 255;
+                    case 1: {
+                        //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
+                        // When blitting from a monochrome DC to a color DC,
+                        // the color black in the source turns into the destination’s text color,
+                        // and the color white in the source turns into the destination’s background
+                        // color.
+                        BYTE * sourcePixel = sourcePixelBase + ((UINT)src_curx >> (UINT)3);
+                        UINT bitNumber = (UINT) (src_curx % 8);
+                        if(*sourcePixel & ((UINT)1 << bitNumber)) {
+                            sourceColorPointer[0] = 0;
+                            sourceColorPointer[1] = 0;
+                            sourceColorPointer[2] = 0;
                         } else {
-                            destinationPixel[0] = colorIndex;
-                            destinationPixel[1] = colorIndex;
-                            destinationPixel[2] = colorIndex;
-                            destinationPixel[3] = 255;
+                            sourceColorPointer[0] = 255;
+                            sourceColorPointer[1] = 255;
+                            sourceColorPointer[2] = 255;
+                        }
+                        sourceColorPointer[3] = 255;
+                        break;
+                    }
+                    case 4: {
+                        int currentXBytes = ((sourceBitCount >> (UINT)2) * src_curx) >> (UINT)1;
+                        BYTE * sourcePixel = sourcePixelBase + currentXBytes;
+                        BYTE colorIndex = (parity & (BYTE)0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> (UINT)4);
+                        if (palPalEntry) {
+                            sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
+                            sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
+                            sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
+                            sourceColorPointer[3] = 255;
+                        } else {
+                            sourceColorPointer[0] = colorIndex;
+                            sourceColorPointer[1] = colorIndex;
+                            sourceColorPointer[2] = colorIndex;
+                            sourceColorPointer[3] = 255;
                         }
                         break;
                     }
                     case 8: {
+                        BYTE * sourcePixel = sourcePixelBase + src_curx;
                         BYTE colorIndex = sourcePixel[0];
                         if (palPalEntry) {
-                            destinationPixel[0] = palPalEntry[colorIndex].peBlue;
-                            destinationPixel[1] = palPalEntry[colorIndex].peGreen;
-                            destinationPixel[2] = palPalEntry[colorIndex].peRed;
-                            destinationPixel[3] = 255;
+                            sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
+                            sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
+                            sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
+                            sourceColorPointer[3] = 255;
                         } else {
-                            destinationPixel[0] = sourcePixel[0];
-                            destinationPixel[1] = sourcePixel[0];
-                            destinationPixel[2] = sourcePixel[0];
-                            destinationPixel[3] = 255;
+                            sourceColorPointer[0] = colorIndex;
+                            sourceColorPointer[1] = colorIndex;
+                            sourceColorPointer[2] = colorIndex;
+                            sourceColorPointer[3] = 255;
                         }
                         break;
                     }
-                    case 24:
-                        destinationPixel[0] = sourcePixel[2];
-                        destinationPixel[1] = sourcePixel[1];
-                        destinationPixel[2] = sourcePixel[0];
-                        destinationPixel[3] = 255;
+                    case 24: {
+                        BYTE * sourcePixel = sourcePixelBase + 3 * src_curx;
+                        sourceColorPointer[0] = sourcePixel[2];
+                        sourceColorPointer[1] = sourcePixel[1];
+                        sourceColorPointer[2] = sourcePixel[0];
+                        sourceColorPointer[3] = 255;
                         break;
-                    case 32:
-                        memcpy(destinationPixel, sourcePixel, (size_t) sourceBytes);
+                    }
+                    case 32: {
+                        BYTE *sourcePixel = sourcePixelBase + 4 * src_curx;
+                        memcpy(sourceColorPointer, sourcePixel, 4);
                         break;
+                    }
+                    default:
+                        break;
+                }
+
+                switch (destinationBitCount) {
+                    case 1: {
+                        //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
+                        // If you blit from a color DC to a monochrome DC,
+                        // then all pixels in the source that are equal to the background color
+                        // will turn white, and all other pixels will turn black.
+                        // In other words, GDI considers a monochrome bitmap to be
+                        // black pixels on a white background.
+                        BYTE * destinationPixel = destinationPixelBase + (x >> 3);
+                        UINT bitNumber = x % 8;
+                        if(brushColor == sourceColor) {
+                            *destinationPixel |= (1 << bitNumber);
+                        } else {
+                            *destinationPixel &= ~(1 << bitNumber);
+                        }
+                        break;
+                    }
+                    case 4: {
+                        //TODO
+                        break;
+                    }
+                    case 8: {
+                        //TODO
+                        break;
+                    }
+                    case 24: {
+                        BYTE * destinationPixel = destinationPixelBase + 3 * x;
+                        destinationPixel[0] = sourceColorPointer[0];
+                        destinationPixel[1] = sourceColorPointer[1];
+                        destinationPixel[2] = sourceColorPointer[2];
+                        break;
+                    }
+                    case 32: {
+                        BYTE * destinationPixel = destinationPixelBase + 4 * x;
+                        // https://docs.microsoft.com/en-us/windows/desktop/gdi/ternary-raster-operations
+                        // http://www.qnx.com/developers/docs/6.4.1/gf/dev_guide/api/gf_context_set_rop.html
+                        if (rop == ROP_PDSPxax) { // P ^ (D & (S ^ P))
+                            UINT destination = *((UINT *) destinationPixel);
+                            *((UINT *)destinationPixel) = (brushColor ^ (destination & (sourceColor ^ brushColor))) | 0xFF000000;
+                        } else if (rop == ROP_PSDPxax) { // P ^ (S & (D ^ P))
+                            UINT destination = *((UINT *) destinationPixel);
+                            *((UINT *)destinationPixel) = (brushColor ^ (sourceColor & (destination ^ brushColor))) | 0xFF000000;
+                        } else
+                            *((UINT *)destinationPixel) = sourceColor;
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -1736,8 +1888,34 @@ UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq
     }
     return 0;
 }
+HBITMAP CreateBitmap( int nWidth, int nHeight, UINT nPlanes, UINT nBitCount, CONST VOID *lpBits) {
+    PAINT_LOGD("PAINT CreateBitmap()");
+
+    HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+    memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
+    newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
+
+    BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
+    memset(newBitmapInfo, 0, sizeof(BITMAPINFO));
+    //newBitmapInfo->bmiHeader.biBitCount = 32; //TODO should be nBitCount
+    newBitmapInfo->bmiHeader.biBitCount = nBitCount; //TODO should be nBitCount
+    newBitmapInfo->bmiHeader.biClrUsed = 0;
+    newBitmapInfo->bmiHeader.biWidth = nWidth;
+    newBitmapInfo->bmiHeader.biHeight = -nHeight;
+    newBitmapInfo->bmiHeader.biPlanes = (WORD) nPlanes;
+    newHBITMAP->bitmapInfo = newBitmapInfo;
+    newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
+
+    size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
+    size_t size = abs(newBitmapInfo->bmiHeader.biHeight) * stride;
+    newBitmapInfo->bmiHeader.biSizeImage = (DWORD) size;
+    VOID * bitmapBits = malloc(size);
+    memset(bitmapBits, 0, size);
+    newHBITMAP->bitmapBits = bitmapBits;
+    return newHBITMAP;
+}
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
-    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+    PAINT_LOGD("PAINT CreateDIBitmap()");
 
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
@@ -1751,14 +1929,14 @@ HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CO
     size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
     size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
                     newBitmapInfo->bmiHeader.biSizeImage :
-                    newBitmapInfo->bmiHeader.biHeight * stride;
+                  abs(newBitmapInfo->bmiHeader.biHeight) * stride;
     VOID * bitmapBits = malloc(size);
     memcpy(bitmapBits, pjBits, size);
     newHBITMAP->bitmapBits = bitmapBits;
     return newHBITMAP;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
-    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+    PAINT_LOGD("PAINT CreateDIBitmap()");
 
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
@@ -1781,7 +1959,7 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     return newHBITMAP;
 }
 HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
-    PAINT_LOGD("Emu48-PAINT CreateDIBitmap()");
+    PAINT_LOGD("PAINT CreateDIBitmap()");
 
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
@@ -1798,7 +1976,7 @@ HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
     newBitmapInfo->bmiHeader.biBitCount = 32;
 
     size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
-    size_t size = newBitmapInfo->bmiHeader.biHeight * stride;
+    size_t size = abs(newBitmapInfo->bmiHeader.biHeight) * stride;
     newBitmapInfo->bmiHeader.biSizeImage = (DWORD) size;
     newHBITMAP->bitmapBits = malloc(size);
     memset((void *) newHBITMAP->bitmapBits, 0, size);
@@ -1808,9 +1986,90 @@ int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPB
     //TODO
     return 0;
 }
+COLORREF GetPixel(HDC hdc, int x ,int y) {
+    HBITMAP hBitmapSource = hdc->selectedBitmap;
+    void * pixelsSource = (void *) hBitmapSource->bitmapBits;
+
+    BOOL reverseHeight = hBitmapSource->bitmapInfoHeader->biHeight < 0;
+
+    int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+    int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight); // Can be < 0
+
+    int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
+    int sourceStride = 4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32);
+
+    jint ret;
+
+    x -= hdc->windowOriginX;
+    y -= hdc->windowOriginY;
+
+    HPALETTE palette = hdc->realizedPalette;
+    if(!palette)
+        palette = hdc->selectedPalette;
+    PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
+                                 palette->paletteLog->palPalEntry : NULL;
+    if(!palPalEntry && sourceBitCount <= 8 && hBitmapSource->bitmapInfoHeader->biClrUsed > 0) {
+        palPalEntry = (PALETTEENTRY *)hBitmapSource->bitmapInfo->bmiColors;
+    }
+    COLORREF brushColor = 0xFF000000; // 0xAABBGGRR
+    if(hdc->selectedBrushColor) {
+        brushColor = hdc->selectedBrushColor->brushColor;
+    }
+
+    COLORREF resultColor = CLR_INVALID; // 0xAABBGGRR
+
+    if(x >= 0 && y >= 0 && x < sourceWidth && y < sourceHeight) {
+        BYTE * sourcePixel = pixelsSource + sourceStride * y + 4 * x;
+
+        // -> ARGB_8888
+        switch (sourceBitCount) {
+            case 1:
+                //TODO
+                break;
+            case 4: {
+                BYTE colorIndex = (x & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
+                if (palPalEntry) {
+                    resultColor = 0xFF000000 | RGB(palPalEntry[colorIndex].peRed, palPalEntry[colorIndex].peGreen, palPalEntry[colorIndex].peBlue);
+                } else {
+                    resultColor = 0xFF000000 | RGB(colorIndex, colorIndex, colorIndex);
+                }
+                break;
+            }
+            case 8: {
+                BYTE colorIndex = sourcePixel[0];
+                if (palPalEntry) {
+                    resultColor = 0xFF000000 | RGB(palPalEntry[colorIndex].peRed, palPalEntry[colorIndex].peGreen, palPalEntry[colorIndex].peBlue);
+                } else {
+                    resultColor = 0xFF000000 | RGB(sourcePixel[0], sourcePixel[0], sourcePixel[0]);
+                }
+                break;
+            }
+            case 24:
+                resultColor = 0xFF000000 | RGB(sourcePixel[2], sourcePixel[1], sourcePixel[0]);
+                break;
+            case 32:
+                resultColor = 0xFF000000 | RGB(sourcePixel[2], sourcePixel[1], sourcePixel[0]);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return resultColor;
+}
 BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom) {
     //TODO
     return 0;
+}
+BOOL SetRectEmpty(LPRECT lprc) {
+    if(lprc) {
+        lprc->top = 0;
+        lprc->bottom = 0;
+        lprc->left = 0;
+        lprc->right = 0;
+        return TRUE;
+    }
+    return FALSE;
 }
 int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw) {
     //TODO
@@ -1828,14 +2087,16 @@ HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint) {
     if(lpPaint) {
         memset(lpPaint, 0, sizeof(PAINTSTRUCT));
         lpPaint->fErase = TRUE;
-        lpPaint->hdc = hWindowDC;
+        lpPaint->hdc = CreateCompatibleDC(NULL); //hWnd->windowDC);
         lpPaint->rcPaint.right = (short) nBackgroundW;
         lpPaint->rcPaint.bottom = (short) nBackgroundH;
+        return lpPaint->hdc;
     }
-    return hWindowDC;
+    return NULL;
 }
 BOOL EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
-    mainViewUpdateCallback();
+    //mainViewUpdateCallback(); //TODO May be not needed
+    DeleteDC(lpPaint->hdc);
     return 0;
 }
 

@@ -299,11 +299,15 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
     _tcscpy(szRomDirectory, "assets/calculators/");
     _tcscpy(szPort2Filename, "");
 
-    hWindowDC = CreateCompatibleDC(NULL);
-
     // initialization
     QueryPerformanceFrequency(&lFreq);		// init high resolution counter
     QueryPerformanceCounter(&lAppStart);
+
+    hWnd = CreateWindow();
+    //hWindowDC = CreateCompatibleDC(NULL);
+    hWindowDC = GetDC(hWnd);
+
+
 
     szCurrentKml[0] = 0;					// no KML file selected
     SetSpeed(bRealSpeed);					// set speed
@@ -337,8 +341,11 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_start(JNIEnv *env
 
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_stop(JNIEnv *env, jobject thisz) {
 
-    if (hThread) SwitchToState(SM_RETURN);	// exit emulation thread
-  	//ReleaseDC(hWnd, hWindowDC);
+    if (hThread)
+		SwitchToState(SM_RETURN);	// exit emulation thread
+
+    ReleaseDC(hWnd, hWindowDC);
+    DestroyWindow(hWnd);
 	hWindowDC = NULL;						// hWindowDC isn't valid any more
 	hWnd = NULL;
 
@@ -476,6 +483,10 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileNew(JNIEnv 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
 
     if(result) {
+        if(hLcdDC && hLcdDC->selectedBitmap) {
+            hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
+        }
+
         mainViewResizeCallback(nBackgroundW, nBackgroundH);
         draw();
 
@@ -499,8 +510,13 @@ JNIEXPORT jint JNICALL Java_org_emulator_forty_eight_NativeLib_onFileOpen(JNIEnv
     chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
     lastKMLFilename[0] = '\0';
     BOOL result = OpenDocument(szBufferFilename);
-    if (result)
+    if (result) {
+        if(hLcdDC && hLcdDC->selectedBitmap) {
+            hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
+        }
+
         MruAdd(szBufferFilename);
+    }
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
     if(result) {
@@ -852,7 +868,12 @@ JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEn
 
     if (bSucc)
     {
+        if(hLcdDC && hLcdDC->selectedBitmap) {
+            hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
+        }
+
         mainViewResizeCallback(nBackgroundW, nBackgroundH);
+        draw();
         if (Chipset.wRomCrc != wRomCrc)		// ROM changed
         {
             CpuReset();
@@ -868,7 +889,7 @@ JNIEXPORT int JNICALL Java_org_emulator_forty_eight_NativeLib_onViewScript(JNIEn
         SetWindowTitle(NULL);
     }
 //    mainViewResizeCallback(nBackgroundW, nBackgroundH);
-    draw();
+    //draw(); //TODO CRASH
 
     return result;
 }
