@@ -90,6 +90,14 @@
                 android:title="@string/nav_change_kml_script" />
         </menu>
     </item>
+    <item android:title="@string/nav_tool">
+        <menu>
+            <item
+                android:id="@+id/nav_create_ram_card"
+                android:icon="@drawable/ic_memory_black_24dp"
+                android:title="@string/nav_create_ram_card" />
+        </menu>
+    </item>
     <item android:title="@string/nav_help">
         <menu>
             <item

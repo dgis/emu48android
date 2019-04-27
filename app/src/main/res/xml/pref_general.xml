@@ -33,6 +33,14 @@
                 android:title="@string/settings_fill_screen_title"
                 android:defaultValue="false" />
             <SwitchPreference
+                android:key="settings_hide_bar_status"
+                android:title="@string/settings_hide_bar_status"
+                android:defaultValue="false" />
+            <SwitchPreference
+                android:key="settings_hide_bar_nav"
+                android:title="@string/settings_hide_bar_nav"
+                android:defaultValue="false" />
+            <SwitchPreference
                 android:key="settings_allow_sound"
                 android:title="@string/settings_allow_sound_title"
                 android:defaultValue="true" />

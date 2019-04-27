@@ -20,6 +20,7 @@ cmake_minimum_required(VERSION 3.4.1)
 
 #add_compile_options(-DNEW_WIN32_SOUND_ENGINE)
 
+add_compile_options(-DEMUXX=48)
 
 include_directories(src/main/cpp/win32)
 
@@ -72,8 +73,8 @@ add_library( # Sets the name of the library.
 
         src/main/cpp/win32-layer.c
         src/main/cpp/android-layer.c
-        src/main/cpp/android-emu48.c # Emu48.c rewrite
-        src/main/cpp/emu48-jni.c
+        src/main/cpp/android-emu.c # Emu48.c rewrite
+        src/main/cpp/emu-jni.c
 )
 
 # Specifies libraries CMake should link to your target library. You

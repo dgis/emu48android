@@ -10,7 +10,7 @@
 #include <android/bitmap.h>
 #include <android/asset_manager.h>
 #include <android/log.h>
-#define LOG_TAG "NDK_NativeEmu48"
+#define LOG_TAG "NDK_NativeEmuXX"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 

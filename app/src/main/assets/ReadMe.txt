@@ -27,11 +27,23 @@ QUICK START
 NOTES
 
 - When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependency files.
-- By default, in Emu48 for Windows with the HP49/50, the "HKEY_CURRENT_USER\Software\Emu48\ROM[Writeable]=1",
-which allows to write the port2 (128KB) in the ROM! Because in Android, it is not possible to write in the embedded ROM,
-we have the same behavior as under Windows with "HKEY_CURRENT_USER\Software\Emu48\ROM[Writeable]=0".
-The port 2 is well saved in the state file "*.e49", but once this state file is reloaded,
-this causes a warmstart and the port 2 is never loaded.
+- Starting with the version 1.4, a RAM card generator for the port 2 of the HP48SX and HP48GX has been added.
+  Like with the MKSHARED.EXE on Windows, you can generate the card in a file (i.e.: SHARED.BIN).
+  And then, to use with the HP48SX or the HP48GX, you must select this generated file in the "Settings/Port2 File".
+- By default when you create a new HP49/50 with the embedded readonly file "rom.49g",
+  everything that you store in port 2 is lost just because the file "rom.49g" is READONLY.
+  But it works exactly like with Windows. If you can write in the ROM file,
+  it should save the content of port 2 in the ROM file with Android too.
+  To save the port 2 in the HP49/50 with Emu48 for Android:
+  * copy "real50g-lc.kml", "real50g-lc.png", "keyb4950.kmi",  "rom.49g" in a FOLDER of your Android device,
+  * in the menu:
+   - touch "New..." to create a new device
+   - or touch "Change KML Script..." to change the current KML script and ROM location
+  * select "[Custom KML script...]"
+  * select the FOLDER
+  * pick the calculator (which should be "Eric's Real 50g (Large Cropped)")!
+  And because, the file "FOLDER/rom.49g" is not readonly anymore, you can save your port 2.
+
 
 NOT WORKING YET
 
@@ -46,6 +58,9 @@ CHANGES
 
 Version 1.4 (2019-04-xx)
 
+- Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
+- Add the possibility to hide the status and/or the navigation bars.
+- Update the Win32 layer.
 - Fix the authentic speed issue at the first start.
 - Fix the non working Restore/Delete backup.
 

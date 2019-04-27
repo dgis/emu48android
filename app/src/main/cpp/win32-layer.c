@@ -14,7 +14,6 @@ extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
 extern AndroidBitmapInfo androidBitmapInfo;
 
-
 HANDLE hWnd;
 LPTSTR szTitle;
 LPTSTR szCurrentAssetDirectory = NULL;
@@ -94,12 +93,14 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 {
     FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
     BOOL forceNormalFile = FALSE;
-//    if(_tcscmp(lpFileName, szPort2Filename) == 0) {
-//        // Special case for Port2 filename
-//        forceNormalFile = TRUE;
-//        if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
-//            return (HANDLE) INVALID_HANDLE_VALUE;
-//    }
+#if EMUXX == 48
+    if(_tcscmp(lpFileName, szPort2Filename) == 0) {
+        // Special case for Port2 filename
+        forceNormalFile = TRUE;
+        if(!settingsPort2wr && (dwDesiredAccess & GENERIC_WRITE))
+            return (HANDLE) INVALID_HANDLE_VALUE;
+    }
+#endif
 
     TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
 
@@ -117,7 +118,9 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 if(filename) {
                     *filename = _T('\0');
                 }
-                //_tcscpy(szRomDirectory, szEmuDirectory);
+#if EMUXX == 48
+                _tcscpy(szRomDirectory, szEmuDirectory);
+#endif
                 SetCurrentDirectory(szEmuDirectory);
             } else if(foundDocumentScheme) {
                 // With a recorded "document:" scheme, extract the folder URL with content:// scheme
@@ -126,11 +129,15 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 if(filename) {
                     *filename = _T('\0');
                 }
-                //_tcscpy(szRomDirectory, szEmuDirectory);
+#if EMUXX == 48
+                _tcscpy(szRomDirectory, szEmuDirectory);
+#endif
                 SetCurrentDirectory(szEmuDirectory);
             } else {
                 _tcscpy(szEmuDirectory, "assets/calculators/");
-                //_tcscpy(szRomDirectory, "assets/calculators/");
+#if EMUXX == 48
+                _tcscpy(szRomDirectory, "assets/calculators/");
+#endif
                 SetCurrentDirectory(szEmuDirectory);
             }
         }
@@ -902,6 +909,9 @@ void onPlayerDoneTimerCallback(void *context) {
     WAVE_OUT_LOGD("waveOut onPlayerDoneTimerCallback()");
     HWAVEOUT hwo = context;
     onPlayerDone(hwo);
+
+    //TODO May be needed if an attached occurs in the future
+    //jniDetachCurrentThread();
 }
 
 #endif
@@ -2151,6 +2161,8 @@ void timerCallback(int timerId) {
             TIMER_LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
             deleteTimeEvent((UINT) (timerId + 1));
         }
+
+        jniDetachCurrentThread();
     }
 }
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {

@@ -12,4 +12,14 @@
         <!--<item>2</item>-->
     </string-array>
 
+    <string-array name="ram_cards">
+        <item>32kb (1 port: 2)</item>
+        <item>128kb (1 port: 2)</item>
+        <item>256kb (2 ports: 2,3)</item>
+        <item>512kb (4 ports: 2 through 5)</item>
+        <item>1mb (8 ports: 2 through 9)</item>
+        <item>2mb (16 ports: 2 through 17)</item>
+        <item>4mb (32 ports: 2 through 33)</item>
+    </string-array>
+
 </resources>
