@@ -60,7 +60,7 @@ Version 1.4 (2019-04-xx)
 
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
 - Add the possibility to hide the status and/or the navigation bars.
-- Update the Win32 layer.
+- Update the Win32 layer from Emu42 dev.
 - Fix the authentic speed issue at the first start.
 - Fix the non working Restore/Delete backup.
 

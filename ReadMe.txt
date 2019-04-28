@@ -60,7 +60,7 @@ Version 1.4 (2019-04-xx)
 
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
 - Add the possibility to hide the status and/or the navigation bars.
-- Update the Win32 layer.
+- Update the Win32 layer from Emu42 dev.
 - Fix the authentic speed issue at the first start.
 - Fix the non working Restore/Delete backup.
 
@@ -130,7 +130,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
-- Allow to generate empty memory card in the port 2 for 48SX/GX
+- The clock seems unsynchronized sometimes
 - Sometimes the "busy" annunciator gets stuck
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)
 - Add a separation between the pixels (Suggestion from Jaime Meza)
