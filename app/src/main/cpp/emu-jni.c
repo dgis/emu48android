@@ -18,6 +18,7 @@ static jobject viewToUpdate = NULL;
 static jobject mainActivity = NULL;
 jobject bitmapMainScreen;
 AndroidBitmapInfo androidBitmapInfo;
+enum DialogBoxMode currentDialogBoxMode;
 enum ChooseKmlMode  chooseCurrentKmlMode;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
@@ -905,6 +906,9 @@ JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupSave(JNIE
 JNIEXPORT void JNICALL Java_org_emulator_forty_eight_NativeLib_onBackupRestore(JNIEnv *env, jobject thisz) {
     SwitchToState(SM_INVALID);
     RestoreBackup();
+    if(hLcdDC && hLcdDC->selectedBitmap) {
+        hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
+    }
     if (pbyRom) SwitchToState(SM_RUN);
 }
 

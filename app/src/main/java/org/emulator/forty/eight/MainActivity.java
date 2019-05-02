@@ -781,11 +781,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             kmlScriptsForCurrentModel = kmlScripts;
 
         final int lastIndex = kmlScriptsForCurrentModel.size();
-        final String[] kmlScriptTitles = new String[lastIndex + 2];
+        final String[] kmlScriptTitles = new String[lastIndex + (lastIndex > 0 ? 2 : 1)];
         for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
             kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
         kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
-        kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
+        if(lastIndex > 0)
+            kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(getResources().getString(R.string.pick_calculator))
                 .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
@@ -798,7 +799,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             // Reset to default KML folder
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putBoolean("settings_kml_default", true);
-                            //editor.putString("settings_kml_folder", url);
                             editor.apply();
                             updateFromPreferences("settings_kml", true);
                             if(changeKML)

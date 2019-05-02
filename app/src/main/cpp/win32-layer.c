@@ -788,7 +788,18 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
 BOOL GetOpenFileName(LPOPENFILENAME openFilename) {
     return FALSE;
 }
+
+TCHAR getSaveObjectFilenameResult[MAX_PATH];
 BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
+    if(openFilename) {
+        if(currentDialogBoxMode == DialogBoxMode_SET_USRPRG32
+           || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42) {
+            openFilename->nMaxFile = MAX_PATH;
+            openFilename->nFileExtension = 1;
+            openFilename->lpstrFile = getSaveObjectFilenameResult;
+            return TRUE;
+        }
+    }
     return FALSE;
 }
 
@@ -797,14 +808,41 @@ HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT f
     return NULL;
 }
 
+
+LPARAM itemData[MAX_ITEMDATA];
+TCHAR *itemString[MAX_ITEMDATA];
+int itemDataCount = 0;
+int selItemDataIndex[MAX_ITEMDATA];
+int selItemDataCount = 0;
+TCHAR labels[MAX_LABEL_SIZE];
+
 LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
+    if(currentDialogBoxMode == DialogBoxMode_GET_USRPRG32
+    || currentDialogBoxMode == DialogBoxMode_GET_USRPRG42
+    || currentDialogBoxMode == DialogBoxMode_SET_USRPRG32
+    || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42) {
+        if (Msg == LB_ADDSTRING && itemDataCount < MAX_ITEMDATA) {
+            itemString[itemDataCount] = (TCHAR *)lParam;
+            return itemDataCount++;
+        } else if (Msg == LB_SETITEMDATA && wParam < MAX_ITEMDATA) {
+            itemData[wParam] = lParam;
+        } else if (Msg == LB_GETITEMDATA && wParam < MAX_ITEMDATA) {
+            return itemData[wParam];
+        } else if (Msg == LB_GETCOUNT) {
+            return itemDataCount;
+        } else if (Msg == LB_GETSELCOUNT) {
+            return selItemDataCount;
+        } else if (Msg == LB_GETSEL && wParam < itemDataCount && wParam < MAX_ITEMDATA) {
+            return selItemDataIndex[wParam];
+        }
+    }
     return NULL;
 }
 BOOL PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
     if(hWnd == 0 && Msg == WM_COMMAND) {
-        int menuCommand = (wParam & 0xffff) - 40000;
+        int menuCommand = (int) ((wParam & 0xffff) - 40000);
         LOGD("Menu Item %d", menuCommand);
         sendMenuItemCommand(menuCommand);
     }
@@ -1714,8 +1752,13 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             brushColor = hdcDest->selectedBrushColor->brushColor;
         }
         COLORREF backgroundColor = 0xFF000000; // 0xAABBGGRR
-        if(hdcDest->isBackgroundColorSet) {
-            brushColor = hdcDest->backgroundColor;
+        if(sourceBitCount > 1 && destinationBitCount == 1 && hdcSrc->isBackgroundColorSet)
+        {
+            backgroundColor = hdcSrc->backgroundColor;
+        }
+        else if(sourceBitCount == 1 && destinationBitCount > 1 && hdcDest->isBackgroundColorSet)
+        {
+            backgroundColor = hdcDest->backgroundColor;
         }
 
         int dst_maxx = xDest + wDest;
@@ -1762,13 +1805,15 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         BYTE * sourcePixel = sourcePixelBase + ((UINT)src_curx >> (UINT)3);
                         UINT bitNumber = (UINT) (src_curx % 8);
                         if(*sourcePixel & ((UINT)1 << bitNumber)) {
-                            sourceColorPointer[0] = 0;
-                            sourceColorPointer[1] = 0;
-                            sourceColorPointer[2] = 0;
-                        } else {
+                            // Monochrome 1=White
                             sourceColorPointer[0] = 255;
                             sourceColorPointer[1] = 255;
                             sourceColorPointer[2] = 255;
+                        } else {
+                            // Monochrome 0=Black
+                            sourceColorPointer[0] = 0;
+                            sourceColorPointer[1] = 0;
+                            sourceColorPointer[2] = 0;
                         }
                         sourceColorPointer[3] = 255;
                         break;
@@ -1833,10 +1878,10 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                         // black pixels on a white background.
                         BYTE * destinationPixel = destinationPixelBase + (x >> 3);
                         UINT bitNumber = x % 8;
-                        if(brushColor == sourceColor) {
-                            *destinationPixel |= (1 << bitNumber);
+                        if(backgroundColor == sourceColor) {
+                            *destinationPixel |= (1 << bitNumber); // 1 White
                         } else {
-                            *destinationPixel &= ~(1 << bitNumber);
+                            *destinationPixel &= ~(1 << bitNumber); // 0 Black
                         }
                         break;
                     }
@@ -2013,6 +2058,12 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
     x -= hdc->windowOriginX;
     y -= hdc->windowOriginY;
 
+    if(!reverseHeight) {
+//        int YY = sourceHeight - y;
+//        y = YY;
+        y = sourceHeight - y;
+    }
+
     HPALETTE palette = hdc->realizedPalette;
     if(!palette)
         palette = hdc->selectedPalette;
@@ -2029,7 +2080,7 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
     COLORREF resultColor = CLR_INVALID; // 0xAABBGGRR
 
     if(x >= 0 && y >= 0 && x < sourceWidth && y < sourceHeight) {
-        BYTE * sourcePixel = pixelsSource + sourceStride * y + 4 * x;
+        BYTE * sourcePixel = pixelsSource + sourceStride * y;
 
         // -> ARGB_8888
         switch (sourceBitCount) {
@@ -2037,6 +2088,7 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
                 //TODO
                 break;
             case 4: {
+                sourcePixel += x >> 2;
                 BYTE colorIndex = (x & 0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> 4);
                 if (palPalEntry) {
                     resultColor = 0xFF000000 | RGB(palPalEntry[colorIndex].peRed, palPalEntry[colorIndex].peGreen, palPalEntry[colorIndex].peBlue);
@@ -2046,6 +2098,7 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
                 break;
             }
             case 8: {
+                sourcePixel += x;
                 BYTE colorIndex = sourcePixel[0];
                 if (palPalEntry) {
                     resultColor = 0xFF000000 | RGB(palPalEntry[colorIndex].peRed, palPalEntry[colorIndex].peGreen, palPalEntry[colorIndex].peBlue);
@@ -2055,9 +2108,11 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
                 break;
             }
             case 24:
+                sourcePixel += 3 * x;
                 resultColor = 0xFF000000 | RGB(sourcePixel[2], sourcePixel[1], sourcePixel[0]);
                 break;
             case 32:
+                sourcePixel += 4 * x;
                 resultColor = 0xFF000000 | RGB(sourcePixel[2], sourcePixel[1], sourcePixel[0]);
                 break;
             default:
@@ -2301,6 +2356,13 @@ UINT IsDlgButtonChecked(HWND hDlg, int nIDButton) {
 }
 BOOL EndDialog(HWND hDlg, INT_PTR nResult) {
     //TODO
+    if(currentDialogBoxMode == DialogBoxMode_GET_USRPRG32
+    || currentDialogBoxMode == DialogBoxMode_GET_USRPRG42
+    || currentDialogBoxMode == DialogBoxMode_SET_USRPRG32
+    || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42) {
+        itemDataCount = 0;
+        selItemDataCount = 0;
+    }
     return 0;
 }
 HANDLE  FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData) {
@@ -2327,6 +2389,9 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     //TODO
     return NULL;
 }
+#ifndef IDD_USERCODE
+    #define IDD_USERCODE 121
+#endif
 INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
     //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
@@ -2344,6 +2409,27 @@ INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndPar
         }
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
+    } else if(lpTemplateName == MAKEINTRESOURCE(IDD_USERCODE)) {
+        if(currentDialogBoxMode == DialogBoxMode_GET_USRPRG32
+        || currentDialogBoxMode == DialogBoxMode_GET_USRPRG42) {
+            itemDataCount = 0;
+            selItemDataCount = 0;
+            lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
+            LPTSTR lpLabel = labels;
+            for(int i = 0; i < itemDataCount; i++) {
+                _tcscpy(lpLabel, itemString[i]);
+                lpLabel += _tcslen(itemString[i]) * sizeof(TCHAR);
+                *lpLabel = 9; // Separator (TAB)
+                lpLabel++;
+            }
+            *lpLabel = 0; // End of string
+            lpDialogFunc(NULL, WM_COMMAND, IDCANCEL, 0);
+        } else if(currentDialogBoxMode == DialogBoxMode_SET_USRPRG32
+        || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42) {
+            itemDataCount = 0;
+            lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
+            lpDialogFunc(NULL, WM_COMMAND, IDOK, 0);
+        }
     }
     return IDOK;
 }

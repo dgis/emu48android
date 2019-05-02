@@ -1231,6 +1231,20 @@ enum ChooseKmlMode {
 	ChooseKmlMode_CHANGE_KML
 };
 extern enum ChooseKmlMode chooseCurrentKmlMode;
+enum DialogBoxMode {
+	DialogBoxMode_UNKNOWN,
+	DialogBoxMode_GET_USRPRG32,
+	DialogBoxMode_SET_USRPRG32,
+	DialogBoxMode_GET_USRPRG42,
+	DialogBoxMode_SET_USRPRG42
+};
+extern enum DialogBoxMode currentDialogBoxMode;
+#define MAX_LABEL_SIZE 5000
+extern TCHAR labels[MAX_LABEL_SIZE];
+#define MAX_ITEMDATA 100
+extern int selItemDataIndex[MAX_ITEMDATA];
+extern int selItemDataCount;
+extern TCHAR getSaveObjectFilenameResult[MAX_PATH];
 BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize);
 void clipboardCopyText(const TCHAR * text);
 const TCHAR * clipboardPasteText();

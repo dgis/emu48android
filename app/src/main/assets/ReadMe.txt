@@ -56,7 +56,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.4 (2019-04-xx)
+Version 1.4 (2019-05-xx)
 
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
 - Add the possibility to hide the status and/or the navigation bars.

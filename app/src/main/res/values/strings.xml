@@ -46,8 +46,8 @@
     <string name="nav_item_help">Help</string>
     <string name="nav_about">About Emu48...</string>
 
-    <string name="load_custom_kml">[Custom KML script...]</string>
-    <string name="load_default_kml">[Default KML script]</string>
+    <string name="load_custom_kml">[Select a Custom KML script folder...]</string>
+    <string name="load_default_kml">[Default KML script folder]</string>
     <string name="pick_calculator">Pick a calculator</string>
 
     <string name="create_ram_card_title">Create RAM Card</string>
