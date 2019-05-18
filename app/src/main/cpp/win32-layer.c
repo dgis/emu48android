@@ -24,6 +24,14 @@ size_t assetsPrefixLength;
 const TCHAR * contentScheme = _T("content://");
 size_t contentSchemeLength;
 const TCHAR * documentScheme = _T("document:");
+
+
+DWORD GetLastError(VOID) {
+    //TODO
+    return NO_ERROR;
+}
+
+
 struct timerEvent {
     BOOL valid;
     int timerId;
@@ -93,6 +101,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 {
     FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
     BOOL forceNormalFile = FALSE;
+    securityExceptionOccured = FALSE;
 #if EMUXX == 48
     if(_tcscmp(lpFileName, szPort2Filename) == 0) {
         // Special case for Port2 filename
@@ -193,8 +202,10 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             // Case of an absolute file with the scheme content://
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
-            if(fd == -1) {
+            if(fd < 0) {
                 FILE_LOGD("CreateFile() openFileFromContentResolver() %d", errno);
+                if(fd == -2)
+                    securityExceptionOccured = TRUE;
             }
         } else if(szCurrentContentDirectory) {
             // Case of a relative file to a folder with the scheme content://
@@ -212,7 +223,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 FILE_LOGD("CreateFile() open() %d", errno);
             }
         }
-        if (fd != -1) {
+        if (fd >= 0) {
             HANDLE handle = malloc(sizeof(struct _HANDLE));
             memset(handle, 0, sizeof(struct _HANDLE));
             handle->handleType = HANDLE_TYPE_FILE;
@@ -1642,6 +1653,12 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
                         destinationPixel[2] = palPalEntry[0].peBlue;
                         destinationPixel[3] = 255;
                         break;
+                    case WHITENESS:
+                        destinationPixel[0] = 255; //palPalEntry[1].peRed;
+                        destinationPixel[1] = 255; //palPalEntry[1].peGreen;
+                        destinationPixel[2] = 255; //palPalEntry[1].peBlue;
+                        destinationPixel[3] = 255;
+                        break;
                     case PATCOPY:
                         // 0xAABBGGRR
                         *((UINT *)destinationPixel) = brushColor;
@@ -1997,8 +2014,11 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
     newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
 
-    BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
-    memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
+    size_t bitmapInfoSize = sizeof(BITMAPINFO);
+    if(pbmi->bmiHeader.biClrUsed > 0)
+        bitmapInfoSize += sizeof(RGBQUAD) * min(pbmi->bmiHeader.biClrUsed, 2^16);
+    BITMAPINFO * newBitmapInfo = malloc(bitmapInfoSize);
+    memcpy(newBitmapInfo, pbmi, bitmapInfoSize);
     newHBITMAP->bitmapInfo = newBitmapInfo;
     newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
 

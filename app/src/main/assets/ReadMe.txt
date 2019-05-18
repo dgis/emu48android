@@ -43,6 +43,7 @@ NOTES
   * select the FOLDER
   * pick the calculator (which should be "Eric's Real 50g (Large Cropped)")!
   And because, the file "FOLDER/rom.49g" is not readonly anymore, you can save your port 2.
+  BUT for the moment, it is saved ONLY when you CLOSE (or change) the state file. Not when you end the application.
 
 
 NOT WORKING YET

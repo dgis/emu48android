@@ -146,8 +146,10 @@ static LRESULT OnLButtonDown(UINT nFlags, WORD x, WORD y)
 	if (nMacroState == MACRO_PLAY) return 0; // playing macro
 	if (nState == SM_RUN) {
 		MouseButtonDownAt(nFlags, x,y);
-		if(MouseIsButton(x,y))
+		if(MouseIsButton(x,y)) {
             performHapticFeedback();
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -180,8 +182,8 @@ void draw() {
     OnPaint(NULL);
 }
 
-void buttonDown(int x, int y) {
-    OnLButtonDown(MK_LBUTTON, x, y);
+BOOL buttonDown(int x, int y) {
+    return OnLButtonDown(MK_LBUTTON, x, y);
 }
 
 void buttonUp(int x, int y) {

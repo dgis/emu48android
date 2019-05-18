@@ -12,6 +12,19 @@
         <!--<item>2</item>-->
     </string-array>
 
+    <string-array name="settings_settings_auto_layout_item">
+        <item>None</item>
+        <item>Auto Rotation (default)</item>
+        <item>Auto Zoom</item>
+        <item>Fill Screen</item>
+    </string-array>
+    <string-array name="settings_settings_auto_layout_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
     <string-array name="ram_cards">
         <item>32kb (1 port: 2)</item>
         <item>128kb (1 port: 2)</item>

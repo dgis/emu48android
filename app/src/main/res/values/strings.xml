@@ -51,8 +51,10 @@
     <string name="pick_calculator">Pick a calculator</string>
 
     <string name="create_ram_card_title">Create RAM Card</string>
-
-
+    <string name="message_open_security">Permission Denied</string>
+    <string name="message_open_security_description">For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!</string>
+    <string name="message_open_security_retry">Please, open again</string>
+    <string name="message_open_security_retry_description">I hope now you could open again the state file.</string>
     <string name="message_state_saved">State saved</string>
     <string name="message_do_you_want_to_save">Do you want to save changes?\n(BACK to cancel)</string>
     <string name="message_yes">Yes</string>
@@ -63,18 +65,23 @@
     <string name="message_press_reset">Are you sure you want to press the Reset Button?</string>
     <string name="message_change_kml">You cannot change the KML script when Emu48 is not running. Use the File, New menu item to create a new calculator.</string>
     <string name="message_kml_script_compilation_result">KML Script Compilation Result</string>
+
     <string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>
     <string name="settings_grayscale_title">Enable Virtual LCD Delay</string>
     <string name="settings_autosave_title">Automatically Save Files</string>
     <string name="settings_objectloadwarning_title">Show Load Object Warning</string>
     <string name="settings_alwaysdisplog_title">Always Show KML Compilation Result</string>
-    <string name="settings_allow_rotation_title">Allow rotation</string>
-    <string name="settings_fill_screen_title">Fill screen</string>
+
+    <string name="settings_category_ui_title">UI</string>
+    <string name="settings_auto_layout_title">Layout</string>
+    <string name="settings_auto_layout_summary">Following the calculator screen ratio and the current device orientation, find the best layout compromise</string>
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
+    <string name="settings_hide_button_menu">Hide the button menu</string>
     <string name="settings_allow_sound_title">Allow sounds</string>
     <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
+
     <string name="settings_category_background_title">Background Color</string>
     <string name="settings_background_kml_color_title">Use KML color</string>
     <string name="settings_background_kml_color_summary">Use default KML transparency color of the background bitmap (if exist)</string>
@@ -82,6 +89,7 @@
     <string name="settings_background_fallback_color_summary">Else if the KML color is not used</string>
     <string name="settings_background_custom_color_title">Custom color</string>
     <string name="settings_background_custom_color_summary">Used when selecting the \'Custom color\' in the \'Other possible colors\'</string>
+
     <string name="settings_category_memory_cards_title">Memory Cards</string>
     <string name="settings_port1en_title">Port 1 is Plugged</string>
     <string name="settings_port1wr_title">Port 1 is Writable</string>
