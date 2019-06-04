@@ -1034,7 +1034,8 @@ extern MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc);
 extern MMRESULT timeBeginPeriod(UINT uPeriod);
 extern MMRESULT timeEndPeriod(UINT uPeriod);
 extern VOID GetLocalTime(LPSYSTEMTIME lpSystemTime);
-extern WORD GetTickCount(VOID);
+extern ULONGLONG GetTickCount64(VOID);
+extern DWORD GetTickCount(VOID);
 
 extern BOOL EnableWindow(HWND hWnd, BOOL bEnable);
 extern HWND GetDlgItem(HWND hDlg, int nIDDlgItem);

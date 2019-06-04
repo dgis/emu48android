@@ -361,22 +361,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Menu menu = navigationView.getMenu();
         boolean isDocumentAvailable = NativeLib.isDocumentAvailable();
         boolean isBackup = NativeLib.isBackup();
-	// disable stack loading items on HP38G, HP39/40G, HP39G+
-//	BOOL bStackEnable = cCurrentRomType!='6' && cCurrentRomType!='A' && cCurrentRomType!='E' && cCurrentRomType!='P';  // CdB for HP: add apples
-//	BOOL bRun         = nState == SM_RUN || nState == SM_SLEEP;
-
-//	UINT uStackEnable = (bRun && bStackEnable) ? MF_ENABLED : MF_GRAYED;
-//	UINT uRun         = bRun                   ? MF_ENABLED : MF_GRAYED;
-//	UINT uBackup      = bBackup                ? MF_ENABLED : MF_GRAYED;
+        int cCurrentRomType = NativeLib.getCurrentModel();
+        //int nState = NativeLib.getState();
+        //boolean bRun          = (nState == 0 /* SM_RUN */ || nState == 3 /* SM_SLEEP */);
+        boolean bStackEnable = cCurrentRomType!='6' && cCurrentRomType!='A' && cCurrentRomType!='E' && cCurrentRomType!='P';  // CdB for HP: add apples
 
         menu.findItem(R.id.nav_save).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_save_as).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_close).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_load_object).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_save_object).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_load_object).setEnabled(isDocumentAvailable && bStackEnable);
+        menu.findItem(R.id.nav_save_object).setEnabled(isDocumentAvailable && bStackEnable);
         menu.findItem(R.id.nav_copy_screen).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_copy_stack).setEnabled(isDocumentAvailable);
-        menu.findItem(R.id.nav_paste_stack).setEnabled(isDocumentAvailable);
+        menu.findItem(R.id.nav_copy_stack).setEnabled(isDocumentAvailable && bStackEnable);
+        menu.findItem(R.id.nav_paste_stack).setEnabled(isDocumentAvailable && bStackEnable);
         menu.findItem(R.id.nav_reset_calculator).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_backup_save).setEnabled(isDocumentAvailable);
         menu.findItem(R.id.nav_backup_restore).setEnabled(isDocumentAvailable && isBackup);
@@ -633,29 +630,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         int model = NativeLib.getCurrentModel();
-        String extension = "e48";
+        String filename = "emu48-state.e48";
         switch (model) {
             case 'S': //HP48SX
+                filename = "emu48-state-48sx.e48";
+                break;
             case 'G': //HP48GX
-                extension = "e48";
+                filename = "emu48-state-48gx.e48";
                 break;
             case '6': //HP38G 64K RAM
             case 'A': //HP38G 32K RAM
-                extension = "e38";
+                filename = "emu48-state.e38";
                 break;
             case 'E': // HP39G/(HP39G+/HP39GS)/HP40G/HP40GS
-                extension = "e39";
+                filename = "emu48-state.e39";
                 break;
             case 'P': // HP39G+/HP39GS
-                extension = "e39";
+                filename = "emu48-state.e39";
                 break;
             case '2': // HP48GII
+                filename = "emu48-state-48gii.e49";
+                break;
             case 'Q': // HP49G+/HP50G
+                filename = "emu48-state-50g.e49";
+                break;
             case 'X': // HP49G
-                extension = "e49";
+                filename = "emu48-state-49g.e49";
                 break;
         }
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-state." + extension);
+        intent.putExtra(Intent.EXTRA_TITLE, filename);
         startActivityForResult(intent, INTENT_GETSAVEFILENAME);
     }
     private void OnFileClose() {
