@@ -59,11 +59,16 @@ CHANGES
 
 Version 1.4 (2019-05-xx)
 
+- Add an optional menu button in the top left corner.
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
 - Add the possibility to hide the status and/or the navigation bars.
+- Rewrite the timers engine (Hoping this fixes the issue with the stuck "busy" annunciator.)
 - Update the Win32 layer from Emu42 dev.
 - Fix the authentic speed issue at the first start.
 - Fix the non working Restore/Delete backup.
+- Prevent to load/save object and copy/paste with HP39/40.
+- Add a volume slider in the settings.
+- Add a rotation option.
 
 
 Version 1.3 (2019-04-04)

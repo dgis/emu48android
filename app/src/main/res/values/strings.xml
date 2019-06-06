@@ -76,10 +76,15 @@
     <string name="settings_category_ui_title">UI</string>
     <string name="settings_auto_layout_title">Layout</string>
     <string name="settings_auto_layout_summary">Following the calculator screen ratio and the current device orientation, find the best layout compromise</string>
+
+    <string name="settings_rotation_title">Rotation</string>
+    <string name="settings_rotation_summary">Allow to rotate, or force Portrait or Landscape orientation</string>
+
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
     <string name="settings_hide_button_menu">Hide the button menu</string>
-    <string name="settings_allow_sound_title">Allow sounds</string>
+    <!--<string name="settings_allow_sound_title">Allow sounds</string>-->
+    <string name="settings_sound_volume_title">Sound Volume</string>
     <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
 
     <string name="settings_category_background_title">Background Color</string>

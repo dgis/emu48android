@@ -840,7 +840,7 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 }
 BOOL PostMessage(HWND handleWindow, UINT Msg, WPARAM wParam, LPARAM lParam) {
     //TODO
-    if(Msg == WM_COMMAND && hWnd == handleWindow) {
+    if(handleWindow == hWnd && Msg == WM_COMMAND) {
         int menuCommand = (int) ((wParam & 0xffff) - 40000);
         LOGD("Menu Item %d", menuCommand);
         sendMenuItemCommand(menuCommand);

@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- General -->
         <PreferenceCategory android:title="@string/settings_category_general_title">
@@ -30,9 +31,18 @@
                 android:title="@string/settings_auto_layout_title"
                 android:dialogTitle="@string/settings_auto_layout_title"
                 android:summary="@string/settings_auto_layout_summary"
-                android:entries="@array/settings_settings_auto_layout_item"
-                android:entryValues="@array/settings_settings_auto_layout_value"
+                android:entries="@array/settings_auto_layout_item"
+                android:entryValues="@array/settings_auto_layout_value"
                 android:defaultValue="1"
+                />
+            <ListPreference
+                android:key="settings_rotation"
+                android:title="@string/settings_rotation_title"
+                android:dialogTitle="@string/settings_rotation_title"
+                android:summary="@string/settings_rotation_summary"
+                android:entries="@array/settings_rotation_item"
+                android:entryValues="@array/settings_rotation_value"
+                android:defaultValue="0"
                 />
             <SwitchPreference
                 android:key="settings_hide_bar_status"
@@ -46,10 +56,17 @@
                 android:key="settings_hide_button_menu"
                 android:title="@string/settings_hide_button_menu"
                 android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_allow_sound"
-                android:title="@string/settings_allow_sound_title"
-                android:defaultValue="true" />
+            <!--<SwitchPreference-->
+                <!--android:key="settings_allow_sound"-->
+                <!--android:title="@string/settings_allow_sound_title"-->
+                <!--android:defaultValue="true" />-->
+            <SeekBarPreference
+                android:key="settings_sound_volume"
+                android:title="@string/settings_sound_volume_title"
+                android:defaultValue="25"
+                android:min="0"
+                android:max="100"
+                app:showSeekBarValue="true" />
             <SwitchPreference
                 android:key="settings_haptic_feedback"
                 android:title="@string/settings_haptic_feedback_title"

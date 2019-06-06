@@ -29,6 +29,7 @@ public class MainScreenView extends PanAndScaleView {
     private int fallbackBackgroundColorType = 0;
     private int statusBarColor = 0;
     private boolean viewSized = false;
+    private int rotationMode = 0;
     private boolean autoRotation = false;
     private boolean autoZoom = false;
 
@@ -251,8 +252,17 @@ public class MainScreenView extends PanAndScaleView {
                         ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     else
                         ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                } else if(autoZoom) {
+                } else {
+
+                    if(rotationMode == 0) // Allow rotation
                     ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                    else if(rotationMode == 1) // Portrait
+                        ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    else if(rotationMode == 2) // Landscape (left or right following the sensor)
+                        ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+
+                    if (autoZoom) {
+                        //((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 if (imageRatio < 1.0f != viewRatio < 1.0f) {
                     // With have different screens orientations, so we automatically zoom
                     float translateX, translateY, scale;
@@ -279,7 +289,8 @@ public class MainScreenView extends PanAndScaleView {
                     return;
                 }
                 } else {
-                    ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                        //((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                    }
                 }
             }
             // Else, the screens orientations are the same, so we set the calculator in fullscreen
@@ -336,6 +347,14 @@ public class MainScreenView extends PanAndScaleView {
 
     public Bitmap getBitmapMainScreen() {
         return bitmapMainScreen;
+    }
+
+    public void setRotationMode(int rotationMode, boolean isDynamic) {
+        this.rotationMode = rotationMode;
+        if(isDynamic) {
+            updateLayout();
+            invalidate();
+        }
     }
 
     public void setAutoLayout(int layoutMode, boolean isDynamic) {

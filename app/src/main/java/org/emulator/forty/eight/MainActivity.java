@@ -993,7 +993,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     OnViewScript();
                                     break;
                                 case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
-
                                     break;
                                 case INTENT_PICK_KML_FOLDER_FOR_SECURITY:
                                     new AlertDialog.Builder(this)
@@ -1331,8 +1330,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
             String[] settingKeys = {
-                    "settings_realspeed", "settings_grayscale", /*"settings_allow_rotation",*/ "settings_auto_layout", //"settings_fill_screen",
-                    "settings_hide_bar", "settings_hide_button_menu", "settings_allow_sound", "settings_haptic_feedback",
+                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout",
+                    "settings_hide_bar", "settings_hide_button_menu", /*"settings_allow_sound",*/ "settings_sound_volume", "settings_haptic_feedback",
                     "settings_background_kml_color", "settings_background_fallback_color",
                     "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
@@ -1347,6 +1346,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     NativeLib.setConfiguration(key, isDynamicValue, sharedPreferences.getBoolean(key, false) ? 1 : 0, 0, null);
                     break;
 
+                case "settings_rotation":
+                    int rotationMode = 0;
+                    try {
+                        rotationMode = Integer.parseInt(sharedPreferences.getString("settings_rotation", "0"));
+                    } catch (NumberFormatException ex) {}
+                    mainScreenView.setRotationMode(rotationMode, isDynamic);
+                    break;
                 case "settings_auto_layout":
                     int autoLayoutMode = 1;
                     try {
@@ -1367,11 +1373,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     imageButtonMenu.setVisibility(sharedPreferences.getBoolean("settings_hide_button_menu", false) ? View.GONE : View.VISIBLE);
                     break;
 
-                case "settings_allow_sound":
-                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue,
-                            sharedPreferences.getBoolean("settings_allow_sound", true) ? 64 : 0, 0, null);
+//                case "settings_allow_sound":
+//                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue,
+//                            sharedPreferences.getBoolean("settings_allow_sound", true) ? 64 : 0, 0, null);
+//                    break;
+                case "settings_sound_volume": {
+                    float volumeOption = sharedPreferences.getInt("settings_sound_volume", 25);
+                    int volumeValue = (int)((volumeOption * 255.0f) / 100.0f);
+                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeValue, 0, null);
                     break;
-
+                }
                 case "settings_haptic_feedback":
                     // Nothing to do
                     break;
