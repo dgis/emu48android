@@ -26,6 +26,7 @@ QUICK START
 
 NOTES
 
+- The Help menu displays Emu48's original help HTML page and may not accurately reflect the behavior of this Android version.
 - When using a custom KML script by selecting a folder, you must take care of the case sensitivity of its dependency files.
 - Starting with the version 1.4, a RAM card generator for the port 2 of the HP48SX and HP48GX has been added.
   Like with the MKSHARED.EXE on Windows, you can generate the card in a file (i.e.: SHARED.BIN).
@@ -123,7 +124,7 @@ Version 1.0 (2019-02-28)
 
 LICENSES
 
-Android version by Régis COSNIER.
+Android version by R�gis COSNIER.
 This program is based on Emu48 for Windows version, copyrighted by Christoph Gießelink & Sébastien Carlier, with the addition of a win32 layer to run on Android.
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.

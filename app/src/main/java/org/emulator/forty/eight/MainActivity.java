@@ -1378,9 +1378,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                            sharedPreferences.getBoolean("settings_allow_sound", true) ? 64 : 0, 0, null);
 //                    break;
                 case "settings_sound_volume": {
-                    float volumeOption = sharedPreferences.getInt("settings_sound_volume", 25);
-                    int volumeValue = (int)((volumeOption * 255.0f) / 100.0f);
-                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeValue, 0, null);
+                    int volumeOption = sharedPreferences.getInt("settings_sound_volume", 64);
+                    NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeOption, 0, null);
                     break;
                 }
                 case "settings_haptic_feedback":

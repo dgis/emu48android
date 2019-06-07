@@ -243,7 +243,7 @@ public class MainScreenView extends PanAndScaleView {
     }
 
     protected void updateLayout() {
-        if(bitmapMainScreen != null) {
+        if(bitmapMainScreen != null && virtualSizeHeight > 1) {
             if (virtualSizeWidth > 0.0f && viewSizeWidth > 0.0f) {
                 float imageRatio = virtualSizeHeight / virtualSizeWidth;
                 float viewRatio = viewSizeHeight / viewSizeWidth;

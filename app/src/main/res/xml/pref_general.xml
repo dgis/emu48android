@@ -63,9 +63,9 @@
             <SeekBarPreference
                 android:key="settings_sound_volume"
                 android:title="@string/settings_sound_volume_title"
-                android:defaultValue="25"
+                android:defaultValue="64"
                 android:min="0"
-                android:max="100"
+                android:max="255"
                 app:showSeekBarValue="true" />
             <SwitchPreference
                 android:key="settings_haptic_feedback"
