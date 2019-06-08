@@ -4,7 +4,7 @@ WARNING: WITH VERSION 1.3, THE STATUS FILE HAS BEEN MODIFIED AND IS NOW FULLY CO
 HOWEVER, BEFORE THE UPDATE, BACK UP YOUR DATA BECAUSE YOU COULD LOSE THEM.
 
 This project ports the Windows application Emu48 written in C to Android.
-It uses the Android NDK. The former Emu48 source code remains untouched because of a thin win32 emulation layer above Linux/NDK!
+It uses the Android NDK. The former Emu48 source code (written by Sébastien Carlier and Christoph Giesselink) remains untouched because of a thin win32 emulation layer above Linux/NDK!
 This win32 layer will allow to easily update from the original Emu48 source code.
 It can open or save the exact same state files (state.e48/e49) than the original Windows application!
 
@@ -20,7 +20,7 @@ QUICK START
 
 1. From the left side, slide your finger to open the menu.
 2. Touch the "New..." menu item.
-3. Select a predefined faceplate (or select a custom KML script folder).
+3. Select a predefined faceplate (or select a custom KML script folder with Android >= 5.0).
 4. And the calculator should now be opened.
 
 
@@ -58,7 +58,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.4 (2019-05-xx)
+Version 1.4 (2019-06-08)
 
 - Add an optional menu button in the top left corner.
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
@@ -70,6 +70,7 @@ Version 1.4 (2019-05-xx)
 - Prevent to load/save object and copy/paste with HP39/40.
 - Add a volume slider in the settings.
 - Add a rotation option.
+- Warn the user about the KML folder selection if this is Android < 5.0
 
 
 Version 1.3 (2019-04-04)
@@ -124,7 +125,7 @@ Version 1.0 (2019-02-28)
 
 LICENSES
 
-Android version by R�gis COSNIER.
+Android version by Régis COSNIER.
 This program is based on Emu48 for Windows version, copyrighted by Christoph Gießelink & Sébastien Carlier, with the addition of a win32 layer to run on Android.
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.

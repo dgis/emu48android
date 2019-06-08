@@ -58,7 +58,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.4 (2019-06-xx)
+Version 1.4 (2019-06-08)
 
 - Add an optional menu button in the top left corner.
 - Add a RAM card generator for the port 2 of the HP48SX and HP48GX.
@@ -70,6 +70,7 @@ Version 1.4 (2019-06-xx)
 - Prevent to load/save object and copy/paste with HP39/40.
 - Add a volume slider in the settings.
 - Add a rotation option.
+- Warn the user about the KML folder selection if this is Android < 5.0
 
 
 Version 1.3 (2019-04-04)
@@ -137,8 +138,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
-- Warn the user about the KML folder selection if this is Android < 5.0
-- Disable the Restore after loading a new state file.
 - Improve the swipe gesture.
 - The clock seems unsynchronized sometimes
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?)

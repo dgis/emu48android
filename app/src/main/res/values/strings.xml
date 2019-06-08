@@ -65,6 +65,8 @@
     <string name="message_press_reset">Are you sure you want to press the Reset Button?</string>
     <string name="message_change_kml">You cannot change the KML script when Emu48 is not running. Use the File, New menu item to create a new calculator.</string>
     <string name="message_kml_script_compilation_result">KML Script Compilation Result</string>
+    <string name="message_kml_folder_selection_need_api_lollipop">Need Android 5.0</string>
+    <string name="message_kml_folder_selection_need_api_lollipop_description">To select the KML folder, you need at least Android version 5.0</string>
 
     <string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>
