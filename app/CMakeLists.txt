@@ -61,7 +61,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/core/mru.c
         src/main/cpp/core/opcodes.c
         src/main/cpp/core/pch.c
-#        src/main/cpp/core/redeye.c
+        src/main/cpp/core/redeye.c
         src/main/cpp/core/rpl.c
 #        src/main/cpp/core/serial.c
         src/main/cpp/core/settings.c

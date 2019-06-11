@@ -1,10 +1,6 @@
 #include "core/pch.h"
 #include "core/Emu48.h"
 
-// Redeye.c
-VOID IrPrinter(BYTE c) {
-}
-
 // Serial.c
 BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort) {
     return 0;
@@ -32,6 +28,9 @@ VOID ResetUdp(VOID) {
 }
 
 BOOL SendByteUdp(BYTE byData) {
+
+    LOGD("SendByteUdp(%d -> 0x%02x -> '%c')", byData, byData, byData);
+
     return FALSE;
 }
 
