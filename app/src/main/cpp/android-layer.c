@@ -28,9 +28,7 @@ VOID ResetUdp(VOID) {
 }
 
 BOOL SendByteUdp(BYTE byData) {
-
-    LOGD("SendByteUdp(%d -> 0x%02x -> '%c')", byData, byData, byData);
-
+    sendByteUdp(byData);
     return FALSE;
 }
 

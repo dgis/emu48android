@@ -40,6 +40,7 @@
     <string name="nav_delete_backup">Delete Backup</string>
     <string name="nav_view">View</string>
     <string name="nav_change_kml_script">Change KML Script...</string>
+    <string name="nav_show_printer">Show the Printer Simulator...</string>
     <string name="nav_tool">Tool</string>
     <string name="nav_create_ram_card">Create RAM Card...</string>
     <string name="nav_help">Help</string>
@@ -67,6 +68,7 @@
     <string name="message_kml_script_compilation_result">KML Script Compilation Result</string>
     <string name="message_kml_folder_selection_need_api_lollipop">Need Android 5.0</string>
     <string name="message_kml_folder_selection_need_api_lollipop_description">To select the KML folder, you need at least Android version 5.0</string>
+    <string name="message_printer">Printer Simulator</string>
 
     <string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>

@@ -141,7 +141,7 @@
             <!--"Device",IDC_STATIC,13,42,24,8-->
             <!--COMBOBOX        IDC_SOUND_DEVICE,44,40,193,87,CBS_DROPDOWNLIST |-->
         <!--</PreferenceCategory>-->
-        <!--<PreferenceCategory app:title="Infrared Printer">
+        <!--<PreferenceCategory app:title="Infrared PrinterSimulator">
             "IP Address:",IDC_STATIC
             "Port:",IDC_STATIC
             IDC_IR_ADDR

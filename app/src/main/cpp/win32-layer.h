@@ -1255,5 +1255,6 @@ BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size
 void clipboardCopyText(const TCHAR * text);
 const TCHAR * clipboardPasteText();
 void performHapticFeedback();
+void sendByteUdp(unsigned char byteSent);
 
 typedef int SOCKET;

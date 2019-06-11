@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     };
 
+    private PrinterSimulator printer = new PrinterSimulator();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -325,6 +327,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             OnBackupDelete();
         } else if (id == R.id.nav_change_kml_script) {
             OnViewScript();
+        } else if (id == R.id.nav_show_printer) {
+            OnViewPrinter();
         } else if (id == R.id.nav_create_ram_card) {
             OnCreateRAMCard();
         } else if (id == R.id.nav_help) {
@@ -781,6 +785,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         showKMLPicker(true);
+    }
+
+    private void OnViewPrinter() {
+        String printerText = printer.getText();
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.message_printer))
+                .setMessage(printerText)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                }).show();
     }
 
     private void showKMLPicker(final boolean changeKML) {
@@ -1325,6 +1340,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     void performHapticFeedback() {
         if(sharedPreferences.getBoolean("settings_haptic_feedback", true))
             mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+    }
+
+    void sendByteUdp(int byteSent) {
+        printer.write(byteSent);
     }
 
     private void setPort1Settings(boolean port1Plugged, boolean port1Writable) {
