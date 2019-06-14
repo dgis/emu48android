@@ -230,7 +230,7 @@ public class PrinterSimulator {
         } while (false);
     }
 
-    String getText() {
+    public String getText() {
         return m_Text.toString();
     }
 
@@ -238,6 +238,9 @@ public class PrinterSimulator {
 
     private final Bitmap mBitmap;
 
+    public Bitmap getImage() {
+        return mBitmap;
+    }
 
     private final int MAXPRTLINES		= 32768;				// maximum printable lines (out of paper)
 //    private final int SCROLL_HEIGHT     = 1;					// no. of pixel rows to scroll
