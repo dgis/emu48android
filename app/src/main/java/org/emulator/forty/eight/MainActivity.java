@@ -101,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     };
 
     private PrinterSimulator printer = new PrinterSimulator();
+    private PrinterSimulatorFragment fragmentPrinterSimulator = new PrinterSimulatorFragment();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateNavigationDrawerItems();
 
 
+        fragmentPrinterSimulator.setPrinter(printer);
 
 
         //android.os.Debug.waitForDebugger();
@@ -788,14 +791,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnViewPrinter() {
-        String printerText = printer.getText();
-        new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.message_printer))
-                .setMessage(printerText)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                }).show();
+        fragmentPrinterSimulator.show(getSupportFragmentManager(), "Hello Fragment");
+
+//        String printerText = printer.getText();
+//        new AlertDialog.Builder(this)
+//                .setTitle(getString(R.string.message_printer))
+//                .setMessage(printerText)
+//                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                    }
+//                }).show();
     }
 
     private void showKMLPicker(final boolean changeKML) {
