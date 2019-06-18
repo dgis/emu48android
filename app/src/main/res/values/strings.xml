@@ -51,6 +51,12 @@
     <string name="load_default_kml">[Default KML script folder]</string>
     <string name="pick_calculator">Pick a calculator</string>
 
+    <string name="dialog_printer_simulator_title">Printer Simulator</string>
+    <string name="tab_printer_textual">Text</string>
+    <string name="tab_printer_graphical">Graphic</string>
+    <string name="menu_printer_simulator_share_text">Share Text</string>
+    <string name="menu_printer_simulator_share_graphic">Share Graphic</string>
+
     <string name="create_ram_card_title">Create RAM Card</string>
     <string name="message_open_security">Permission Denied</string>
     <string name="message_open_security_description">For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!</string>
@@ -69,6 +75,8 @@
     <string name="message_kml_folder_selection_need_api_lollipop">Need Android 5.0</string>
     <string name="message_kml_folder_selection_need_api_lollipop_description">To select the KML folder, you need at least Android version 5.0</string>
     <string name="message_printer">Printer Simulator</string>
+    <string name="message_printer_share_text">Save printer paper as text</string>
+    <string name="message_printer_share_graphic">Save printer paper as image</string>
 
     <string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>

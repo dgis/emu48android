@@ -49,6 +49,7 @@ public class PanAndScaleView extends SurfaceView {
     protected boolean showCursor = false;
     protected PointF cursorLocation = new PointF(0f, 0f);
 	protected boolean showScaleThumbnail = false;
+	protected int scaleThumbnailColor = Color.WHITE;
 	protected boolean allowDoubleTapZoom = true;
 	protected boolean fillBounds = false;
 
@@ -625,7 +626,7 @@ public class PanAndScaleView extends SurfaceView {
 		//&& (viewScaleFactorX > scaleFactorMin || virtualSizeWidth > viewSizeWidth || virtualSizeHeight > viewSizeHeight)
 		) {
 			// Draw the scale thumbnail
-			paint.setColor(Color.WHITE);
+			paint.setColor(scaleThumbnailColor);
 			
 			float scale = 0.2f;
 			if(virtualSizeWidth > virtualSizeHeight)

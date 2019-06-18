@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateNavigationDrawerItems();
 
 
-        fragmentPrinterSimulator.setPrinter(printer);
+        fragmentPrinterSimulator.setPrinterSimulator(printer);
 
 
         //android.os.Debug.waitForDebugger();
@@ -818,12 +818,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else
             kmlScriptsForCurrentModel = kmlScripts;
 
+        boolean hasEmbeddedKMLs = getPackageName().contains("org.emulator.forty.eight");
         final int lastIndex = kmlScriptsForCurrentModel.size();
-        final String[] kmlScriptTitles = new String[lastIndex + (lastIndex > 0 ? 2 : 1)];
+        final String[] kmlScriptTitles = new String[lastIndex + (hasEmbeddedKMLs ? 2 : 1)];
         for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
             kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
         kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
-        if(lastIndex > 0)
+        if(hasEmbeddedKMLs)
             kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(getResources().getString(R.string.pick_calculator))

@@ -15,14 +15,22 @@
 package org.emulator.forty.eight;
 
 import android.graphics.Bitmap;
+import android.opengl.GLES10;
+import android.util.Log;
 
 import java.util.ArrayList;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
 
 /*
  * Based on the free HP82240B Printer Simulator by Christoph Giesselink
  */
 public class PrinterSimulator {
 
+    private static final String TAG = "PrinterSimulator";
     private ArrayList<Integer> data = new ArrayList<>();
     private StringBuilder m_Text = new StringBuilder();
 
@@ -44,9 +52,48 @@ public class PrinterSimulator {
     public PrinterSimulator() {
         m_ePrinterModel = PM_HP82240B;			// HP82240B printer
 
-        mBitmap = Bitmap.createBitmap(LINE_WIDTH, MAXPRTLINES*LINE_HEIGHT, Bitmap.Config.ALPHA_8);
+        int maxBitmapHeight = 2048;
+        try {
+            maxBitmapHeight = getMaximumTextureSize();
+        } catch(Exception ex) {
+            Log.d(TAG, "Cannot get the MaximumTextureSize (Set default to 2048). Error: " + ex.getMessage());
+        }
+
+        maxBitmapHeight = Math.max(maxBitmapHeight, 8192); //32768);
+        MAXPRTLINES = maxBitmapHeight / LINE_HEIGHT;
+        mBitmap = Bitmap.createBitmap(LINE_WIDTH, MAXPRTLINES*LINE_HEIGHT, Bitmap.Config.ALPHA_8); //ARGB_8888); //ALPHA_8);
+        mBitmap.eraseColor(0xFFFFFFFF);
 
         reset();								// reset printer state machine
+
+//        for (int i = 32; i < 256; i++) {
+//            if(i % 16 == 0) {
+//                addTextData(10);
+//                addGraphData(10, false);
+//            }
+//            addTextData(i);
+//            addGraphData(i, false);
+//        }
+    }
+
+    /**
+     * Interface definition for a callback to be invoked when the printer just has print something.
+     */
+    public interface OnPrinterUpdateListener {
+        /**
+         * Called when the printer just has print something.
+         */
+        void onPrinterUpdate();
+    }
+
+    private OnPrinterUpdateListener onPrinterUpdateListener;
+
+    /**
+     * Register a callback to be invoked when this view is tapped down.
+     * @param onPrinterUpdateListener The callback that will run
+     */
+    public void setOnPrinterUpdateListener(OnPrinterUpdateListener onPrinterUpdateListener) {
+        this.onPrinterUpdateListener = onPrinterUpdateListener;
     }
 
     //
@@ -157,6 +204,9 @@ public class PrinterSimulator {
                 --m_byGraphLength;				// graphic character printed
             }
         } while (false);
+
+        if(this.onPrinterUpdateListener != null)
+            this.onPrinterUpdateListener.onPrinterUpdate();
     }
 
     // Text Printer
@@ -242,15 +292,16 @@ public class PrinterSimulator {
         return mBitmap;
     }
 
-    private final int MAXPRTLINES		= 32768;				// maximum printable lines (out of paper)
-//    private final int SCROLL_HEIGHT     = 1;					// no. of pixel rows to scroll
+    public int getPaperHeight() {
+        return m_nCurRow + 1;
+    }
+
+    private int MAXPRTLINES		= 500; //32768;				// maximum printable lines (out of paper)
     private final int LINE_WIDTH		= 166;
     private final int LINE_HEIGHT		= 8;
 
     int    m_nCurCol;						// current column in bitmap
     int    m_nCurRow;						// current row in bitmap
-
-//    int    m_nBytesPerLine;					// bytes in the DIB row
 
     boolean   m_bPrinter82240A;				// HP82240A ROMAN8 font only
 
@@ -273,7 +324,7 @@ public class PrinterSimulator {
             if ((byData & 0x1) == 0x1)			// bit set?
             {
                 //m_pbyPrt[nPos] |= nMask;		// set bit in bitmap
-                mBitmap.setPixel(m_nCurCol, m_nCurRow + i, 1);
+                mBitmap.setPixel(m_nCurCol, m_nCurRow + i, 0x00000000);
             }
 //            nPos += m_nBytesPerLine;			// next line
             byData >>= 1;						// next data bit
@@ -1059,4 +1110,50 @@ public class PrinterSimulator {
         { 0x00, 0xFE, 0x24, 0x24, 0x18 },		// 254
         { 0x18, 0xA1, 0xA0, 0xA1, 0x78 }		// 255
     };
+
+
+
+    // Misc
+
+    // https://community.khronos.org/t/get-maximum-texture-size/67795
+    public int getMaximumTextureSize() {
+        EGL10 egl = (EGL10) EGLContext.getEGL();
+        EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+
+        // Initialise
+        int[] version = new int[2];
+        egl.eglInitialize(display, version);
+
+        // Query total number of configurations
+        int[] totalConfigurations = new int[1];
+        egl.eglGetConfigs(display, null, 0, totalConfigurations);
+
+        // Query actual list configurations
+        EGLConfig[] configurationsList = new EGLConfig[totalConfigurations[0]];
+        egl.eglGetConfigs(display, configurationsList, totalConfigurations[0], totalConfigurations);
+
+        int[] textureSize = new int[1];
+        int maximumTextureSize = 0;
+
+        // Iterate through all the configurations to located the maximum texture size
+        for (int i = 0; i < totalConfigurations[0]; i++)
+        {
+            // Only need to check for width since opengl textures are always squared
+            egl.eglGetConfigAttrib(display, configurationsList[i], EGL10.EGL_MAX_PBUFFER_WIDTH, textureSize);
+
+            // Keep track of the maximum texture size
+            if (maximumTextureSize < textureSize[0])
+            {
+                maximumTextureSize = textureSize[0];
+            }
+
+            Log.i("GLHelper", Integer.toString(textureSize[0]));
+        }
+
+        // Release
+        egl.eglTerminate(display);
+        Log.i("GLHelper", "Maximum GL texture size: " + Integer.toString(maximumTextureSize));
+
+        return maximumTextureSize;
+    }
 }

@@ -58,6 +58,11 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.5 (2019-06-xx)
+
+- Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
+
+
 Version 1.4 (2019-06-08)
 
 - Add an optional menu button in the top left corner.
