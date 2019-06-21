@@ -240,7 +240,7 @@ const TCHAR * clipboardPasteText() {
                 for (int i = 0; i <= length; ++i)
                     pasteText[i] = strReturn[i] & 0xFF;
                 pasteText[length] = 0;
-                (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
+                (*jniEnv)->ReleaseStringChars(jniEnv, result, strReturn);
                 return pasteText;
             }
         }

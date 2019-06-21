@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/menu_printer_simulator_share_text"
-        android:icon="@drawable/ic_menu_share_text"
-        android:title="@string/menu_printer_simulator_share_text"
-        app:showAsAction="ifRoom|withText" />
+        android:icon="@drawable/ic_menu_share"
+        android:title="@string/menu_printer_simulator_share_text" />
 
     <item
         android:id="@+id/menu_printer_simulator_share_graphic"
-        android:icon="@drawable/ic_menu_share_graphic"
-        android:title="@string/menu_printer_simulator_share_graphic"
-        app:showAsAction="ifRoom|withText" />
+        android:icon="@drawable/ic_menu_share"
+        android:title="@string/menu_printer_simulator_share_graphic" />
 
     <item
         android:id="@+id/menu_printer_simulator_change_paper"

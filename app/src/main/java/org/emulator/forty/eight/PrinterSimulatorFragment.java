@@ -24,6 +24,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDialogFragment;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -60,6 +61,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 
         //setStyle(STYLE_NO_FRAME, android.R.style.Theme_Holo_Light);
         //setStyle(STYLE_NO_FRAME, 0);
+        //setStyle(STYLE_NO_TITLE, android.R.style.Theme_Material_Light_Dialog_Alert); //Theme_Holo_Light);
         setStyle(STYLE_NO_TITLE, android.R.style.Theme_Holo_Light);
         //setStyle(STYLE_NO_TITLE, 0);
     }
@@ -85,6 +87,8 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         String title = getString(R.string.dialog_printer_simulator_title);
+        if(printerSimulator != null)
+            title = printerSimulator.getTitle();
         getDialog().setTitle(title);
 
 
@@ -95,6 +99,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 
         toolbar = view.findViewById(R.id.my_toolbar);
         toolbar.setTitle(title);
+        toolbar.setOverflowIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_more_vert_white_24dp));
         //toolbar.setLogo(R.drawable.ic_launcher);
         toolbar.setNavigationIcon(R.drawable.ic_keyboard_backspace_white_24dp);
         toolbar.setNavigationOnClickListener(
@@ -146,7 +151,10 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                         e.printStackTrace();
                         ((MainActivity)getActivity()).showAlert(e.getMessage());
                     }
-
+                } else if(item.getItemId() == R.id.menu_printer_simulator_change_paper) {
+                    printerSimulator.changePaper();
+                    printerGraphView.updatePaper();
+                    updatePaper();
                 }
                 return true;
             }
@@ -175,91 +183,6 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                     case 0: {
                         ViewGroup layoutPagePrinterText = container.findViewById(R.id.page_printer_text);
                         textViewPrinterText = container.findViewById(R.id.printer_text);
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                            textViewPrinterText.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-//                                @Override
-//                                public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-//                                    int virtualHeight = -1;
-//                                    final Layout layout = textViewPrinterText.getLayout();
-//                                    if(layout != null) {
-//                                        virtualHeight = layout.getLineTop(textViewPrinterText.getLineCount());
-//                                    }
-//
-//                                    Log.d(TAG, "onScrollChange() getScrollY: " + textViewPrinterText.getScrollY() + ", getHeight: " + textViewPrinterText.getHeight() + ", virtualHeight: " + virtualHeight);
-//
-//                                }
-//                            });
-//                        }
-
-//                        if(textViewPrinterText != null) {
-//                            textViewPrinterText.setTextIsSelectable(true);
-//                            final Context context = getActivity();
-//
-////                            final ColorStateList colors = textViewPrinterText.getTextColors();
-////                            textViewPrinterText.setTextColor(colors.withAlpha(255));
-//
-//                            textViewPrinterText.setHorizontallyScrolling(true);
-//
-//                            // http://stackoverflow.com/a/34316896
-//                            final Scroller scroller = new Scroller(context);
-//                            textViewPrinterText.setMovementMethod(new ScrollingMovementMethod());
-//                            textViewPrinterText.setScroller(scroller);
-//                            //final Layout textViewResultLayout = textViewPrinterText.getLayout();
-//                            textViewPrinterText.setOnTouchListener(new View.OnTouchListener() {
-//
-//                                // Could make this a field member on your activity
-//                                GestureDetector gesture = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-//                                    @Override
-//                                    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-//
-//                                        Layout textViewResultLayout = textViewPrinterText.getLayout();
-//                                        if(textViewResultLayout != null) {
-//                                            int scrollWidth = (int) textViewResultLayout.getLineWidth(0);
-//                                            int maxX = scrollWidth - textViewPrinterText.getWidth();
-//                                            int scrollHeight = textViewResultLayout.getHeight();
-//                                            //int scrollHeight = textViewPrinterText.getLineCount() * textViewPrinterText.getLineHeight();
-//                                            int maxY = scrollHeight - textViewPrinterText.getHeight();
-//                                            scroller.fling(
-//                                                    textViewPrinterText.getScrollX(), textViewPrinterText.getScrollY(), // int startX, int startY
-//                                                    (int) -velocityX, (int) -velocityY, // int velocityX, int velocityY,
-//                                                    0, maxX, // int minX, int maxX
-//                                                    0, maxY // int minY, int maxY
-//                                            );
-//                                        }
-//
-//                                        return super.onFling(e1, e2, velocityX, velocityY);
-//                                    }
-//
-//                                });
-//
-//                                @Override
-//                                public boolean onTouch(View v, MotionEvent event) {
-//                                    gesture.onTouchEvent(event);
-//                                    return false;
-//                                }
-//
-//                            });
-//                            textViewPrinterText.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-//                                @Override
-//                                public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-//                                    Layout textViewResultLayout = textViewPrinterText.getLayout();
-//                                    if(textViewResultLayout != null) {
-//                                        int scrollWidth = (int) textViewResultLayout.getLineWidth(0);
-//                                        int maxX = Math.max(0, scrollWidth - textViewPrinterText.getWidth());
-//                                        int scrollHeight = textViewResultLayout.getHeight();
-//                                        //int scrollHeight = textViewPrinterText.getLineCount() * textViewPrinterText.getLineHeight();
-//                                        int maxY = Math.max(0, scrollHeight - textViewPrinterText.getHeight());
-//
-//                                        int scrollX = textViewPrinterText.getScrollX();
-//                                        if(scrollX > maxX)
-//                                            textViewPrinterText.setScrollX(maxX);
-//                                        int scrollY = textViewPrinterText.getScrollY();
-//                                        if(scrollY > maxY)
-//                                            textViewPrinterText.setScrollY(maxY);
-//                                    }
-//                                }
-//                            });
-//                        }
                         addToPrinterText(printerSimulator.getText());
                         return layoutPagePrinterText;
                     }
@@ -348,16 +271,19 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
     Runnable onPrinterUpdate = new Runnable() {
         @Override
         public void run() {
-            if(textViewPrinterText != null) {
-                addToPrinterText(printerSimulator.getText());
-            }
-            if(printerGraphView != null) {
-                printerGraphView.setVirtualSize(printerSimulator.getImage().getWidth(), printerSimulator.getPaperHeight());
-                printerGraphView.updateLayoutView();
-                printerGraphView.invalidate();
-            }
+            updatePaper();
         }
     };
+
+    private void updatePaper() {
+        if(textViewPrinterText != null) {
+            addToPrinterText(printerSimulator.getText());
+        }
+        if(printerGraphView != null) {
+            printerGraphView.updatePaper();
+            printerGraphView.invalidate();
+        }
+    }
 
     public void setPrinterSimulator(final PrinterSimulator printerSimulator) {
         this.printerSimulator = printerSimulator;
@@ -421,6 +347,11 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
             }
         }
 
+        public void updatePaper() {
+            setVirtualSize(bitmap.getWidth(), printerSimulator.getPaperHeight());
+            updateLayoutView();
+        }
+
         @Override
         protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
             //super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
@@ -428,8 +359,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
             viewSizeWidth = viewWidth;
             viewSizeHeight = viewHeight;
 
-            setVirtualSize(bitmap.getWidth(), printerSimulator.getPaperHeight());
-            updateLayoutView();
+            updatePaper();
         }
 
         @Override

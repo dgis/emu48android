@@ -60,6 +60,7 @@ CHANGES
 
 Version 1.5 (2019-06-xx)
 
+- Add Change Paper (clean) action in the printer simulator.
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
 - Fix: Bad text characters when copy/paste the stack.
 

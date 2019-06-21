@@ -15,15 +15,9 @@
 package org.emulator.forty.eight;
 
 import android.graphics.Bitmap;
-import android.opengl.GLES10;
 import android.util.Log;
 
 import java.util.ArrayList;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
 
 /*
  * Based on the free HP82240B Printer Simulator by Christoph Giesselink
@@ -54,12 +48,12 @@ public class PrinterSimulator {
 
         int maxBitmapHeight = 2048;
         try {
-            maxBitmapHeight = getMaximumTextureSize();
+            maxBitmapHeight = Utils.getMaximumTextureSize();
         } catch(Exception ex) {
             Log.d(TAG, "Cannot get the MaximumTextureSize (Set default to 2048). Error: " + ex.getMessage());
         }
 
-        maxBitmapHeight = Math.max(maxBitmapHeight, 8192); //32768);
+        maxBitmapHeight = Math.min(maxBitmapHeight, 8192); //32768);
         MAXPRTLINES = maxBitmapHeight / LINE_HEIGHT;
         mBitmap = Bitmap.createBitmap(LINE_WIDTH, MAXPRTLINES*LINE_HEIGHT, Bitmap.Config.ALPHA_8); //ARGB_8888); //ALPHA_8);
         mBitmap.eraseColor(0xFFFFFFFF);
@@ -74,6 +68,25 @@ public class PrinterSimulator {
 //            addTextData(i);
 //            addGraphData(i, false);
 //        }
+    }
+
+    /**
+     * Set the printer type.
+     * @param enable true to set the printer as a model 82240A or 82240B otherwise.
+     */
+    public void setPrinterModel82240A(boolean enable) {
+        m_bPrinter82240A = enable;
+    }
+
+    /**
+     * Change the paper, so we cleanup everything.
+     */
+    public void changePaper() {
+        reset();
+        m_Text.setLength(0);
+        mBitmap.eraseColor(0xFFFFFFFF);
+        m_nCurCol = 0;
+        m_nCurRow = 0;
     }
 
     /**
@@ -96,9 +109,9 @@ public class PrinterSimulator {
         this.onPrinterUpdateListener = onPrinterUpdateListener;
     }
 
-    //
-    // reset printer state machine
-    //
+    /**
+     * Reset the printer state machine.
+     */
     void reset() {
         m_bExpChar = false;						// printing normal-width characters
         m_bUnderLined = false;					// printing non underlined characters
@@ -110,9 +123,9 @@ public class PrinterSimulator {
         m_byGraphLength = 0;					// no remaining graphic bytes
     }
 
-    //
-    // printer selftest
-    //
+    /**
+     * Printer self test.
+     */
     void selftest() {
         // self test normally run in an endless loop, that's very hard to implement,
         // so this implementation printing all characters only one time and then
@@ -143,6 +156,10 @@ public class PrinterSimulator {
         }
     }
 
+    /**
+     * Entry point of the data coming in the printer.
+     * @param byData
+     */
     public synchronized void write(int byData) {
         data.add(byData);
 
@@ -211,7 +228,9 @@ public class PrinterSimulator {
 
     // Text Printer
 
-    // ROMAN8 Unicode table
+    /**
+     * ROMAN8 Unicode table
+     */
     static final int[] wcRoman8 = new int[]
     {
         0x00A0, 0x00F7, 0x00D7, 0x221A, 0x222B, 0x03A3, 0x25B6, 0x03C0,
@@ -232,7 +251,9 @@ public class PrinterSimulator {
         0x00BD, 0x00AA, 0x00BA, 0x00AB, 0x2587, 0x00BB, 0x00B1, 0x00A0
     };
 
-    // ECMA94 Unicode table
+    /**
+     * ECMA94 Unicode table
+     */
     static final int[] wcEcma94 = new int[]
     {
         0x2221, 0x0101, 0x2207, 0x221A, 0x222B, 0x03A3, 0x25B6, 0x03C0,
@@ -280,6 +301,10 @@ public class PrinterSimulator {
         } while (false);
     }
 
+    /**
+     * Get all the text sent to the printer.
+     * @return All the text.
+     */
     public String getText() {
         return m_Text.toString();
     }
@@ -288,25 +313,42 @@ public class PrinterSimulator {
 
     private final Bitmap mBitmap;
 
+    /**
+     * Get the full paper as an image limited by the paper height (see getPaperHeight().
+     * The size of the bitmap is limited by the hardware constraint (max texture size).
+     * @return The image containing all the paper.
+     */
     public Bitmap getImage() {
         return mBitmap;
     }
 
+    /**
+     * Get the current printer head position to know the paper length.
+     * @return The current printer head position in pixel from the start of the paper in the bitmap.
+     */
     public int getPaperHeight() {
         return m_nCurRow + 1;
+    }
+
+    /**
+     * Get the printer title following the configuration.
+     * @return The printer title.
+     */
+    public String getTitle() {
+        return "HP-82240" + (m_bPrinter82240A ? "A" : "B") + " Printer";
     }
 
     private int MAXPRTLINES		= 500; //32768;				// maximum printable lines (out of paper)
     private final int LINE_WIDTH		= 166;
     private final int LINE_HEIGHT		= 8;
 
-    int    m_nCurCol;						// current column in bitmap
-    int    m_nCurRow;						// current row in bitmap
+    private int    m_nCurCol;						// current column in bitmap
+    private int    m_nCurRow;						// current row in bitmap
 
-    boolean   m_bPrinter82240A;				// HP82240A ROMAN8 font only
+    private boolean   m_bPrinter82240A = false;		// HP82240A ROMAN8 font only
 
 
-    void SetColumn(int byData)
+    private void SetColumn(int byData)
     {
         // set column in line
         if (m_nCurCol >= LINE_WIDTH)
@@ -334,7 +376,7 @@ public class PrinterSimulator {
         return;
     }
 
-    void SetSeparatorColumn()
+    private void SetSeparatorColumn()
     {
         int byData = m_bUnderLined ? 0x80 : 0x00;
 
@@ -424,7 +466,9 @@ public class PrinterSimulator {
 
     // the printer font data
 
-    // HP82240A ROMAN8 font table
+    /**
+     * HP82240A ROMAN8 font table.
+     */
     private static final int sFontRoman8_A[][] =
     {
         { 0x00, 0x00, 0x00, 0x00, 0x00 },		// 32
@@ -653,7 +697,9 @@ public class PrinterSimulator {
         { 0x00, 0x00, 0x00, 0x00, 0x00 }		// 255
     };
 
-    // HP82240B ROMAN8 font table
+    /**
+     * HP82240B ROMAN8 font table.
+     */
     private static final int sFontRoman8_B[][] =
     {
         { 0x00, 0x00, 0x00, 0x00, 0x00 },		// 32
@@ -882,7 +928,9 @@ public class PrinterSimulator {
         { 0x00, 0x00, 0x00, 0x00, 0x00 }		// 255
     };
 
-    // HP82240B ECMA94 font table
+    /**
+     * HP82240B ECMA94 font table.
+     */
     private static final int sFontEcma94_B[][] =
     {
         { 0x00, 0x00, 0x00, 0x00, 0x00 },		// 32
@@ -1110,50 +1158,4 @@ public class PrinterSimulator {
         { 0x00, 0xFE, 0x24, 0x24, 0x18 },		// 254
         { 0x18, 0xA1, 0xA0, 0xA1, 0x78 }		// 255
     };
-
-
-
-    // Misc
-
-    // https://community.khronos.org/t/get-maximum-texture-size/67795
-    public int getMaximumTextureSize() {
-        EGL10 egl = (EGL10) EGLContext.getEGL();
-        EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-
-        // Initialise
-        int[] version = new int[2];
-        egl.eglInitialize(display, version);
-
-        // Query total number of configurations
-        int[] totalConfigurations = new int[1];
-        egl.eglGetConfigs(display, null, 0, totalConfigurations);
-
-        // Query actual list configurations
-        EGLConfig[] configurationsList = new EGLConfig[totalConfigurations[0]];
-        egl.eglGetConfigs(display, configurationsList, totalConfigurations[0], totalConfigurations);
-
-        int[] textureSize = new int[1];
-        int maximumTextureSize = 0;
-
-        // Iterate through all the configurations to located the maximum texture size
-        for (int i = 0; i < totalConfigurations[0]; i++)
-        {
-            // Only need to check for width since opengl textures are always squared
-            egl.eglGetConfigAttrib(display, configurationsList[i], EGL10.EGL_MAX_PBUFFER_WIDTH, textureSize);
-
-            // Keep track of the maximum texture size
-            if (maximumTextureSize < textureSize[0])
-            {
-                maximumTextureSize = textureSize[0];
-            }
-
-            Log.i("GLHelper", Integer.toString(textureSize[0]));
-        }
-
-        // Release
-        egl.eglTerminate(display);
-        Log.i("GLHelper", "Maximum GL texture size: " + Integer.toString(maximumTextureSize));
-
-        return maximumTextureSize;
-    }
 }
