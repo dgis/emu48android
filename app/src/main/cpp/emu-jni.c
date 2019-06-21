@@ -214,9 +214,14 @@ void clipboardCopyText(const TCHAR * text) {
         jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
         if(mainActivityClass) {
             jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "clipboardCopyText", "(Ljava/lang/String;)V");
-            jstring messageUTF = (*jniEnv)->NewStringUTF(jniEnv, text);
+            jint length = _tcslen(text);
+            unsigned short * utf16String =  malloc(2 * (length + 1));
+            for (int i = 0; i <= length; ++i)
+                utf16String[i] = ((unsigned char *)text)[i];
+            jstring messageUTF = (*jniEnv)->NewString(jniEnv, utf16String, length);
             (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, messageUTF);
             (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+            free(utf16String);
         }
     }
 }
@@ -229,10 +234,12 @@ const TCHAR * clipboardPasteText() {
             jobject result = (*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr);
             (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
             if(result) {
-                const char *strReturn = (*jniEnv)->GetStringUTFChars(jniEnv, result, 0);
-                size_t length = _tcslen(strReturn);
+                const jchar *strReturn = (*jniEnv)->GetStringChars(jniEnv, result, 0);
+                jsize length = (*jniEnv)->GetStringLength(jniEnv, result);
                 TCHAR * pasteText = (TCHAR *) GlobalAlloc(0, length + 2);
-                _tcscpy(pasteText, strReturn);
+                for (int i = 0; i <= length; ++i)
+                    pasteText[i] = strReturn[i] & 0xFF;
+                pasteText[length] = 0;
                 (*jniEnv)->ReleaseStringUTFChars(jniEnv, result, strReturn);
                 return pasteText;
             }

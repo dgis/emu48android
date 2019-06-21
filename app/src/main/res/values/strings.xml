@@ -56,6 +56,7 @@
     <string name="tab_printer_graphical">Graphic</string>
     <string name="menu_printer_simulator_share_text">Share Text</string>
     <string name="menu_printer_simulator_share_graphic">Share Graphic</string>
+    <string name="menu_printer_simulator_change_paper">Change Paper (Erase)</string>
 
     <string name="create_ram_card_title">Create RAM Card</string>
     <string name="message_open_security">Permission Denied</string>

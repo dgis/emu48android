@@ -12,4 +12,9 @@
         android:icon="@drawable/ic_menu_share_graphic"
         android:title="@string/menu_printer_simulator_share_graphic"
         app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/menu_printer_simulator_change_paper"
+        android:icon="@drawable/ic_insert_drive_file_white_24dp"
+        android:title="@string/menu_printer_simulator_change_paper" />
 </menu>

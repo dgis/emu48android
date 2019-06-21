@@ -61,6 +61,7 @@ CHANGES
 Version 1.5 (2019-06-xx)
 
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
+- Fix: Bad text characters when copy/paste the stack.
 
 
 Version 1.4 (2019-06-08)
