@@ -1,3 +1,17 @@
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 package org.emulator.forty.eight;
 
 import android.app.Activity;
@@ -37,6 +51,14 @@ import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+
+import org.emulator.calculator.InfoActivity;
+import org.emulator.calculator.InfoWebActivity;
+import org.emulator.calculator.MainScreenView;
+import org.emulator.calculator.NativeLib;
+import org.emulator.calculator.PrinterSimulator;
+import org.emulator.calculator.PrinterSimulatorFragment;
+import org.emulator.calculator.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -90,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean kmFolderChange = true;
 
     private int selectedRAMSize = -1;
+    private boolean[] objectsToSaveItemChecked = null;
 
     private int MRU_ID_START = 10000;
     private int MAX_MRU = 5;
@@ -792,15 +815,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void OnViewPrinter() {
         fragmentPrinterSimulator.show(getSupportFragmentManager(), "Hello Fragment");
-
-//        String printerText = printer.getText();
-//        new AlertDialog.Builder(this)
-//                .setTitle(getString(R.string.message_printer))
-//                .setMessage(printerText)
-//                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int which) {
-//                    }
-//                }).show();
     }
 
     private void showKMLPicker(final boolean changeKML) {
@@ -1000,7 +1014,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                         case INTENT_OBJECT_SAVE: {
                             //Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
-                            NativeLib.onObjectSave(url);
+                            NativeLib.onObjectSave(url, null);
                             break;
                         }
                         case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
@@ -1209,11 +1223,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return -1;
     }
 
-    void showAlert(String text) {
-        Toast toast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
-        //View view = toast.getView();
-        //view.setBackgroundColor(0x80000000);
-        toast.show();
+    public void showAlert(String text) {
+        Utils.showAlert(this, text);
     }
 
     void sendMenuItemCommand(int menuItem) {

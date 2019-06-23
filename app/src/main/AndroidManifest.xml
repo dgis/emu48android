@@ -55,7 +55,7 @@
                 android:value="org.emulator.forty.eight.MainActivity"/>
         </activity>
         <activity
-            android:name=".InfoWebActivity"
+            android:name="org.emulator.calculator.InfoWebActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_web_activity_info">
             <meta-data
@@ -63,7 +63,7 @@
                 android:value="org.emulator.forty.eight.MainActivity" />
         </activity>
         <activity
-            android:name=".InfoActivity"
+            android:name="org.emulator.calculator.InfoActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_activity_info">
             <meta-data

@@ -12,14 +12,14 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-package org.emulator.forty.eight;
+package org.emulator.calculator;
 
 import android.graphics.Bitmap;
 import android.util.Log;
 
 import java.util.ArrayList;
 
-/*
+/**
  * Based on the free HP82240B Printer Simulator by Christoph Giesselink
  */
 public class PrinterSimulator {
@@ -27,6 +27,7 @@ public class PrinterSimulator {
     private static final String TAG = "PrinterSimulator";
     private ArrayList<Integer> data = new ArrayList<>();
     private StringBuilder m_Text = new StringBuilder();
+    private StringBuilder textUpdate = new StringBuilder();
 
 
     private final int ESC = 27;					// ESC
@@ -96,7 +97,7 @@ public class PrinterSimulator {
         /**
          * Called when the printer just has print something.
          */
-        void onPrinterUpdate();
+        void onPrinterUpdate(String textAppended);
     }
 
     private OnPrinterUpdateListener onPrinterUpdateListener;
@@ -161,6 +162,9 @@ public class PrinterSimulator {
      * @param byData
      */
     public synchronized void write(int byData) {
+
+        textUpdate.setLength(0);
+
         data.add(byData);
 
         do {
@@ -223,7 +227,7 @@ public class PrinterSimulator {
         } while (false);
 
         if(this.onPrinterUpdateListener != null)
-            this.onPrinterUpdateListener.onPrinterUpdate();
+            this.onPrinterUpdateListener.onPrinterUpdate(textUpdate.toString());
     }
 
     // Text Printer
@@ -278,27 +282,29 @@ public class PrinterSimulator {
         do {
             // special LF and LF characters
             if (byData == 0x04 || byData == 0x0A) {
-                m_Text.append('\r');
-                m_Text.append('\n');
+                textUpdate.append('\r');
+                textUpdate.append('\n');
                 break;
             }
 
             // unprintable control codes
             if (byData < ' ')
-                return;							// no print
+                break;							// no print
 
             // normal 7bit ASCII character
             if (byData < 128)
-                m_Text.append((char)byData);
+                textUpdate.append((char)byData);
             else {
                 byData -= 128;					// index to table
 
                 if (m_bEcma94 == false)
-                    m_Text.append((char)wcRoman8[byData]);
+                    textUpdate.append((char)wcRoman8[byData]);
                 else
-                    m_Text.append((char)wcEcma94[byData]);
+                    textUpdate.append((char)wcEcma94[byData]);
             }
         } while (false);
+
+        m_Text.append(textUpdate);
     }
 
     /**

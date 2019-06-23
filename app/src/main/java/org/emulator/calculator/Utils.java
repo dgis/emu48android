@@ -1,10 +1,27 @@
-package org.emulator.forty.eight;
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+package org.emulator.calculator;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -12,7 +29,35 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 
 public class Utils {
-    static String getFileName(Context context, String url) {
+
+    public static void showAlert(Context context, String text) {
+        Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+        //View view = toast.getView();
+        //view.setBackgroundColor(0x80000000);
+        toast.show();
+    }
+
+    public static int resId(Context context, String resourcename, String variableName)
+    {
+        try {
+            return context.getResources().getIdentifier(variableName, resourcename, context.getApplicationContext().getPackageName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public static int resId(Fragment context, String resourcename, String variableName)
+    {
+        try {
+            return context.getResources().getIdentifier(variableName, resourcename, context.getContext().getApplicationContext().getPackageName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public static String getFileName(Context context, String url) {
         String result = null;
         try {
             Uri uri = Uri.parse(url);
@@ -47,7 +92,7 @@ public class Utils {
     }
 
     // https://community.khronos.org/t/get-maximum-texture-size/67795
-    static int getMaximumTextureSize() {
+    public static int getMaximumTextureSize() {
         EGL10 egl = (EGL10) EGLContext.getEGL();
         EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
 

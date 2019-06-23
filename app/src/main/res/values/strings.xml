@@ -19,9 +19,6 @@
     <string name="action_settings">Settings</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <!--<string name="nav_header_title">Emu48</string>-->
-    <!--<string name="nav_header_subtitle">android.studio@android.com</string>-->
-    <!--<string name="nav_header_desc">Navigation header</string>-->
     <string name="nav_new">New...</string>
     <string name="nav_open">Open...</string>
     <string name="nav_save">Save</string>
@@ -68,6 +65,7 @@
     <string name="message_yes">Yes</string>
     <string name="message_no">No</string>
     <string name="message_object_load">Warning: Trying to load an object while the emulator is busy will certainly result in a memory lost. Before loading an object you should be sure that the calculator is in idle state. Do you want to see this warning next time you try to load an object?</string>
+    <string name="message_object_save_program">Select Program</string>
     <string name="message_screenshot">Emu48 screenshot</string>
     <string name="message_share_screenshot">Share Emu48 screenshot</string>
     <string name="message_press_reset">Are you sure you want to press the Reset Button?</string>
@@ -96,7 +94,6 @@
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
     <string name="settings_hide_button_menu">Hide the button menu</string>
-    <!--<string name="settings_allow_sound_title">Allow sounds</string>-->
     <string name="settings_sound_volume_title">Sound Volume</string>
     <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
 
@@ -114,6 +111,5 @@
     <string name="settings_port2en_title">Port 2 is Plugged</string>
     <string name="settings_port2wr_title">Port 2 is Writable</string>
     <string name="settings_port2load_title">Port 2 File</string>
-
 
 </resources>

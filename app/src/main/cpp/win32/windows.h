@@ -1,7 +1,3 @@
-//
-// Created by Dgis on 01/15/2019.
-//
-
 #ifndef TRUNK_WINDOWS_H
 #define TRUNK_WINDOWS_H
 

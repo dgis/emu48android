@@ -1,5 +1,20 @@
-package org.emulator.forty.eight;
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+package org.emulator.calculator;
+
+import android.app.Activity;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 
@@ -9,7 +24,7 @@ public class NativeLib {
         System.loadLibrary("native-lib");
     }
 
-    public static native void start(AssetManager mgr, Bitmap bitmapMainScreen, MainActivity activity, MainScreenView view);
+    public static native void start(AssetManager mgr, Bitmap bitmapMainScreen, Activity activity, MainScreenView view);
     public static native void stop();
     public static native void changeBitmap(Bitmap bitmapMainScreen);
     public static native void draw();
@@ -36,7 +51,9 @@ public class NativeLib {
     public static native int onFileSaveAs(String newFilename);
     public static native int onFileClose();
     public static native int onObjectLoad(String filename);
-    public static native int onObjectSave(String filename);
+
+    public static native String[] getObjectsToSave();
+    public static native int onObjectSave(String filename, boolean[] objectsToSaveItemChecked);
     public static native void onViewCopy(Bitmap bitmapScreen);
     public static native void onStackCopy();
     public static native void onStackPaste();

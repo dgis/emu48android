@@ -1,3 +1,17 @@
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 package org.emulator.forty.eight;
 
 import android.app.Activity;
@@ -17,7 +31,8 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
-import java.util.HashSet;
+import org.emulator.calculator.NativeLib;
+import org.emulator.calculator.Utils;
 
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -75,33 +90,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         settingsKeyChanged.add(key);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(resultCode == Activity.RESULT_OK && data != null) {
-            if(requestCode == MainActivity.INTENT_PORT2LOAD) {
-                Uri uri = data.getData();
-                //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
-                String url;
-                if (uri != null) {
-                    url = uri.toString();
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("settings_port2load", url);
-                    editor.apply();
-                    makeUriPersistable(data, uri);
-                    if(generalPreferenceFragment != null)
-                        generalPreferenceFragment.updatePort2LoadFilename(url);
-                }
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void makeUriPersistable(Intent data, Uri uri) {
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-            getContentResolver().takePersistableUriPermission(uri, takeFlags);
-    }
-
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -111,9 +99,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         Preference preferencePort2load = null;
 
         @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
@@ -219,11 +205,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             });
         }
 
-        @Override
-        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-
-        }
-
         public void updatePort2LoadFilename(String port2Filename) {
             if(preferencePort2load != null) {
                 String displayName = port2Filename;
@@ -235,5 +216,32 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                 preferencePort2load.setSummary(displayName);
             }
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(resultCode == Activity.RESULT_OK && data != null) {
+            if(requestCode == MainActivity.INTENT_PORT2LOAD) {
+                Uri uri = data.getData();
+                //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
+                String url;
+                if (uri != null) {
+                    url = uri.toString();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("settings_port2load", url);
+                    editor.apply();
+                    makeUriPersistable(data, uri);
+                    if(generalPreferenceFragment != null)
+                        generalPreferenceFragment.updatePort2LoadFilename(url);
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void makeUriPersistable(Intent data, Uri uri) {
+        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 }

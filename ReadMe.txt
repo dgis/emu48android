@@ -52,7 +52,6 @@ NOT WORKING YET
 - Disassembler
 - Debugger
 - Macro
-- Infrared Printer
 - Serial Ports (Wire or Ir)
 
 
@@ -60,9 +59,10 @@ CHANGES
 
 Version 1.5 (2019-06-xx)
 
-- Add Change Paper (clean) action in the printer simulator.
-- Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
+- Add the printer simulator.
+- Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
 - Fix: Bad text characters when copy/paste the stack.
+- Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
 
 
 Version 1.4 (2019-06-08)
