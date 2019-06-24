@@ -19,7 +19,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -27,22 +26,18 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDialogFragment;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -144,6 +139,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 //                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 //                    intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(),getActivity().getPackageName() + ".provider", imageFile));
                     startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_text"))));
+                    //dismiss();
                 } else if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_share_graphic")) {
                     String imageFilename = "HPPrinter-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
                     try {
@@ -168,6 +164,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(),getActivity().getPackageName() + ".provider", imageFile));
                         startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
+                        //dismiss();
                     } catch (Exception e) {
                         e.printStackTrace();
                         Utils.showAlert(getActivity(), e.getMessage());
@@ -180,16 +177,16 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                 return true;
             }
         });
-        TypedValue tv = new TypedValue();
-        Context context = getContext();
-        if(context != null) {
-            Resources.Theme theme = context.getTheme();
-            if (theme != null) {
-                theme.resolveAttribute(androidx.appcompat.R.attr.actionBarSize, tv, true);
-                int actionBarHeight = getResources().getDimensionPixelSize(tv.resourceId);
-                toolbar.setMinimumHeight(actionBarHeight);
-            }
-        }
+//        Context context = getContext();
+//        if(context != null) {
+//            Resources.Theme theme = context.getTheme();
+//            if (theme != null) {
+//                TypedValue tv = new TypedValue();
+//                theme.resolveAttribute(androidx.appcompat.R.attr.actionBarSize, tv, true);
+//                int actionBarHeight = getResources().getDimensionPixelSize(tv.resourceId);
+//                toolbar.setMinimumHeight(actionBarHeight);
+//            }
+//        }
         setMenuVisibility(true);
 
         // ViewPager with Text and Graph
@@ -245,9 +242,11 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         return view;
     }
 
-    private void appendTextToPrinter(String text) {
-        if(textViewPrinterText != null && text != null && text.length() > 0) {
-
+    private void appendTextToPrinter(String fullText, String text) {
+        if(textViewPrinterText != null) {
+            if(fullText != null)
+                textViewPrinterText.setText(fullText);
+            if (text != null && text.length() > 0) {
 //            boolean isAtMaxScrollPosition;
 //            int currentScrollPosition = textViewPrinterText.getScrollY(); // SP
 //            int viewHeight = textViewPrinterText.getHeight(); // VH
@@ -270,14 +269,15 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 //                    textViewPrinterText.scrollTo(0, currentScrollPosition);
 //                }
 //            } else
-            textViewPrinterText.append(text);
+                textViewPrinterText.append(text);
+            }
         }
     }
 
     private void updatePaper(String textAppended) {
         if(debug) Log.d(TAG, "updatePaper(" + textAppended + ")");
         if(textViewPrinterText != null) {
-            appendTextToPrinter(textAppended == null ? printerSimulator.getText() : textAppended);
+            appendTextToPrinter(textAppended == null ? printerSimulator.getText() : null, textAppended);
         }
         if(printerGraphView != null) {
             printerGraphView.updatePaperLayout();

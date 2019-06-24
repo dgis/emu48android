@@ -145,10 +145,10 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
+- Pan and zoom seems possible after closing the calc.
 - In Chrome OS:
     - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.
-- Pan and zoom seems possible after closing the calc.
 - Improve the swipe gesture.
 - The clock seems unsynchronized sometimes.
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?).

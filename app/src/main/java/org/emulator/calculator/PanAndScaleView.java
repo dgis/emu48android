@@ -28,13 +28,13 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.OverScroller;
 
 import androidx.core.view.ViewCompat;
 
-public class PanAndScaleView extends SurfaceView {
+/* Inherit from View and not SurfaceView to prevent 2 SurfaceView with one over the other! */
+public class PanAndScaleView extends View {
 
 	protected static final String TAG = "PanAndScaleView";
 	protected final boolean debug = false;
