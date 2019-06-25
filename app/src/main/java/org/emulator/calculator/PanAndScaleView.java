@@ -66,6 +66,7 @@ public class PanAndScaleView extends View {
 	protected int scaleThumbnailColor = Color.WHITE;
 	protected boolean allowDoubleTapZoom = true;
 	protected boolean fillBounds = false;
+	protected boolean enablePanAndScale = false;
 
 	protected Paint paint = null;
 	protected OnTapListener onTapDownListener;
@@ -197,11 +198,26 @@ public class PanAndScaleView extends View {
 	}
 
 	/**
-	 * @param fillBounds true to allow the virtual space to fill view bounds the ; false otherwise.
+	 * @param fillBounds true to allow the virtual space to fill the view bounds; false otherwise.
 	 */
 	public void setFillBounds(boolean fillBounds) {
 		this.fillBounds = fillBounds;
 	}
+
+	/**
+	 * @return true to allow to pan and scale; false otherwise.
+	 */
+	public boolean getEnablePanAndScale() {
+		return enablePanAndScale;
+	}
+
+	/**
+	 * @param enablePanAndScale true to allow to pan and scale; false otherwise.
+	 */
+	public void setEnablePanAndScale(boolean enablePanAndScale) {
+		this.enablePanAndScale = enablePanAndScale;
+	}
+
 
 	public void setVirtualSize(float width, float height) {
 		virtualSizeWidth = width;
@@ -408,14 +424,17 @@ public class PanAndScaleView extends View {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		boolean result = scaleDetector.onTouchEvent(event);
-		result = gestureDetector.onTouchEvent(event) || result;
-		return result || super.onTouchEvent(event);
+		if(enablePanAndScale) {
+			boolean result = scaleDetector.onTouchEvent(event);
+			result = gestureDetector.onTouchEvent(event) || result;
+			return result || super.onTouchEvent(event);
+		} else
+			return super.onTouchEvent(event);
 	}
 	
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
-		if (!fillBounds && (event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
+		if (enablePanAndScale && !fillBounds && (event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
 		//if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
 			switch (event.getAction()) {
 			case MotionEvent.ACTION_SCROLL:
@@ -433,7 +452,7 @@ public class PanAndScaleView extends View {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		if(!fillBounds) {
+		if(enablePanAndScale && !fillBounds) {
 			char character = (char) event.getUnicodeChar();
 			if (character == '+') {
 				scaleByStep(scaleStep, getWidth() / 2.0f, getHeight() / 2.0f);
@@ -633,7 +652,7 @@ public class PanAndScaleView extends View {
 			if(firstTime) {
 				firstTime = false;
 			} else
-			startOSDTimer();
+				startOSDTimer();
 		}
 
 		if(!fillBounds && osdAllowed && showScaleThumbnail

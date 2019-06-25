@@ -183,9 +183,9 @@ public class MainScreenView extends PanAndScaleView {
         int actionIndex = event.getActionIndex();
         int action = event.getActionMasked();
         switch (action) {
-        case MotionEvent.ACTION_DOWN:
-        case MotionEvent.ACTION_POINTER_DOWN:
-            //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
+                //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
                 //NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
                 currentButtonTouched.remove(actionIndex);
                 if(actionIndex == 0 && event.getPointerCount() == 1)
@@ -200,10 +200,10 @@ public class MainScreenView extends PanAndScaleView {
                 if (debug) Log.d(TAG, "onTouchEvent() ACTION_DOWN false, actionIndex: " + actionIndex
                         + ", currentButtonTouched: " + currentButtonTouched.size()
                         + ", preventToScroll: " + preventToScroll + ", getPointerCount: " + event.getPointerCount());
-            break;
-        case MotionEvent.ACTION_UP:
-        case MotionEvent.ACTION_POINTER_UP:
-            //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+                //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
                 //NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
                 NativeLib.buttonUp((int) ((event.getX(actionIndex) - viewPanOffsetX) / viewScaleFactorX), (int) ((event.getY(actionIndex) - viewPanOffsetY) / viewScaleFactorY));
                 currentButtonTouched.remove(actionIndex);
@@ -214,9 +214,9 @@ public class MainScreenView extends PanAndScaleView {
                 currentButtonTouched.remove(actionIndex);
                 preventToScroll = currentButtonTouched.size() > 0;
                 if (debug) Log.d(TAG, "onTouchEvent() ACTION_CANCEL, actionIndex: " + actionIndex + ", currentButtonTouched: " + currentButtonTouched.size() + ", preventToScroll: " + preventToScroll);
-            break;
-        default:
-            break;
+                break;
+            default:
+                break;
         }
         return super.onTouchEvent(event);
     }
@@ -402,7 +402,7 @@ public class MainScreenView extends PanAndScaleView {
             return kmlBackgroundColor;
         } else switch(fallbackBackgroundColorType) {
             case 0:
-                return 0;
+                return 0xFF000000;
             case 1:
                 return statusBarColor;
         }

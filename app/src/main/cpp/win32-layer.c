@@ -1197,7 +1197,8 @@ MMRESULT waveOutClose(HWAVEOUT handle) {
     sem_destroy(&handle->waveOutLock);
 #else
     onPlayerDone(handle);
-    timer_delete(handle->playerDoneTimer);
+    if(handle->playerDoneTimer)
+        timer_delete(handle->playerDoneTimer);
 #endif
 
     memset(handle, 0, sizeof(struct _HWAVEOUT));
@@ -2562,7 +2563,7 @@ VOID GetLocalTime(LPSYSTEMTIME lpSystemTime) {
 ULONGLONG GetTickCount64(VOID) {
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now))
-    return 0;
+        return 0;
     return (ULONGLONG) ((ULONGLONG)now.tv_sec * 1000UL + (ULONGLONG)now.tv_nsec / 1000000UL);
 }
 DWORD GetTickCount(VOID) {

@@ -96,10 +96,18 @@
                 <!--/>-->
         </PreferenceCategory>
 
-        <!--<PreferenceCategory app:title="Style">
-            "Show Title",IDC_SHOWTITLE
-            "Show Menu",IDC_SHOWMENU
-        </PreferenceCategory>-->
+        <PreferenceCategory android:title="@string/settings_category_printer_title">
+            <ListPreference
+                android:key="settings_printer_model"
+                android:title="@string/settings_printer_model_title"
+                android:dialogTitle="@string/settings_printer_model_title"
+                android:summary="@string/settings_printer_model_summary"
+                android:entries="@array/settings_printer_model_item"
+                android:entryValues="@array/settings_printer_model_value"
+                android:defaultValue="1"
+                />
+        </PreferenceCategory>
+
         <!--<PreferenceCategory app:title="Disassembler">
             "HP Mnemonics",IDC_DISASM_HP
             "Class Mnemonics",IDC_DISASM_CLASS

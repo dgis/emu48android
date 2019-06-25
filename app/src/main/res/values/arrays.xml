@@ -46,4 +46,15 @@
         <item>4mb (32 ports: 2 through 33)</item>
     </string-array>
 
+    <string-array name="settings_printer_model_item">
+        <item>HP82240A</item>
+        <item>HP82240B (default)</item>
+        <!--<item>Generic Serial</item>-->
+    </string-array>
+    <string-array name="settings_printer_model_value">
+        <item>0</item>
+        <item>1</item>
+        <!--<item>2</item>-->
+    </string-array>
+
 </resources>

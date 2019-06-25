@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.4.1)
 #add_compile_options(-DDEBUG_IO)
 #add_compile_options(-DDEBUG_SERIAL)
 
-#add_compile_options(-DDEBUG_ANDROID_WAVE_OUT)
+add_compile_options(-DDEBUG_ANDROID_WAVE_OUT)
 #add_compile_options(-DDEBUG_ANDROID_TIMER)
 #add_compile_options(-DDEBUG_ANDROID_PAINT)
 #add_compile_options(-DDEBUG_ANDROID_THREAD)

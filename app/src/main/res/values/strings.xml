@@ -1,24 +1,25 @@
 <resources>
 
-    <!-- Info Activity -->
+    <!-- InfoActivity -->
 
     <string name="title_activity_info">About</string>
     <string name="info_readme">ReadMe.txt</string>
 
-    <!-- Info Activity -->
+    <!-- InfoWebActivity -->
     <string name="title_web_activity_info">Help</string>
     <string name="help_url">file:///android_asset/Emu48.htm</string>
 
-    <!-- Settings Activity -->
+    <!-- SettingsActivity -->
 
     <string name="title_activity_settings">Settings</string>
 
-    <!-- PaintByNumber Activity -->
+    <!-- MainActivity -->
 
     <string name="app_name">Emu48</string>
     <string name="action_settings">Settings</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="button_main_menu_content_description">Open the main menu</string>
     <string name="nav_new">New...</string>
     <string name="nav_open">Open...</string>
     <string name="nav_save">Save</string>
@@ -76,6 +77,9 @@
     <string name="message_printer">Printer Simulator</string>
     <string name="message_printer_share_text">Save printer paper as text</string>
     <string name="message_printer_share_graphic">Save printer paper as image</string>
+    <string name="message_printer_out_of_paper">Out of paper error for the graphic printer (max line: %s, max pixel line: %s).</string>
+
+
 
     <string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>
@@ -111,5 +115,9 @@
     <string name="settings_port2en_title">Port 2 is Plugged</string>
     <string name="settings_port2wr_title">Port 2 is Writable</string>
     <string name="settings_port2load_title">Port 2 File</string>
+
+    <string name="settings_category_printer_title">Printer Simulator</string>
+    <string name="settings_printer_model_title">Printer Model</string>
+    <string name="settings_printer_model_summary">You can choose the printer model</string>
 
 </resources>

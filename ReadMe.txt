@@ -63,6 +63,8 @@ Version 1.5 (2019-06-xx)
 - Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
 - Fix: Bad text characters when copy/paste the stack.
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
+- Fix a crash with waveOutClose().
+- Fix an issue with the Pan and zoom which was possible after closing the calc.
 
 
 Version 1.4 (2019-06-08)
@@ -145,7 +147,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
-- Pan and zoom seems possible after closing the calc.
 - In Chrome OS:
     - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.
