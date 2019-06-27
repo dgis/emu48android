@@ -65,6 +65,9 @@ Version 1.5 (2019-06-xx)
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
 - Fix a crash with waveOutClose().
 - Fix an issue with the Pan and zoom which was possible after closing the calc.
+- Prevent the ESC key from leaving the application.
+- Map the keyboard DELETE key like it should.
+- Map the keyboard +/= key to the + key and the _/- key to the - (US keyboard).
 
 
 Version 1.4 (2019-06-08)
@@ -147,6 +150,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this appli
 
 TODO
 
+- Make the regular (not keypad) '*', and '/' work (#6).
 - In Chrome OS:
     - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.

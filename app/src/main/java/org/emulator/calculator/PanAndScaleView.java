@@ -67,6 +67,7 @@ public class PanAndScaleView extends View {
 	protected boolean allowDoubleTapZoom = true;
 	protected boolean fillBounds = false;
 	protected boolean enablePanAndScale = false;
+	protected boolean enableZoomKeyboard = true;
 
 	protected Paint paint = null;
 	protected OnTapListener onTapDownListener;
@@ -452,7 +453,7 @@ public class PanAndScaleView extends View {
 	
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		if(enablePanAndScale && !fillBounds) {
+		if(enableZoomKeyboard && enablePanAndScale && !fillBounds) {
 			char character = (char) event.getUnicodeChar();
 			if (character == '+') {
 				scaleByStep(scaleStep, getWidth() / 2.0f, getHeight() / 2.0f);

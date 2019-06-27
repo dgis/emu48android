@@ -60,14 +60,15 @@ public class MainScreenView extends PanAndScaleView {
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.BLACK);
+        enableZoomKeyboard = false;
 
         vkmap = new HashMap<>();
         //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
         vkmap.put(KeyEvent.KEYCODE_TAB, 0x09); // VK_TAB
         vkmap.put(KeyEvent.KEYCODE_ENTER, 0x0D); // VK_RETURN
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_ENTER, 0x0D); // VK_RETURN
-        //vkmap.put(KeyEvent.KEYCODE_DEL, 0x2E); // VK_DELETE
-        vkmap.put(KeyEvent.KEYCODE_DEL, 0x08); // VK_DELETE
+        vkmap.put(KeyEvent.KEYCODE_DEL, 0x08); // VK_BACK
+        vkmap.put(KeyEvent.KEYCODE_FORWARD_DEL, 0x2E); // VK_DELETE
         vkmap.put(KeyEvent.KEYCODE_INSERT, 0x2D); // VK_INSERT
         vkmap.put(KeyEvent.KEYCODE_SHIFT_LEFT, 0x10); // VK_SHIFT
         vkmap.put(KeyEvent.KEYCODE_SHIFT_RIGHT, 0x10); // VK_SHIFT
@@ -115,16 +116,6 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_X, 0x58); // X
         vkmap.put(KeyEvent.KEYCODE_Y, 0x59); // Y
         vkmap.put(KeyEvent.KEYCODE_Z, 0x5A); // Z
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_0, 0x60); // VK_NUMPAD0
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_1, 0x61); // VK_NUMPAD1
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_2, 0x62); // VK_NUMPAD2
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_3, 0x63); // VK_NUMPAD3
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_4, 0x64); // VK_NUMPAD4
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_5, 0x65); // VK_NUMPAD5
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_6, 0x66); // VK_NUMPAD6
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_7, 0x67); // VK_NUMPAD7
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_8, 0x68); // VK_NUMPAD8
-        vkmap.put(KeyEvent.KEYCODE_NUMPAD_9, 0x69); // VK_NUMPAD9
         vkmap.put(KeyEvent.KEYCODE_0, 0x60); // VK_NUMPAD0
         vkmap.put(KeyEvent.KEYCODE_1, 0x61); // VK_NUMPAD1
         vkmap.put(KeyEvent.KEYCODE_2, 0x62); // VK_NUMPAD2
@@ -135,9 +126,21 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_7, 0x67); // VK_NUMPAD7
         vkmap.put(KeyEvent.KEYCODE_8, 0x68); // VK_NUMPAD8
         vkmap.put(KeyEvent.KEYCODE_9, 0x69); // VK_NUMPAD9
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_0, 0x60); // VK_NUMPAD0
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_1, 0x61); // VK_NUMPAD1
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_2, 0x62); // VK_NUMPAD2
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_3, 0x63); // VK_NUMPAD3
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_4, 0x64); // VK_NUMPAD4
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_5, 0x65); // VK_NUMPAD5
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_6, 0x66); // VK_NUMPAD6
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_7, 0x67); // VK_NUMPAD7
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_8, 0x68); // VK_NUMPAD8
+        vkmap.put(KeyEvent.KEYCODE_NUMPAD_9, 0x69); // VK_NUMPAD9
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_MULTIPLY, 0x6A); // VK_MULTIPLY
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_ADD, 0x6B); // VK_ADD
+        vkmap.put(KeyEvent.KEYCODE_EQUALS, 0x6B); // VK_ADD
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_SUBTRACT, 0x6D); // VK_SUBTRACT
+        vkmap.put(KeyEvent.KEYCODE_MINUS, 0x6D); // VK_SUBTRACT
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DOT, 0x6E); // VK_DECIMAL
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DIVIDE, 0x6F); // VK_DIVIDE
 //        vkmap.put(KeyEvent.KEYCODE_SEMICOLON, 0xBA); // VK_OEM_1 (:);)
@@ -225,11 +228,13 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             Integer windowsKeycode = vkmap.get(keyCode);
-            if (windowsKeycode != null)
+            if (windowsKeycode != null) {
                 NativeLib.keyDown(windowsKeycode);
-            else
+            } else
                 Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
+        if(keyCode == KeyEvent.KEYCODE_BACK)
+            return true;
         return super.onKeyDown(keyCode, event);
     }
 
@@ -242,6 +247,8 @@ public class MainScreenView extends PanAndScaleView {
             else
                 Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
+        if(keyCode == KeyEvent.KEYCODE_BACK)
+            return true;
         return super.onKeyUp(keyCode, event);
     }
 
