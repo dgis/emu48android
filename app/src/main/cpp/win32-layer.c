@@ -2076,16 +2076,11 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
     int sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
     int sourceStride = 4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32);
 
-    jint ret;
-
     x -= hdc->windowOriginX;
     y -= hdc->windowOriginY;
 
-    if(!reverseHeight) {
-//        int YY = sourceHeight - y;
-//        y = YY;
-        y = sourceHeight - y;
-    }
+    if(!reverseHeight)
+        y = sourceHeight - 1 - y;
 
     HPALETTE palette = hdc->realizedPalette;
     if(!palette)
@@ -2095,11 +2090,6 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
     if(!palPalEntry && sourceBitCount <= 8 && hBitmapSource->bitmapInfoHeader->biClrUsed > 0) {
         palPalEntry = (PALETTEENTRY *)hBitmapSource->bitmapInfo->bmiColors;
     }
-    COLORREF brushColor = 0xFF000000; // 0xAABBGGRR
-    if(hdc->selectedBrushColor) {
-        brushColor = hdc->selectedBrushColor->brushColor;
-    }
-
     COLORREF resultColor = CLR_INVALID; // 0xAABBGGRR
 
     if(x >= 0 && y >= 0 && x < sourceWidth && y < sourceHeight) {

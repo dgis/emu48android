@@ -228,9 +228,9 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             Integer windowsKeycode = vkmap.get(keyCode);
-            if (windowsKeycode != null) {
+            if (windowsKeycode != null)
                 NativeLib.keyDown(windowsKeycode);
-            } else
+            else
                 Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
         if(keyCode == KeyEvent.KEYCODE_BACK)

@@ -45,6 +45,7 @@ NOTES
   * pick the calculator (which should be "Eric's Real 50g (Large Cropped)")!
   And because, the file "FOLDER/rom.49g" is not readonly anymore, you can save your port 2.
   BUT for the moment, it is saved ONLY when you CLOSE (or change) the state file. Not when you end the application.
+- To speed up printing, set the 'delay' to 0 in the calculator's print options.
 
 
 NOT WORKING YET
@@ -59,7 +60,7 @@ CHANGES
 
 Version 1.5 (2019-06-xx)
 
-- Add the printer simulator.
+- Add the printer simulator (set delay to 0 to speed up!).
 - Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
 - Fix: Bad text characters when copy/paste the stack.
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!

@@ -67,10 +67,10 @@
     <string name="message_no">No</string>
     <string name="message_object_load">Warning: Trying to load an object while the emulator is busy will certainly result in a memory lost. Before loading an object you should be sure that the calculator is in idle state. Do you want to see this warning next time you try to load an object?</string>
     <string name="message_object_save_program">Select Program</string>
-    <string name="message_screenshot">Emu48 screenshot</string>
-    <string name="message_share_screenshot">Share Emu48 screenshot</string>
+    <string name="message_screenshot">Screenshot</string>
+    <string name="message_share_screenshot">Share the screenshot</string>
     <string name="message_press_reset">Are you sure you want to press the Reset Button?</string>
-    <string name="message_change_kml">You cannot change the KML script when Emu48 is not running. Use the File, New menu item to create a new calculator.</string>
+    <string name="message_change_kml">You cannot change the KML script when Emulator is not running. Use the File, New menu item to create a new calculator.</string>
     <string name="message_kml_script_compilation_result">KML Script Compilation Result</string>
     <string name="message_kml_folder_selection_need_api_lollipop">Need Android 5.0</string>
     <string name="message_kml_folder_selection_need_api_lollipop_description">To select the KML folder, you need at least Android version 5.0</string>
