@@ -38,6 +38,7 @@ public class MainScreenView extends PanAndScaleView {
     private Paint paint = new Paint();
     private Bitmap bitmapMainScreen;
     private HashMap<Integer, Integer> vkmap;
+    private HashMap<Character, Integer> charmap;
     private int kmlBackgroundColor = Color.BLACK;
     private boolean useKmlBackgroundColor = false;
     private int fallbackBackgroundColorType = 0;
@@ -62,6 +63,12 @@ public class MainScreenView extends PanAndScaleView {
         bitmapMainScreen.eraseColor(Color.BLACK);
         enableZoomKeyboard = false;
 
+        charmap = new HashMap<>();
+        charmap.put('+', 0x6B); // VK_ADD
+        charmap.put('-', 0x6D); // VK_SUBTRACT
+        charmap.put('*', 0x6A); // VK_MULTIPLY
+        charmap.put('/', 0x6F); // VK_DIVIDE
+
         vkmap = new HashMap<>();
         //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
         vkmap.put(KeyEvent.KEYCODE_TAB, 0x09); // VK_TAB
@@ -71,9 +78,9 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_FORWARD_DEL, 0x2E); // VK_DELETE
         vkmap.put(KeyEvent.KEYCODE_INSERT, 0x2D); // VK_INSERT
         vkmap.put(KeyEvent.KEYCODE_SHIFT_LEFT, 0x10); // VK_SHIFT
-        vkmap.put(KeyEvent.KEYCODE_SHIFT_RIGHT, 0x10); // VK_SHIFT
+//        vkmap.put(KeyEvent.KEYCODE_SHIFT_RIGHT, 0x10); // VK_SHIFT
         vkmap.put(KeyEvent.KEYCODE_CTRL_LEFT, 0x11); // VK_CONTROL
-        vkmap.put(KeyEvent.KEYCODE_CTRL_RIGHT, 0x11); // VK_CONTROL
+//        vkmap.put(KeyEvent.KEYCODE_CTRL_RIGHT, 0x11); // VK_CONTROL
         vkmap.put(KeyEvent.KEYCODE_ESCAPE, 0x1B); // VK_ESCAPE
         vkmap.put(KeyEvent.KEYCODE_SPACE, 0x20); // VK_SPACE
         vkmap.put(KeyEvent.KEYCODE_DPAD_LEFT, 0x25); // VK_LEFT
@@ -142,6 +149,7 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_SUBTRACT, 0x6D); // VK_SUBTRACT
         vkmap.put(KeyEvent.KEYCODE_MINUS, 0x6D); // VK_SUBTRACT
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DOT, 0x6E); // VK_DECIMAL
+        vkmap.put(KeyEvent.KEYCODE_SLASH, 0x6F); // VK_DIVIDE
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DIVIDE, 0x6F); // VK_DIVIDE
 //        vkmap.put(KeyEvent.KEYCODE_SEMICOLON, 0xBA); // VK_OEM_1 (:);)
         vkmap.put(KeyEvent.KEYCODE_COMMA, 0xBC); // VK_OEM_COMMA
@@ -227,7 +235,11 @@ public class MainScreenView extends PanAndScaleView {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
-            Integer windowsKeycode = vkmap.get(keyCode);
+            char pressedKey = (char) event.getUnicodeChar();
+            Log.d(TAG, "onKeyDown is: " + pressedKey);
+            Integer windowsKeycode = charmap.get(pressedKey);
+            if(windowsKeycode == null)
+                windowsKeycode = vkmap.get(keyCode);
             if (windowsKeycode != null)
                 NativeLib.keyDown(windowsKeycode);
             else
@@ -241,7 +253,11 @@ public class MainScreenView extends PanAndScaleView {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
-            Integer windowsKeycode = vkmap.get(keyCode);
+            char pressedKey = (char) event.getUnicodeChar();
+            Log.d(TAG, "onKeyUp is: " + pressedKey);
+            Integer windowsKeycode = charmap.get(pressedKey);
+            if(windowsKeycode == null)
+                windowsKeycode = vkmap.get(keyCode);
             if (windowsKeycode != null)
                 NativeLib.keyUp(windowsKeycode);
             else
