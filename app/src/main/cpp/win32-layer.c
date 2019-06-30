@@ -513,6 +513,9 @@ int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
             if (milliseconds != (uint64_t) -1)
             {
                 result = pthread_cond_timedwait(&hHandle->eventCVariable, &hHandle->eventMutex, &ts);
+                THREAD_LOGD("UnlockedWaitForEvent() pthread_cond_timedwait() for event %x return %d", hHandle, result);
+                if(result == ETIMEDOUT)
+                    result = WAIT_TIMEOUT;
             }
             else
             {
@@ -799,6 +802,15 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hMem) {
 }
 
 BOOL GetOpenFileName(LPOPENFILENAME openFilename) {
+    if(openFilename) {
+        if(currentDialogBoxMode == DialogBoxMode_OPEN_MACRO) {
+            openFilename->nMaxFile = MAX_PATH;
+            openFilename->nFileExtension = 1;
+            //openFilename->lpstrFile = getSaveObjectFilenameResult;
+            _tcsncpy(openFilename->lpstrFile, getSaveObjectFilenameResult, openFilename->nMaxFile);
+            return TRUE;
+        }
+    }
     return FALSE;
 }
 
@@ -806,10 +818,12 @@ TCHAR getSaveObjectFilenameResult[MAX_PATH];
 BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
     if(openFilename) {
         if(currentDialogBoxMode == DialogBoxMode_SET_USRPRG32
-           || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42) {
+        || currentDialogBoxMode == DialogBoxMode_SET_USRPRG42
+        || currentDialogBoxMode == DialogBoxMode_SAVE_MACRO) {
             openFilename->nMaxFile = MAX_PATH;
             openFilename->nFileExtension = 1;
-            openFilename->lpstrFile = getSaveObjectFilenameResult;
+            //openFilename->lpstrFile = getSaveObjectFilenameResult;
+            _tcsncpy(openFilename->lpstrFile, getSaveObjectFilenameResult, openFilename->nMaxFile);
             return TRUE;
         }
     }

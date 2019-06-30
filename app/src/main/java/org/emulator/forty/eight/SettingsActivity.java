@@ -158,6 +158,23 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 //                onPreferenceChangeListenerBackgroundCustomColor.onPreferenceChange(preferenceBackgroundCustomColor, sharedPreferences.getBoolean(preferenceBackgroundCustomColor.getKey(), false));
             }
 
+            // Macro
+
+            Preference preferenceMacroRealSpeed = findPreference("settings_macro_real_speed");
+            final Preference preferenceMacroManualSpeed = findPreference("settings_macro_manual_speed");
+            if(preferenceMacroRealSpeed != null && preferenceMacroManualSpeed != null) {
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerMacroRealSpeed = new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object value) {
+                        if(value != null)
+                            preferenceMacroManualSpeed.setEnabled(!(Boolean) value);
+                        return true;
+                    }
+                };
+                preferenceMacroRealSpeed.setOnPreferenceChangeListener(onPreferenceChangeListenerMacroRealSpeed);
+                onPreferenceChangeListenerMacroRealSpeed.onPreferenceChange(preferenceMacroRealSpeed, sharedPreferences.getBoolean(preferenceMacroRealSpeed.getKey(), true));
+            }
+
             // Ports 1 & 2 settings
 
             final Preference preferencePort1en = findPreference("settings_port1en");

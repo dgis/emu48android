@@ -44,6 +44,7 @@ public class NativeLib {
     public static native boolean getPort1Writable();
     public static native boolean getSoundEnabled();
     public static native int getGlobalColor();
+    public static native int getMacroState();
 
     public static native int onFileNew(String kmlFilename);
     public static native int onFileOpen(String filename);
@@ -62,6 +63,10 @@ public class NativeLib {
     public static native void onBackupSave();
     public static native void onBackupRestore();
     public static native void onBackupDelete();
+
+    public static native void onToolMacroNew(String filename);
+    public static native void onToolMacroPlay(String filename);
+    public static native void onToolMacroStop();
 
     public static native void setConfiguration(String key, int isDynamic, int intValue1, int intValue2, String stringValue);
     public static native boolean isPortExtensionPossible();

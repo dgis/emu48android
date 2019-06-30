@@ -480,6 +480,10 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getGlobalColor(JNI
     return (jint) dwTColor;
 }
 
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getMacroState(JNIEnv *env, jobject thisz) {
+    return nMacroState;
+}
+
 
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
     if (bDocumentAvail)
@@ -955,6 +959,31 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onBackupDelete(JNI
     ResetBackup();
 }
 
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onToolMacroNew(JNIEnv *env, jobject thisz, jstring filename) {
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL);
+    _tcscpy(getSaveObjectFilenameResult, filenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+    currentDialogBoxMode = DialogBoxMode_SAVE_MACRO;
+    OnToolMacroNew();
+    getSaveObjectFilenameResult[0] = 0;
+    currentDialogBoxMode = DialogBoxMode_UNKNOWN;
+}
+
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onToolMacroPlay(JNIEnv *env, jobject thisz, jstring filename) {
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL);
+    _tcscpy(getSaveObjectFilenameResult, filenameUTF8);
+    (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+    currentDialogBoxMode = DialogBoxMode_OPEN_MACRO;
+    OnToolMacroPlay();
+    getSaveObjectFilenameResult[0] = 0;
+    currentDialogBoxMode = DialogBoxMode_UNKNOWN;
+}
+
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onToolMacroStop(JNIEnv *env, jobject thisz) {
+    OnToolMacroStop();
+}
+
+
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
     const char *configStringValue = stringValue ? (*env)->GetStringUTFChars(env, stringValue, NULL) : NULL;
@@ -983,6 +1012,9 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
             SoundOpen(uWaveDevId);
             soundEnabled = TRUE;
         }
+    } else if(_tcscmp(_T("settings_macro"), configKey) == 0) {
+        bMacroRealSpeed = (BOOL)intValue1;
+        nMacroTimeout = 500 - intValue2;
     } else if(_tcscmp(_T("settings_port1"), configKey) == 0) {
         BOOL settingsPort1en = (BOOL) intValue1;
         BOOL settingsPort1wr = (BOOL) intValue2;

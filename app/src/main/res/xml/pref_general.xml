@@ -108,6 +108,21 @@
                 />
         </PreferenceCategory>
 
+
+        <PreferenceCategory android:title="@string/settings_category_macro_title">
+            <SwitchPreference
+                android:key="settings_macro_real_speed"
+                android:title="@string/settings_macro_real_speed_title"
+                android:defaultValue="true" />
+            <SeekBarPreference
+                android:key="settings_macro_manual_speed"
+                android:title="@string/settings_macro_manual_speed_title"
+                android:defaultValue="500"
+                android:min="0"
+                android:max="500"
+                app:showSeekBarValue="true" />
+        </PreferenceCategory>
+
         <!--<PreferenceCategory app:title="Disassembler">
             "HP Mnemonics",IDC_DISASM_HP
             "Class Mnemonics",IDC_DISASM_CLASS

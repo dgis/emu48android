@@ -1,8 +1,5 @@
 DESCRIPTION
 
-WARNING: WITH VERSION 1.3, THE STATUS FILE HAS BEEN MODIFIED AND IS NOW FULLY COMPATIBLE WITH THE WINDOWS VERSION AS IT SHOULD HAVE BEEN.
-HOWEVER, BEFORE THE UPDATE, BACK UP YOUR DATA BECAUSE YOU COULD LOSE THEM.
-
 This project ports the Windows application Emu48 written in C to Android.
 It uses the Android NDK. The former Emu48 source code (written by Sébastien Carlier and Christoph Giesselink) remains untouched because of a thin win32 emulation layer above Linux/NDK!
 This win32 layer will allow to easily update from the original Emu48 source code.
@@ -45,6 +42,7 @@ NOTES
   * pick the calculator (which should be "Eric's Real 50g (Large Cropped)")!
   And because, the file "FOLDER/rom.49g" is not readonly anymore, you can save your port 2.
   BUT for the moment, it is saved ONLY when you CLOSE (or change) the state file. Not when you end the application.
+- To speed up printing, set the 'delay' to 0 in the calculator's print options.
 
 
 NOT WORKING YET
@@ -52,11 +50,23 @@ NOT WORKING YET
 - Disassembler
 - Debugger
 - Macro
-- Infrared Printer
 - Serial Ports (Wire or Ir)
 
 
 CHANGES
+
+Version 1.5 (2019-06-xx)
+
+- Add the printer simulator (set delay to 0 to speed up!).
+- Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
+- Fix: Bad text characters when copy/paste the stack.
+- Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
+- Fix a crash with waveOutClose().
+- Fix an issue with the Pan and zoom which was possible after closing the calc.
+- Prevent the ESC key from leaving the application (Github Fix: #6).
+- Map the keyboard DELETE key like it should (Github Fix: #6).
+- Map the +, -, * and / keys catching the typed character instead of the virtual key (Github Fix: #6).
+
 
 Version 1.4 (2019-06-08)
 
@@ -133,4 +143,4 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
-The Eric's Real scripts ("real*.kml" and "real*.bmp") are embedded in this application with the kind permission of Eric Rechlin.
+The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this application with the kind permission of Eric Rechlin.

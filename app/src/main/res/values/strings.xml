@@ -41,6 +41,11 @@
     <string name="nav_show_printer">Show the Printer Simulator...</string>
     <string name="nav_tool">Tool</string>
     <string name="nav_create_ram_card">Create RAM Card...</string>
+    <string name="nav_macro_record">Record Macro...</string>
+    <string name="nav_macro_play">Play Macro...</string>
+    <string name="nav_macro_stop">Macro Stop</string>
+
+
     <string name="nav_help">Help</string>
     <string name="nav_item_help">Help</string>
     <string name="nav_about">About Emu48...</string>
@@ -119,5 +124,9 @@
     <string name="settings_category_printer_title">Printer Simulator</string>
     <string name="settings_printer_model_title">Printer Model</string>
     <string name="settings_printer_model_summary">You can choose the printer model</string>
+
+    <string name="settings_category_macro_title">Macro</string>
+    <string name="settings_macro_real_speed_title">Use Real Replay Speed</string>
+    <string name="settings_macro_manual_speed_title">Manual Replay Speed</string>
 
 </resources>

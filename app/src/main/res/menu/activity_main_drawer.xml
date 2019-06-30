@@ -100,6 +100,18 @@
                 android:id="@+id/nav_create_ram_card"
                 android:icon="@drawable/ic_memory_black_24dp"
                 android:title="@string/nav_create_ram_card" />
+            <item
+                android:id="@+id/nav_macro_record"
+                android:icon="@drawable/ic_fiber_manual_record_black_24dp"
+                android:title="@string/nav_macro_record" />
+            <item
+                android:id="@+id/nav_macro_play"
+                android:icon="@drawable/ic_play_arrow_black_24dp"
+                android:title="@string/nav_macro_play" />
+            <item
+                android:id="@+id/nav_macro_stop"
+                android:icon="@drawable/ic_stop_black_24dp"
+                android:title="@string/nav_macro_stop" />
         </menu>
     </item>
     <item android:title="@string/nav_help">

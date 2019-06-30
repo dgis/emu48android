@@ -1255,7 +1255,9 @@ enum DialogBoxMode {
 	DialogBoxMode_GET_USRPRG32,
 	DialogBoxMode_SET_USRPRG32,
 	DialogBoxMode_GET_USRPRG42,
-	DialogBoxMode_SET_USRPRG42
+	DialogBoxMode_SET_USRPRG42,
+	DialogBoxMode_OPEN_MACRO,
+	DialogBoxMode_SAVE_MACRO
 };
 extern enum DialogBoxMode currentDialogBoxMode;
 extern BOOL securityExceptionOccured;
