@@ -56,7 +56,7 @@ CHANGES
 
 Version 1.5 (2019-06-xx)
 
-- Add the printer simulator (set delay to 0 to speed up!).
+- Add the Ir printer simulator (set delay to 0 to speed up!).
 - Add the macro support.
 - Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
 - Fix: Bad text characters when copy/paste the stack.

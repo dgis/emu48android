@@ -414,16 +414,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int nMacroState = NativeLib.getMacroState();
 
         boolean uRun = NativeLib.isDocumentAvailable();
-        boolean bStackEnable = cCurrentRomType!='6' && cCurrentRomType!='A' && cCurrentRomType!='E' && cCurrentRomType!='P';  // CdB for HP: add apples
+        boolean bObjectEnable = cCurrentRomType!='6' && cCurrentRomType!='A' && cCurrentRomType!='E' && cCurrentRomType!='P';  // CdB for HP: add apples
+        boolean bStackCEnable = bObjectEnable;
+        boolean bStackPEnable = bObjectEnable;
 
         menu.findItem(R.id.nav_save).setEnabled(uRun);
         menu.findItem(R.id.nav_save_as).setEnabled(uRun);
         menu.findItem(R.id.nav_close).setEnabled(uRun);
-        menu.findItem(R.id.nav_load_object).setEnabled(uRun && bStackEnable);
-        menu.findItem(R.id.nav_save_object).setEnabled(uRun && bStackEnable);
+        menu.findItem(R.id.nav_load_object).setEnabled(uRun && bObjectEnable);
+        menu.findItem(R.id.nav_save_object).setEnabled(uRun && bObjectEnable);
         menu.findItem(R.id.nav_copy_screen).setEnabled(uRun);
-        menu.findItem(R.id.nav_copy_stack).setEnabled(uRun && bStackEnable);
-        menu.findItem(R.id.nav_paste_stack).setEnabled(uRun && bStackEnable);
+        menu.findItem(R.id.nav_copy_stack).setEnabled(uRun && bStackCEnable);
+        menu.findItem(R.id.nav_paste_stack).setEnabled(uRun && bStackPEnable);
         menu.findItem(R.id.nav_reset_calculator).setEnabled(uRun);
         menu.findItem(R.id.nav_backup_save).setEnabled(uRun);
         menu.findItem(R.id.nav_backup_restore).setEnabled(uRun && isBackup);
@@ -671,7 +673,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
-                intent.putExtra(Intent.EXTRA_TITLE, "emu48-state.e48");
+                intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-state.e48");
                 startActivityForResult(intent, INTENT_GETOPENFILENAME);
             }
         });
@@ -684,32 +686,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         int model = NativeLib.getCurrentModel();
-        String filename = "emu48-state.e48";
+        String emuXX = getString(R.string.filename);
+        String filename = emuXX + "-state.e48";
         switch (model) {
             case 'S': //HP48SX
-                filename = "emu48-state-48sx.e48";
+                filename = emuXX + "-state-48sx.e48";
                 break;
             case 'G': //HP48GX
-                filename = "emu48-state-48gx.e48";
+                filename = emuXX + "-state-48gx.e48";
                 break;
             case '6': //HP38G 64K RAM
             case 'A': //HP38G 32K RAM
-                filename = "emu48-state.e38";
+                filename = emuXX + "-state.e38";
                 break;
             case 'E': // HP39G/(HP39G+/HP39GS)/HP40G/HP40GS
-                filename = "emu48-state.e39";
+                filename = emuXX + "-state.e39";
                 break;
             case 'P': // HP39G+/HP39GS
-                filename = "emu48-state.e39";
+                filename = emuXX + "-state.e39";
                 break;
             case '2': // HP48GII
-                filename = "emu48-state-48gii.e49";
+                filename = emuXX + "-state-48gii.e49";
                 break;
             case 'Q': // HP49G+/HP50G
-                filename = "emu48-state-50g.e49";
+                filename = emuXX + "-state-50g.e49";
                 break;
             case 'X': // HP49G
-                filename = "emu48-state-49g.e49";
+                filename = emuXX + "-state-49g.e49";
                 break;
         }
         intent.putExtra(Intent.EXTRA_TITLE, filename);
@@ -743,7 +746,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
+        intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_LOAD);
     }
 
@@ -768,7 +771,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-object.hp");
+        intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
     }
     private void OnViewCopy() {
@@ -779,7 +782,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         NativeLib.onViewCopy(bitmapScreen);
 
-        String imageFilename = "Emu48-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
+        String imageFilename = getString(R.string.filename) + "-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
         try {
             File storagePath = new File(this.getExternalCacheDir(), "");
             File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
@@ -964,7 +967,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-macro.mac");
+        intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-macro.mac");
         startActivityForResult(intent, INTENT_MACRO_SAVE);
     }
 
@@ -972,7 +975,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "emu48-macro.mac");
+        intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-macro.mac");
         startActivityForResult(intent, INTENT_MACRO_LOAD);
     }
 

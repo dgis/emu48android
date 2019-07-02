@@ -236,7 +236,7 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            Log.d(TAG, "onKeyDown is: " + pressedKey);
+            //Log.d(TAG, "onKeyDown is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
@@ -254,7 +254,7 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            Log.d(TAG, "onKeyUp is: " + pressedKey);
+            //Log.d(TAG, "onKeyUp is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
