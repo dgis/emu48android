@@ -67,6 +67,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Set<String> savedMRU = sharedPreferences.getStringSet("MRU", null);
         if(savedMRU != null) {
             for (String url : savedMRU) {
-                if(url != null & !url.isEmpty())
+                if(url != null && !url.isEmpty())
                     mruLinkedHashMap.put(url, null);
             }
         }
@@ -335,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
+        int id = item != null ? item.getItemId() : -1;
         if (id == R.id.nav_new) {
             OnFileNew();
         } else if (id == R.id.nav_open) {
@@ -465,7 +466,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (calculatorFilename.toLowerCase().lastIndexOf(".kml") != -1) {
                             BufferedReader reader = null;
                             try {
-                                reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorFilename), "UTF-8"));
+                                reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorFilename), StandardCharsets.UTF_8));
                                 // do reading, usually loop until end of file reading
                                 String mLine;
                                 boolean inGlobal = false;
@@ -519,14 +520,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 List<String> calculatorsAssetFilenames = new LinkedList<>();
 
                 DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
-                for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
-                    final String url = file.getUri().toString();
-                    final String name = file.getName();
-                    final String mime = file.getType();
-                    Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
-                    if(kmlMimeType.equals(mime)) {
-                        calculatorsAssetFilenames.add(url);
-                    }
+                if(kmlFolderDocumentFile != null) {
+	                for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
+	                    final String url = file.getUri().toString();
+	                    final String name = file.getName();
+	                    final String mime = file.getType();
+	                    Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
+	                    if(kmlMimeType.equals(mime)) {
+	                        calculatorsAssetFilenames.add(url);
+	                    }
+	                }
                 }
                 kmlScripts.clear();
                 Pattern patternGlobalTitle = Pattern.compile("\\s*Title\\s+\"(.*)\"");
@@ -538,41 +541,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             Uri calculatorsAssetFilenameUri = Uri.parse(calculatorFilename);
                             DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
-                            Uri fileUri = documentFile.getUri();
-                            InputStream inputStream = getContentResolver().openInputStream(fileUri);
-                            reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                            // do reading, usually loop until end of file reading
-                            String mLine;
-                            boolean inGlobal = false;
-                            String title = null;
-                            String model = null;
-                            while ((mLine = reader.readLine()) != null) {
-                                //process line
-                                if (mLine.indexOf("Global") == 0) {
-                                    inGlobal = true;
-                                    title = null;
-                                    model = null;
-                                    continue;
-                                }
-                                if (inGlobal) {
-                                    if (mLine.indexOf("End") == 0) {
-                                        KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                        newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
-                                        newKMLScriptItem.title = title;
-                                        newKMLScriptItem.model = model;
-                                        kmlScripts.add(newKMLScriptItem);
-                                        break;
-                                    }
-
-                                    m = patternGlobalTitle.matcher(mLine);
-                                    if (m.find()) {
-                                        title = m.group(1);
-                                    }
-                                    m = patternGlobalModel.matcher(mLine);
-                                    if (m.find()) {
-                                        model = m.group(1);
-                                    }
-                                }
+                            if(documentFile != null) {
+	                            Uri fileUri = documentFile.getUri();
+	                            InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                                reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+	                            // do reading, usually loop until end of file reading
+	                            String mLine;
+	                            boolean inGlobal = false;
+	                            String title = null;
+	                            String model = null;
+	                            while ((mLine = reader.readLine()) != null) {
+	                                //process line
+	                                if (mLine.indexOf("Global") == 0) {
+	                                    inGlobal = true;
+	                                    title = null;
+	                                    model = null;
+	                                    continue;
+	                                }
+	                                if (inGlobal) {
+	                                    if (mLine.indexOf("End") == 0) {
+	                                        KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+	                                        newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
+	                                        newKMLScriptItem.title = title;
+	                                        newKMLScriptItem.model = model;
+	                                        kmlScripts.add(newKMLScriptItem);
+	                                        break;
+	                                    }
+	
+	                                    m = patternGlobalTitle.matcher(mLine);
+	                                    if (m.find()) {
+	                                        title = m.group(1);
+	                                    }
+	                                    m = patternGlobalModel.matcher(mLine);
+	                                    if (m.find()) {
+	                                        model = m.group(1);
+	                                    }
+	                                }
+	                            }
                             }
                         } catch (IOException e) {
                             //log the exception
@@ -852,7 +857,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel;
         if(changeKML) {
-            kmlScriptsForCurrentModel = new ArrayList<KMLScriptItem>();
+            kmlScriptsForCurrentModel = new ArrayList<>();
             char m = (char) NativeLib.getCurrentModel();
             for (int i = 0; i < kmlScripts.size(); i++) {
                 KMLScriptItem kmlScriptItem = kmlScripts.get(i);
@@ -1037,7 +1042,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (openResult > 0) {
                                 saveLastDocument(url);
                                 makeUriPersistable(data, uri);
-                            } else if(openResult == -2) {
+                            } else if(openResult == -2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // >= API 21
                                 // For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!
                                 new AlertDialog.Builder(this)
                                         .setTitle(getString(R.string.message_open_security))
@@ -1110,16 +1115,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             //Log.d(TAG, "onActivityResult INTENT_CREATE_RAM_CARD " + url);
                             if(selectedRAMSize > 0) {
                                 int size = 2 * selectedRAMSize;
-                                FileOutputStream fileOutputStream = null;
+                                FileOutputStream fileOutputStream;
                                 try {
                                     ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w");
-                                    fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-                                    byte[] zero = new byte[1024];
-                                    Arrays.fill(zero, (byte) 0);
-                                    for (int i = 0; i < size; i++)
-                                        fileOutputStream.write(zero);
-                                    fileOutputStream.flush();
-                                    fileOutputStream.close();
+                                    if(pfd != null) {
+                                        fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+                                        byte[] zero = new byte[1024];
+                                        Arrays.fill(zero, (byte) 0);
+                                        for (int i = 0; i < size; i++)
+                                            fileOutputStream.write(zero);
+                                        fileOutputStream.flush();
+                                        fileOutputStream.close();
+                                    }
                                 } catch (FileNotFoundException e) {
                                     e.printStackTrace();
                                 } catch (IOException e) {
@@ -1246,10 +1253,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }).show();
     }
 
+    // Method used from JNI!
+
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
     Map<Integer, ParcelFileDescriptor> parcelFileDescriptorPerFd = null;
-    int openFileFromContentResolver(String fileURL, int writeAccess) {
+    public int openFileFromContentResolver(String fileURL, int writeAccess) {
         //https://stackoverflow.com/a/31677287
         Uri uri = Uri.parse(fileURL);
         ParcelFileDescriptor filePfd;
@@ -1274,20 +1283,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         parcelFileDescriptorPerFd.put(fd, filePfd);
         return fd;
     }
-    int openFileInFolderFromContentResolver(String filename, String folderURL, int writeAccess) {
+    public int openFileInFolderFromContentResolver(String filename, String folderURL, int writeAccess) {
         Uri folderURI = Uri.parse(folderURL);
         DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
-        for (DocumentFile file : folderDocumentFile.listFiles()) {
-            final String url = file.getUri().toString();
-            final String name = file.getName();
-            //Log.d(TAG, "url: " + url + ", name: " + name);
-            if(filename.equals(name)) {
-                return openFileFromContentResolver(url, writeAccess);
+        if(folderDocumentFile != null) {
+            for (DocumentFile file : folderDocumentFile.listFiles()) {
+                final String url = file.getUri().toString();
+                final String name = file.getName();
+                //Log.d(TAG, "url: " + url + ", name: " + name);
+                if (filename.equals(name)) {
+                    return openFileFromContentResolver(url, writeAccess);
+                }
             }
         }
         return -1;
     }
-    int closeFileFromContentResolver(int fd) {
+    public int closeFileFromContentResolver(int fd) {
         if(parcelFileDescriptorPerFd != null) {
             ParcelFileDescriptor filePfd = parcelFileDescriptorPerFd.get(fd);
             if(filePfd != null) {
@@ -1307,7 +1318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Utils.showAlert(this, text);
     }
 
-    void sendMenuItemCommand(int menuItem) {
+    public void sendMenuItemCommand(int menuItem) {
         switch (menuItem) {
             case 1: // FILE_NEW
                 OnFileNew();
@@ -1385,7 +1396,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    String getFirstKMLFilenameForType(char chipsetType) {
+    public String getFirstKMLFilenameForType(char chipsetType) {
         extractKMLScripts();
 
         for (int i = 0; i < kmlScripts.size(); i++) {
@@ -1411,7 +1422,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return null;
     }
 
-    void clipboardCopyText(String text) {
+    public void clipboardCopyText(String text) {
         // Gets a handle to the clipboard service.
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
         if(clipboard != null) {
@@ -1420,7 +1431,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             clipboard.setPrimaryClip(clip);
         }
     }
-    String clipboardPasteText() {
+    public String clipboardPasteText() {
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboard != null && clipboard.hasPrimaryClip()) {
             ClipData clipData = clipboard.getPrimaryClip();
@@ -1435,12 +1446,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return "";
     }
 
-    void performHapticFeedback() {
+    public void performHapticFeedback() {
         if(sharedPreferences.getBoolean("settings_haptic_feedback", true))
             mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
     }
 
-    void sendByteUdp(int byteSent) {
+    public void sendByteUdp(int byteSent) {
         printerSimulator.write(byteSent);
     }
 
@@ -1458,7 +1469,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String[] settingKeys = {
                     "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout",
                     "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
-                    "settings_background_kml_color", "settings_background_fallback_color", "settings_printer_model", "settings_macro",
+                    "settings_background_kml_color", "settings_background_fallback_color",
+                    "settings_printer_model", "settings_printer_prevent_line_wrap", "settings_macro",
                     "settings_kml", "settings_port1", "settings_port2" };
             for (String settingKey : settingKeys) {
                 updateFromPreferences(settingKey, false);
@@ -1475,15 +1487,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_rotation":
                     int rotationMode = 0;
                     try {
-                        rotationMode = Integer.parseInt(sharedPreferences.getString("settings_rotation", "0"));
-                    } catch (NumberFormatException ex) {}
+                        String rotationModeValue = sharedPreferences.getString("settings_rotation", "0");
+                        if(rotationModeValue != null)
+                            rotationMode = Integer.parseInt(rotationModeValue);
+                    } catch (NumberFormatException ex) {
+                        // Catch bad number format
+                    }
                     mainScreenView.setRotationMode(rotationMode, isDynamic);
                     break;
                 case "settings_auto_layout":
                     int autoLayoutMode = 1;
                     try {
-                        autoLayoutMode = Integer.parseInt(sharedPreferences.getString("settings_auto_layout", "1"));
-                    } catch (NumberFormatException ex) {}
+                        String autoLayoutModeValue = sharedPreferences.getString("settings_auto_layout", "1");
+                        if(autoLayoutModeValue != null)
+                            autoLayoutMode = Integer.parseInt(autoLayoutModeValue);
+                    } catch (NumberFormatException ex) {
+                        // Catch bad number format
+                    }
                     mainScreenView.setAutoLayout(autoLayoutMode, isDynamic);
                     break;
                 case "settings_hide_bar":
@@ -1514,14 +1534,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_background_fallback_color":
                     String fallbackColor = sharedPreferences.getString("settings_background_fallback_color", "0");
                     try {
-                        mainScreenView.setBackgroundFallbackColor(Integer.parseInt(fallbackColor));
-                    } catch (NumberFormatException ex) {}
+                        if(fallbackColor != null)
+                            mainScreenView.setBackgroundFallbackColor(Integer.parseInt(fallbackColor));
+                    } catch (NumberFormatException ex) {
+                        // Catch bad number format
+                    }
                     break;
                 case "settings_printer_model":
                     String printerModel = sharedPreferences.getString("settings_printer_model", "1");
                     try {
-                        printerSimulator.setPrinterModel82240A(Integer.parseInt(printerModel) == 0);
-                    } catch (NumberFormatException ex) {}
+                        if(printerModel != null)
+                            printerSimulator.setPrinterModel82240A(Integer.parseInt(printerModel) == 0);
+                    } catch (NumberFormatException ex) {
+                        // Catch bad number format
+                    }
+                    break;
+                case "settings_printer_prevent_line_wrap":
+                    printerSimulator.setPreventLineWrap(sharedPreferences.getBoolean("settings_printer_prevent_line_wrap", false));
                     break;
 
                 case "settings_kml":

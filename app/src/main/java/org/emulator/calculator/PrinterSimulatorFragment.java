@@ -277,7 +277,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 
         private void commonInitialization() {
             setShowScaleThumbnail(true);
-            scaleThumbnailColor = Color.RED;
+            scaleThumbnailColor = Color.GRAY;
         }
 
         public void setBitmap(Bitmap bitmap) {

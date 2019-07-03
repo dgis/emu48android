@@ -25,6 +25,7 @@ import java.util.ArrayList;
 public class PrinterSimulator {
 
     private static final String TAG = "PrinterSimulator";
+    private boolean debug = false;
     private ArrayList<Integer> data = new ArrayList<>();
     private StringBuilder m_Text = new StringBuilder();
     private StringBuilder textUpdate = new StringBuilder();
@@ -69,6 +70,15 @@ public class PrinterSimulator {
     public void setPrinterModel82240A(boolean enable) {
         m_bPrinter82240A = enable;
     }
+
+    /**
+     * true to prevent the line wrapping for the textual printer when the character '\4' is sent by the calc.
+     * @param preventLineWrap true to prevent the line wrapping; false otherwise.
+     */
+    public void setPreventLineWrap(boolean preventLineWrap) {
+        this.preventLineWrap = preventLineWrap;
+    }
+
 
     /**
      * Change the paper, so we cleanup everything.
@@ -245,6 +255,8 @@ public class PrinterSimulator {
 
     // Text Printer
 
+    private boolean preventLineWrap = false;
+
     /**
      * ROMAN8 Unicode table
      */
@@ -294,9 +306,10 @@ public class PrinterSimulator {
     private void addTextData(int byData) {
         do {
             // special LF and LF characters
-            if (byData == 0x04 || byData == 0x0A) {
+            if (!preventLineWrap && byData == 0x04 || byData == 0x0A) {
                 textUpdate.append('\r');
                 textUpdate.append('\n');
+                if(debug) Log.d(TAG, "addTextData(" + byData + ")");
                 break;
             }
 

@@ -83,7 +83,7 @@
     <string name="message_printer">Printer Simulator</string>
     <string name="message_printer_share_text">Save printer paper as text</string>
     <string name="message_printer_share_graphic">Save printer paper as image</string>
-    <string name="message_printer_out_of_paper">Out of paper error for the graphic printer (max line: %s, max pixel line: %s).</string>
+    <string name="message_printer_out_of_paper">Out of paper error for the graphic printer (max line: %d, max pixel line: %d).</string>
 
 
 
@@ -125,6 +125,8 @@
     <string name="settings_category_printer_title">Printer Simulator</string>
     <string name="settings_printer_model_title">Printer Model</string>
     <string name="settings_printer_model_summary">You can choose the printer model</string>
+    <string name="settings_printer_prevent_line_wrap">Prevent Line Wrapping</string>
+    <string name="settings_printer_prevent_line_wrap_summary">Prevent the calc to wrap the line in the textual printer simulator</string>
 
     <string name="settings_category_macro_title">Macro</string>
     <string name="settings_macro_real_speed_title">Use Real Replay Speed</string>
