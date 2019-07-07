@@ -575,24 +575,11 @@ typedef struct _HANDLE * HANDLE;
 
 typedef HANDLE HMENU;
 typedef HANDLE HINSTANCE;
-//typedef HANDLE HWND;
 typedef HANDLE HCURSOR;
 typedef HANDLE HLOCAL; //TODO
 
 
 typedef struct _OVERLAPPED {
-/*
-    ULONG_PTR Internal;
-    ULONG_PTR InternalHigh;
-    union {
-        struct {
-            DWORD Offset;
-            DWORD OffsetHigh;
-        } DUMMYSTRUCTNAME;
-        PVOID Pointer;
-    } DUMMYUNIONNAME;
-*/
-
     HANDLE  hEvent;
 } OVERLAPPED, *LPOVERLAPPED;
 

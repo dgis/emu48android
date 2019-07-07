@@ -14,7 +14,6 @@
 
 package org.emulator.calculator;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -22,7 +21,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -33,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -54,19 +53,11 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
     private static final String TAG = "PrinterSimulator";
     private boolean debug = false;
     private PrinterSimulator printerSimulator;
-    private Toolbar toolbar;
     private TextView textViewPrinterText;
+    private ScrollView scrollViewPrinterText;
     private PrinterGraphView printerGraphView;
 
-//    ColorMatrixColorFilter colorFilterAlpha8ToRGB = new ColorMatrixColorFilter(new float[]{
-//            0, 0, 0, 1, 0,
-//            0, 0, 0, 1, 0,
-//            0, 0, 0, 1, 0,
-//            0, 0, 0, 0, 255
-//    });
-
     public PrinterSimulatorFragment() {
-
     }
 
     @Override
@@ -92,20 +83,25 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 //        getDialog().getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
 //    }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        Window window = dialog.getWindow();
+        if(window != null)
+            window.requestFeature(Window.FEATURE_NO_TITLE);
         return dialog;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         String title = getString(Utils.resId(this, "string", "dialog_printer_simulator_title"));
         if(printerSimulator != null)
             title = printerSimulator.getTitle();
-        getDialog().setTitle(title);
+        Dialog dialog = getDialog();
+        if(dialog != null)
+            dialog.setTitle(title);
 
 
         // Inflate the layout for this fragment
@@ -113,10 +109,8 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 
         // Toolbar
 
-        toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
+        Toolbar toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
         toolbar.setTitle(title);
-        //toolbar.setOverflowIcon(ContextCompat.getDrawable(getActivity(), Utils.resId(this, "drawable", "ic_more_vert_white_24dp")));
-        //toolbar.setLogo(R.drawable.ic_launcher);
         toolbar.setNavigationIcon(Utils.resId(this, "drawable", "ic_keyboard_backspace_white_24dp"));
         toolbar.setNavigationOnClickListener(
                 new View.OnClickListener() {
@@ -143,22 +137,24 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                         Bitmap croppedPaperBitmap = Bitmap.createBitmap(paperBitmap.getWidth(), printerSimulator.getPaperHeight(), Bitmap.Config.ARGB_8888);
                         Canvas canvas = new Canvas(croppedPaperBitmap);
                         Paint paint = new Paint();
-                        //paint.setColorFilter(colorFilterAlpha8ToRGB);
                         canvas.drawBitmap(paperBitmap, 0, 0, paint);
 
-                        File storagePath = new File(getActivity().getExternalCacheDir(), "");
-                        File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
-                        FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
-                        croppedPaperBitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
-                        fileOutputStream.close();
-                        String mimeType = "application/png";
-                        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-                        intent.setType(mimeType);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(),getActivity().getPackageName() + ".provider", imageFile));
-                        startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
+                        Activity activity = getActivity();
+                        if(activity != null) {
+                            File storagePath = new File(activity.getExternalCacheDir(), "");
+                            File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
+                            FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+                            croppedPaperBitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
+                            fileOutputStream.close();
+                            String mimeType = "application/png";
+                            Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+                            intent.setType(mimeType);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile));
+                            startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         Utils.showAlert(getActivity(), e.getMessage());
@@ -182,25 +178,22 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         ViewPager pager = view.findViewById(Utils.resId(this, "id", "viewPagerPrinter"));
         pager.setAdapter(new PagerAdapter() {
 
-            @SuppressLint("ClickableViewAccessibility")
-            public Object instantiateItem(ViewGroup container, int position) {
-                switch (position) {
-                    case 0: {
-                        ViewGroup layoutPagePrinterText = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "page_printer_text"));
-                        textViewPrinterText = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "printer_text"));
-                        updatePaper(printerSimulator.getText());
-                        return layoutPagePrinterText;
-                    }
-                    case 1: {
-                        ViewGroup layoutPagePrinterGraphic = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "page_printer_graphic"));
-                        ViewGroup pagePrinterGraphicContainer = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "printer_graphic_container"));
-                        printerGraphView = new PrinterGraphView(getActivity());
-                        printerGraphView.setBitmap(printerSimulator.getImage());
-                        pagePrinterGraphicContainer.addView(printerGraphView);
-                        return layoutPagePrinterGraphic;
-                    }
+            @NonNull
+            public Object instantiateItem(@NonNull ViewGroup container, int position) {
+                if (position == 0) {
+                    ViewGroup layoutPagePrinterText = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "page_printer_text"));
+                    textViewPrinterText = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "printer_text"));
+                    scrollViewPrinterText = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "printer_text_scroll"));
+                    updatePaper(printerSimulator.getText());
+                    return layoutPagePrinterText;
+                } else {
+                    ViewGroup layoutPagePrinterGraphic = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "page_printer_graphic"));
+                    ViewGroup pagePrinterGraphicContainer = container.findViewById(Utils.resId(PrinterSimulatorFragment.this, "id", "printer_graphic_container"));
+                    printerGraphView = new PrinterGraphView(getActivity());
+                    printerGraphView.setBitmap(printerSimulator.getImage());
+                    pagePrinterGraphicContainer.addView(printerGraphView);
+                    return layoutPagePrinterGraphic;
                 }
-                return null;
             }
 
             @Override
@@ -234,6 +227,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         if(debug) Log.d(TAG, "updatePaper(" + textAppended + ")");
         if(textViewPrinterText != null) {
             textViewPrinterText.append(textAppended);
+            scrollViewPrinterText.fullScroll(View.FOCUS_DOWN);
         }
         if(printerGraphView != null) {
             printerGraphView.updatePaperLayout();
@@ -370,8 +364,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
 
         @Override
         protected void onCustomDraw(Canvas canvas) {
-            //paintBitmap.setColorFilter(colorFilterAlpha8ToRGB);
-            canvas.drawColor(Color.BLACK); // LTGRAY);
+            canvas.drawColor(Color.BLACK);
             Rect paperclip = new Rect(0, 0, bitmap.getWidth(), printerSimulator.getPaperHeight());
             canvas.drawBitmap(this.bitmap, paperclip, paperclip, paintBitmap);
         }

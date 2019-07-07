@@ -37,7 +37,7 @@ public class Utils {
         toast.show();
     }
 
-    public static int resId(Context context, String resourcename, String variableName)
+    static int resId(Context context, String resourcename, String variableName)
     {
         try {
             return context.getResources().getIdentifier(variableName, resourcename, context.getApplicationContext().getPackageName());
@@ -47,14 +47,16 @@ public class Utils {
         }
     }
 
-    public static int resId(Fragment context, String resourcename, String variableName)
+    static int resId(Fragment fragment, String resourcename, String variableName)
     {
         try {
-            return context.getResources().getIdentifier(variableName, resourcename, context.getContext().getApplicationContext().getPackageName());
+            Context context = fragment.getContext();
+            if(context != null)
+                return fragment.getResources().getIdentifier(variableName, resourcename, context.getApplicationContext().getPackageName());
         } catch (Exception e) {
             e.printStackTrace();
-            return -1;
         }
+        return -1;
     }
 
     public static String getFileName(Context context, String url) {
@@ -92,7 +94,7 @@ public class Utils {
     }
 
     // https://community.khronos.org/t/get-maximum-texture-size/67795
-    public static int getMaximumTextureSize() {
+    static int getMaximumTextureSize() {
         EGL10 egl = (EGL10) EGLContext.getEGL();
         EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
 
@@ -128,7 +130,7 @@ public class Utils {
 
         // Release
         egl.eglTerminate(display);
-        Log.i("GLHelper", "Maximum GL texture size: " + Integer.toString(maximumTextureSize));
+        Log.i("GLHelper", "Maximum GL texture size: " + maximumTextureSize);
 
         return maximumTextureSize;
     }

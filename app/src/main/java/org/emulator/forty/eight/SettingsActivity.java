@@ -130,7 +130,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                             int backgroundFallbackColor = -1;
                             try {
                                 backgroundFallbackColor = Integer.parseInt(stringValue);
-                            } catch (NumberFormatException ex) {}
+                            } catch (NumberFormatException ignored) {}
                             if(backgroundFallbackColor >= 0 && backgroundFallbackColor < stringArrayBackgroundFallbackColor.length)
                                 preference.setSummary(stringArrayBackgroundFallbackColor[backgroundFallbackColor]);
 //                            preferenceBackgroundCustomColor.setEnabled(backgroundFallbackColor == 2);
@@ -216,13 +216,15 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("*/*");
                     intent.putExtra(Intent.EXTRA_TITLE, "shared.bin");
-                    getActivity().startActivityForResult(intent, MainActivity.INTENT_PORT2LOAD);
+                    Activity activity = getActivity();
+                    if(activity != null)
+                        activity.startActivityForResult(intent, MainActivity.INTENT_PORT2LOAD);
                     return true;
                 }
             });
         }
 
-        public void updatePort2LoadFilename(String port2Filename) {
+        void updatePort2LoadFilename(String port2Filename) {
             if(preferencePort2load != null) {
                 String displayName = port2Filename;
                 try {

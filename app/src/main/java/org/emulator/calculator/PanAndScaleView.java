@@ -14,6 +14,7 @@
 
 package org.emulator.calculator;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -85,7 +86,13 @@ public class PanAndScaleView extends View {
 	protected boolean firstTime = false;
 
 	protected boolean viewHasChanged() {
-		if(viewPanOffsetX != previousViewPanOffsetX || viewPanOffsetY != previousViewPanOffsetY || viewScaleFactorX != previousViewScaleFactorX || viewScaleFactorY != previousViewScaleFactorY) {
+		if((int)viewPanOffsetX != (int)previousViewPanOffsetX || (int)viewPanOffsetY != (int)previousViewPanOffsetY
+		|| (int)viewScaleFactorX != (int)previousViewScaleFactorX || (int)viewScaleFactorY != (int)previousViewScaleFactorY) {
+			if(debug) Log.d(TAG, "viewHasChanged() previousViewPanOffsetX: " + previousViewPanOffsetX + ", viewPanOffsetX: " + viewPanOffsetX
+												   + ", previousViewPanOffsetY: " + previousViewPanOffsetY + ", viewPanOffsetY: " + viewPanOffsetY
+												   + ", previousViewScaleFactorX: " + previousViewScaleFactorX + ", previousViewScaleFactorY: " + previousViewScaleFactorY
+												   + ", previousViewScaleFactorY: " + previousViewScaleFactorY + ", viewScaleFactorY: " + viewScaleFactorY);
+
 			previousViewPanOffsetX = viewPanOffsetX;
 			previousViewPanOffsetY = viewPanOffsetY;
 			previousViewScaleFactorX = viewScaleFactorX;
@@ -126,6 +133,7 @@ public class PanAndScaleView extends View {
 	 * Register a callback to be invoked when this view is tapped down.
 	 * @param onTapDownListener The callback that will run
 	 */
+	@SuppressWarnings("unused")
 	public void setOnTapDownListener(OnTapListener onTapDownListener) {
 		this.onTapDownListener = onTapDownListener;
 	}
@@ -134,30 +142,37 @@ public class PanAndScaleView extends View {
 	 * Register a callback to be invoked when this view is tapped up.
 	 * @param onTapUpListener The callback that will run
 	 */
+	@SuppressWarnings("unused")
 	public void setOnTapUpListener(OnTapListener onTapUpListener) {
 		this.onTapUpListener = onTapUpListener;
 	}
 
+	@SuppressWarnings("unused")
 	public float getMaxZoom() {
         return maxZoom;
     }
-    
+
+	@SuppressWarnings("unused")
     public void setMaxZoom(float maxZoom) {
     	this.maxZoom = maxZoom;
     }
-    
+
+	@SuppressWarnings("unused")
     public boolean getShowCursor() {
         return showCursor;
     }
-    
+
+	@SuppressWarnings("unused")
     public void setShowCursor(boolean showCursor) {
         this.showCursor = showCursor;
     }
-    
+
+	@SuppressWarnings("unused")
     public PointF getCursorLocation() {
         return cursorLocation;
     }
 
+	@SuppressWarnings("unused")
     public void setCursorLocation(float x, float y) {
         cursorLocation.set(x, y);
     }
@@ -165,6 +180,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @return true to show a small scale thumbnail in the bottom right; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public boolean getShowScaleThumbnail() {
 		return showScaleThumbnail;
 	}
@@ -172,6 +188,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @param showScaleThumbnail true to show a small scale thumbnail in the bottom right; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public void setShowScaleThumbnail(boolean showScaleThumbnail) {
 		this.showScaleThumbnail = showScaleThumbnail;
 	}
@@ -179,6 +196,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @return true to allow to zoom when double tapping; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public boolean getAllowDoubleTapZoom() {
 		return allowDoubleTapZoom;
 	}
@@ -186,6 +204,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @param allowDoubleTapZoom true to allow to zoom when double tapping; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public void setAllowDoubleTapZoom(boolean allowDoubleTapZoom) {
 		this.allowDoubleTapZoom = allowDoubleTapZoom;
 	}
@@ -194,6 +213,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @return true to allow the virtual space to fill view bounds the ; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public boolean getFillBounds() {
 		return fillBounds;
 	}
@@ -201,6 +221,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @param fillBounds true to allow the virtual space to fill the view bounds; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public void setFillBounds(boolean fillBounds) {
 		this.fillBounds = fillBounds;
 	}
@@ -208,6 +229,7 @@ public class PanAndScaleView extends View {
 	/**
 	 * @return true to allow to pan and scale; false otherwise.
 	 */
+	@SuppressWarnings("unused")
 	public boolean getEnablePanAndScale() {
 		return enablePanAndScale;
 	}
@@ -276,7 +298,7 @@ public class PanAndScaleView extends View {
 
 			@Override
 			public boolean onDown(MotionEvent e) {
-				if(debug) Log.d(TAG, "onDown() actionIndex: " + e.getActionIndex());
+				if(debug) Log.d(TAG, "onDown() actionIndex: " + e.getActionIndex() + ", X: " + e.getX() + ", Y: " + e.getY());
 				scroller.forceFinished(true);
 				ViewCompat.postInvalidateOnAnimation(PanAndScaleView.this);
 				if(onTapDownListener != null) {
@@ -288,14 +310,9 @@ public class PanAndScaleView extends View {
 				return super.onDown(e);
 			}
 
-//			@Override
-//			public void onShowPress(MotionEvent e) {
-//				super.onShowPress(e);
-//			}
-
 			@Override
 			public boolean onSingleTapConfirmed(MotionEvent e) {
-				if(debug) Log.d(TAG, "onSingleTapConfirmed() actionIndex: " + e.getActionIndex());
+				if(debug) Log.d(TAG, "onSingleTapConfirmed() actionIndex: " + e.getActionIndex() + ", X: " + e.getX() + ", Y: " + e.getY());
 				if(onTapUpListener != null) {
 					float scaleAndPanX = (e.getX() - viewPanOffsetX) / viewScaleFactorX;
 					float scaleAndPanY = (e.getY() - viewPanOffsetY) / viewScaleFactorY;
@@ -308,7 +325,7 @@ public class PanAndScaleView extends View {
 
 			@Override
 			public boolean onDoubleTap(MotionEvent e) {
-				if(debug) Log.d(TAG, "onDoubleTap() actionIndex: " + e.getActionIndex());
+				if(debug) Log.d(TAG, "onDoubleTap() actionIndex: " + e.getActionIndex() + ", X: " + e.getX() + ", Y: " + e.getY());
 				if(!allowDoubleTapZoom || fillBounds)
 					return false;
 				float scaleFactorPreviousX = viewScaleFactorX;
@@ -328,7 +345,11 @@ public class PanAndScaleView extends View {
 
 			@Override
 			public boolean onScroll(MotionEvent downEvent, MotionEvent moveEvent, float distanceX, float distanceY) {
-				if(debug) Log.d(TAG, "onScroll() downEvent.actionIndex: " + (downEvent != null ? downEvent.getActionIndex() : "null") + ", moveEvent.actionIndex: " + (downEvent != null ? moveEvent.getActionIndex() : "null"));
+				if(debug)
+					Log.d(TAG, "onScroll() downEvent.actionIndex: " + (downEvent != null ? downEvent.getActionIndex() : "null")
+							+ ", moveEvent.actionIndex: " + (downEvent != null ? moveEvent.getActionIndex() : "null")
+							+ ", distanceX: " + distanceX + ", distanceY: " + distanceY
+					);
 				if(fillBounds || preventToScroll)
 					return false;
 
@@ -355,10 +376,10 @@ public class PanAndScaleView extends View {
 						+ ", minX: " + viewPanMinX + ", maxX: " + 0
 						+ ", minY: " + viewPanMinY + ", maxY: " + 0
 						+ ")");
-				scroller.fling((int) viewPanOffsetX, (int) viewPanOffsetY,
+				scroller.fling(-(int)viewPanOffsetX, -(int)viewPanOffsetY,
 						(int)(velocityFactor * velocityX), (int)(velocityFactor * velocityY),
-						(int)viewPanMinX, 0,
-						(int)viewPanMinY, 0);
+						0, -(int)viewPanMinX,
+						0, -(int)viewPanMinY);
 				ViewCompat.postInvalidateOnAnimation(PanAndScaleView.this);
 				return true;
 			}
@@ -367,8 +388,7 @@ public class PanAndScaleView extends View {
 		this.setFocusable(true);
 		this.setFocusableInTouchMode(true);
 
-		// This call is necessary, or else the
-		// draw method will not be called.
+		// This call is necessary, or else the draw method will not be called.
 		setWillNotDraw(false);
 	}
 
@@ -412,6 +432,7 @@ public class PanAndScaleView extends View {
 		invalidate();
 	}
 
+	@SuppressWarnings("unused")
 	public void postDoScroll(float deltaX, float deltaY, boolean center) {
 		if(fillBounds)
 			return;
@@ -423,9 +444,11 @@ public class PanAndScaleView extends View {
 		postInvalidate();
 	}
 
+	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if(enablePanAndScale) {
+			// The order of operations is important
 			boolean result = scaleDetector.onTouchEvent(event);
 			result = gestureDetector.onTouchEvent(event) || result;
 			return result || super.onTouchEvent(event);
@@ -436,14 +459,12 @@ public class PanAndScaleView extends View {
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
 		if (enablePanAndScale && !fillBounds && (event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
-		//if (event.isFromSource(InputDevice.SOURCE_CLASS_POINTER)) {
-			switch (event.getAction()) {
-			case MotionEvent.ACTION_SCROLL:
+			if (event.getAction() == MotionEvent.ACTION_SCROLL) {
 				float wheelDelta = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-		    	if(wheelDelta > 0f)
-		    		scaleByStep(scaleStep, event.getX(), event.getY());
-		    	else if(wheelDelta < 0f)
-		    		scaleByStep(1.0f / scaleStep, event.getX(), event.getY());
+				if (wheelDelta > 0f)
+					scaleByStep(scaleStep, event.getX(), event.getY());
+				else if (wheelDelta < 0f)
+					scaleByStep(1.0f / scaleStep, event.getX(), event.getY());
 
 				return true;
 			}
@@ -466,12 +487,7 @@ public class PanAndScaleView extends View {
 		return super.onKeyUp(keyCode, event);
 	}
 	
-	/**
-	 * Scale the view step by step following the mouse/touch position
-	 * @param scaleFactor
-	 * @param x
-	 * @param y
-	 */
+	// Scale the view step by step following the mouse/touch position
 	private void scaleByStep(float scaleFactor, float x, float y) {
 		float scaleFactorPreviousX = viewScaleFactorX;
 		float scaleFactorPreviousY = viewScaleFactorY;
@@ -490,9 +506,6 @@ public class PanAndScaleView extends View {
 	}
 	
 	private void scaleWithFocus(float focusX, float focusY, float scaleFactorPreviousX, float scaleFactorPreviousY) {
-		//float centeredScaleFactor = 1f - viewScaleFactor / scaleFactorPrevious;
-		//viewPanOffsetX += (focusX - viewPanOffsetX) * centeredScaleFactor;
-		//viewPanOffsetY += (focusY - viewPanOffsetY) * centeredScaleFactor;
 		viewPanOffsetX = viewPanOffsetX + (focusX - viewPanOffsetX) - (focusX - viewPanOffsetX) * viewScaleFactorX / scaleFactorPreviousX;
 		viewPanOffsetY = viewPanOffsetY + (focusY - viewPanOffsetY) - (focusY - viewPanOffsetY) * viewScaleFactorY / scaleFactorPreviousY;
 	}
@@ -616,6 +629,7 @@ public class PanAndScaleView extends View {
 
 	@Override
 	protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
+		if(debug) Log.d(TAG, "onSizeChanged(viewWidth: " + viewWidth + ", viewHeight: " + viewHeight + ", oldViewWidth: " + oldViewWidth + ", oldViewHeight: " + oldViewHeight + ")");
 		super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
 		
 		viewSizeWidth = viewWidth;
@@ -674,9 +688,6 @@ public class PanAndScaleView extends View {
     			viewSizeHeight - marginY
 	    	);
 			canvas.drawRect(rectScaleImage, paint);
-//    		rectBitmapSource.set(0, 0, (int) virtualSizeWidth, (int) virtualSizeHeight);
-//    		if(mBitmap != null)
-//    			canvas.drawBitmap(mBitmap, rectBitmapSource, rectScaleImage, paint);
     		rectScaleView.set(rectScaleImage.left + scale * (-viewPanOffsetX / viewScaleFactorX),
 				rectScaleImage.top + scale * (-viewPanOffsetY / viewScaleFactorY),
 				rectScaleImage.left + scale * (viewSizeWidth - viewPanOffsetX) / viewScaleFactorX,

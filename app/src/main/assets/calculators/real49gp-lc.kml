@@ -83,37 +83,37 @@ End
 
 Annunciator 1
 	Size 24 18
-	Offset 84 2
+	Offset 40 2
 	Down 443 927
 End
 
 Annunciator 2
 	Size 24 18
-	Offset 147 2
+	Offset 103 2
 	Down 467 927
 End
 
 Annunciator 3
 	Size 24 18
-	Offset 220 2
+	Offset 176 2
 	Down 491 927
 End
 
 Annunciator 4
 	Size 24 18
-	Offset 290 2
+	Offset 246 2
 	Down 515 927
 End
 
 Annunciator 5
 	Size 24 18
-	Offset 355 2
+	Offset 311 2
 	Down 539 927
 End
 
 Annunciator 6
 	Size 24 18
-	Offset 424 2
+	Offset 380 2
 	Down 564 927
 End
 

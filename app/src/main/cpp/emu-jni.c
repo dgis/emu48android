@@ -932,8 +932,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEn
         ResetDocument();					// close document
         SetWindowTitle(NULL);
     }
-//    mainViewResizeCallback(nBackgroundW, nBackgroundH);
-    //draw(); //TODO CRASH
 
     return result;
 }

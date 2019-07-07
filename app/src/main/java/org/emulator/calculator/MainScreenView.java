@@ -14,6 +14,7 @@
 
 package org.emulator.calculator;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -23,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -37,7 +39,7 @@ public class MainScreenView extends PanAndScaleView {
 
     private Paint paint = new Paint();
     private Bitmap bitmapMainScreen;
-    private HashMap<Integer, Integer> vkmap;
+    private SparseIntArray vkmap;
     private HashMap<Character, Integer> charmap;
     private int kmlBackgroundColor = Color.BLACK;
     private boolean useKmlBackgroundColor = false;
@@ -69,7 +71,7 @@ public class MainScreenView extends PanAndScaleView {
         charmap.put('*', 0x6A); // VK_MULTIPLY
         charmap.put('/', 0x6F); // VK_DIVIDE
 
-        vkmap = new HashMap<>();
+        vkmap = new SparseIntArray();
         //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
         vkmap.put(KeyEvent.KEYCODE_TAB, 0x09); // VK_TAB
         vkmap.put(KeyEvent.KEYCODE_ENTER, 0x0D); // VK_RETURN
@@ -87,16 +89,6 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_DPAD_UP, 0x26); // VK_UP
         vkmap.put(KeyEvent.KEYCODE_DPAD_RIGHT, 0x27); // VK_RIGHT
         vkmap.put(KeyEvent.KEYCODE_DPAD_DOWN, 0x28); // VK_DOWN
-//        vkmap.put(KeyEvent.KEYCODE_0, 0x30); // 0
-//        vkmap.put(KeyEvent.KEYCODE_1, 0x31); // 1
-//        vkmap.put(KeyEvent.KEYCODE_2, 0x32); // 2
-//        vkmap.put(KeyEvent.KEYCODE_3, 0x33); // 3
-//        vkmap.put(KeyEvent.KEYCODE_4, 0x34); // 4
-//        vkmap.put(KeyEvent.KEYCODE_5, 0x35); // 5
-//        vkmap.put(KeyEvent.KEYCODE_6, 0x36); // 6
-//        vkmap.put(KeyEvent.KEYCODE_7, 0x37); // 7
-//        vkmap.put(KeyEvent.KEYCODE_8, 0x38); // 8
-//        vkmap.put(KeyEvent.KEYCODE_9, 0x39); // 9
         vkmap.put(KeyEvent.KEYCODE_A, 0x41); // A
         vkmap.put(KeyEvent.KEYCODE_B, 0x42); // B
         vkmap.put(KeyEvent.KEYCODE_C, 0x43); // C
@@ -165,39 +157,17 @@ public class MainScreenView extends PanAndScaleView {
         // This call is necessary, or else the
         // draw method will not be called.
         setWillNotDraw(false);
-
-//        scroller.setFriction(0.00001f); // ViewConfiguration.getScrollFriction(); // ViewConfiguration.SCROLL_FRICTION = 0.015f;
-//        setOnTapDownListener(new OnTapListener() {
-//            @Override
-//            public boolean onTap(View v, float x, float y) {
-//                if(NativeLib.buttonDown((int)x, (int)y)) {
-//                    if(debug) Log.d(TAG, "onTapDown() true");
-//                        return true;
-//                }
-//                if(debug) Log.d(TAG, "onTapDown() false");
-//                return false;
-//            }
-//        });
-
-//        setOnTapUpListener(new OnTapListener() {
-//            @Override
-//            public boolean onTap(View v, float x, float y) {
-//                if(debug) Log.d(TAG, "onTapUp()");
-//                NativeLib.buttonUp((int)x, (int)y);
-//                return false;
-//            }
-//        });
     }
 
-    protected Set<Integer> currentButtonTouched = new HashSet<Integer>();
+    // Prevent accidental scroll when taping a calc button
+    protected Set<Integer> currentButtonTouched = new HashSet<>();
+    @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
         int actionIndex = event.getActionIndex();
         int action = event.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
-                //Log.d(TAG, "ACTION_DOWN/ACTION_POINTER_DOWN count: " + touchCount + ", actionIndex: " + actionIndex);
-                //NativeLib.buttonDown((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
                 currentButtonTouched.remove(actionIndex);
                 if(actionIndex == 0 && event.getPointerCount() == 1)
                     currentButtonTouched.clear();
@@ -205,8 +175,6 @@ public class MainScreenView extends PanAndScaleView {
                         (int) ((event.getY(actionIndex) - viewPanOffsetY) / viewScaleFactorY))) {
                     currentButtonTouched.add(actionIndex);
                     preventToScroll = true;
-//                    if (debug) Log.d(TAG, "onTouchEvent() ACTION_DOWN true, actionIndex: " + actionIndex + ", currentButtonTouched: " + currentButtonTouched.size());
-//                    return true;
                 }
                 if (debug) Log.d(TAG, "onTouchEvent() ACTION_DOWN false, actionIndex: " + actionIndex
                         + ", currentButtonTouched: " + currentButtonTouched.size()
@@ -214,8 +182,6 @@ public class MainScreenView extends PanAndScaleView {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
-                //Log.d(TAG, "ACTION_UP/ACTION_POINTER_UP count: " + touchCount + ", actionIndex: " + actionIndex);
-                //NativeLib.buttonUp((int)((event.getX(actionIndex) - screenOffsetX) / screenScaleX), (int)((event.getY(actionIndex) - screenOffsetY) / screenScaleY));
                 NativeLib.buttonUp((int) ((event.getX(actionIndex) - viewPanOffsetX) / viewScaleFactorX), (int) ((event.getY(actionIndex) - viewPanOffsetY) / viewScaleFactorY));
                 currentButtonTouched.remove(actionIndex);
                 preventToScroll = currentButtonTouched.size() > 0;
@@ -236,14 +202,13 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            //Log.d(TAG, "onKeyDown is: " + pressedKey);
+            if(debug) Log.d(TAG, "onKeyDown is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
-            if (windowsKeycode != null)
+            if (windowsKeycode != 0)
                 NativeLib.keyDown(windowsKeycode);
-            else
-                Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+            else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
         if(keyCode == KeyEvent.KEYCODE_BACK)
             return true;
@@ -254,14 +219,13 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            //Log.d(TAG, "onKeyUp is: " + pressedKey);
+            if(debug) Log.d(TAG, "onKeyUp is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
-            if (windowsKeycode != null)
+            if (windowsKeycode != 0)
                 NativeLib.keyUp(windowsKeycode);
-            else
-                Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+            else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
         }
         if(keyCode == KeyEvent.KEYCODE_BACK)
             return true;
@@ -270,8 +234,6 @@ public class MainScreenView extends PanAndScaleView {
 
     @Override
     protected void onSizeChanged(int viewWidth, int viewHeight, int oldViewWidth, int oldViewHeight) {
-//        super.onSizeChanged(viewWidth, viewHeight, oldViewWidth, oldViewHeight);
-
         viewSizeWidth = viewWidth;
         viewSizeHeight = viewHeight;
 
@@ -325,8 +287,6 @@ public class MainScreenView extends PanAndScaleView {
                             constrainPan();
                             return;
                         }
-                    } else {
-                        //((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                     }
                 }
             }
@@ -350,7 +310,8 @@ public class MainScreenView extends PanAndScaleView {
     final int CALLBACK_TYPE_INVALIDATE = 0;
     final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
 
-    int updateCallback(int type, int param1, int param2, String param3, String param4) {
+    @SuppressWarnings("unused")
+    public int updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case CALLBACK_TYPE_INVALIDATE:
                 //Log.d(TAG, "PAINT updateCallback() postInvalidate()");

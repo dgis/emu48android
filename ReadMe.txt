@@ -66,6 +66,8 @@ Version 1.5 (2019-06-xx)
 - Prevent the ESC key from leaving the application (Github Fix: #6).
 - Map the keyboard DELETE key like it should (Github Fix: #6).
 - Map the +, -, * and / keys catching the typed character instead of the virtual key (Github Fix: #6).
+- Fix the printer icon in the Eric's script "real49gp-lc.kml" and "real50g-lc.kml".
+- Improve the swipe gesture.
 
 
 Version 1.4 (2019-06-08)
@@ -146,12 +148,20 @@ Note: some included files are not covered by the GPL; these include ROM image fi
 The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this application with the kind permission of Eric Rechlin.
 
 
+DONE
+
+- Cleanup code.
+- Auto-scroll down the textual printer.
+- Fix the printer icon in the Eric's script "real49gp-lc.kml" and "real50g-lc.kml".
+- Improve the swipe gesture.
+
+
 TODO
 
+- With HP49, On+D does not work even with version 2.10 (2.15 should not work)!
 - In Chrome OS:
     - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.
-- Improve the swipe gesture.
 - The clock seems unsynchronized sometimes.
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?).
 - Add a separation between the pixels (Suggestion from Jaime Meza).
