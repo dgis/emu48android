@@ -125,6 +125,8 @@ typedef ULONG_PTR SIZE_T, *PSIZE_T;
 
 
 #define MAXLONG     0x7fffffff
+#define MAXDWORD    0xffffffff
+
 
 #define CONST const
 
@@ -177,7 +179,6 @@ typedef union _LARGE_INTEGER {
 
 typedef char *LPTSTR;
 typedef char *LPSTR;
-//typedef char LPCSTR[255];
 typedef const char *LPCSTR;
 typedef const char *LPCTSTR;
 #ifdef UNICODE
@@ -215,44 +216,6 @@ struct TIMECAPS
 	UINT wPeriodMin;
 	UINT wPeriodMax;
 };
-
-struct DCB
-{
-	DWORD DCBlength;
-	DWORD BaudRate;
-	BOOL fBinary,
-			fParity,
-			fOutxCtsFlow,
-			fOutxDsrFlow,
-			fOutX,
-			fErrorChar,
-			fNull,
-			fAbortOnError;
-
-	WORD fDtrControl,
-			fDsrSensitivity,
-			fRtsControl,
-			ByteSize,
-			Parity,
-			StopBits;
-};
-enum
-{
-	DTR_CONTROL_DISABLE,
-	RTS_CONTROL_DISABLE,
-	NOPARITY,
-	ONESTOPBIT
-};
-struct COMMTIMEOUTS
-{
-	DWORD a,b,c,d,e;
-};
-/*
-struct OVERLAPPED
-{
-	HANDLE hEvent;
-};
-*/
 
 typedef struct _SYSTEM_POWER_STATUS
 {
@@ -339,7 +302,8 @@ enum FilePointerType {
 };
 #define INVALID_FILE_SIZE ((DWORD)0xFFFFFFFF)
 #define INVALID_SET_FILE_POINTER ((DWORD)-1)
-#define NO_ERROR 0L                                                 // dderror
+#define NO_ERROR 0L                 // dderror
+#define ERROR_IO_PENDING 997L		// dderror
 extern DWORD GetLastError(VOID);
 
 // Supposedly specifies that Windows use default window coords
@@ -714,6 +678,10 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 extern HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
 extern DWORD ResumeThread(HANDLE hThread);
 extern BOOL CloseHandle(HANDLE hObject);
+#define THREAD_BASE_PRIORITY_MAX    2
+#define THREAD_PRIORITY_HIGHEST         THREAD_BASE_PRIORITY_MAX
+#define THREAD_PRIORITY_ABOVE_NORMAL    (THREAD_PRIORITY_HIGHEST-1)
+extern BOOL SetThreadPriority(HANDLE hThread, int nPriority);
 
 extern void InitializeCriticalSection(CRITICAL_SECTION * lpCriticalSection);
 extern void EnterCriticalSection(CRITICAL_SECTION *);
@@ -1261,3 +1229,84 @@ void performHapticFeedback();
 void sendByteUdp(unsigned char byteSent);
 
 typedef int SOCKET;
+
+// IO
+
+#define EV_RXCHAR           0x0001
+#define EV_TXEMPTY          0x0004
+#define EV_ERR              0x0080
+
+#define CE_OVERRUN          0x0002
+#define CE_FRAME            0x0008
+#define CE_BREAK            0x0010
+
+#define PURGE_TXABORT       0x0001
+#define PURGE_TXCLEAR       0x0004
+
+#define DTR_CONTROL_DISABLE    0x00
+#define RTS_CONTROL_DISABLE    0x00
+
+#define NOPARITY            0
+#define TWOSTOPBITS         2
+
+typedef struct _COMSTAT {
+	DWORD fCtsHold : 1;
+	DWORD fDsrHold : 1;
+	DWORD fRlsdHold : 1;
+	DWORD fXoffHold : 1;
+	DWORD fXoffSent : 1;
+	DWORD fEof : 1;
+	DWORD fTxim : 1;
+	DWORD fReserved : 25;
+	DWORD cbInQue;
+	DWORD cbOutQue;
+} COMSTAT, *LPCOMSTAT;
+
+typedef struct _COMMTIMEOUTS {
+	DWORD ReadIntervalTimeout;
+	DWORD ReadTotalTimeoutMultiplier;
+	DWORD ReadTotalTimeoutConstant;
+	DWORD WriteTotalTimeoutMultiplier;
+	DWORD WriteTotalTimeoutConstant;
+} COMMTIMEOUTS,*LPCOMMTIMEOUTS;
+
+typedef struct _DCB {
+	DWORD DCBlength;
+	DWORD BaudRate;
+	DWORD fBinary: 1;
+	DWORD fParity: 1;
+	DWORD fOutxCtsFlow:1;
+	DWORD fOutxDsrFlow:1;
+	DWORD fDtrControl:2;
+	DWORD fDsrSensitivity:1;
+	DWORD fTXContinueOnXoff: 1;
+	DWORD fOutX: 1;
+	DWORD fInX: 1;
+	DWORD fErrorChar: 1;
+	DWORD fNull: 1;
+	DWORD fRtsControl:2;
+	DWORD fAbortOnError:1;
+	DWORD fDummy2:17;
+	WORD wReserved;
+	WORD XonLim;
+	WORD XoffLim;
+	BYTE ByteSize;
+	BYTE Parity;
+	BYTE StopBits;
+	char XonChar;
+	char XoffChar;
+	char ErrorChar;
+	char EofChar;
+	char EvtChar;
+	WORD wReserved1;
+} DCB, *LPDCB;
+
+extern BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait);
+extern BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped);
+extern BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat);
+extern BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts);
+extern BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask);
+extern BOOL SetCommState(HANDLE hFile, LPDCB lpDCB);
+extern BOOL PurgeComm(HANDLE hFile, DWORD dwFlags);
+extern BOOL SetCommBreak(HANDLE hFile);
+extern BOOL ClearCommBreak(HANDLE hFile);

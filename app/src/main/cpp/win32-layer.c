@@ -605,6 +605,13 @@ DWORD ResumeThread(HANDLE hThread) {
     return 0;
 }
 
+BOOL SetThreadPriority(HANDLE hThread, int nPriority) {
+    THREAD_LOGD("SetThreadPriority()");
+    //TODO
+    return 0;
+}
+
+
 //https://docs.microsoft.com/en-us/windows/desktop/api/synchapi/nf-synchapi-waitforsingleobject
 DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 {
@@ -2767,4 +2774,43 @@ void _makepath(char _Buffer, char const* _Drive, char const* _Dir, char const* _
 BOOL GetClientRect(HWND hWnd, LPRECT lpRect)
 {
     return 0;
+}
+
+// IO
+
+BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait) {
+    //TODO
+    return FALSE;
+}
+BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped) {
+    //TODO
+    return FALSE;
+}
+BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat) {
+    //TODO
+    return FALSE;
+}
+BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts) {
+    //TODO
+    return FALSE;
+}
+BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask) {
+    //TODO
+    return FALSE;
+}
+BOOL SetCommState(HANDLE hFile, LPDCB lpDCB) {
+    //TODO
+    return FALSE;
+}
+BOOL PurgeComm(HANDLE hFile, DWORD dwFlags) {
+    //TODO
+    return FALSE;
+}
+BOOL SetCommBreak(HANDLE hFile) {
+    //TODO
+    return FALSE;
+}
+BOOL ClearCommBreak(HANDLE hFile) {
+    //TODO
+    return FALSE;
 }

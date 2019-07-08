@@ -16,22 +16,22 @@
 #include "emu.h"
 
 // Serial.c
-BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort) {
-    return 0;
-}
-VOID CommClose(VOID) {
-}
-VOID CommSetBaud(VOID) {
-}
-BOOL UpdateUSRQ(VOID) {
-    return 0;
-}
-VOID CommTxBRK(VOID) {
-}
-VOID CommTransmit(VOID) {
-}
-VOID CommReceive(VOID) {
-}
+//BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort) {
+//    return 0;
+//}
+//VOID CommClose(VOID) {
+//}
+//VOID CommSetBaud(VOID) {
+//}
+//BOOL UpdateUSRQ(VOID) {
+//    return 0;
+//}
+//VOID CommTxBRK(VOID) {
+//}
+//VOID CommTransmit(VOID) {
+//}
+//VOID CommReceive(VOID) {
+//}
 
 // udp.c
 TCHAR szUdpServer[1024] = _T("localhost");
