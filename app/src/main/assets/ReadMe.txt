@@ -49,15 +49,15 @@ NOT WORKING YET
 
 - Disassembler
 - Debugger
-- Macro
 - Serial Ports (Wire or Ir)
 
 
 CHANGES
 
-Version 1.5 (2019-06-xx)
+Version 1.5 (2019-07-11)
 
-- Add the printer simulator (set delay to 0 to speed up!).
+- Add the Ir printer simulator based on the Christoph Giesselink's HP82240B Printer Simulator for Windows.
+- Add the macro support.
 - Refactor the code for easier code sharing between Emu48, Emu42 and Emu71.
 - Fix: Bad text characters when copy/paste the stack.
 - Fix: Selecting an empty KML folder prevent to select the default embedded KML folder (Github Fix: #5)!
@@ -66,6 +66,9 @@ Version 1.5 (2019-06-xx)
 - Prevent the ESC key from leaving the application (Github Fix: #6).
 - Map the keyboard DELETE key like it should (Github Fix: #6).
 - Map the +, -, * and / keys catching the typed character instead of the virtual key (Github Fix: #6).
+- Fix the printer icon in the Eric's script "real49gp-lc.kml" and "real50g-lc.kml".
+- Improve the swipe gesture.
+- Fix the On+D tests for hp49/50 by mocking "serial.c".
 
 
 Version 1.4 (2019-06-08)

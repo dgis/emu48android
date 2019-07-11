@@ -33,8 +33,8 @@ android {
         applicationId "org.emulator.forty.eight"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 6
-        versionName "1.4"
+        versionCode 7
+        versionName "1.5"
         setProperty("archivesBaseName", "Emu48-v$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {

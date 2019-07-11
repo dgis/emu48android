@@ -306,7 +306,7 @@ public class PrinterSimulator {
     private void addTextData(int byData) {
         do {
             // special LF and LF characters
-            if (!preventLineWrap && byData == 0x04 || byData == 0x0A) {
+            if (/*!preventLineWrap &&*/ byData == 0x04 || byData == 0x0A) {
                 textUpdate.append('\r');
                 textUpdate.append('\n');
                 if(debug) Log.d(TAG, "addTextData(" + byData + ")");

@@ -54,7 +54,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.5 (2019-06-xx)
+Version 1.5 (2019-07-11)
 
 - Add the Ir printer simulator based on the Christoph Giesselink's HP82240B Printer Simulator for Windows.
 - Add the macro support.
@@ -151,6 +151,9 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Add the possibility to load and save the flash in another file.
+- Add the possibility to deactivate the zoom.
+- Sometimes, the calculator seems to lag and finally freeze.
 - In Chrome OS:
     - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.
