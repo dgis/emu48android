@@ -57,7 +57,8 @@ CHANGES
 Version 1.6 (2019-07-XX)
 
 - Add option to prevent the pinch zoom.
-- Prevent the white bottom bar when both options "Hide the status/navigations bar" and "Hide the menu button" are set (Github Fix: #6).
+- Prevent the white bottom bar when both options "Hide the status/navigations bar" and "Hide the menu button" are set (Github Fix: #9).
+- Prevent the BACK/ESCAPE key to end the application only from a hardware keyboard (Github Fix: #10).
 
 
 Version 1.5 (2019-07-11)

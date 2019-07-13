@@ -209,9 +209,9 @@ public class MainScreenView extends PanAndScaleView {
             if (windowsKeycode != 0)
                 NativeLib.keyDown(windowsKeycode);
             else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+            if(keyCode == KeyEvent.KEYCODE_BACK)
+                return true;
         }
-        if(keyCode == KeyEvent.KEYCODE_BACK)
-            return true;
         return super.onKeyDown(keyCode, event);
     }
 
@@ -226,9 +226,9 @@ public class MainScreenView extends PanAndScaleView {
             if (windowsKeycode != 0)
                 NativeLib.keyUp(windowsKeycode);
             else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
+            if(keyCode == KeyEvent.KEYCODE_BACK)
+                return true;
         }
-        if(keyCode == KeyEvent.KEYCODE_BACK)
-            return true;
         return super.onKeyUp(keyCode, event);
     }
 
