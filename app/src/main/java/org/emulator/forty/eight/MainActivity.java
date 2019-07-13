@@ -76,7 +76,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -90,7 +89,6 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
-    public static MainActivity mainActivity;
     private SharedPreferences sharedPreferences;
     private NavigationView navigationView;
     private DrawerLayout drawer;
@@ -138,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setVisibility(View.GONE);
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -147,19 +146,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        mainActivity = this;
-
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             mainScreenView.setStatusBarColor(getWindow().getStatusBarColor());
-        }
-
-        toolbar.setVisibility(View.GONE);
+        mainScreenView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
         mainScreenContainer.addView(mainScreenView, 0);
 
         imageButtonMenu = findViewById(R.id.button_menu);
@@ -1480,7 +1475,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
             String[] settingKeys = {
-                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout",
+                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom",
                     "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
                     "settings_background_kml_color", "settings_background_fallback_color",
                     "settings_printer_model", "settings_printer_prevent_line_wrap", "settings_macro",
@@ -1514,6 +1509,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         // Catch bad number format
                     }
                     mainScreenView.setAutoLayout(autoLayoutMode, isDynamic);
+                    break;
+                case "settings_allow_pinch_zoom":
+                    mainScreenView.setAllowPinchZoom(sharedPreferences.getBoolean("settings_allow_pinch_zoom", true));
                     break;
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":

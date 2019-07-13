@@ -45,6 +45,10 @@
                 android:defaultValue="0"
                 />
             <SwitchPreference
+                android:key="settings_allow_pinch_zoom"
+                android:title="@string/settings_allow_pinch_zoom_title"
+                android:defaultValue="true" />
+            <SwitchPreference
                 android:key="settings_hide_bar_status"
                 android:title="@string/settings_hide_bar_status"
                 android:defaultValue="false" />
@@ -56,10 +60,6 @@
                 android:key="settings_hide_button_menu"
                 android:title="@string/settings_hide_button_menu"
                 android:defaultValue="false" />
-            <!--<SwitchPreference-->
-                <!--android:key="settings_allow_sound"-->
-                <!--android:title="@string/settings_allow_sound_title"-->
-                <!--android:defaultValue="true" />-->
             <SeekBarPreference
                 android:key="settings_sound_volume"
                 android:title="@string/settings_sound_volume_title"

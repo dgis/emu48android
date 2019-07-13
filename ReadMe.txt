@@ -54,6 +54,12 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.6 (2019-07-XX)
+
+- Add option to prevent the pinch zoom.
+- Prevent the white bottom bar when both options "Hide the status/navigations bar" and "Hide the menu button" are set (Github Fix: #6).
+
+
 Version 1.5 (2019-07-11)
 
 - Add the Ir printer simulator based on the Christoph Giesselink's HP82240B Printer Simulator for Windows.

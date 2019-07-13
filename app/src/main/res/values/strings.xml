@@ -101,6 +101,8 @@
     <string name="settings_rotation_title">Rotation</string>
     <string name="settings_rotation_summary">Allow to rotate, or force Portrait or Landscape orientation</string>
 
+    <string name="settings_allow_pinch_zoom_title">Allow to pinch to zoom</string>
+
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
     <string name="settings_hide_button_menu">Hide the button menu</string>

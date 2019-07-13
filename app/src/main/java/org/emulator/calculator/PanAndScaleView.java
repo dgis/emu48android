@@ -51,6 +51,7 @@ public class PanAndScaleView extends View {
 	protected boolean preventToScroll = false;
 	protected boolean hasScrolled = false;
     protected PointF panPrevious = new PointF(0f, 0f);
+	protected boolean preventPinchZoom = false;
 
     protected RectF rectScaleView = new RectF();
     protected RectF rectScaleImage = new RectF();
@@ -241,6 +242,10 @@ public class PanAndScaleView extends View {
 		this.enablePanAndScale = enablePanAndScale;
 	}
 
+	public void setAllowPinchZoom(boolean allowPinchZoom) {
+		this.preventPinchZoom = !allowPinchZoom;
+	}
+
 
 	public void setVirtualSize(float width, float height) {
 		virtualSizeWidth = width;
@@ -274,7 +279,7 @@ public class PanAndScaleView extends View {
 			@Override
 		    public boolean onScale(ScaleGestureDetector detector) {
 				if(debug) Log.d(TAG, "onScale()");
-		    	if(fillBounds)
+		    	if(fillBounds || preventPinchZoom)
 		    		return false;
 				float scaleFactorPreviousX = viewScaleFactorX;
 				float scaleFactorPreviousY = viewScaleFactorY;
