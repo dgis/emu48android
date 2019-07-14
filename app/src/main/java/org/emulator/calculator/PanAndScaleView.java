@@ -616,13 +616,10 @@ public class PanAndScaleView extends View {
 
 	boolean osdAllowed = false;
 	Handler osdTimerHandler = new Handler();
-	Runnable osdTimerRunnable = new Runnable() {
-		@Override
-		public void run() {
-			// OSD should stop now!
-			osdAllowed = false;
-			invalidate();
-		}
+	Runnable osdTimerRunnable = () -> {
+		// OSD should stop now!
+		osdAllowed = false;
+		invalidate();
 	};
 
 	void startOSDTimer() {

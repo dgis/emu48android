@@ -74,7 +74,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -134,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setVisibility(View.GONE);
 
@@ -187,19 +186,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         fragmentPrinterSimulator.setPrinterSimulator(printerSimulator);
-        printerSimulator.setOnPrinterOutOfPaperListener(new PrinterSimulator.OnPrinterOutOfPaperListener() {
-            @Override
-            public void onPrinterOutOfPaper(final int currentLine, final int maxLine, final int currentPixelRow, final int maxPixelRow) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, String.format(Locale.US,
-                                getString(R.string.message_printer_out_of_paper),
-                                maxLine, maxPixelRow), Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-        });
+        printerSimulator.setOnPrinterOutOfPaperListener((currentLine, maxLine, currentPixelRow, maxPixelRow) -> runOnUiThread(
+                () -> Toast.makeText(MainActivity.this, String.format(Locale.US, getString(R.string.message_printer_out_of_paper), maxLine, maxPixelRow), Toast.LENGTH_LONG).show()
+                )
+        );
 
 
         //android.os.Debug.waitForDebugger();
@@ -387,15 +377,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String[] mrus = mruLinkedHashMapKeySet.toArray(new String[mruLength]);
 
             int mruClickedIndex = id - MRU_ID_START;
-            final String url = mrus[mruClickedIndex];
+            String url = mrus[mruClickedIndex];
             mruLinkedHashMap.get(url);
 
-            ensureDocumentSaved(new Runnable() {
-                @Override
-                public void run() {
-                    if(onFileOpen(url) != 0) {
-                        saveLastDocument(url);
-                    }
+            ensureDocumentSaved(() -> {
+                if(onFileOpen(url) != 0) {
+                    saveLastDocument(url);
                 }
             });
 
@@ -519,9 +506,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
                 if(kmlFolderDocumentFile != null) {
 	                for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
-	                    final String url = file.getUri().toString();
-	                    final String name = file.getName();
-	                    final String mime = file.getType();
+	                    String url = file.getUri().toString();
+	                    String name = file.getName();
+	                    String mime = file.getType();
 	                    Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
 	                    if(kmlMimeType.equals(mime)) {
 	                        calculatorsAssetFilenames.add(url);
@@ -595,41 +582,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
 
-            Collections.sort(kmlScripts, new Comparator<KMLScriptItem>() {
-                @Override
-                public int compare(KMLScriptItem lhs, KMLScriptItem rhs) {
-                    return lhs.title.compareTo(rhs.title);
-                }
-            });
+            Collections.sort(kmlScripts, (lhs, rhs) -> lhs.title.compareTo(rhs.title));
         }
     }
 
-    private void ensureDocumentSaved(final Runnable continueCallback) {
+    private void ensureDocumentSaved(Runnable continueCallback) {
         ensureDocumentSaved(continueCallback, false);
     }
 
     private Runnable fileSaveAsCallback = null;
-    private void ensureDocumentSaved(final Runnable continueCallback, boolean forceRequest) {
+    private void ensureDocumentSaved(Runnable continueCallback, boolean forceRequest) {
         if(NativeLib.isDocumentAvailable()) {
-            final String currentFilename = NativeLib.getCurrentFilename();
-            final boolean hasFilename = (currentFilename != null && currentFilename.length() > 0);
+            String currentFilename = NativeLib.getCurrentFilename();
+            boolean hasFilename = (currentFilename != null && currentFilename.length() > 0);
 
-            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE) {
-                        if (hasFilename) {
-                            if(NativeLib.onFileSave() == 1)
-                                showAlert(getString(R.string.message_state_saved));
-                            if (continueCallback != null)
-                                continueCallback.run();
-                        } else {
-                            fileSaveAsCallback = continueCallback;
-                            OnFileSaveAs();
-                        }
-                    } else if (which == DialogInterface.BUTTON_NEGATIVE) {
-                        if(continueCallback != null)
+            DialogInterface.OnClickListener onClickListener = (dialog, which) -> {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    if (hasFilename) {
+                        if(NativeLib.onFileSave() == 1)
+                            showAlert(getString(R.string.message_state_saved));
+                        if (continueCallback != null)
                             continueCallback.run();
+                    } else {
+                        fileSaveAsCallback = continueCallback;
+                        OnFileSaveAs();
                     }
+                } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                    if(continueCallback != null)
+                        continueCallback.run();
                 }
             };
 
@@ -650,12 +630,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // By default Port1 is set
         setPort1Settings(true, true);
 
-        ensureDocumentSaved(new Runnable() {
-            @Override
-            public void run() {
-                showKMLPicker(false);
-            }
-        });
+        ensureDocumentSaved(() -> showKMLPicker(false));
     }
 
     private void newFileFromKML(String kmlScriptFilename) {
@@ -670,15 +645,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnFileOpen() {
-        ensureDocumentSaved(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-state.e48");
-                startActivityForResult(intent, INTENT_GETOPENFILENAME);
-            }
+        ensureDocumentSaved(() -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-state.e48");
+            startActivityForResult(intent, INTENT_GETOPENFILENAME);
         });
     }
     private void OnFileSave() {
@@ -722,21 +694,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivityForResult(intent, INTENT_GETSAVEFILENAME);
     }
     private void OnFileClose() {
-        ensureDocumentSaved(new Runnable() {
-            @Override
-            public void run() {
-                NativeLib.onFileClose();
-                showCalculatorView(false);
-                saveLastDocument("");
-                updateNavigationDrawerItems();
-                displayFilename("");
-                if(drawer != null) {
-                    new android.os.Handler().postDelayed(new Runnable() {
-                        public void run() {
-                            drawer.openDrawer(GravityCompat.START);
-                        }
-                    }, 300);
-                }
+        ensureDocumentSaved(() -> {
+            NativeLib.onFileClose();
+            showCalculatorView(false);
+            saveLastDocument("");
+            updateNavigationDrawerItems();
+            displayFilename("");
+            if(drawer != null) {
+                new android.os.Handler().postDelayed(() -> drawer.openDrawer(GravityCompat.START), 300);
             }
         }, true);
     }
@@ -755,11 +720,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void OnObjectLoad() {
         if(sharedPreferences.getBoolean("settings_objectloadwarning", false)) {
-            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE) {
-                        openDocument();
-                    }
+            DialogInterface.OnClickListener onClickListener = (dialog, which) -> {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    openDocument();
                 }
             };
             new AlertDialog.Builder(this)
@@ -812,11 +775,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NativeLib.onStackPaste();
     }
     private void OnViewReset() {
-        DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == DialogInterface.BUTTON_POSITIVE) {
-                    NativeLib.onViewReset();
-                }
+        DialogInterface.OnClickListener onClickListener = (dialog, which) -> {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                NativeLib.onViewReset();
             }
         };
         new AlertDialog.Builder(this)
@@ -850,10 +811,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentPrinterSimulator.show(getSupportFragmentManager(), "Hello Fragment");
     }
 
-    private void showKMLPicker(final boolean changeKML) {
+    private void showKMLPicker(boolean changeKML) {
         extractKMLScripts();
 
-        final ArrayList<KMLScriptItem> kmlScriptsForCurrentModel;
+        ArrayList<KMLScriptItem> kmlScriptsForCurrentModel;
         if(changeKML) {
             kmlScriptsForCurrentModel = new ArrayList<>();
             char m = (char) NativeLib.getCurrentModel();
@@ -866,8 +827,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             kmlScriptsForCurrentModel = kmlScripts;
 
         boolean hasEmbeddedKMLs = getPackageName().contains("org.emulator.forty.eight");
-        final int lastIndex = kmlScriptsForCurrentModel.size();
-        final String[] kmlScriptTitles = new String[lastIndex + (hasEmbeddedKMLs ? 2 : 1)];
+        int lastIndex = kmlScriptsForCurrentModel.size();
+        String[] kmlScriptTitles = new String[lastIndex + (hasEmbeddedKMLs ? 2 : 1)];
         for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
             kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
         kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
@@ -875,45 +836,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(getResources().getString(R.string.pick_calculator))
-                .setItems(kmlScriptTitles, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(which == lastIndex) {
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) { // < API 21
-                                new AlertDialog.Builder(MainActivity.this)
-                                        .setTitle(getString(R.string.message_kml_folder_selection_need_api_lollipop))
-                                        .setMessage(getString(R.string.message_kml_folder_selection_need_api_lollipop_description))
-                                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int which) {
-                                            }
-                                        }).show();
-                            } else {
-                                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                                startActivityForResult(intent, changeKML ? INTENT_PICK_KML_FOLDER_FOR_CHANGING : INTENT_PICK_KML_FOLDER_FOR_NEW_FILE);
-                            }
-                        } else if(which == lastIndex + 1) {
-                            // Reset to default KML folder
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putBoolean("settings_kml_default", true);
-                            editor.apply();
-                            updateFromPreferences("settings_kml", true);
-                            if(changeKML)
-                                OnViewScript();
-                            else
-                                OnFileNew();
+                .setItems(kmlScriptTitles, (dialog, which) -> {
+                    if(which == lastIndex) {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) { // < API 21
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle(getString(R.string.message_kml_folder_selection_need_api_lollipop))
+                                    .setMessage(getString(R.string.message_kml_folder_selection_need_api_lollipop_description))
+                                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int which) {
+                                        }
+                                    }).show();
                         } else {
-                            String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
-                            if(changeKML) {
-                                int result = NativeLib.onViewScript(kmlScriptFilename);
-                                if(result > 0) {
-                                    displayKMLTitle();
-                                    showKMLLog();
-                                } else
-                                    showKMLLogForce();
-                                updateNavigationDrawerItems();
-                            } else
-                                newFileFromKML(kmlScriptFilename);
+                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                            startActivityForResult(intent, changeKML ? INTENT_PICK_KML_FOLDER_FOR_CHANGING : INTENT_PICK_KML_FOLDER_FOR_NEW_FILE);
                         }
+                    } else if(which == lastIndex + 1) {
+                        // Reset to default KML folder
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("settings_kml_default", true);
+                        editor.apply();
+                        updateFromPreferences("settings_kml", true);
+                        if(changeKML)
+                            OnViewScript();
+                        else
+                            OnFileNew();
+                    } else {
+                        String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
+                        if(changeKML) {
+                            int result = NativeLib.onViewScript(kmlScriptFilename);
+                            if(result > 0) {
+                                displayKMLTitle();
+                                showKMLLog();
+                            } else
+                                showKMLLogForce();
+                            updateNavigationDrawerItems();
+                        } else
+                            newFileFromKML(kmlScriptFilename);
                     }
                 }).show();
     }
@@ -1172,12 +1130,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
             getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
     private void makeUriPersistableReadOnly(Intent data, Uri uri) {
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
             getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
@@ -1288,8 +1246,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
         if(folderDocumentFile != null) {
             for (DocumentFile file : folderDocumentFile.listFiles()) {
-                final String url = file.getUri().toString();
-                final String name = file.getName();
+                String url = file.getUri().toString();
+                String name = file.getName();
                 //Log.d(TAG, "url: " + url + ", name: " + name);
                 if (filename.equals(name)) {
                     return openFileFromContentResolver(url, writeAccess);

@@ -122,21 +122,18 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 //            final ColorPickerPreferenceCompat preferenceBackgroundCustomColor = (ColorPickerPreferenceCompat)findPreference("settings_background_custom_color");
             if(preferenceBackgroundFallbackColor != null /*&& preferenceBackgroundCustomColor != null*/) {
                 final String[] stringArrayBackgroundFallbackColor = getResources().getStringArray(R.array.settings_background_fallback_color_item);
-                Preference.OnPreferenceChangeListener onPreferenceChangeListenerBackgroundFallbackColor = new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(Preference preference, Object value) {
-                        if(value != null) {
-                            String stringValue = value.toString();
-                            int backgroundFallbackColor = -1;
-                            try {
-                                backgroundFallbackColor = Integer.parseInt(stringValue);
-                            } catch (NumberFormatException ignored) {}
-                            if(backgroundFallbackColor >= 0 && backgroundFallbackColor < stringArrayBackgroundFallbackColor.length)
-                                preference.setSummary(stringArrayBackgroundFallbackColor[backgroundFallbackColor]);
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerBackgroundFallbackColor = (preference, value) -> {
+                    if(value != null) {
+                        String stringValue = value.toString();
+                        int backgroundFallbackColor = -1;
+                        try {
+                            backgroundFallbackColor = Integer.parseInt(stringValue);
+                        } catch (NumberFormatException ignored) {}
+                        if(backgroundFallbackColor >= 0 && backgroundFallbackColor < stringArrayBackgroundFallbackColor.length)
+                            preference.setSummary(stringArrayBackgroundFallbackColor[backgroundFallbackColor]);
 //                            preferenceBackgroundCustomColor.setEnabled(backgroundFallbackColor == 2);
-                        }
-                        return true;
                     }
+                    return true;
                 };
                 preferenceBackgroundFallbackColor.setOnPreferenceChangeListener(onPreferenceChangeListenerBackgroundFallbackColor);
                 onPreferenceChangeListenerBackgroundFallbackColor.onPreferenceChange(preferenceBackgroundFallbackColor,
@@ -161,15 +158,12 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             // Macro
 
             Preference preferenceMacroRealSpeed = findPreference("settings_macro_real_speed");
-            final Preference preferenceMacroManualSpeed = findPreference("settings_macro_manual_speed");
+            Preference preferenceMacroManualSpeed = findPreference("settings_macro_manual_speed");
             if(preferenceMacroRealSpeed != null && preferenceMacroManualSpeed != null) {
-                Preference.OnPreferenceChangeListener onPreferenceChangeListenerMacroRealSpeed = new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(Preference preference, Object value) {
-                        if(value != null)
-                            preferenceMacroManualSpeed.setEnabled(!(Boolean) value);
-                        return true;
-                    }
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerMacroRealSpeed = (preference, value) -> {
+                    if(value != null)
+                        preferenceMacroManualSpeed.setEnabled(!(Boolean) value);
+                    return true;
                 };
                 preferenceMacroRealSpeed.setOnPreferenceChangeListener(onPreferenceChangeListenerMacroRealSpeed);
                 onPreferenceChangeListenerMacroRealSpeed.onPreferenceChange(preferenceMacroRealSpeed, sharedPreferences.getBoolean(preferenceMacroRealSpeed.getKey(), true));
@@ -177,51 +171,45 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
             // Ports 1 & 2 settings
 
-            final Preference preferencePort1en = findPreference("settings_port1en");
-            final Preference preferencePort1wr = findPreference("settings_port1wr");
-            final Preference preferencePort2en = findPreference("settings_port2en");
-            final Preference preferencePort2wr = findPreference("settings_port2wr");
+            Preference preferencePort1en = findPreference("settings_port1en");
+            Preference preferencePort1wr = findPreference("settings_port1wr");
+            Preference preferencePort2en = findPreference("settings_port2en");
+            Preference preferencePort2wr = findPreference("settings_port2wr");
             preferencePort2load = findPreference("settings_port2load");
+            if(preferencePort1en != null && preferencePort1wr != null
+                    && preferencePort2en != null && preferencePort2wr != null
+                    && preferencePort2load != null) {
+                boolean enablePortPreferences = NativeLib.isPortExtensionPossible();
 
-            final boolean enablePortPreferences = NativeLib.isPortExtensionPossible();
-
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort1en = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort1en = (preference, value) -> {
                     preferencePort1en.setEnabled(enablePortPreferences);
                     preferencePort1wr.setEnabled(enablePortPreferences);
                     return true;
-                }
-            };
-            preferencePort1en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort1en);
-            onPreferenceChangeListenerPort1en.onPreferenceChange(preferencePort1en, sharedPreferences.getBoolean(preferencePort1en.getKey(), false));
+                };
+                preferencePort1en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort1en);
+                onPreferenceChangeListenerPort1en.onPreferenceChange(preferencePort1en, sharedPreferences.getBoolean(preferencePort1en.getKey(), false));
 
-            Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort2en = new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
+                Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort2en = (preference, value) -> {
                     preferencePort2en.setEnabled(enablePortPreferences);
                     preferencePort2wr.setEnabled(enablePortPreferences);
                     preferencePort2load.setEnabled(enablePortPreferences);
                     return true;
-                }
-            };
-            preferencePort2en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort2en);
-            onPreferenceChangeListenerPort2en.onPreferenceChange(preferencePort2en, sharedPreferences.getBoolean(preferencePort2en.getKey(), false));
+                };
+                preferencePort2en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort2en);
+                onPreferenceChangeListenerPort2en.onPreferenceChange(preferencePort2en, sharedPreferences.getBoolean(preferencePort2en.getKey(), false));
 
-            updatePort2LoadFilename(sharedPreferences.getString(preferencePort2load.getKey(), ""));
-            preferencePort2load.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
+                updatePort2LoadFilename(sharedPreferences.getString(preferencePort2load.getKey(), ""));
+                preferencePort2load.setOnPreferenceClickListener(preference -> {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("*/*");
                     intent.putExtra(Intent.EXTRA_TITLE, "shared.bin");
                     Activity activity = getActivity();
-                    if(activity != null)
+                    if (activity != null)
                         activity.startActivityForResult(intent, MainActivity.INTENT_PORT2LOAD);
                     return true;
-                }
-            });
+                });
+            }
         }
 
         void updatePort2LoadFilename(String port2Filename) {
@@ -259,7 +247,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
-        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
             getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }

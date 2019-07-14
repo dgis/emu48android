@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -113,63 +112,55 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         toolbar.setTitle(title);
         toolbar.setNavigationIcon(Utils.resId(this, "drawable", "ic_keyboard_backspace_white_24dp"));
         toolbar.setNavigationOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dismiss();
-                    }
-                }
+                v -> dismiss()
         );
         toolbar.inflateMenu(Utils.resId(this, "menu", "fragment_printer_simulator"));
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_share_text")) {
-                    Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-                    intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_text"));
-                    intent.putExtra(Intent.EXTRA_TEXT, printerSimulator.getText());
-                    startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_text"))));
-                } else if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_share_graphic")) {
-                    String imageFilename = "HPPrinter-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
-                    try {
-                        Bitmap paperBitmap = printerSimulator.getImage();
-                        Bitmap croppedPaperBitmap = Bitmap.createBitmap(paperBitmap.getWidth(), printerSimulator.getPaperHeight(), Bitmap.Config.ARGB_8888);
-                        Canvas canvas = new Canvas(croppedPaperBitmap);
-                        Paint paint = new Paint();
-                        canvas.drawBitmap(paperBitmap, 0, 0, paint);
+        toolbar.setOnMenuItemClickListener(item -> {
+            if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_share_text")) {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_text"));
+                intent.putExtra(Intent.EXTRA_TEXT, printerSimulator.getText());
+                startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_text"))));
+            } else if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_share_graphic")) {
+                String imageFilename = "HPPrinter-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
+                try {
+                    Bitmap paperBitmap = printerSimulator.getImage();
+                    Bitmap croppedPaperBitmap = Bitmap.createBitmap(paperBitmap.getWidth(), printerSimulator.getPaperHeight(), Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(croppedPaperBitmap);
+                    Paint paint = new Paint();
+                    canvas.drawBitmap(paperBitmap, 0, 0, paint);
 
-                        Activity activity = getActivity();
-                        if(activity != null) {
-                            File storagePath = new File(activity.getExternalCacheDir(), "");
-                            File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
-                            FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
-                            croppedPaperBitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
-                            fileOutputStream.close();
-                            String mimeType = "application/png";
-                            Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-                            intent.setType(mimeType);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile));
-                            startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Utils.showAlert(getActivity(), e.getMessage());
+                    Activity activity = getActivity();
+                    if(activity != null) {
+                        File storagePath = new File(activity.getExternalCacheDir(), "");
+                        File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
+                        FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+                        croppedPaperBitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
+                        fileOutputStream.close();
+                        String mimeType = "application/png";
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType(mimeType);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile));
+                        startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
                     }
-                } else if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_change_paper")) {
-                    printerSimulator.changePaper();
-                    printerGraphView.updatePaperLayout();
-                    textViewPrinterText.setText("");
-                    if(printerGraphView != null) {
-                        printerGraphView.updatePaperLayout();
-                        printerGraphView.invalidate();
-                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Utils.showAlert(getActivity(), e.getMessage());
                 }
-                return true;
+            } else if(item.getItemId() == Utils.resId(PrinterSimulatorFragment.this, "id", "menu_printer_simulator_change_paper")) {
+                printerSimulator.changePaper();
+                printerGraphView.updatePaperLayout();
+                textViewPrinterText.setText("");
+                if(printerGraphView != null) {
+                    printerGraphView.updatePaperLayout();
+                    printerGraphView.invalidate();
+                }
             }
+            return true;
         });
         setMenuVisibility(true);
 
@@ -235,21 +226,15 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         }
     }
 
-    public void setPrinterSimulator(final PrinterSimulator printerSimulator) {
+    public void setPrinterSimulator(PrinterSimulator printerSimulator) {
         this.printerSimulator = printerSimulator;
-        this.printerSimulator.setOnPrinterUpdateListener(new PrinterSimulator.OnPrinterUpdateListener() {
-            @Override
-            public void onPrinterUpdate(final String textAppended) {
-                Activity activity = getActivity();
-                if(activity != null)
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(debug) Log.d(TAG, "onPrinterUpdate(" + textAppended + ")");
-                            updatePaper(textAppended);
-                        }
-                    });
-            }
+        this.printerSimulator.setOnPrinterUpdateListener(textAppended -> {
+            Activity activity = getActivity();
+            if(activity != null)
+                activity.runOnUiThread(() -> {
+                    if(debug) Log.d(TAG, "onPrinterUpdate(" + textAppended + ")");
+                    updatePaper(textAppended);
+                });
         });
     }
 

@@ -17,8 +17,6 @@ package org.emulator.calculator;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import java.util.ArrayList;
-
 /**
  * Based on the free HP82240B Printer Simulator by Christoph Giesselink
  */
@@ -26,7 +24,6 @@ public class PrinterSimulator {
 
     private static final String TAG = "PrinterSimulator";
     private boolean debug = false;
-    private ArrayList<Integer> data = new ArrayList<>();
     private StringBuilder m_Text = new StringBuilder();
     private StringBuilder textUpdate = new StringBuilder();
 
@@ -187,8 +184,6 @@ public class PrinterSimulator {
     public synchronized void write(int byData) {
 
         textUpdate.setLength(0);
-
-        data.add(byData);
 
         do {
             // check for begin of ESC sequence
