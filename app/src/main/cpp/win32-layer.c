@@ -871,6 +871,9 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
             return selItemDataIndex[wParam];
         }
     }
+    if(Msg == WM_SETICON) {
+
+    }
     return NULL;
 }
 BOOL PostMessage(HWND handleWindow, UINT Msg, WPARAM wParam, LPARAM lParam) {

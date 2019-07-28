@@ -158,6 +158,8 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Add the name of the file in the toast "State saved".
+- Add the KML icon in the navigation menu header.
 - Add the possibility to load and save the flash in another file.
 - Add the possibility to deactivate the zoom.
 - Sometimes, the calculator seems to lag and finally freeze.
