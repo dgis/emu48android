@@ -48,6 +48,17 @@
                 android:key="settings_allow_pinch_zoom"
                 android:title="@string/settings_allow_pinch_zoom_title"
                 android:defaultValue="true" />
+            <ListPreference
+                android:key="settings_lcd_overlapping_mode"
+                android:title="@string/settings_lcd_overlapping_mode_title"
+                android:dialogTitle="@string/settings_lcd_overlapping_mode_title"
+                android:summary="@string/settings_lcd_overlapping_mode_summary"
+                android:entries="@array/settings_lcd_overlapping_mode_item"
+                android:entryValues="@array/settings_lcd_overlapping_mode_value"
+                android:defaultValue="0"
+                />
+
+
             <SwitchPreference
                 android:key="settings_hide_bar_status"
                 android:title="@string/settings_hide_bar_status"

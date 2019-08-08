@@ -507,20 +507,24 @@ enum HANDLE_TYPE {
     HANDLE_TYPE_EVENT,
 	HANDLE_TYPE_THREAD,
 	HANDLE_TYPE_WINDOW,
+	HANDLE_TYPE_ICON,
 };
 struct _HANDLE {
     enum HANDLE_TYPE handleType;
 
+    // HANDLE_TYPE_FILE*
     int fileDescriptor;
     BOOL fileOpenFileFromContentResolver;
 
     AAsset* fileAsset;
 
+    // HANDLE_TYPE_FILE_MAPPING*
     off_t fileMappingOffset;
     size_t fileMappingSize;
     void* fileMappingAddress;
 	DWORD fileMappingProtect;
 
+	// HANDLE_TYPE_THREAD
     pthread_t threadId;
     DWORD (*threadStartAddress)(LPVOID);
     LPVOID threadParameter;
@@ -528,12 +532,17 @@ struct _HANDLE {
     struct tagMSG threadMessage;
 	int threadIndex;
 
+	// HANDLE_TYPE_EVENT
     pthread_cond_t eventCVariable;
     pthread_mutex_t eventMutex;
     BOOL eventAutoReset;
     BOOL eventState;
 
-	HDC windowDC;
+    // HANDLE_TYPE_WINDOW
+    HDC windowDC;
+
+    // HANDLE_TYPE_ICON
+    HBITMAP icon;
 };
 typedef struct _HANDLE * HANDLE;
 
@@ -1227,6 +1236,7 @@ void clipboardCopyText(const TCHAR * text);
 const TCHAR * clipboardPasteText();
 void performHapticFeedback();
 void sendByteUdp(unsigned char byteSent);
+void setKMLIcon(int imageWidth, int imageHeight, LPBYTE buffer, int bufferSize);
 
 typedef int SOCKET;
 

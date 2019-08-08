@@ -528,13 +528,13 @@ public class PanAndScaleView extends View {
         // Keep the panning limits and the image centered.
 		float viewWidth = viewSizeWidth;
 		float viewHeight = viewSizeHeight;
-		if(viewWidth == 0.0f){
+		if(viewWidth == 0.0f) {
 			viewWidth = 1.0f;
 			viewHeight = 1.0f;
 		}
 		float virtualWidth = virtualSizeWidth;
 		float virtualHeight = virtualSizeHeight;
-		if(virtualWidth == 0.0f){
+		if(virtualWidth == 0.0f) {
 			virtualWidth = 1.0f;
 			virtualHeight = 1.0f;
 		}

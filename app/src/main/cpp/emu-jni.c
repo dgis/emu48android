@@ -25,9 +25,8 @@
 #include "win32-layer.h"
 
 extern AAssetManager * assetManager;
-static jobject viewToUpdate = NULL;
 static jobject mainActivity = NULL;
-jobject bitmapMainScreen;
+jobject bitmapMainScreen = NULL;
 AndroidBitmapInfo androidBitmapInfo;
 enum DialogBoxMode currentDialogBoxMode;
 enum ChooseKmlMode  chooseCurrentKmlMode;
@@ -86,16 +85,16 @@ enum CALLBACK_TYPE {
 
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
 int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, const TCHAR * param4) {
-    if (viewToUpdate) {
+    if (mainActivity) {
         JNIEnv *jniEnv = getJNIEnvironment();
         if(jniEnv) {
-            jclass viewToUpdateClass = (*jniEnv)->GetObjectClass(jniEnv, viewToUpdate);
-            if(viewToUpdateClass) {
-                jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, viewToUpdateClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
+            jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+            if(mainActivityClass) {
+                jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "updateCallback", "(IIILjava/lang/String;Ljava/lang/String;)I");
                 jstring utfParam3 = (*jniEnv)->NewStringUTF(jniEnv, param3);
                 jstring utfParam4 = (*jniEnv)->NewStringUTF(jniEnv, param4);
-                int result = (*jniEnv)->CallIntMethod(jniEnv, viewToUpdate, midStr, type, param1, param2, utfParam3, utfParam4);
-                (*jniEnv)->DeleteLocalRef(jniEnv, viewToUpdateClass);
+                int result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, type, param1, param2, utfParam3, utfParam4);
+                (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
                 //if(needDetach) ret = (*java_machine)->DetachCurrentThread(java_machine);
                 return result;
             }
@@ -283,20 +282,30 @@ void sendByteUdp(unsigned char byteSent) {
     }
 }
 
-JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject bitmapMainScreen0, jobject activity, jobject view) {
+void setKMLIcon(int imageWidth, int imageHeight, LPBYTE buffer, int bufferSize) {
+    JNIEnv *jniEnv = getJNIEnvironment();
+    if(jniEnv) {
+        jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+        if(mainActivityClass) {
+            jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "setKMLIcon", "(II[B)V");
+
+            jbyteArray pixels = NULL;
+            if(buffer) {
+                pixels = (*jniEnv)->NewByteArray(jniEnv, bufferSize);
+                (*jniEnv)->SetByteArrayRegion(jniEnv, pixels, 0, bufferSize, (jbyte *) buffer);
+            }
+            (*jniEnv)->CallVoidMethod(jniEnv, mainActivity, midStr, imageWidth, imageHeight, pixels);
+            (*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+        }
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject activity) {
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     szChosenCurrentKml[0] = '\0';
 
-    bitmapMainScreen = (*env)->NewGlobalRef(env, bitmapMainScreen0);
     mainActivity = (*env)->NewGlobalRef(env, activity);
-    viewToUpdate = (*env)->NewGlobalRef(env, view);
-
-
-    int ret = AndroidBitmap_getInfo(env, bitmapMainScreen, &androidBitmapInfo);
-    if (ret < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-    }
 
     assetManager = AAssetManager_fromJava(env, assetMgr);
 
@@ -394,10 +403,6 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_stop(JNIEnv *env, 
     SoundClose();							// close waveform-audio output device
     soundEnabled = FALSE;
 
-    if (viewToUpdate) {
-        (*env)->DeleteGlobalRef(env, viewToUpdate);
-        viewToUpdate = NULL;
-    }
     if(bitmapMainScreen) {
         (*env)->DeleteGlobalRef(env, bitmapMainScreen);
         bitmapMainScreen = NULL;
@@ -417,6 +422,74 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_changeBitmap(JNIEn
     if (ret < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
     }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_emulator_calculator_NativeLib_copyLCD(JNIEnv *env, jobject thisz, jobject bitmapLCD) {
+
+    if(!bitmapLCD)
+        return JNI_FALSE;
+
+    AndroidBitmapInfo bitmapLCDInfo;
+    int ret = AndroidBitmap_getInfo(env, bitmapLCD, &bitmapLCDInfo);
+    if (ret < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        return JNI_FALSE;
+    }
+
+//    INT nxSize, nySize;
+//    GetSizeLcdBitmap(&nxSize,&nySize); // get LCD size
+
+    HDC hSrcDC = hLcdDC;				// use display HDC as source
+    if(!hSrcDC)
+        return JNI_FALSE;
+
+
+
+    HBITMAP hBmp = hSrcDC->selectedBitmap;
+    if (hBmp && hBmp->bitmapInfoHeader && hBmp->bitmapInfoHeader->biWidth == bitmapLCDInfo.width &&
+        abs(hBmp->bitmapInfoHeader->biHeight) == bitmapLCDInfo.height) {
+        INT nxO = 0, nyO = 0;                    // origin in HDC
+        void *pixelsDestination;
+        if ((ret = AndroidBitmap_lockPixels(env, bitmapLCD, &pixelsDestination)) < 0) {
+            LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+            return JNI_FALSE;
+        }
+
+        //    if (nCurrentHardware == HDW_SACA)
+        //    {
+        //        TCHAR cBuffer[32];			// temp. buffer for text
+        //        MSG msg;
+        //
+        //        // calculate bitmap origins from hWindowDC
+        //        nxO = nLcdX; if (nxO > 1) { nxO -= 2; nxSize += 4; };
+        //        nyO = nLcdY; if (nyO > 1) { nyO -= 2; nySize += 4; };
+        //
+        //        hSrcDC = hWindowDC;				// use output HDC as source
+        //    }
+
+        EnterCriticalSection(&csGDILock); // solving NT GDI problems
+
+        // copy display area
+        //BitBlt(hBmpDC,0,0,nxSize,nySize,hSrcDC,nxO,nyO,SRCCOPY);
+
+        size_t strideSource = ((unsigned int) (4 * ((hBmp->bitmapInfoHeader->biWidth *
+                                                     hBmp->bitmapInfoHeader->biBitCount + 31) /
+                                                    32)));
+        size_t strideDestination = bitmapLCDInfo.stride;
+        VOID *bitmapBitsSource = (VOID *) hBmp->bitmapBits;
+        VOID *bitmapBitsDestination = pixelsDestination;
+        int biHeight = abs(hBmp->bitmapInfoHeader->biHeight);
+        for (int y = 0; y < biHeight; y++) {
+            memcpy(bitmapBitsDestination, bitmapBitsSource, strideSource);
+            bitmapBitsSource += strideSource;
+            bitmapBitsDestination += strideDestination;
+        }
+        LeaveCriticalSection(&csGDILock);
+        AndroidBitmap_unlockPixels(env, bitmapLCD);
+        return JNI_TRUE;
+    }
+
+    return JNI_FALSE;
 }
 
 
@@ -1117,6 +1190,12 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getState(JNIEnv *e
     return nState;
 }
 
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenPositionX(JNIEnv *env, jobject thisz) {
+    return nLcdX;
+}
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenPositionY(JNIEnv *env, jobject thisz) {
+    return nLcdY;
+}
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenWidth(JNIEnv *env, jobject thisz) {
     return 131*nLcdZoom*nGdiXZoom;
 }

@@ -61,7 +61,7 @@ public class MainScreenView extends PanAndScaleView {
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        bitmapMainScreen = Bitmap.createBitmap(displayMetrics.widthPixels, displayMetrics.heightPixels, Bitmap.Config.ARGB_8888);
+        bitmapMainScreen = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
         bitmapMainScreen.eraseColor(Color.BLACK);
         enableZoomKeyboard = false;
 
@@ -153,10 +153,6 @@ public class MainScreenView extends PanAndScaleView {
 
         this.setFocusable(true);
         this.setFocusableInTouchMode(true);
-
-        // This call is necessary, or else the
-        // draw method will not be called.
-        setWillNotDraw(false);
     }
 
     // Prevent accidental scroll when taping a calc button
@@ -285,6 +281,8 @@ public class MainScreenView extends PanAndScaleView {
                             viewPanOffsetY = translateY;
 
                             constrainPan();
+                            if(this.onUpdateLayoutListener != null)
+                                this.onUpdateLayoutListener.run();
                             return;
                         }
                     }
@@ -292,13 +290,19 @@ public class MainScreenView extends PanAndScaleView {
             }
             // Else, the screens orientations are the same, so we set the calculator in fullscreen
             resetViewport();
+
+            if(this.onUpdateLayoutListener != null)
+                this.onUpdateLayoutListener.run();
         }
     }
 
-    /**
-     * Draw the score.
-     * @param canvas The canvas to draw to coming from the View.onDraw() method.
-     */
+    private Runnable onUpdateLayoutListener = null;
+
+    public void setOnUpdateLayoutListener(Runnable onUpdateLayoutListener) {
+        this.onUpdateLayoutListener = onUpdateLayoutListener;
+    }
+
+
     @Override
     protected void onCustomDraw(Canvas canvas) {
         //Log.d(TAG, "onCustomDraw()");
@@ -307,17 +311,13 @@ public class MainScreenView extends PanAndScaleView {
         canvas.drawBitmap(bitmapMainScreen, 0, 0, paint);
     }
 
-    final int CALLBACK_TYPE_INVALIDATE = 0;
-    final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
-
-    @SuppressWarnings("unused")
     public int updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
-            case CALLBACK_TYPE_INVALIDATE:
+            case NativeLib.CALLBACK_TYPE_INVALIDATE:
                 //Log.d(TAG, "PAINT updateCallback() postInvalidate()");
                 postInvalidate();
                 break;
-            case CALLBACK_TYPE_WINDOW_RESIZE:
+            case NativeLib.CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size
                 if(bitmapMainScreen == null || bitmapMainScreen.getWidth() != param1 || bitmapMainScreen.getHeight() != param2) {
                     if(debug) Log.d(TAG, "updateCallback() Bitmap.createBitmap(x: " + Math.max(1, param1) + ", y: " + Math.max(1, param2) + ")");
@@ -337,14 +337,9 @@ public class MainScreenView extends PanAndScaleView {
                     if(viewSized)
                         updateLayout();
                 }
-                //postInvalidate();
                 break;
         }
         return -1;
-    }
-
-    public Bitmap getBitmapMainScreen() {
-        return bitmapMainScreen;
     }
 
     public void setRotationMode(int rotationMode, boolean isDynamic) {

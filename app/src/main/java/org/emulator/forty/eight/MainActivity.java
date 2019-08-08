@@ -37,7 +37,9 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +58,7 @@ import com.google.android.material.navigation.NavigationView;
 
 import org.emulator.calculator.InfoActivity;
 import org.emulator.calculator.InfoWebActivity;
+import org.emulator.calculator.LCDOverlappingView;
 import org.emulator.calculator.MainScreenView;
 import org.emulator.calculator.NativeLib;
 import org.emulator.calculator.PrinterSimulator;
@@ -69,6 +72,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView navigationView;
     private DrawerLayout drawer;
     private MainScreenView mainScreenView;
+    private LCDOverlappingView lcdOverlappingView;
     private ImageButton imageButtonMenu;
 
     public static final int INTENT_GETOPENFILENAME = 1;
@@ -127,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private PrinterSimulator printerSimulator = new PrinterSimulator();
     private PrinterSimulatorFragment fragmentPrinterSimulator = new PrinterSimulatorFragment();
+    private Bitmap bitmapIcon;
 
 
     @Override
@@ -151,23 +157,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mainScreenView = new MainScreenView(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             mainScreenView.setStatusBarColor(getWindow().getStatusBarColor());
-        mainScreenView.setLayoutParams(new ViewGroup.LayoutParams(
+        mainScreenContainer.addView(mainScreenView, 0, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        mainScreenContainer.addView(mainScreenView, 0);
+
+        lcdOverlappingView = new LCDOverlappingView(this, mainScreenView);
+        lcdOverlappingView.setVisibility(View.GONE);
+        mainScreenContainer.addView(lcdOverlappingView, 1, new FrameLayout.LayoutParams(0, 0));
 
         imageButtonMenu = findViewById(R.id.button_menu);
-        imageButtonMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(drawer != null)
-                    drawer.openDrawer(GravityCompat.START);
-            }
+        imageButtonMenu.setOnClickListener(v -> {
+            if(drawer != null)
+                drawer.openDrawer(GravityCompat.START);
         });
         showCalculatorView(false);
 
         AssetManager assetManager = getResources().getAssets();
-        NativeLib.start(assetManager, mainScreenView.getBitmapMainScreen(), this, mainScreenView);
+        NativeLib.start(assetManager, this);
 
         // By default Port1 is set
         setPort1Settings(true, true);
@@ -277,6 +283,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putStringSet("MRU", mruLinkedHashMap.keySet());
         editor.apply();
+
+        if(lcdOverlappingView != null)
+            lcdOverlappingView.saveViewLayout();
 
         super.onStop();
     }
@@ -842,9 +851,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             new AlertDialog.Builder(MainActivity.this)
                                     .setTitle(getString(R.string.message_kml_folder_selection_need_api_lollipop))
                                     .setMessage(getString(R.string.message_kml_folder_selection_need_api_lollipop_description))
-                                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int which) {
-                                        }
+                                    .setPositiveButton(android.R.string.ok, (dialog1, which1) -> {
                                     }).show();
                         } else {
                             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -880,47 +887,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String[] stringArrayRAMCards = getResources().getStringArray(R.array.ram_cards);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(getResources().getString(R.string.create_ram_card_title))
-                .setItems(stringArrayRAMCards, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                        intent.addCategory(Intent.CATEGORY_OPENABLE);
-                        intent.setType("*/*");
-                        String sizeTitle = "2mb";
-                        selectedRAMSize = -1;
-                        switch (which) {
-                            case 0: // 32kb (1 port: 2)
-                                sizeTitle = "32kb";
-                                selectedRAMSize = 32;
-                                break;
-                            case 1: // 128kb (1 port: 2)
-                                sizeTitle = "128kb";
-                                selectedRAMSize = 128;
-                                break;
-                            case 2: // 256kb (2 ports: 2,3)
-                                sizeTitle = "256kb";
-                                selectedRAMSize = 256;
-                                break;
-                            case 3: // 512kb (4 ports: 2 through 5)
-                                sizeTitle = "512kb";
-                                selectedRAMSize = 512;
-                                break;
-                            case 4: // 1mb (8 ports: 2 through 9)
-                                sizeTitle = "1mb";
-                                selectedRAMSize = 1024;
-                                break;
-                            case 5: // 2mb (16 ports: 2 through 17)
-                                sizeTitle = "2mb";
-                                selectedRAMSize = 2048;
-                                break;
-                            case 6: // 4mb (32 ports: 2 through 33)
-                                sizeTitle = "4mb";
-                                selectedRAMSize = 4096;
-                                break;
-                        }
-                        intent.putExtra(Intent.EXTRA_TITLE, "shared-" + sizeTitle + ".bin");
-                        startActivityForResult(intent, INTENT_CREATE_RAM_CARD);
+                .setItems(stringArrayRAMCards, (dialog, which) -> {
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("*/*");
+                    String sizeTitle = "2mb";
+                    selectedRAMSize = -1;
+                    switch (which) {
+                        case 0: // 32kb (1 port: 2)
+                            sizeTitle = "32kb";
+                            selectedRAMSize = 32;
+                            break;
+                        case 1: // 128kb (1 port: 2)
+                            sizeTitle = "128kb";
+                            selectedRAMSize = 128;
+                            break;
+                        case 2: // 256kb (2 ports: 2,3)
+                            sizeTitle = "256kb";
+                            selectedRAMSize = 256;
+                            break;
+                        case 3: // 512kb (4 ports: 2 through 5)
+                            sizeTitle = "512kb";
+                            selectedRAMSize = 512;
+                            break;
+                        case 4: // 1mb (8 ports: 2 through 9)
+                            sizeTitle = "1mb";
+                            selectedRAMSize = 1024;
+                            break;
+                        case 5: // 2mb (16 ports: 2 through 17)
+                            sizeTitle = "2mb";
+                            selectedRAMSize = 2048;
+                            break;
+                        case 6: // 4mb (32 ports: 2 through 33)
+                            sizeTitle = "4mb";
+                            selectedRAMSize = 4096;
+                            break;
                     }
+                    intent.putExtra(Intent.EXTRA_TITLE, "shared-" + sizeTitle + ".bin");
+                    startActivityForResult(intent, INTENT_CREATE_RAM_CARD);
                 }).show();
     }
 
@@ -941,12 +945,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnMacroStop() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                NativeLib.onToolMacroStop();
-                updateNavigationDrawerItems();
-            }
+        runOnUiThread(() -> {
+            NativeLib.onToolMacroStop();
+            updateNavigationDrawerItems();
         });
     }
 
@@ -1003,11 +1004,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 new AlertDialog.Builder(this)
                                         .setTitle(getString(R.string.message_open_security))
                                         .setMessage(getString(R.string.message_open_security_description))
-                                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                                                startActivityForResult(intent, INTENT_PICK_KML_FOLDER_FOR_SECURITY);
-                                            }
+                                        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                                            startActivityForResult(intent, INTENT_PICK_KML_FOLDER_FOR_SECURITY);
                                         }).show();
                             }
                             break;
@@ -1059,9 +1058,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     new AlertDialog.Builder(this)
                                             .setTitle(getString(R.string.message_open_security_retry))
                                             .setMessage(getString(R.string.message_open_security_retry_description))
-                                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                }
+                                            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                                             }).show();
                                     break;
                             }
@@ -1122,11 +1119,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if(url != null && !url.isEmpty())
             mruLinkedHashMap.put(url, null);
-        navigationView.post(new Runnable() {
-            public void run() {
-                updateMRU();
-            }
-        });
+        navigationView.post(this::updateMRU);
     }
 
     private void makeUriPersistable(Intent data, Uri uri) {
@@ -1167,10 +1160,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void displayFilename(String url) {
         String displayName = getFilenameFromURL(url);
-        View header = displayKMLTitle();
-        TextView textViewSubtitle = header.findViewById(R.id.nav_header_subtitle);
-        if(textViewSubtitle != null)
-            textViewSubtitle.setText(displayName);
+        View headerView = displayKMLTitle();
+        if(headerView != null) {
+            TextView textViewSubtitle = headerView.findViewById(R.id.nav_header_subtitle);
+            if (textViewSubtitle != null)
+                textViewSubtitle.setText(displayName);
+        }
     }
 
     private String getFilenameFromURL(String url) {
@@ -1184,12 +1179,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private View displayKMLTitle() {
+        View headerView = null;
         NavigationView navigationView = findViewById(R.id.nav_view);
-        View header = navigationView.getHeaderView(0);
-        TextView textViewTitle = header.findViewById(R.id.nav_header_title);
-        if(textViewTitle != null)
-            textViewTitle.setText(NativeLib.getKMLTitle());
-        return header;
+        if (navigationView != null) {
+            headerView = navigationView.getHeaderView(0);
+            if (headerView != null) {
+                TextView textViewTitle = headerView.findViewById(R.id.nav_header_title);
+                if (textViewTitle != null)
+                    textViewTitle.setText(NativeLib.getKMLTitle());
+                changeHeaderIcon();
+            }
+        }
+        return headerView;
+    }
+
+    private void changeHeaderIcon() {
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        if (headerView != null) {
+            ImageView imageViewIcon = headerView.findViewById(R.id.nav_header_icon);
+            if (imageViewIcon != null) {
+                if (bitmapIcon != null)
+                    imageViewIcon.setImageBitmap(bitmapIcon);
+                else
+                    imageViewIcon.setImageDrawable(null);
+            }
+        }
     }
 
     private void showKMLLog() {
@@ -1203,13 +1218,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.message_kml_script_compilation_result))
                 .setMessage(kmlLog)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                 }).show();
     }
 
     // Method used from JNI!
+
+    @SuppressWarnings("unused")
+    public int updateCallback(int type, int param1, int param2, String param3, String param4) {
+
+        mainScreenView.updateCallback(type, param1, param2, param3, param4);
+        lcdOverlappingView.updateCallback(type, param1, param2, param3, param4);
+        return -1;
+    }
+
 
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
@@ -1421,6 +1443,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         printerSimulator.write(byteSent);
     }
 
+    @SuppressWarnings("unused")
+    public synchronized void setKMLIcon(int imageWidth, int imageHeight, byte[] pixels) {
+        if(imageWidth > 0 && imageHeight > 0 && pixels != null) {
+            try {
+                bitmapIcon = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.ARGB_8888);
+                ByteBuffer buffer = ByteBuffer.wrap(pixels);
+                bitmapIcon.copyPixelsFromBuffer(buffer);
+            } catch (Exception ex) {
+                // Cannot load the icon
+                bitmapIcon.recycle();
+                bitmapIcon = null;
+            }
+        } else if(bitmapIcon != null) {
+            bitmapIcon.recycle();
+            bitmapIcon = null;
+        }
+        changeHeaderIcon();
+    }
+
     private void setPort1Settings(boolean port1Plugged, boolean port1Writable) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("settings_port1en", port1Plugged);
@@ -1433,7 +1474,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
             String[] settingKeys = {
-                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom",
+                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom", "settings_lcd_overlapping_mode",
                     "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
                     "settings_background_kml_color", "settings_background_fallback_color",
                     "settings_printer_model", "settings_printer_prevent_line_wrap", "settings_macro",
@@ -1470,6 +1511,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 case "settings_allow_pinch_zoom":
                     mainScreenView.setAllowPinchZoom(sharedPreferences.getBoolean("settings_allow_pinch_zoom", true));
+                    break;
+                case "settings_lcd_overlapping_mode":
+                    int overlappingLCDMode = 0;
+                    try {
+                        overlappingLCDMode = Integer.parseInt(sharedPreferences.getString("settings_lcd_overlapping_mode", "0"));
+                    } catch (NumberFormatException ex) {
+                        // Catch bad number format
+                    }
+                    lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode, isDynamic);
                     break;
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":

@@ -23,6 +23,8 @@
 #include "core/resource.h"
 #include "win32-layer.h"
 #include "emu.h"
+#include "core/lodepng.h"
+
 
 extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
@@ -837,9 +839,189 @@ BOOL GetSaveFileName(LPOPENFILENAME openFilename) {
     return FALSE;
 }
 
+// Almost the same function as the private core function DibNumColors()
+static __inline WORD DibNumColors(BITMAPINFOHEADER CONST *lpbi)
+{
+    if (lpbi->biClrUsed != 0) return (WORD) lpbi->biClrUsed;
+
+    /* a 24 bitcount DIB has no color table */
+    return (lpbi->biBitCount <= 8) ? (1 << lpbi->biBitCount) : 0;
+}
+
+static HBITMAP DecodeBMPIcon(LPBYTE imageBuffer, size_t imageSize) {
+    // size of bitmap header information
+    DWORD dwFileSize = sizeof(BITMAPINFOHEADER);
+    if (imageSize < dwFileSize)
+        return NULL;
+
+    LPBITMAPINFO pBmi = (LPBITMAPINFO)imageBuffer;
+
+    // size with color table
+    if (pBmi->bmiHeader.biCompression == BI_BITFIELDS)
+        dwFileSize += 3 * sizeof(DWORD);
+    else
+        dwFileSize += DibNumColors(&pBmi->bmiHeader) * sizeof(RGBQUAD);
+
+    pBmi->bmiHeader.biHeight /= 2;
+
+    DWORD stride = (((pBmi->bmiHeader.biWidth * (DWORD)pBmi->bmiHeader.biBitCount) + 31) / 32 * 4);
+    DWORD height = (DWORD) abs(pBmi->bmiHeader.biHeight);
+
+    // size with bitmap data
+    if (pBmi->bmiHeader.biCompression != BI_RGB)
+        dwFileSize += pBmi->bmiHeader.biSizeImage;
+    else {
+        pBmi->bmiHeader.biSizeImage =  stride * height;
+        dwFileSize += pBmi->bmiHeader.biSizeImage;
+    }
+    if (imageSize < dwFileSize)
+        return NULL;
+
+    HBITMAP hBitmap = CreateDIBitmap(hWindowDC, &pBmi->bmiHeader, CBM_INIT, imageBuffer, pBmi, DIB_RGB_COLORS);
+    if(hBitmap) {
+        // Inverse the height
+        BYTE *source = imageBuffer + dwFileSize - stride;
+        BYTE *destination = hBitmap->bitmapBits;
+        for (int i = 0; i < height; ++i) {
+            memcpy(destination, source, stride);
+            source -= stride;
+            destination += stride;
+        }
+    }
+    // Only support 32bits RGBA BMP for now.
+    return hBitmap;
+}
+
+static HBITMAP DecodePNGIcon(LPBYTE imageBuffer, size_t imageSize) {
+    HBITMAP hBitmap = NULL;
+    UINT uWidth,uHeight;
+    LPBYTE pbyImage = NULL;
+    UINT uError = lodepng_decode_memory(&pbyImage, &uWidth, &uHeight, imageBuffer, imageSize, LCT_RGBA, 8);
+    if (uError == 0) {
+        BITMAPINFO bmi;
+        ZeroMemory(&bmi, sizeof(bmi));			// init bitmap info
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = (LONG) uWidth;
+        bmi.bmiHeader.biHeight = (LONG) uHeight;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;			// create a true color DIB
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        // bitmap dimensions
+        LONG lBytesPerLine = (((bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) + 31) / 32 * 4);
+        bmi.bmiHeader.biSizeImage = (DWORD) (lBytesPerLine * bmi.bmiHeader.biHeight);
+
+        // allocate buffer for pixels
+        LPBYTE  pbyPixels;						// BMP buffer
+        hBitmap = CreateDIBSection(hWindowDC, &bmi, DIB_RGB_COLORS, (VOID **)&pbyPixels, NULL, 0);
+        if (hBitmap)
+            memcpy(pbyPixels, pbyImage, bmi.bmiHeader.biSizeImage);
+    }
+
+    if (pbyImage != NULL)
+        free(pbyImage);
+    return hBitmap;
+}
+
+// ICO (file format) https://en.wikipedia.org/wiki/ICO_(file_format)
+// https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)
+typedef struct {
+    WORD idReserved;
+    WORD idType;
+    WORD idCount;
+} ICONDIR, *LPICONDIR;
+typedef struct ICONDIRENTRY {
+    BYTE bWidth; // Specifies image width in pixels. Can be any number between 0 and 255. Value 0 means image width is 256 pixels.
+    BYTE bHeight; // Specifies image height in pixels. Can be any number between 0 and 255. Value 0 means image height is 256 pixels.
+    BYTE bColorCount; // Specifies number of colors in the color palette. Should be 0 if the image does not use a color palette.
+    BYTE bReserved; // Reserved. Should be 0.
+    WORD wPlanes; // In ICO format: Specifies color planes. Should be 0 or 1.
+    WORD wBitCount; // In ICO format: Specifies bits per pixel.
+    DWORD dwBytesInRes; // Specifies the size of the image's data in bytes
+    DWORD dwImageOffset; // Specifies the offset of BMP or PNG data from the beginning of the ICO/CUR file
+} ICONDIRENTRY, *LPICONDIRENTRY;
+
+typedef struct {
+    BITMAPINFOHEADER   icHeader;      // DIB header
+    RGBQUAD         icColors[1];   // Color table
+    BYTE            icXOR[1];      // DIB bits for XOR mask
+    BYTE            icAND[1];      // DIB bits for AND mask
+} ICONIMAGE, *LPICONIMAGE;
+
 HANDLE LoadImage(HINSTANCE hInst, LPCSTR name, UINT type, int cx, int cy, UINT fuLoad) {
-    //TODO
-    return NULL;
+
+    HANDLE hIconFile = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hIconFile == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    ICONDIR fileHeader;
+    DWORD nNumberOfBytesToRead = 0;
+    if(ReadFile(hIconFile, &fileHeader, sizeof(ICONDIR), &nNumberOfBytesToRead, NULL) == FALSE || sizeof(ICONDIR) != nNumberOfBytesToRead) {
+        CloseHandle(hIconFile);
+        return NULL;
+    }
+
+    size_t iconsBufferSize = fileHeader.idCount * sizeof(ICONDIRENTRY);
+    ICONDIRENTRY * iconHeaderArray = malloc(iconsBufferSize);
+    nNumberOfBytesToRead = 0;
+    if(ReadFile(hIconFile, iconHeaderArray, iconsBufferSize, &nNumberOfBytesToRead, NULL) == FALSE || iconsBufferSize != nNumberOfBytesToRead) {
+        CloseHandle(hIconFile);
+        return NULL;
+    }
+
+    int maxWidth = -1;
+    int maxHeight = -1;
+    int maxBitPerPixel = -1;
+    int maxIconIndex = -1;
+    for (int i = 0; i < fileHeader.idCount; ++i) {
+        ICONDIRENTRY * iconHeader = &(iconHeaderArray[i]);
+        int width = iconHeader->bWidth == 0 ? 256 : iconHeader->bWidth;
+        int height = iconHeader->bHeight == 0 ? 256 : iconHeader->bHeight;
+        if(width >= maxWidth && height >= maxHeight && iconHeader->wBitCount > maxBitPerPixel) {
+            maxWidth = width;
+            maxHeight = height;
+            maxBitPerPixel = iconHeader->wBitCount;
+            maxIconIndex = i;
+        }
+    }
+    maxIconIndex = 1; // To test BMP
+    if(maxIconIndex == -1) {
+        CloseHandle(hIconFile);
+        return NULL;
+    }
+
+    DWORD dwBytesInRes = iconHeaderArray[maxIconIndex].dwBytesInRes;
+    LPBYTE iconBuffer = malloc(dwBytesInRes);
+
+    SetFilePointer(hIconFile, iconHeaderArray[maxIconIndex].dwImageOffset, 0, FILE_BEGIN);
+    if(ReadFile(hIconFile, iconBuffer, dwBytesInRes, &nNumberOfBytesToRead, NULL) == FALSE || dwBytesInRes != nNumberOfBytesToRead) {
+        CloseHandle(hIconFile);
+        free(iconHeaderArray);
+        free(iconBuffer);
+        return NULL;
+    }
+    CloseHandle(hIconFile);
+
+    HBITMAP icon = NULL;
+    if (dwBytesInRes >= 8 && memcmp(iconBuffer, "\x89PNG\r\n\x1a\n", 8) == 0)
+        // It is a PNG image
+        icon = DecodePNGIcon(iconBuffer, dwBytesInRes);
+    else
+        // It is a BMP image
+        icon = DecodeBMPIcon(iconBuffer, dwBytesInRes);
+
+
+    free(iconHeaderArray);
+    free(iconBuffer);
+
+    if(!icon)
+        return NULL;
+
+    HANDLE handle = malloc(sizeof(struct _HANDLE));
+    memset(handle, 0, sizeof(struct _HANDLE));
+    handle->handleType = HANDLE_TYPE_ICON;
+    handle->icon = icon;
+    return handle;
 }
 
 
@@ -871,8 +1053,17 @@ LRESULT SendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
             return selItemDataIndex[wParam];
         }
     }
-    if(Msg == WM_SETICON) {
-
+    if(Msg == WM_SETICON && wParam == ICON_BIG) {
+        if(lParam != NULL) {
+            HANDLE hIcon = (HANDLE)lParam;
+            if(hIcon->handleType == HANDLE_TYPE_ICON && hIcon->icon != NULL) {
+                HBITMAP icon = hIcon->icon;
+                if(icon && icon->bitmapInfoHeader && icon->bitmapBits)
+                    setKMLIcon(icon->bitmapInfoHeader->biWidth, icon->bitmapInfoHeader->biHeight, icon->bitmapBits, icon->bitmapInfoHeader->biSizeImage);
+            }
+        } else {
+            setKMLIcon(0, 0, NULL, 0);
+        }
     }
     return NULL;
 }
@@ -1964,7 +2155,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             }
         }
 
-        if(jniEnv && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
+        if(jniEnv && hdcDest->hdcCompatible == NULL && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
             LOGD("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
             return FALSE;
         }
@@ -1996,8 +2187,7 @@ HBITMAP CreateBitmap( int nWidth, int nHeight, UINT nPlanes, UINT nBitCount, CON
 
     BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
     memset(newBitmapInfo, 0, sizeof(BITMAPINFO));
-    //newBitmapInfo->bmiHeader.biBitCount = 32; //TODO should be nBitCount
-    newBitmapInfo->bmiHeader.biBitCount = nBitCount; //TODO should be nBitCount
+    newBitmapInfo->bmiHeader.biBitCount = (WORD) nBitCount;
     newBitmapInfo->bmiHeader.biClrUsed = 0;
     newBitmapInfo->bmiHeader.biWidth = nWidth;
     newBitmapInfo->bmiHeader.biHeight = -nHeight;
