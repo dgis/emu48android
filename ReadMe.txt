@@ -158,6 +158,8 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Retain a key by right clicking if it is from a mouse.
+- Allow screenshot of the fullscreen including the skin.
 - Add the name of the file in the toast "State saved".
 - Add the KML icon in the navigation menu header.
 - Add the possibility to load and save the flash in another file.
