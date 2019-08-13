@@ -174,16 +174,11 @@ public class LCDOverlappingView extends View {
         canvas.drawColor(Color.RED); //TODO to remove
 
         if(this.overlappingLCDMode > 0 && bitmapLCD != null) {
-            canvas.save();
-            if (bitmapLCD.getWidth() > 0 && bitmapLCD.getHeight() > 0)
-                canvas.scale((float) getWidth() / (float) bitmapLCD.getWidth(), (float) getHeight() / (float) bitmapLCD.getHeight());
-            canvas.drawBitmap(bitmapLCD, 0, 0, paint);
-            canvas.restore();
-//            int x = NativeLib.getScreenPositionX();
-//            int y = NativeLib.getScreenPositionY();
-//            srcBitmapCopy.set(x, y, x + NativeLib.getScreenWidth(), y + NativeLib.getScreenHeight());
-//            dstBitmapCopy.set(0, 0, getWidth(), getHeight());
-//            canvas.drawBitmap(mainScreenView.getBitmap(), srcBitmapCopy, dstBitmapCopy, paint);
+            int x = NativeLib.getScreenPositionX();
+            int y = NativeLib.getScreenPositionY();
+            srcBitmapCopy.set(x, y, x + NativeLib.getScreenWidth(), y + NativeLib.getScreenHeight());
+            dstBitmapCopy.set(0, 0, getWidth(), getHeight());
+            canvas.drawBitmap(mainScreenView.getBitmap(), srcBitmapCopy, dstBitmapCopy, paint);
         }
     }
 
@@ -194,10 +189,8 @@ public class LCDOverlappingView extends View {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
                 //if(debug) Log.d(TAG, "PAINT updateCallback() postInvalidate()");
                 if(debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE");
-                if(bitmapLCD.getWidth() > 1) {
-                    NativeLib.copyLCD(bitmapLCD);
+                if(bitmapLCD.getWidth() > 1)
                     postInvalidate();
-                }
                 break;
             case NativeLib.CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size

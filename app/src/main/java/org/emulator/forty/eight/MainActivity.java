@@ -24,6 +24,8 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -1478,14 +1480,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 bitmapIcon.copyPixelsFromBuffer(buffer);
             } catch (Exception ex) {
                 // Cannot load the icon
-                bitmapIcon.recycle();
+//                bitmapIcon.recycle();
                 bitmapIcon = null;
             }
         } else if(bitmapIcon != null) {
-            bitmapIcon.recycle();
+//            bitmapIcon.recycle();
             bitmapIcon = null;
         }
+        if(bitmapIcon == null)
+            // Try to load the app icon
+            bitmapIcon = getApplicationIconBitmap();
         changeHeaderIcon();
+    }
+
+    private Bitmap getApplicationIconBitmap() {
+        Drawable drawable = getApplicationInfo().loadIcon(getPackageManager());
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if (bitmapDrawable.getBitmap() != null)
+                return bitmapDrawable.getBitmap();
+        }
+
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0)
+            return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+        else
+            return Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
     }
 
     private void setPort1Settings(boolean port1Plugged, boolean port1Writable) {

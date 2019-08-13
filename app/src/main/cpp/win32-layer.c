@@ -1592,15 +1592,6 @@ BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
 }
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 extern void draw();
-
-void StretchBltInternal(int xDest, int yDest, int wDest, int hDest, const void *pixelsDestination,
-                        int destinationBitCount, int destinationStride, int destinationWidth,
-                        int destinationHeight, int xSrc, int ySrc, int hSrc, int wSrc,
-                        const void *pixelsSource, UINT sourceBitCount, int sourceStride,
-                        int sourceWidth, int sourceHeight, DWORD rop, BOOL reverseHeight,
-                        const PALETTEENTRY *palPalEntry, COLORREF brushColor,
-                        COLORREF backgroundColor);
-
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) {
     // Update when switch the screen off
     draw(); //TODO Need a true WM_PAINT event!

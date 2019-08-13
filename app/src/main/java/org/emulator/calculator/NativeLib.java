@@ -30,7 +30,6 @@ public class NativeLib {
     public static native void start(AssetManager mgr, Activity activity);
     public static native void stop();
     public static native void changeBitmap(Bitmap bitmapMainScreen);
-    public static native boolean copyLCD(Bitmap bitmapLCD);
     public static native void draw();
     public static native boolean buttonDown(int x, int y);
     public static native void buttonUp(int x, int y);
