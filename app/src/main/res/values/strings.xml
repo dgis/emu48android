@@ -30,6 +30,7 @@
     <string name="nav_load_object">Load Object...</string>
     <string name="nav_save_object">Save Object...</string>
     <string name="nav_copy_screen">Copy Screen</string>
+    <string name="nav_copy_fullscreen">Copy Fullscreen</string>
     <string name="nav_copy_stack">Copy Stack</string>
     <string name="nav_recents">Recent</string>
     <string name="nav_edit">Edit</string>

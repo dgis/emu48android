@@ -439,51 +439,63 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_calculator_NativeLib_copyLCD(JNIEnv
 //    INT nxSize, nySize;
 //    GetSizeLcdBitmap(&nxSize,&nySize); // get LCD size
 
-    HDC hSrcDC = hLcdDC;				// use display HDC as source
-    if(!hSrcDC)
+
+    void *pixelsDestination;
+    if ((ret = AndroidBitmap_lockPixels(env, bitmapLCD, &pixelsDestination)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return JNI_FALSE;
+    }
+
+    if(hLcdDC && hLcdDC->selectedBitmap) {
+        HBITMAP hBitmapSource = hLcdDC->selectedBitmap;
+        void * pixelsSource = (void *) hBitmapSource->bitmapBits;
+        BOOL reverseHeight = hBitmapSource->bitmapInfoHeader->biHeight < 0;
+
+        int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
+        int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight); // Can be < 0
+
+        UINT sourceBitCount = hBitmapSource->bitmapInfoHeader->biBitCount;
+        int sourceStride = 4 * ((sourceWidth * hBitmapSource->bitmapInfoHeader->biBitCount + 31) / 32);
+
+        HPALETTE palette = hLcdDC->realizedPalette;
+        if(!palette)
+            palette = hLcdDC->selectedPalette;
+        PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?
+                                     palette->paletteLog->palPalEntry : NULL;
+        if(!palPalEntry && sourceBitCount <= 8 && hBitmapSource->bitmapInfoHeader->biClrUsed > 0)
+            palPalEntry = (PALETTEENTRY *)hBitmapSource->bitmapInfo->bmiColors;
 
 
+        int destinationWidth = bitmapLCDInfo.width;
+        int destinationHeight = bitmapLCDInfo.height;
+        int destinationBitCount = 32;
+        int destinationStride = bitmapLCDInfo.stride;
 
-    HBITMAP hBmp = hSrcDC->selectedBitmap;
-    if (hBmp && hBmp->bitmapInfoHeader && hBmp->bitmapInfoHeader->biWidth == bitmapLCDInfo.width &&
-        abs(hBmp->bitmapInfoHeader->biHeight) == bitmapLCDInfo.height) {
-        INT nxO = 0, nyO = 0;                    // origin in HDC
-        void *pixelsDestination;
-        if ((ret = AndroidBitmap_lockPixels(env, bitmapLCD, &pixelsDestination)) < 0) {
-            LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-            return JNI_FALSE;
-        }
-
-        //    if (nCurrentHardware == HDW_SACA)
-        //    {
-        //        TCHAR cBuffer[32];			// temp. buffer for text
-        //        MSG msg;
-        //
-        //        // calculate bitmap origins from hWindowDC
-        //        nxO = nLcdX; if (nxO > 1) { nxO -= 2; nxSize += 4; };
-        //        nyO = nLcdY; if (nyO > 1) { nyO -= 2; nySize += 4; };
-        //
-        //        hSrcDC = hWindowDC;				// use output HDC as source
-        //    }
 
         EnterCriticalSection(&csGDILock); // solving NT GDI problems
+        UINT nLines = MAINSCREENHEIGHT;
 
-        // copy display area
-        //BitBlt(hBmpDC,0,0,nxSize,nySize,hSrcDC,nxO,nyO,SRCCOPY);
+        // copy header display area
+        StretchBltInternal(0, 0, 131*nLcdZoom*nGdiXZoom, Chipset.d0size*nLcdZoom*nGdiYZoom, pixelsDestination, destinationBitCount,
+                           destinationStride, destinationWidth, destinationHeight,
+                           Chipset.d0offset, 0, 131, Chipset.d0size, pixelsSource, sourceBitCount,
+                           sourceStride, sourceWidth, sourceHeight,
+                           SRCCOPY, reverseHeight, palPalEntry, 0, 0);
 
-        size_t strideSource = ((unsigned int) (4 * ((hBmp->bitmapInfoHeader->biWidth *
-                                                     hBmp->bitmapInfoHeader->biBitCount + 31) /
-                                                    32)));
-        size_t strideDestination = bitmapLCDInfo.stride;
-        VOID *bitmapBitsSource = (VOID *) hBmp->bitmapBits;
-        VOID *bitmapBitsDestination = pixelsDestination;
-        int biHeight = abs(hBmp->bitmapInfoHeader->biHeight);
-        for (int y = 0; y < biHeight; y++) {
-            memcpy(bitmapBitsDestination, bitmapBitsSource, strideSource);
-            bitmapBitsSource += strideSource;
-            bitmapBitsDestination += strideDestination;
-        }
+
+        // copy main display area
+        StretchBltInternal(0, Chipset.d0size*nLcdZoom*nGdiYZoom, 131*nLcdZoom*nGdiXZoom, nLines*nLcdZoom*nGdiYZoom, pixelsDestination, destinationBitCount,
+                           destinationStride, destinationWidth, destinationHeight,
+                           Chipset.boffset, Chipset.d0size, 131, nLines, pixelsSource, sourceBitCount,
+                           sourceStride, sourceWidth, sourceHeight,
+                           SRCCOPY, reverseHeight, palPalEntry, 0, 0);
+        // copy menu display area
+        StretchBltInternal(0, (nLines+Chipset.d0size)*nLcdZoom*nGdiYZoom, 131*nLcdZoom*nGdiXZoom, MENUHEIGHT*nLcdZoom*nGdiYZoom, pixelsDestination, destinationBitCount,
+                           destinationStride, destinationWidth, destinationHeight,
+                           0, (nLines+Chipset.d0size), 131, MENUHEIGHT, pixelsSource, sourceBitCount,
+                           sourceStride, sourceWidth, sourceHeight,
+                           SRCCOPY, reverseHeight, palPalEntry, 0, 0);
+
         LeaveCriticalSection(&csGDILock);
         AndroidBitmap_unlockPixels(env, bitmapLCD);
         return JNI_TRUE;

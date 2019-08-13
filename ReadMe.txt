@@ -54,6 +54,13 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.7 (2019-08-XX)
+
+- Allow to take a screenshot of the fullscreen including the skin.
+- Add the KML Icon if present in the navigation menu header (only support PNG or 32bits BMP in the ICO file).
+- Allow an optional overlapping LCD part stuck to the screen when swiping the 2 calc parts.
+
+
 Version 1.6 (2019-07-15)
 
 - Add option to prevent the pinch zoom.
@@ -159,7 +166,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 TODO
 
 - Retain a key by right clicking if it is from a mouse.
-- Allow screenshot of the fullscreen including the skin.
 - Add the name of the file in the toast "State saved".
 - Add the KML icon in the navigation menu header.
 - Add the possibility to load and save the flash in another file.

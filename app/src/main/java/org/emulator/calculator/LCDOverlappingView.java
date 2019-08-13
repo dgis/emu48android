@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -21,6 +22,8 @@ public class LCDOverlappingView extends View {
 
     private SharedPreferences sharedPreferences;
     private Paint paint = new Paint();
+    private Rect srcBitmapCopy = new Rect();
+    private Rect dstBitmapCopy = new Rect();
     private Bitmap bitmapLCD;
     private float bitmapRatio = -1;
     private float minViewSize = 200.0f;
@@ -35,8 +38,8 @@ public class LCDOverlappingView extends View {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-        paint.setFilterBitmap(true);
-        paint.setAntiAlias(true);
+        //paint.setFilterBitmap(true);
+        //paint.setAntiAlias(true);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -168,7 +171,7 @@ public class LCDOverlappingView extends View {
     protected void onDraw(Canvas canvas) {
         //if(debug) Log.d(TAG, "onDraw()");
 
-        canvas.drawColor(Color.RED);
+        canvas.drawColor(Color.RED); //TODO to remove
 
         if(this.overlappingLCDMode > 0 && bitmapLCD != null) {
             canvas.save();
@@ -176,6 +179,11 @@ public class LCDOverlappingView extends View {
                 canvas.scale((float) getWidth() / (float) bitmapLCD.getWidth(), (float) getHeight() / (float) bitmapLCD.getHeight());
             canvas.drawBitmap(bitmapLCD, 0, 0, paint);
             canvas.restore();
+//            int x = NativeLib.getScreenPositionX();
+//            int y = NativeLib.getScreenPositionY();
+//            srcBitmapCopy.set(x, y, x + NativeLib.getScreenWidth(), y + NativeLib.getScreenHeight());
+//            dstBitmapCopy.set(0, 0, getWidth(), getHeight());
+//            canvas.drawBitmap(mainScreenView.getBitmap(), srcBitmapCopy, dstBitmapCopy, paint);
         }
     }
 
@@ -186,8 +194,10 @@ public class LCDOverlappingView extends View {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
                 //if(debug) Log.d(TAG, "PAINT updateCallback() postInvalidate()");
                 if(debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE");
-                NativeLib.copyLCD(bitmapLCD);
-                postInvalidate();
+                if(bitmapLCD.getWidth() > 1) {
+                    NativeLib.copyLCD(bitmapLCD);
+                    postInvalidate();
+                }
                 break;
             case NativeLib.CALLBACK_TYPE_WINDOW_RESIZE:
                 // New Bitmap size

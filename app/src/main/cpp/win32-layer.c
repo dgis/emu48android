@@ -1592,6 +1592,15 @@ BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl) {
 }
 BOOL SetWindowPlacement(HWND hWnd, CONST WINDOWPLACEMENT *lpwndpl) { return 0; }
 extern void draw();
+
+void StretchBltInternal(int xDest, int yDest, int wDest, int hDest, const void *pixelsDestination,
+                        int destinationBitCount, int destinationStride, int destinationWidth,
+                        int destinationHeight, int xSrc, int ySrc, int hSrc, int wSrc,
+                        const void *pixelsSource, UINT sourceBitCount, int sourceStride,
+                        int sourceWidth, int sourceHeight, DWORD rop, BOOL reverseHeight,
+                        const PALETTEENTRY *palPalEntry, COLORREF brushColor,
+                        COLORREF backgroundColor);
+
 BOOL InvalidateRect(HWND hWnd, CONST RECT *lpRect, BOOL bErase) {
     // Update when switch the screen off
     draw(); //TODO Need a true WM_PAINT event!
@@ -1996,23 +2005,44 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             backgroundColor = hdcDest->backgroundColor;
         }
 
-        int dst_maxx = xDest + wDest;
-        int dst_maxy = yDest + hDest;
+        StretchBltInternal(xDest, yDest, wDest, hDest, pixelsDestination, destinationBitCount,
+                           destinationStride, destinationWidth, destinationHeight,
+                           xSrc, ySrc, wSrc, hSrc, pixelsSource, sourceBitCount,
+                           sourceStride, sourceWidth, sourceHeight,
+                           rop, reverseHeight, palPalEntry, brushColor, backgroundColor);
 
-        if(xDest < 0) {
+        if(jniEnv && hdcDest->hdcCompatible == NULL && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
+            LOGD("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
+                        const void *pixelsDestination, int destinationBitCount, int destinationStride, int destinationWidth, int destinationHeight,
+                        int xSrc, int ySrc, int wSrc, int hSrc,
+                        const void *pixelsSource, UINT sourceBitCount, int sourceStride, int sourceWidth, int sourceHeight,
+                        DWORD rop, BOOL reverseHeight, const PALETTEENTRY *palPalEntry, COLORREF brushColor, COLORREF backgroundColor) {
+    int dst_maxx = xDest + wDest;
+    int dst_maxy = yDest + hDest;
+
+    if(xDest < 0) {
             wDest += xDest;
             xDest = 0;
         }
-        if(yDest < 0) {
+    if(yDest < 0) {
             hDest += yDest;
             yDest = 0;
         }
-        if(dst_maxx > destinationWidth)
+    if(dst_maxx > destinationWidth)
             dst_maxx = destinationWidth;
-        if(dst_maxy > destinationHeight)
+    if(dst_maxy > destinationHeight)
             dst_maxy = destinationHeight;
 
-        for (int y = yDest; y < dst_maxy; y++) {
+    for (int y = yDest; y < dst_maxy; y++) {
             int src_cury = ySrc + (y - yDest) * hSrc / hDest;
             if(!reverseHeight)
                 src_cury = sourceHeight - 1 - src_cury;
@@ -2154,16 +2184,8 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
                 }
             }
         }
-
-        if(jniEnv && hdcDest->hdcCompatible == NULL && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
-            LOGD("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
-            return FALSE;
-        }
-
-        return TRUE;
-    }
-    return FALSE;
 }
+
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
     if(prgbq
        && hdc && hdc->realizedPalette && hdc->realizedPalette->paletteLog && hdc->realizedPalette->paletteLog->palPalEntry

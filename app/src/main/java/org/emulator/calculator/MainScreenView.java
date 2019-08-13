@@ -387,4 +387,8 @@ public class MainScreenView extends PanAndScaleView {
         }
         return 0;
     }
+
+    public Bitmap getBitmap() {
+        return bitmapMainScreen;
+    }
 }

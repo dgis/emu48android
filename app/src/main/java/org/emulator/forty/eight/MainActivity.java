@@ -349,6 +349,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             OnObjectLoad();
         } else if (id == R.id.nav_save_object) {
             OnObjectSave();
+        } else if (id == R.id.nav_copy_fullscreen) {
+            OnViewCopyFullscreen();
         } else if (id == R.id.nav_copy_screen) {
             OnViewCopy();
         } else if (id == R.id.nav_copy_stack) {
@@ -748,6 +750,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_TITLE, getString(R.string.filename) + "-object.hp");
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
+    }
+    private void OnViewCopyFullscreen() {
+        Bitmap bitmapScreen = mainScreenView.getBitmap();
+        if(bitmapScreen == null)
+            return;
+        String imageFilename = getString(R.string.filename) + "-" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
+        try {
+            File storagePath = new File(this.getExternalCacheDir(), "");
+            File imageFile = File.createTempFile(imageFilename, ".png", storagePath);
+            FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+            bitmapScreen.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
+            fileOutputStream.close();
+            String mimeType = "application/png";
+            Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+            intent.setType(mimeType);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra(Intent.EXTRA_SUBJECT, R.string.message_screenshot);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(this,this.getPackageName() + ".provider", imageFile));
+            startActivity(Intent.createChooser(intent, getString(R.string.message_share_screenshot)));
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(e.getMessage());
+        }
     }
     private void OnViewCopy() {
         int width = NativeLib.getScreenWidth();

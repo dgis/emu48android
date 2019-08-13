@@ -720,6 +720,13 @@ extern BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, in
 #define HALFTONE                     4
 extern int SetStretchBltMode(HDC hdc, int mode);
 extern BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
+extern void StretchBltInternal(int xDest, int yDest, int wDest, int hDest, const void *pixelsDestination,
+						int destinationBitCount, int destinationStride, int destinationWidth,
+						int destinationHeight, int xSrc, int ySrc, int hSrc, int wSrc,
+						const void *pixelsSource, UINT sourceBitCount, int sourceStride,
+						int sourceWidth, int sourceHeight, DWORD rop, BOOL reverseHeight,
+						const PALETTEENTRY *palPalEntry, COLORREF brushColor,
+						COLORREF backgroundColor);
 extern UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq);
 /* constants for CreateDIBitmap */
 #define CBM_INIT        0x04L   /* initialize bitmap */
