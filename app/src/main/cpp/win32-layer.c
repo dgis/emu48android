@@ -2166,6 +2166,9 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                         } else if (rop == ROP_PSDPxax) { // P ^ (S & (D ^ P))
                             UINT destination = *((UINT *) destinationPixel);
                             *((UINT *)destinationPixel) = (brushColor ^ (sourceColor & (destination ^ brushColor))) | 0xFF000000;
+                        } else if (rop == SRCAND) { // dest = source AND dest
+                            UINT destination = *((UINT *) destinationPixel);
+                            *((UINT *)destinationPixel) = (sourceColor & destination) | 0xFF000000;
                         } else
                             *((UINT *)destinationPixel) = sourceColor;
                         break;
@@ -3019,4 +3022,20 @@ BOOL SetCommBreak(HANDLE hFile) {
 BOOL ClearCommBreak(HANDLE hFile) {
     //TODO
     return FALSE;
+}
+
+int WSAGetLastError() {
+    //TODO
+    // Win9x break with WSAEINTR (a blocking socket call was canceled)
+//    if(errno == ECANCELED)
+//        return WSAEINTR;
+    return 0;
+}
+
+int WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData) {
+    return 0;
+}
+
+int WSACleanup() {
+    return 0;
 }

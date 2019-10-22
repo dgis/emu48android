@@ -165,6 +165,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Autosave only works once a manual save has been done (William Hostman from comment).
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.

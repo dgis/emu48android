@@ -82,6 +82,7 @@ typedef int BOOL;
 typedef unsigned long ULONG;
 typedef short SHORT;
 typedef unsigned short USHORT;
+typedef unsigned char UCHAR;
 typedef uint64_t ULONGLONG;
 typedef int64_t LONGLONG;
 typedef int64_t __int64;
@@ -334,6 +335,7 @@ enum {
 
 #define TEXT(x)	@x
 #define LOWORD(x)	x
+#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
 #define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
 
 #define HIBYTE(i)   ((i)>>8)
@@ -343,6 +345,7 @@ enum {
 #define lstrcpy(d,s)    strcpy(d,s)
 #define _tcsspn(s,k)    strspn(s,k)
 #define wsprintf(s,f,...)   sprintf(s,f, ## __VA_ARGS__)
+#define sprintf_s(s,l,f,...) sprintf((const char *)s,f, ## __VA_ARGS__)
 #define HeapAlloc(h,v,s)    malloc(s)
 #define HeapFree(h,v,p)     do{free(p);(p)=v;}while(0)
 #define ZeroMemory(p,s)     memset(p,0,s)
@@ -711,6 +714,7 @@ HBRUSH  CreateSolidBrush(COLORREF color);
 extern BOOL MoveToEx(HDC hdc, int x, int y, LPPOINT lppt);
 extern BOOL LineTo(HDC hdc, int x, int y);
 #define SRCCOPY             (DWORD)0x00CC0020 /* dest = source                   */
+#define SRCAND              (DWORD)0x008800C6 /* dest = source AND dest          */
 #define PATCOPY             (DWORD)0x00F00021 /* dest = pattern                  */
 #define DSTINVERT           (DWORD)0x00550009 /* dest = (NOT dest)               */
 #define BLACKNESS           (DWORD)0x00000042 /* dest = BLACK                    */
@@ -1245,8 +1249,6 @@ void performHapticFeedback();
 void sendByteUdp(unsigned char byteSent);
 void setKMLIcon(int imageWidth, int imageHeight, LPBYTE buffer, int bufferSize);
 
-typedef int SOCKET;
-
 // IO
 
 #define EV_RXCHAR           0x0001
@@ -1327,3 +1329,24 @@ extern BOOL SetCommState(HANDLE hFile, LPDCB lpDCB);
 extern BOOL PurgeComm(HANDLE hFile, DWORD dwFlags);
 extern BOOL SetCommBreak(HANDLE hFile);
 extern BOOL ClearCommBreak(HANDLE hFile);
+
+// TCP
+
+typedef int SOCKET;
+#define INVALID_SOCKET  (SOCKET)(~0)
+#define SOCKET_ERROR            (-1)
+
+#define WSAEINTR 10004L
+extern int WSAGetLastError();
+
+typedef struct WSAData {
+    WORD                    wVersion;
+    WORD                    wHighVersion;
+    //...
+} WSADATA, * LPWSADATA;
+
+
+extern int WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
+extern int WSACleanup();
+
+typedef struct addrinfo ADDRINFO;

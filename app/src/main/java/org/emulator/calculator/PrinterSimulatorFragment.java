@@ -63,24 +63,8 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setStyle(AppCompatDialogFragment.STYLE_NO_FRAME, android.R.style.Theme_Holo_Light);
-        //setStyle(STYLE_NO_FRAME, android.R.style.Theme_Holo_Light);
-        //setStyle(STYLE_NO_TITLE, android.R.style.Theme_Holo_Light);
-
-        //setStyle(STYLE_NO_TITLE, android.R.style.Theme_Material_Light_Dialog_Alert);
-
-        //setStyle(STYLE_NO_FRAME, 0);
-        //setStyle(STYLE_NO_TITLE, 0);
+        setStyle(AppCompatDialogFragment.STYLE_NO_FRAME, android.R.style.Theme_Material);
     }
-
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        ViewGroup.LayoutParams params = getDialog().getWindow().getAttributes();
-//        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-//        params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-//        getDialog().getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
-//    }
 
     @NonNull
     @Override
