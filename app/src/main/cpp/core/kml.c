@@ -895,6 +895,8 @@ static KmlLine* ParseLines(BOOL bInclude)
 		if (eToken == TOK_INCLUDE)
 		{
 			LPTSTR szFilename;
+			UINT   nLexLineKml;
+
 			eToken = Lex(LEX_PARAM);		// get include parameter in 'szLexString'
 			if (eToken != TOK_STRING)		// not a string (token don't begin with ")
 			{
@@ -903,6 +905,7 @@ static KmlLine* ParseLines(BOOL bInclude)
 			}
 			szFilename = szLexString;		// save pointer to allocated memory
 			szLexString = NULL;
+			nLexLineKml = nLexLine;			// save line number
 			eToken = Lex(LEX_PARAM);		// decode argument
 			if (eToken != TOK_EOL)
 			{
@@ -925,7 +928,10 @@ static KmlLine* ParseLines(BOOL bInclude)
 			}
 			free(szFilename);				// free filename string
 			if (pLine == NULL)				// parsing error
+			{
+				nLexLine = nLexLineKml;		// restore line number
 				goto abort;
+			}
 			while (pLine->pNext) pLine=pLine->pNext;
 			continue;
 		}
@@ -1096,6 +1102,8 @@ static KmlBlock* ParseBlocks(BOOL bInclude, BOOL bEndTokenEn)
 		if (eToken == TOK_INCLUDE)
 		{
 			LPTSTR szFilename;
+			UINT   nLexLineKml;
+
 			eToken = Lex(LEX_PARAM);		// get include parameter in 'szLexString'
 			if (eToken != TOK_STRING)		// not a string (token don't begin with ")
 			{
@@ -1104,6 +1112,7 @@ static KmlBlock* ParseBlocks(BOOL bInclude, BOOL bEndTokenEn)
 			}
 			szFilename = szLexString;		// save pointer to allocated memory
 			szLexString = NULL;
+			nLexLineKml = nLexLine;			// save line number
 			eToken = Lex(LEX_PARAM);		// decode argument
 			if (eToken != TOK_EOL)
 			{
@@ -1117,7 +1126,10 @@ static KmlBlock* ParseBlocks(BOOL bInclude, BOOL bEndTokenEn)
 				pBlock = pFirst = IncludeBlocks(bInclude,szFilename);
 			free(szFilename);				// free filename string
 			if (pBlock == NULL)				// parsing error
+			{
+				nLexLine = nLexLineKml;		// restore line number
 				goto abort;
+			}
 			while (pBlock->pNext) pBlock = pBlock->pNext;
 			continue;
 		}

@@ -855,6 +855,7 @@ BOOL NewDocument(VOID)
 	if (!DisplayChooseKml(0)) goto restore;
 	if (!InitKML(szCurrentKml,FALSE)) goto restore;
 	Chipset.type = cCurrentRomType;
+	CrcRom(&Chipset.wRomCrc);				// save fingerprint of loaded ROM
 
 	if (Chipset.type == '6' || Chipset.type == 'A')	// HP38G
 	{
@@ -1071,14 +1072,6 @@ BOOL OpenDocument(LPCTSTR szFilename)
 		AbortMessage(_T("Emulator state file with invalid calculator model."));
 		goto restore;
 	}
-
-    // Temporary patch for going from v1.2 with sizeof(BOOL)==1 to v1.3 with sizeof(BOOL)==4!
-	//--> begin of modification by cg
-	if (lSizeofChipset == 8632) // fix for Emu48 for Android v1.2 or earlier
-	{
-		ZeroMemory(&((BYTE *)&Chipset)[offsetof(CHIPSET,SoftInt)],sizeof(Chipset) - offsetof(CHIPSET,SoftInt));
-	}
-	//<-- end of modification
 
 	SetWindowLocation(hWnd,Chipset.nPosX,Chipset.nPosY);
 
@@ -1813,7 +1806,7 @@ static HPALETTE CreateBIPalette(BITMAPINFOHEADER CONST *lpbi)
 	return hpal;
 }
 
-static HBITMAP DecodeBmp(LPBMPFILE pBmp)
+static HBITMAP DecodeBmp(LPBMPFILE pBmp,BOOL bPalette)
 {
 	LPBITMAPFILEHEADER pBmfh;
 	LPBITMAPINFO pBmi;
@@ -1863,7 +1856,7 @@ static HBITMAP DecodeBmp(LPBMPFILE pBmp)
 		pBmi, DIB_RGB_COLORS));
 	if (hBitmap == NULL) return NULL;
 
-	if (hPalette == NULL)
+	if (bPalette && hPalette == NULL)
 	{
 		hPalette = CreateBIPalette(&pBmi->bmiHeader);
 		// save old palette
@@ -1894,7 +1887,7 @@ static BOOL ReadGifWord(LPBMPFILE pGif, INT *n)
 	return FALSE;
 }
 
-static HBITMAP DecodeGif(LPBMPFILE pBmp,DWORD *pdwTransparentColor)
+static HBITMAP DecodeGif(LPBMPFILE pBmp,DWORD *pdwTransparentColor,BOOL bPalette)
 {
 	// this implementation base on the GIF image file
 	// decoder engine of Free42 (c) by Thomas Okken
@@ -2388,7 +2381,7 @@ static HBITMAP DecodeGif(LPBMPFILE pBmp,DWORD *pdwTransparentColor)
 	_ASSERT(bDecoding == FALSE);			// decoding successful
 
 	// normal decoding exit
-	if (hPalette == NULL)
+	if (bPalette && hPalette == NULL)
 	{
 		hPalette = CreateBIPalette((PBITMAPINFOHEADER) &bmi);
 		// save old palette
@@ -2405,7 +2398,7 @@ quit:
 	return hBitmap;
 }
 
-static HBITMAP DecodePng(LPBMPFILE pBmp)
+static HBITMAP DecodePng(LPBMPFILE pBmp,BOOL bPalette)
 {
 	// this implementation use the PNG image file decoder
 	// engine of Copyright (c) 2005-2018 Lode Vandevenne
@@ -2430,7 +2423,7 @@ static HBITMAP DecodePng(LPBMPFILE pBmp)
 	if (uError) goto quit;
 
 	ZeroMemory(&bmi,sizeof(bmi));			// init bitmap info
-	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = (LONG) uWidth;
 	bmi.bmiHeader.biHeight = (LONG) uHeight;
 	bmi.bmiHeader.biPlanes = 1;
@@ -2468,7 +2461,7 @@ static HBITMAP DecodePng(LPBMPFILE pBmp)
 		_ASSERT((DWORD) (pbyLine - pbyPixels) <= bmi.bmiHeader.biSizeImage);
 	}
 
-	if (hPalette == NULL)
+	if (bPalette && hPalette == NULL)
 	{
 		hPalette = CreateBIPalette((PBITMAPINFOHEADER) &bmi);
 		// save old palette
@@ -2490,7 +2483,7 @@ quit:
 	return hBitmap;
 }
 
-HBITMAP LoadBitmapFile(LPCTSTR szFilename)
+HBITMAP LoadBitmapFile(LPCTSTR szFilename,BOOL bPalette)
 {
 	HANDLE  hFile;
 	HANDLE  hMap;
@@ -2521,7 +2514,7 @@ HBITMAP LoadBitmapFile(LPCTSTR szFilename)
 		// check for bitmap file header "BM"
 		if (Bmp.dwFileSize >= 2 && *(WORD *) Bmp.pbyFile == 0x4D42)
 		{
-			hBitmap = DecodeBmp(&Bmp);
+			hBitmap = DecodeBmp(&Bmp,bPalette);
 			break;
 		}
 
@@ -2529,14 +2522,14 @@ HBITMAP LoadBitmapFile(LPCTSTR szFilename)
 		if (   Bmp.dwFileSize >= 6
 			&& (memcmp(Bmp.pbyFile,"GIF87a",6) == 0 || memcmp(Bmp.pbyFile,"GIF89a",6) == 0))
 		{
-			hBitmap = DecodeGif(&Bmp,&dwTColor);
+			hBitmap = DecodeGif(&Bmp,&dwTColor,bPalette);
 			break;
 		}
 
 		// check for PNG file header
 		if (Bmp.dwFileSize >= 8 && memcmp(Bmp.pbyFile,"\x89PNG\r\n\x1a\n",8) == 0)
 		{
-			hBitmap = DecodePng(&Bmp);
+			hBitmap = DecodePng(&Bmp,bPalette);
 			break;
 		}
 

@@ -59,6 +59,8 @@ WORD    wInstrSize = 256;					// size of last instruction array
 WORD    wInstrWp;							// write pointer of instruction array
 WORD    wInstrRp;							// read pointer of instruction array
 
+VOID (*fnOutTrace)(VOID) = NULL;			// callback function for file trace
+
 static INT   nDbgRplBreak = BN_ASM;			// flag for RPL breakpoint detection
 static INT   nDbgOldState = DBG_OFF;		// old state of debugger for suspend/resume
 
@@ -99,6 +101,10 @@ static __inline VOID Debugger(VOID)			// debugger part
 	UpdateDbgCycleCounter();				// update 64 bit cpu cycle counter
 
 	SaveInstrAddr(Chipset.pc);				// save pc in last instruction buffer
+	if (fnOutTrace != NULL)					// has a trace function
+	{
+		fnOutTrace();						// write file trace
+	}
 
 	nDbgRplBreak = BN_ASM;					// notify ASM breakpoint
 

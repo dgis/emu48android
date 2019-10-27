@@ -218,6 +218,7 @@ extern DWORD   *pdwInstrArray;
 extern WORD    wInstrSize;
 extern WORD    wInstrWp;
 extern WORD    wInstrRp;
+extern VOID    (*fnOutTrace)(VOID);
 extern VOID    SuspendDebugger(VOID);
 extern VOID    ResumeDebugger(VOID);
 extern VOID    CheckSerial(VOID);
@@ -290,7 +291,7 @@ extern BOOL    LoadObject(LPCTSTR szFilename);
 extern BOOL    SaveObject(LPCTSTR szFilename);
 extern BOOL    LoadIconFromFile(LPCTSTR szFilename);
 extern VOID    LoadIconDefault(VOID);
-extern HBITMAP LoadBitmapFile(LPCTSTR szFilename);
+extern HBITMAP LoadBitmapFile(LPCTSTR szFilename,BOOL bPalette);
 extern HRGN    CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol);
 
 // Timer.c

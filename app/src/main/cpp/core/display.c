@@ -214,7 +214,7 @@ BOOL CreateMainBitmap(LPCTSTR szFilename)
 	_ASSERT(hWindowDC != NULL);
 	VERIFY(hMainDC = CreateCompatibleDC(hWindowDC));
 	if (hMainDC == NULL) return FALSE;		// quit if failed
-	hMainBitmap = LoadBitmapFile(szFilename);
+	hMainBitmap = LoadBitmapFile(szFilename,TRUE);
 	if (hMainBitmap == NULL)
 	{
 		DeleteDC(hMainDC);
@@ -249,7 +249,7 @@ BOOL CreateAnnunBitmap(LPCTSTR szFilename)
 	_ASSERT(hWindowDC != NULL);
 	VERIFY(hAnnunDC = CreateCompatibleDC(hWindowDC));
 	if (hAnnunDC == NULL) return FALSE;		// quit if failed
-	hAnnunBitmap = LoadBitmapFile(szFilename);
+	hAnnunBitmap = LoadBitmapFile(szFilename,FALSE);
 	if (hAnnunBitmap == NULL)
 	{
 		DeleteDC(hAnnunDC);

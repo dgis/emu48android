@@ -13,7 +13,7 @@
 #include "kml.h"
 #include "debugger.h"
 
-#define VERSION   "1.60+"
+#define VERSION   "1.61+"
 
 #ifdef _DEBUG
 LPCTSTR szNoTitle = _T("Emu48 ")_T(VERSION)_T(" Debug");
@@ -41,6 +41,7 @@ static const LPCTSTR szLicence =
 
 static BOOL bOwnCursor = FALSE;
 static BOOL bTitleBar = TRUE;
+static BOOL bMouseButton = FALSE;
 
 
 CRITICAL_SECTION csGDILock;					// critical section for hWindowDC
@@ -1787,28 +1788,19 @@ static VOID OnContextMenu(LPARAM lParam)
 	return;
 }
 
-static BOOL OnNcHitTest(LPARAM lParam)
-{
-	if (!bTitleBar || bClientWinMove)		// no title bar or window movement over client enabled
-	{
-		POINT pt;
-
-		POINTSTOPOINT(pt,MAKEPOINTS(lParam)); // mouse position
-		VERIFY(ScreenToClient(hWnd,&pt));	// convert mouse into client position
-
-		if (pt.y >= 0)						// client area
-		{
-			// hit area not over a button
-			return !MouseIsButton(pt.x,pt.y);
-		}
-	}
-	return FALSE;
-}
-
 static LRESULT OnLButtonDown(UINT nFlags, WORD x, WORD y)
 {
 	if (nMacroState == MACRO_PLAY) return 0; // playing macro
 	if (nState == SM_RUN) MouseButtonDownAt(nFlags, x,y);
+
+	bMouseButton = MouseIsButton(x,y);		// mouse is over button hit area
+
+	// no title bar or window movement over client enabled and hit area not over a button
+	if ((!bTitleBar || bClientWinMove) && nFlags == MK_LBUTTON && !bMouseButton)
+	{
+		// move window while holding the left mouse button
+		PostMessage(hWnd,WM_NCLBUTTONDOWN,HTCAPTION,MAKELPARAM(x,y));
+	}
 	return 0;
 }
 
@@ -1816,6 +1808,7 @@ static LRESULT OnLButtonUp(UINT nFlags, WORD x, WORD y)
 {
 	if (nMacroState == MACRO_PLAY) return 0; // playing macro
 	if (nState == SM_RUN) MouseButtonUpAt(nFlags, x,y);
+	bMouseButton = FALSE;
 	return 0;
 }
 
@@ -1851,6 +1844,7 @@ static LRESULT OnKeyDown(int nVirtKey, LPARAM lKeyData)
 	// call RunKey() only once (suppress autorepeat feature)
 	if (nState == SM_RUN && (lKeyData & 0x40000000) == 0)
 		RunKey((BYTE)nVirtKey, TRUE);
+	bMouseButton = FALSE;
 	return 0;
 }
 
@@ -1994,12 +1988,18 @@ LRESULT CALLBACK MainWndProc(HWND hWindow, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case SC_CLOSE: return OnFileExit();
 		}
 		break;
-	case WM_CONTEXTMENU:
-	case WM_NCRBUTTONUP:
-		OnContextMenu(lParam);
+	case WM_ENDSESSION:
+		// session will end and any auto saving is enabled
+		if (wParam == TRUE && (bAutoSave || bAutoSaveOnExit))
+		{
+			SwitchToState(SM_INVALID);		// hold emulation thread
+			if (szCurrentFilename[0] != 0)	// has current filename
+				SaveDocument();
+			SwitchToState(SM_RUN);			// on cancel restart emulation thread
+		}
 		break;
-	case WM_NCHITTEST:
-		if (OnNcHitTest(lParam)) return HTCAPTION;
+	case WM_CONTEXTMENU:
+		if (!bMouseButton) OnContextMenu(lParam);
 		break;
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDOWN:  return OnLButtonDown((UINT) wParam, LOWORD(lParam), HIWORD(lParam));

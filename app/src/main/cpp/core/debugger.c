@@ -35,6 +35,9 @@
 
 #define CODELABEL  0x80000000				// label in code window
 
+// trace log file modes
+enum TRACE_MODE { TRACE_FILE_NEW = 0, TRACE_FILE_APPEND };
+
 typedef struct CToolBarData
 {
 	WORD wVersion;
@@ -81,6 +84,14 @@ static DWORD  dwAdrMemFol = 0;				// follow address memory window
 
 static UINT   uIDMap = ID_DEBUG_MEM_MAP;	// current memory view mode
 
+static BOOL   bDbgTrace = FALSE;			// enable trace output
+static HANDLE hLogFile = NULL;				// log file handle
+static TCHAR  szTraceFilename[MAX_PATH] = _T("trace.log"); // filename for trace file
+static UINT   uTraceMode = TRACE_FILE_NEW;	// trace log file mode
+static BOOL   bTraceReg = TRUE;				// enable register logging
+static BOOL   bTraceMmu = FALSE;			// disable MMU logging
+static BOOL   bTraceOpc = TRUE;				// enable opcode logging
+
 static LONG   lCharWidth;					// width of a character (is a fix font)
 
 static HMENU  hMenuCode,hMenuMem,hMenuStack;// handle of context menues
@@ -108,6 +119,12 @@ static BOOL    OnInfoWoRegister(HWND hDlg);
 static VOID    UpdateProfileWnd(HWND hDlg);
 static BOOL    OnMemLoadData(HWND hDlg);
 static BOOL    OnMemSaveData(HWND hDlg);
+static VOID    StartTrace(VOID);
+static VOID    StopTrace(VOID);
+static VOID    FlushTrace(VOID);
+static VOID    OutTrace(VOID);
+static BOOL    OnTraceSettings(HWND hDlg);
+static BOOL    OnTraceEnable(HWND hDlg);
 
 //################
 //#
@@ -1768,6 +1785,7 @@ BOOL CheckBreakpoint(DWORD dwAddr, DWORD dwRange, UINT nType)
 VOID NotifyDebugger(INT nType)				// update registers
 {
 	nRplBreak = nType;						// save breakpoint type
+	FlushTrace();							// flush trace buffer
 	_ASSERT(hDlgDebug);						// debug dialog box open
 	PostMessage(hDlgDebug,WM_UPDATE,0,0);
 	return;
@@ -1861,6 +1879,7 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 	HDC   hDC;
 	HFONT hFont;
 	HMENU hSysMenu;
+	HMENU hDbgMenu;
 	INT   i;
 
 	switch (message)
@@ -1869,6 +1888,15 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		SetWindowLocation(hDlg,nDbgPosX,nDbgPosY);
 		if (bAlwaysOnTop) SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE);
 		SendMessage(hDlg,WM_SETICON,ICON_BIG,(LPARAM) LoadIcon(hApp,MAKEINTRESOURCE(IDI_EMU48)));
+
+		bDbgTrace = FALSE;					// disable file trace
+
+		// load file trace settings
+		ReadSettingsString(_T("Debugger"),_T("TraceFile"),szTraceFilename,szTraceFilename,ARRAYSIZEOF(szTraceFilename));
+		uTraceMode = ReadSettingsInt(_T("Debugger"),_T("TraceFileMode"),uTraceMode);
+		bTraceReg  = ReadSettingsInt(_T("Debugger"),_T("TraceRegister"),bTraceReg);
+		bTraceMmu  = ReadSettingsInt(_T("Debugger"),_T("TraceMMU"),bTraceMmu);
+		bTraceOpc  = ReadSettingsInt(_T("Debugger"),_T("TraceOpcode"),bTraceOpc);
 
 		// add Settings item to sysmenu
 		_ASSERT((IDM_DEBUG_SETTINGS & 0xFFF0) == IDM_DEBUG_SETTINGS);
@@ -1879,11 +1907,17 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			VERIFY(AppendMenu(hSysMenu,MF_STRING,IDM_DEBUG_SETTINGS,_T("Debugger Settings...")));
 		}
 
+		hDbgMenu = GetMenu(hDlg);			// menu of debugger dialog
 		hWndToolbar = CreateToolbar(hDlg);	// add toolbar
-		CheckMenuItem(GetMenu(hDlg),ID_BREAKPOINTS_NOP3,  bDbgNOP3    ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(GetMenu(hDlg),ID_BREAKPOINTS_DOCODE,bDbgCode    ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(GetMenu(hDlg),ID_BREAKPOINTS_RPL,   bDbgRPL     ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(GetMenu(hDlg),ID_INTR_STEPOVERINT,  bDbgSkipInt ? MF_CHECKED : MF_UNCHECKED);
+
+		CheckMenuItem(hDbgMenu,ID_BREAKPOINTS_NOP3,  bDbgNOP3    ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hDbgMenu,ID_BREAKPOINTS_DOCODE,bDbgCode    ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hDbgMenu,ID_BREAKPOINTS_RPL,   bDbgRPL     ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hDbgMenu,ID_INTR_STEPOVERINT,  bDbgSkipInt ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hDbgMenu,ID_TRACE_ENABLE,      bDbgTrace   ? MF_CHECKED : MF_UNCHECKED);
+
+		EnableMenuItem(hDbgMenu,ID_TRACE_SETTINGS,bDbgTrace ? MF_GRAYED : MF_ENABLED);
+
 		hDlgDebug = hDlg;					// handle for debugger dialog
 		hEventDebug = CreateEvent(NULL,FALSE,FALSE,NULL);
 		if (hEventDebug == NULL)
@@ -1931,6 +1965,7 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		InitBsArea(hDlg);					// init bank switcher list box
 		DisableMenuKeys(hDlg);				// set debug menu keys into run state
 
+		fnOutTrace = OutTrace;				// function for file trace
 		RplReadNibble = GetMemNib;			// get nibble function for RPL object viewer
 
 		dwDbgStopPC = -1;					// no stop address for goto cursor
@@ -1949,6 +1984,7 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 	case WM_DESTROY:
 		// SetHP48Time();					// update time & date
 		nDbgState = DBG_OFF;				// debugger inactive
+		StopTrace();						// finish trace
 		bInterrupt = TRUE;					// exit opcode loop
 		SetEvent(hEventDebug);
 		if (pdwInstrArray)					// free last instruction circular buffer
@@ -1965,6 +2001,14 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		GetWindowPlacement(hDlg, &wndpl);
 		nDbgPosX = wndpl.rcNormalPosition.left;
 		nDbgPosY = wndpl.rcNormalPosition.top;
+
+		// save file trace settings
+		WriteSettingsString(_T("Debugger"),_T("TraceFile"),szTraceFilename);
+		WriteSettingsInt(_T("Debugger"),_T("TraceFileMode"),uTraceMode);
+		WriteSettingsInt(_T("Debugger"),_T("TraceRegister"),bTraceReg);
+		WriteSettingsInt(_T("Debugger"),_T("TraceMMU"),bTraceMmu);
+		WriteSettingsInt(_T("Debugger"),_T("TraceOpcode"),bTraceOpc);
+
 		RplDeleteTable();					// delete rpl symbol table
 		DeleteObject(hFontBold);			// delete bold font
 		DestroyMenu(hMenuMainCode);
@@ -2023,6 +2067,8 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		case ID_BREAKPOINTS_NOP3:         return OnToggleMenuItem(hDlg,LOWORD(wParam),&bDbgNOP3);
 		case ID_BREAKPOINTS_DOCODE:       return OnToggleMenuItem(hDlg,LOWORD(wParam),&bDbgCode);
 		case ID_BREAKPOINTS_RPL:          return OnToggleMenuItem(hDlg,LOWORD(wParam),&bDbgRPL);
+		case ID_TRACE_SETTINGS:           return OnTraceSettings(hDlg);
+		case ID_TRACE_ENABLE:             return OnTraceEnable(hDlg);
 		case ID_INFO_LASTINSTRUCTIONS:    return OnInfoIntr(hDlg);
 		case ID_INFO_PROFILE:             return OnProfile(hDlg);
 		case ID_INFO_WRITEONLYREG:        return OnInfoWoRegister(hDlg);
@@ -2199,7 +2245,7 @@ static __inline BOOL OnFindOK(HWND hDlg,BOOL bASCII,DWORD *pdwAddrLast,INT nSear
 		#if defined _UNICODE
 		{
 			// Unicode to byte translation
-			LPTSTR szTmp = DuplicateString((LPTSTR) lpbySearch);
+			LPTSTR szTmp = DuplicateString((LPCTSTR) lpbySearch);
 			if (szTmp != NULL)
 			{
 				WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK,
@@ -2719,7 +2765,6 @@ static INT_PTR CALLBACK Settings(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 	UNREFERENCED_PARAMETER(lParam);
 }
 
@@ -2783,7 +2828,6 @@ static INT_PTR CALLBACK NewValue(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 }
 
 static INT_PTR OnNewValue(LPTSTR lpszValue)
@@ -2835,7 +2879,6 @@ static INT_PTR CALLBACK EnterAddr(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 }
 
 static VOID OnEnterAddress(HWND hDlg, DWORD *dwValue)
@@ -2888,7 +2931,6 @@ static INT_PTR CALLBACK EnterBreakpoint(HWND hDlg, UINT message, WPARAM wParam, 
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 }
 
 static VOID OnEnterBreakpoint(HWND hDlg, BP_T *sValue)
@@ -3183,7 +3225,6 @@ static INT_PTR CALLBACK EditBreakpoint(HWND hDlg, UINT message, WPARAM wParam, L
 		return TRUE;
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 	UNREFERENCED_PARAMETER(lParam);
 }
 
@@ -3569,7 +3610,6 @@ static INT_PTR CALLBACK DebugMemLoad(HWND hDlg, UINT message, WPARAM wParam, LPA
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 	UNREFERENCED_PARAMETER(lParam);
 }
 
@@ -3577,7 +3617,6 @@ static BOOL OnMemLoadData(HWND hDlg)
 {
 	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_DEBUG_MEMLOAD), hDlg, (DLGPROC)DebugMemLoad) == -1)
 		AbortMessage(_T("DebugLoad Dialog Box Creation Error !"));
-
 	return -1;
 }
 
@@ -3625,7 +3664,6 @@ static INT_PTR CALLBACK DebugMemSave(HWND hDlg, UINT message, WPARAM wParam, LPA
 		}
 	}
 	return FALSE;
-	UNREFERENCED_PARAMETER(wParam);
 	UNREFERENCED_PARAMETER(lParam);
 }
 
@@ -3633,6 +3671,337 @@ static BOOL OnMemSaveData(HWND hDlg)
 {
 	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_DEBUG_MEMSAVE), hDlg, (DLGPROC)DebugMemSave) == -1)
 		AbortMessage(_T("DebugSave Dialog Box Creation Error !"));
-
 	return -1;
+}
+
+
+//################
+//#
+//#    Trace Log
+//#
+//################
+
+static VOID StartTrace(VOID)
+{
+	if (hLogFile == NULL)
+	{
+		SetCurrentDirectory(szEmuDirectory);
+		hLogFile = CreateFile(
+			szTraceFilename,
+			GENERIC_READ|GENERIC_WRITE,
+			FILE_SHARE_READ,
+			NULL,
+			(uTraceMode == TRACE_FILE_NEW) ? CREATE_ALWAYS : OPEN_ALWAYS,
+			0,
+			NULL);
+		SetCurrentDirectory(szCurrentDirectory);
+		if (hLogFile == INVALID_HANDLE_VALUE)
+		{
+			InfoMessage(_T("Unable to create trace log file."));
+			hLogFile = NULL;
+			return;
+		}
+
+		// goto end of file
+		SetFilePointer(hLogFile,0L,NULL,FILE_END);
+	}
+	return;
+}
+
+static VOID StopTrace(VOID)
+{
+	if (hLogFile != NULL)
+	{
+		CloseHandle(hLogFile);
+	}
+	hLogFile = NULL;
+	return;
+}
+
+static VOID FlushTrace(VOID)
+{
+	if (hLogFile != NULL)
+	{
+		VERIFY(FlushFileBuffers(hLogFile));
+	}
+	return;
+}
+
+static __inline void __cdecl PrintTrace(LPCTSTR lpFormat, ...)
+{
+	TCHAR cOutput[1024];
+	DWORD dwWritten, dwRead;
+	va_list arglist;
+
+	va_start(arglist,lpFormat);
+	dwWritten = (DWORD) wvsprintf(cOutput,lpFormat,arglist);
+	va_end(arglist);
+	#if defined _UNICODE
+	{
+		// Unicode to byte translation
+		LPTSTR szTmp = DuplicateString(cOutput);
+		if (szTmp != NULL)
+		{
+			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK,
+								szTmp, -1,
+								(LPSTR) cOutput, sizeof(cOutput), NULL, NULL);
+			free(szTmp);
+		}
+	}
+	#endif
+	WriteFile(hLogFile,cOutput,dwWritten,&dwRead,NULL);
+	return;
+}
+
+static VOID OutTrace(VOID)
+{
+	enum MEM_MAPPING eMapMode;
+	LPCTSTR lpszName;
+	LPTSTR  s,d;
+	TCHAR   szBuffer[128];
+	TCHAR   szOpc[8];
+	DWORD   dwNxtAddr,dwOpcAddr;
+	UINT    i;
+
+	if (hLogFile != NULL)					// log file opened
+	{
+		if (bTraceReg)						// show regs
+		{
+			INT  nPos;
+
+			nPos =  wsprintf(szBuffer,_T("\r\n  A=%s"),RegToStr(Chipset.A,16));
+			nPos += wsprintf(&szBuffer[nPos],_T("  B=%s"),RegToStr(Chipset.B,16));
+			nPos += wsprintf(&szBuffer[nPos],_T("  C=%s"),RegToStr(Chipset.C,16));
+			wsprintf(&szBuffer[nPos],_T("  D=%s\r\n"),RegToStr(Chipset.D,16));
+			PrintTrace(szBuffer);
+
+			nPos =  wsprintf(szBuffer,_T("  R0=%s"),RegToStr(Chipset.R0,16));
+			nPos += wsprintf(&szBuffer[nPos],_T(" R1=%s"),RegToStr(Chipset.R1,16));
+			nPos += wsprintf(&szBuffer[nPos],_T(" R2=%s"),RegToStr(Chipset.R2,16));
+			wsprintf(&szBuffer[nPos],_T(" R3=%s\r\n"),RegToStr(Chipset.R3,16));
+			PrintTrace(szBuffer);
+
+			PrintTrace(_T("  R4=%s D0=%05X  D1=%05X  P=%X  CY=%d  Mode=%c  OUT=%03X  IN=%04X\r\n"),
+				RegToStr(Chipset.R4,16),Chipset.d0,Chipset.d1,Chipset.P,Chipset.carry,
+				Chipset.mode_dec ? _T('D') : _T('H'),Chipset.out,Chipset.in);
+
+			PrintTrace(_T("  ST=%s  MP=%d SR=%d SB=%d XM=%d  IntrEn=%d  KeyScan=%d  BS=%02X\r\n"),
+				RegToStr(Chipset.ST,4),
+				(Chipset.HST & MP) != 0,(Chipset.HST & SR) != 0,(Chipset.HST & SB) != 0,(Chipset.HST & XM) != 0,
+				Chipset.inte,Chipset.intk,Chipset.Bank_FF & 0x7F);
+
+			// hardware stack content
+			PrintTrace(_T("  Stack="));
+			for (i = 1; i <= ARRAYSIZEOF(Chipset.rstk); ++i)
+			{
+				PrintTrace(_T(" %05X"), Chipset.rstk[(Chipset.rstkp-i)&7]);
+			}
+			PrintTrace(_T("\r\n"));
+		}
+
+		if (bTraceMmu)						// show MMU
+		{
+			TCHAR szSize[8],szAddr[8];
+
+			if (!bTraceReg)					// no regs
+			{
+				PrintTrace(_T("\r\n"));		// add separator line
+			}
+
+			wsprintf(szAddr, Chipset.IOCfig ? _T("%05X") : _T("-----"),Chipset.IOBase);
+			PrintTrace(_T("  I/O=%s"),szAddr);
+
+			wsprintf(szSize, Chipset.P0Cfg2 ? _T("%05X") : _T("-----"),(Chipset.P0Size^0xFF)<<12);
+			wsprintf(szAddr, Chipset.P0Cfig ? _T("%05X") : _T("-----"),Chipset.P0Base<<12);
+			PrintTrace(_T(" NCE2=%s/%s"),szSize,szAddr);
+
+			if (cCurrentRomType=='S')
+			{
+				wsprintf(szSize, Chipset.P1Cfg2 ? _T("%05X") : _T("-----"),(Chipset.P1Size^0xFF)<<12);
+				wsprintf(szAddr, Chipset.P1Cfig ? _T("%05X") : _T("-----"),Chipset.P1Base<<12);
+			}
+			else
+			{
+				wsprintf(szSize, Chipset.BSCfg2 ? _T("%05X") : _T("-----"),(Chipset.BSSize^0xFF)<<12);
+				wsprintf(szAddr, Chipset.BSCfig ? _T("%05X") : _T("-----"),Chipset.BSBase<<12);
+			}
+			PrintTrace(_T(" CE1=%s/%s"),szSize,szAddr);
+
+			if (cCurrentRomType=='S')
+			{
+				wsprintf(szSize, Chipset.P2Cfg2 ? _T("%05X") : _T("-----"),(Chipset.P2Size^0xFF)<<12);
+				wsprintf(szAddr, Chipset.P2Cfig ? _T("%05X") : _T("-----"),Chipset.P2Base<<12);
+			}
+			else
+			{
+				wsprintf(szSize, Chipset.P1Cfg2 ? _T("%05X") : _T("-----"),(Chipset.P1Size^0xFF)<<12);
+				wsprintf(szAddr, Chipset.P1Cfig ? _T("%05X") : _T("-----"),Chipset.P1Base<<12);
+			}
+			PrintTrace(_T(" CE2=%s/%s"),szSize,szAddr);
+
+			if (cCurrentRomType=='S')
+			{
+				wsprintf(szSize, Chipset.BSCfg2 ? _T("%05X") : _T("-----"),(Chipset.BSSize^0xFF)<<12);
+				wsprintf(szAddr, Chipset.BSCfig ? _T("%05X") : _T("-----"),Chipset.BSBase<<12);
+			}
+			else
+			{
+				wsprintf(szSize, Chipset.P2Cfg2 ? _T("%05X") : _T("-----"),(Chipset.P2Size^0xFF)<<12);
+				wsprintf(szAddr, Chipset.P2Cfig ? _T("%05X") : _T("-----"),Chipset.P2Base<<12);
+			}
+			PrintTrace(_T(" NCE3=%s/%s\r\n"),szSize,szAddr);
+		}
+
+		// disassemble line
+		eMapMode = GetMemMapType();			// get current map mode
+		SetMemMapType(MEM_MMU);				// disassemble in mapped mode
+
+		// entry has a name
+		if (disassembler_symb && (lpszName = RplGetName(Chipset.pc)) != NULL)
+		{
+			PrintTrace(_T("=%s\r\n"),lpszName);	// print address as label
+		}
+		dwNxtAddr = disassemble(Chipset.pc,szBuffer);
+
+		// in disassembly replace space characters
+		// between Opcode and Modifier with one TAB
+		if ((s = _tcschr(szBuffer,_T(' '))) != NULL)
+		{
+			// skip blanks
+			for (d = s; *d == _T(' '); ++d) { }
+
+			if (d == &szBuffer[8])			// on TAB position
+			{
+				*s++ = _T('\t');			// replace with TAB
+
+				// move the opcode modifier
+				while ((*s++ = *d++) != 0) { }
+			}
+		}
+
+		if (bTraceOpc)						// show opcode nibbles
+		{
+			dwOpcAddr = Chipset.pc;			// init address
+
+			// show opcode nibbles in a block of 5
+			for (i = 0; i < 5 && dwOpcAddr < dwNxtAddr; ++i)
+			{
+				szOpc[i] = cHex[GetMemNib(&dwOpcAddr)];
+			}
+
+			if (i == 1)						// only 1 nibble written
+			{
+				szOpc[i++] = _T('\t');		// one additional TAB necessary
+			}
+			szOpc[i] = 0;					// EOS
+
+			PrintTrace(_T("%05lX %s\t%s\r\n"),Chipset.pc,szOpc,szBuffer);
+
+			while (dwOpcAddr < dwNxtAddr)	// decode rest of opcode
+			{
+				// show opcode nibbles in a block of 5
+				for (i = 0; i < 5 && dwOpcAddr < dwNxtAddr; ++i)
+				{
+					szOpc[i] = cHex[GetMemNib(&dwOpcAddr)];
+				}
+				szOpc[i] = 0;				// EOS
+
+				PrintTrace(_T("      %s\r\n"),szOpc);
+			}
+		}
+		else								// without opcode nibbles 
+		{
+			PrintTrace(_T("%05lX\t%s\r\n"),Chipset.pc,szBuffer);
+		}
+
+		SetMemMapType(eMapMode);			// switch back to old map mode
+	}
+	return;
+}
+
+//
+// trace settings dialog
+//
+static BOOL OnBrowseTraceSettings(HWND hDlg)
+{
+	TCHAR szBuffer[MAX_PATH];
+	OPENFILENAME ofn;
+
+	// get current content of file edit box
+	GetDlgItemText(hDlg,IDC_TRACE_FILE,szBuffer,ARRAYSIZEOF(szBuffer));
+
+	ZeroMemory(&ofn, sizeof(OPENFILENAME));
+	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.hwndOwner = hDlg;
+	ofn.lpstrFilter =
+		_T("Trace Log Files (*.log)\0*.log\0")
+		_T("All Files (*.*)\0*.*\0");
+	ofn.lpstrDefExt = _T("log");
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFile = szBuffer;
+	ofn.nMaxFile = ARRAYSIZEOF(szBuffer);
+	ofn.Flags = OFN_EXPLORER|OFN_HIDEREADONLY|OFN_CREATEPROMPT|OFN_OVERWRITEPROMPT;
+	if (GetSaveFileName(&ofn))
+	{
+		SetDlgItemText(hDlg,IDC_TRACE_FILE,szBuffer);
+	}
+	return 0;
+}
+
+//
+// trace settings
+//
+static INT_PTR CALLBACK TraceSettings(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		SetDlgItemText(hDlg,IDC_TRACE_FILE,szTraceFilename);
+		CheckDlgButton(hDlg,(uTraceMode == TRACE_FILE_NEW) ? IDC_TRACE_NEW : IDC_TRACE_APPEND,BST_CHECKED);
+		CheckDlgButton(hDlg,IDC_TRACE_REGISTER,bTraceReg);
+		CheckDlgButton(hDlg,IDC_TRACE_MMU,bTraceMmu);
+		CheckDlgButton(hDlg,IDC_TRACE_OPCODE,bTraceOpc);
+		return TRUE;
+
+	case WM_COMMAND:
+		switch(LOWORD(wParam))
+		{
+		case IDC_TRACE_BROWSE:
+			return OnBrowseTraceSettings(hDlg);
+
+		case IDOK:
+			// get filename
+			GetDlgItemText(hDlg,IDC_TRACE_FILE,szTraceFilename,ARRAYSIZEOF(szTraceFilename));
+
+			// trace mode
+			uTraceMode = IsDlgButtonChecked(hDlg,IDC_TRACE_NEW) ? TRACE_FILE_NEW : TRACE_FILE_APPEND;
+
+			// trace content
+			bTraceReg = IsDlgButtonChecked(hDlg,IDC_TRACE_REGISTER);
+			bTraceMmu = IsDlgButtonChecked(hDlg,IDC_TRACE_MMU);
+			bTraceOpc = IsDlgButtonChecked(hDlg,IDC_TRACE_OPCODE);
+
+			// no break
+		case IDCANCEL:
+			EndDialog(hDlg,LOWORD(wParam));
+			return TRUE;
+		}
+	}
+	return FALSE;
+	UNREFERENCED_PARAMETER(lParam);
+}
+
+static BOOL OnTraceSettings(HWND hDlg)
+{
+	if (DialogBox(hApp, MAKEINTRESOURCE(IDD_TRACE), hDlg, (DLGPROC)TraceSettings) == -1)
+		AbortMessage(_T("TraceSettings Dialog Box Creation Error !"));
+	return -1;
+}
+
+static BOOL OnTraceEnable(HWND hDlg)
+{
+	OnToggleMenuItem(hDlg,ID_TRACE_ENABLE,&bDbgTrace);
+	bDbgTrace ? StartTrace() : StopTrace();
+	EnableMenuItem(GetMenu(hDlg),ID_TRACE_SETTINGS,bDbgTrace ? MF_GRAYED : MF_ENABLED);
+	return 0;
 }
