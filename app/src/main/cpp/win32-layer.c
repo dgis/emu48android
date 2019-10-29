@@ -1683,7 +1683,8 @@ int GetObject(HGDIOBJ h, int c, LPVOID pv) {
     }    return 0;
 }
 HGDIOBJ GetCurrentObject(HDC hdc, UINT type) {
-    //TODO
+    if(hdc)
+        return hdc->selectedBitmap;
     return NULL;
 }
 BOOL DeleteObject(HGDIOBJ ho) {
@@ -1768,9 +1769,13 @@ HDC CreateCompatibleDC(HDC hdc) {
     return handle;
 }
 HDC GetDC(HWND hWnd) {
+    if(!hWnd)
+        return NULL;
     return hWnd->windowDC;
 }
 int ReleaseDC(HWND hWnd, HDC hDC) {
+    if(!hWnd)
+        return NULL;
     hWnd->windowDC = NULL; //?
     return TRUE;
 }
@@ -2291,7 +2296,23 @@ HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
     return newHBITMAP;
 }
 int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage) {
-    //TODO
+    //TODO Not sure at all for this function
+    if(hbm && lpbmi) {
+        CONST BITMAPINFO *pbmi = hbm->bitmapInfo;
+        if(!lpvBits) {
+            size_t bitmapInfoSize = sizeof(BITMAPINFOHEADER);
+            memcpy(lpbmi, pbmi, bitmapInfoSize);
+        } else {
+            // We consider the source and destination dib with the same format
+            size_t stride = (size_t)(4 * ((pbmi->bmiHeader.biWidth * pbmi->bmiHeader.biBitCount + 31) / 32));
+            VOID * sourceDibBits = (VOID *)hbm->bitmapBits;
+            VOID * destinationDibBits = lpvBits;
+            for(int y = 0; y < cLines; y++) {
+                size_t lineSize = (start + y) * stride;
+                memcpy(destinationDibBits + lineSize, sourceDibBits + lineSize, stride);
+            }
+        }
+    }
     return 0;
 }
 COLORREF GetPixel(HDC hdc, int x ,int y) {

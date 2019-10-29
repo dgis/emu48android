@@ -54,7 +54,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.7 (2019-11-27)
+Version 1.7 (2019-11-29)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.61+ that was merged from Christoph Gießelink's Emu48 version 1.62.
 - Allow to take a screenshot of the fullscreen including the skin.
