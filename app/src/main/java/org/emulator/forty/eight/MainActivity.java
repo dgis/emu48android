@@ -81,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -288,6 +289,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if(lcdOverlappingView != null)
             lcdOverlappingView.saveViewLayout();
+
+        clearFolderCache();
 
         super.onStop();
     }
@@ -1290,20 +1293,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return fd;
     }
 
+
+    String folderURLCached = null;
+    HashMap<String, String> folderCache = new HashMap<>();
+
+    public void clearFolderCache() {
+        folderURLCached = null;
+        folderCache.clear();
+    }
+
     @SuppressWarnings("unused")
     public int openFileInFolderFromContentResolver(String filename, String folderURL, int writeAccess) {
-        Uri folderURI = Uri.parse(folderURL);
-        DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
-        if(folderDocumentFile != null) {
-            for (DocumentFile file : folderDocumentFile.listFiles()) {
-                String url = file.getUri().toString();
-                String name = file.getName();
-                //Log.d(TAG, "url: " + url + ", name: " + name);
-                if (filename.equals(name)) {
-                    return openFileFromContentResolver(url, writeAccess);
-                }
-            }
+        if(folderURLCached == null || !folderURLCached.equals(folderURL)) {
+            folderURLCached = folderURL;
+            folderCache.clear();
+            Uri folderURI = Uri.parse(folderURL);
+            DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
+            if (folderDocumentFile != null)
+                for (DocumentFile file : folderDocumentFile.listFiles())
+                    folderCache.put(file.getName(), file.getUri().toString());
         }
+        String filenameUrl = folderCache.get(filename);
+        if(filenameUrl != null)
+            return openFileFromContentResolver(filenameUrl, writeAccess);
         return -1;
     }
 
