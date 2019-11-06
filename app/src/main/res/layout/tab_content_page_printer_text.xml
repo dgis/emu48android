@@ -42,9 +42,9 @@
                     android:id="@+id/printer_text"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="#000000"
                     android:textIsSelectable="true"
-                    android:typeface="monospace"
-                    />
+                    android:typeface="monospace" />
                 <!--android:textSize="20sp"-->
 
             </ScrollView>
