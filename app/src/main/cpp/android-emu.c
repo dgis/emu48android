@@ -96,6 +96,134 @@ VOID CopyItemsToClipboard(HWND hWnd)		// save selected Listbox Items to Clipboar
 	return;
 }
 
+#define WIDTHBYTES(bits) ((((bits) + 31) / 32) * 4)
+
+static BOOL AbsColorCmp(DWORD dwColor1,DWORD dwColor2,DWORD dwTol)
+{
+	DWORD dwDiff;
+
+	dwDiff =  (DWORD) abs((INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF));
+	dwColor1 >>= 8;
+	dwColor2 >>= 8;
+	dwDiff += (DWORD) abs((INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF));
+	dwColor1 >>= 8;
+	dwColor2 >>= 8;
+	dwDiff += (DWORD) abs((INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF));
+
+	return dwDiff > dwTol;					// FALSE = colors match
+}
+
+static BOOL LabColorCmp(DWORD dwColor1,DWORD dwColor2,DWORD dwTol)
+{
+	DWORD dwDiff;
+	INT   nDiffCol;
+
+	nDiffCol = (INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF);
+	dwDiff = (DWORD) (nDiffCol * nDiffCol);
+	dwColor1 >>= 8;
+	dwColor2 >>= 8;
+	nDiffCol = (INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF);
+	dwDiff += (DWORD) (nDiffCol * nDiffCol);
+	dwColor1 >>= 8;
+	dwColor2 >>= 8;
+	nDiffCol = (INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF);
+	dwDiff += (DWORD) (nDiffCol * nDiffCol);
+	dwTol *= dwTol;
+
+	return dwDiff > dwTol;					// FALSE = colors match
+}
+
+static DWORD EncodeColorBits(DWORD dwColorVal,DWORD dwMask)
+{
+#define MAXBIT 32
+	UINT uLshift = MAXBIT;
+	UINT uRshift = 8;
+	DWORD dwBitMask = dwMask;
+
+	dwColorVal &= 0xFF;						// the color component using the lowest 8 bit
+
+	// position of highest bit
+	while ((dwBitMask & (1<<(MAXBIT-1))) == 0 && uLshift > 0)
+	{
+		dwBitMask <<= 1;					// next bit
+		--uLshift;							// next position
+	}
+
+	if (uLshift > 24)						// avoid overflow on 32bit mask
+	{
+		uLshift -= uRshift;					// normalize left shift
+		uRshift = 0;
+	}
+
+	return ((dwColorVal << uLshift) >> uRshift) & dwMask;
+#undef MAXBIT
+}
+
+extern JavaVM *java_machine;
+extern jobject bitmapMainScreen;
+extern AndroidBitmapInfo androidBitmapInfo;
+
+static void MakeBitmapTransparent(HBITMAP hBmp,COLORREF color,DWORD dwTol) {
+
+	BOOL (*fnColorCmp)(DWORD dwColor1,DWORD dwColor2,DWORD dwTol);
+	if (dwTol >= 1000) {					// use CIE L*a*b compare
+		fnColorCmp = LabColorCmp;
+		dwTol -= 1000;						// remove L*a*b compare selector
+	} else {								// use Abs summation compare
+		fnColorCmp = AbsColorCmp;
+	}
+
+	JNIEnv * jniEnv = NULL;
+	jint ret;
+
+	BOOL needDetach = FALSE;
+	ret = (*java_machine)->GetEnv(java_machine, (void **) &jniEnv, JNI_VERSION_1_6);
+	if (ret == JNI_EDETACHED) {
+		// GetEnv: not attached
+		ret = (*java_machine)->AttachCurrentThread(java_machine, &jniEnv, NULL);
+		if (ret == JNI_OK) {
+			needDetach = TRUE;
+		}
+	}
+
+	int destinationWidth = androidBitmapInfo.width;
+	int destinationHeight = androidBitmapInfo.height;
+	int destinationBitCount = 32;
+	int destinationStride = androidBitmapInfo.stride;
+	void * pixelsDestination = NULL;
+	if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
+		LOGD("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+		return;
+	}
+
+	LPBYTE pbyBits = pixelsDestination;
+
+	// convert COLORREF to RGBQUAD color
+	DWORD dwRed   = 0x00FF0000;
+	DWORD dwGreen = 0x0000FF00;
+	DWORD dwBlue  = 0x000000FF;
+
+	color = EncodeColorBits((color >> 16), dwBlue)
+			| EncodeColorBits((color >>  8), dwGreen)
+			| EncodeColorBits((color >>  0), dwRed);
+
+	DWORD dwBpp = (DWORD) (destinationBitCount >> 3);
+	LPBYTE pbyColor = pbyBits + (destinationHeight - 1) * destinationStride;
+
+	for (LONG y = 0; y < destinationHeight; ++y) {
+		LPBYTE pbyLineStart = pbyColor;
+		for (LONG x = 0; x < destinationWidth; ++x) {
+			if(!fnColorCmp(*(LPDWORD)pbyColor,color,dwTol))
+				*(LPDWORD)pbyColor = 0x00000000;
+			pbyColor += dwBpp;
+		}
+		pbyColor = pbyLineStart - destinationStride;
+	}
+
+	if(jniEnv && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0)
+		LOGD("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+}
+
 //
 // WM_PAINT
 //
@@ -126,6 +254,9 @@ static LRESULT OnPaint(HWND hWindow)
 			BitBlt(hPaintDC, Paint.rcPaint.left, Paint.rcPaint.top,
 				   Paint.rcPaint.right-Paint.rcPaint.left, Paint.rcPaint.bottom-Paint.rcPaint.top,
 				   hMainDC, rcMainPaint.left, rcMainPaint.top, SRCCOPY);
+
+			if (dwTColor != (DWORD) -1) // prepare background bitmap with transparency
+				MakeBitmapTransparent((HBITMAP)GetCurrentObject(hPaintDC, OBJ_BITMAP), dwTColor, dwTColorTol);
 
 			// CdB for HP: add apples display stuff
 			SetWindowOrgEx(hPaintDC, nBackgroundX, nBackgroundY, NULL);

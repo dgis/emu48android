@@ -2026,163 +2026,163 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
     int dst_maxy = yDest + hDest;
 
     if(xDest < 0) {
-            wDest += xDest;
-            xDest = 0;
-        }
+        wDest += xDest;
+        xDest = 0;
+    }
     if(yDest < 0) {
-            hDest += yDest;
-            yDest = 0;
-        }
+        hDest += yDest;
+        yDest = 0;
+    }
     if(dst_maxx > destinationWidth)
-            dst_maxx = destinationWidth;
+        dst_maxx = destinationWidth;
     if(dst_maxy > destinationHeight)
-            dst_maxy = destinationHeight;
+        dst_maxy = destinationHeight;
 
     for (int y = yDest; y < dst_maxy; y++) {
-            int src_cury = ySrc + (y - yDest) * hSrc / hDest;
-            if(!reverseHeight)
-                src_cury = sourceHeight - 1 - src_cury;
-            if (src_cury < 0 || src_cury >= sourceHeight)
+        int src_cury = ySrc + (y - yDest) * hSrc / hDest;
+        if(!reverseHeight)
+            src_cury = sourceHeight - 1 - src_cury;
+        if (src_cury < 0 || src_cury >= sourceHeight)
+            continue;
+        BYTE parity = (BYTE) xSrc;
+        for (int x = xDest; x < dst_maxx; x++, parity++) {
+            int src_curx = xSrc + (x - xDest) * wSrc / wDest;
+            if (src_curx < 0 || src_curx >= sourceWidth)
                 continue;
-            BYTE parity = (BYTE) xSrc;
-            for (int x = xDest; x < dst_maxx; x++, parity++) {
-                int src_curx = xSrc + (x - xDest) * wSrc / wDest;
-                if (src_curx < 0 || src_curx >= sourceWidth)
-                    continue;
 
-                BYTE * sourcePixelBase = pixelsSource + sourceStride * src_cury;
-                BYTE * destinationPixelBase = pixelsDestination + destinationStride * y;
+            BYTE * sourcePixelBase = pixelsSource + sourceStride * src_cury;
+            BYTE * destinationPixelBase = pixelsDestination + destinationStride * y;
 
-                COLORREF sourceColor = 0xFF000000;
-                BYTE * sourceColorPointer = (BYTE *) &sourceColor;
+            COLORREF sourceColor = 0xFF000000;
+            BYTE * sourceColorPointer = (BYTE *) &sourceColor;
 
-                switch (sourceBitCount) {
-                    case 1: {
-                        //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
-                        // When blitting from a monochrome DC to a color DC,
-                        // the color black in the source turns into the destination’s text color,
-                        // and the color white in the source turns into the destination’s background
-                        // color.
-                        BYTE * sourcePixel = sourcePixelBase + ((UINT)src_curx >> (UINT)3);
-                        UINT bitNumber = (UINT) (src_curx % 8);
-                        if(*sourcePixel & ((UINT)1 << bitNumber)) {
-                            // Monochrome 1=White
-                            sourceColorPointer[0] = 255;
-                            sourceColorPointer[1] = 255;
-                            sourceColorPointer[2] = 255;
-                        } else {
-                            // Monochrome 0=Black
-                            sourceColorPointer[0] = 0;
-                            sourceColorPointer[1] = 0;
-                            sourceColorPointer[2] = 0;
-                        }
-                        sourceColorPointer[3] = 255;
-                        break;
+            switch (sourceBitCount) {
+                case 1: {
+                    //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
+                    // When blitting from a monochrome DC to a color DC,
+                    // the color black in the source turns into the destination’s text color,
+                    // and the color white in the source turns into the destination’s background
+                    // color.
+                    BYTE * sourcePixel = sourcePixelBase + ((UINT)src_curx >> (UINT)3);
+                    UINT bitNumber = (UINT) (src_curx % 8);
+                    if(*sourcePixel & ((UINT)1 << bitNumber)) {
+                        // Monochrome 1=White
+                        sourceColorPointer[0] = 255;
+                        sourceColorPointer[1] = 255;
+                        sourceColorPointer[2] = 255;
+                    } else {
+                        // Monochrome 0=Black
+                        sourceColorPointer[0] = 0;
+                        sourceColorPointer[1] = 0;
+                        sourceColorPointer[2] = 0;
                     }
-                    case 4: {
-                        int currentXBytes = ((sourceBitCount >> (UINT)2) * src_curx) >> (UINT)1;
-                        BYTE * sourcePixel = sourcePixelBase + currentXBytes;
-                        BYTE colorIndex = (parity & (BYTE)0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> (UINT)4);
-                        if (palPalEntry) {
-                            sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
-                            sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
-                            sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
-                            sourceColorPointer[3] = 255;
-                        } else {
-                            sourceColorPointer[0] = colorIndex;
-                            sourceColorPointer[1] = colorIndex;
-                            sourceColorPointer[2] = colorIndex;
-                            sourceColorPointer[3] = 255;
-                        }
-                        break;
-                    }
-                    case 8: {
-                        BYTE * sourcePixel = sourcePixelBase + src_curx;
-                        BYTE colorIndex = sourcePixel[0];
-                        if (palPalEntry) {
-                            sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
-                            sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
-                            sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
-                            sourceColorPointer[3] = 255;
-                        } else {
-                            sourceColorPointer[0] = colorIndex;
-                            sourceColorPointer[1] = colorIndex;
-                            sourceColorPointer[2] = colorIndex;
-                            sourceColorPointer[3] = 255;
-                        }
-                        break;
-                    }
-                    case 24: {
-                        BYTE * sourcePixel = sourcePixelBase + 3 * src_curx;
-                        sourceColorPointer[0] = sourcePixel[2];
-                        sourceColorPointer[1] = sourcePixel[1];
-                        sourceColorPointer[2] = sourcePixel[0];
-                        sourceColorPointer[3] = 255;
-                        break;
-                    }
-                    case 32: {
-                        BYTE *sourcePixel = sourcePixelBase + 4 * src_curx;
-                        memcpy(sourceColorPointer, sourcePixel, 4);
-                        break;
-                    }
-                    default:
-                        break;
+                    sourceColorPointer[3] = 255;
+                    break;
                 }
-
-                switch (destinationBitCount) {
-                    case 1: {
-                        //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
-                        // If you blit from a color DC to a monochrome DC,
-                        // then all pixels in the source that are equal to the background color
-                        // will turn white, and all other pixels will turn black.
-                        // In other words, GDI considers a monochrome bitmap to be
-                        // black pixels on a white background.
-                        BYTE * destinationPixel = destinationPixelBase + (x >> 3);
-                        UINT bitNumber = x % 8;
-                        if(backgroundColor == sourceColor) {
-                            *destinationPixel |= (1 << bitNumber); // 1 White
-                        } else {
-                            *destinationPixel &= ~(1 << bitNumber); // 0 Black
-                        }
-                        break;
+                case 4: {
+                    int currentXBytes = ((sourceBitCount >> (UINT)2) * src_curx) >> (UINT)1;
+                    BYTE * sourcePixel = sourcePixelBase + currentXBytes;
+                    BYTE colorIndex = (parity & (BYTE)0x1 ? sourcePixel[0] & (BYTE)0x0F : sourcePixel[0] >> (UINT)4);
+                    if (palPalEntry) {
+                        sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
+                        sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
+                        sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
+                        sourceColorPointer[3] = 255;
+                    } else {
+                        sourceColorPointer[0] = colorIndex;
+                        sourceColorPointer[1] = colorIndex;
+                        sourceColorPointer[2] = colorIndex;
+                        sourceColorPointer[3] = 255;
                     }
-                    case 4: {
-                        //TODO
-                        break;
-                    }
-                    case 8: {
-                        //TODO
-                        break;
-                    }
-                    case 24: {
-                        BYTE * destinationPixel = destinationPixelBase + 3 * x;
-                        destinationPixel[0] = sourceColorPointer[0];
-                        destinationPixel[1] = sourceColorPointer[1];
-                        destinationPixel[2] = sourceColorPointer[2];
-                        break;
-                    }
-                    case 32: {
-                        BYTE * destinationPixel = destinationPixelBase + 4 * x;
-                        // https://docs.microsoft.com/en-us/windows/desktop/gdi/ternary-raster-operations
-                        // http://www.qnx.com/developers/docs/6.4.1/gf/dev_guide/api/gf_context_set_rop.html
-                        if (rop == ROP_PDSPxax) { // P ^ (D & (S ^ P))
-                            UINT destination = *((UINT *) destinationPixel);
-                            *((UINT *)destinationPixel) = (brushColor ^ (destination & (sourceColor ^ brushColor))) | 0xFF000000;
-                        } else if (rop == ROP_PSDPxax) { // P ^ (S & (D ^ P))
-                            UINT destination = *((UINT *) destinationPixel);
-                            *((UINT *)destinationPixel) = (brushColor ^ (sourceColor & (destination ^ brushColor))) | 0xFF000000;
-                        } else if (rop == SRCAND) { // dest = source AND dest
-                            UINT destination = *((UINT *) destinationPixel);
-                            *((UINT *)destinationPixel) = (sourceColor & destination) | 0xFF000000;
-                        } else
-                            *((UINT *)destinationPixel) = sourceColor;
-                        break;
-                    }
-                    default:
-                        break;
+                    break;
                 }
+                case 8: {
+                    BYTE * sourcePixel = sourcePixelBase + src_curx;
+                    BYTE colorIndex = sourcePixel[0];
+                    if (palPalEntry) {
+                        sourceColorPointer[0] = palPalEntry[colorIndex].peBlue;
+                        sourceColorPointer[1] = palPalEntry[colorIndex].peGreen;
+                        sourceColorPointer[2] = palPalEntry[colorIndex].peRed;
+                        sourceColorPointer[3] = 255;
+                    } else {
+                        sourceColorPointer[0] = colorIndex;
+                        sourceColorPointer[1] = colorIndex;
+                        sourceColorPointer[2] = colorIndex;
+                        sourceColorPointer[3] = 255;
+                    }
+                    break;
+                }
+                case 24: {
+                    BYTE * sourcePixel = sourcePixelBase + 3 * src_curx;
+                    sourceColorPointer[0] = sourcePixel[2];
+                    sourceColorPointer[1] = sourcePixel[1];
+                    sourceColorPointer[2] = sourcePixel[0];
+                    sourceColorPointer[3] = 255;
+                    break;
+                }
+                case 32: {
+                    BYTE *sourcePixel = sourcePixelBase + 4 * src_curx;
+                    memcpy(sourceColorPointer, sourcePixel, 4);
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            switch (destinationBitCount) {
+                case 1: {
+                    //TODO https://devblogs.microsoft.com/oldnewthing/?p=29013
+                    // If you blit from a color DC to a monochrome DC,
+                    // then all pixels in the source that are equal to the background color
+                    // will turn white, and all other pixels will turn black.
+                    // In other words, GDI considers a monochrome bitmap to be
+                    // black pixels on a white background.
+                    BYTE * destinationPixel = destinationPixelBase + (x >> 3);
+                    UINT bitNumber = x % 8;
+                    if(backgroundColor == sourceColor) {
+                        *destinationPixel |= (1 << bitNumber); // 1 White
+                    } else {
+                        *destinationPixel &= ~(1 << bitNumber); // 0 Black
+                    }
+                    break;
+                }
+                case 4: {
+                    //TODO
+                    break;
+                }
+                case 8: {
+                    //TODO
+                    break;
+                }
+                case 24: {
+                    BYTE * destinationPixel = destinationPixelBase + 3 * x;
+                    destinationPixel[0] = sourceColorPointer[0];
+                    destinationPixel[1] = sourceColorPointer[1];
+                    destinationPixel[2] = sourceColorPointer[2];
+                    break;
+                }
+                case 32: {
+                    BYTE * destinationPixel = destinationPixelBase + 4 * x;
+                    // https://docs.microsoft.com/en-us/windows/desktop/gdi/ternary-raster-operations
+                    // http://www.qnx.com/developers/docs/6.4.1/gf/dev_guide/api/gf_context_set_rop.html
+                    if (rop == ROP_PDSPxax) { // P ^ (D & (S ^ P))
+                        UINT destination = *((UINT *) destinationPixel);
+                        *((UINT *)destinationPixel) = (brushColor ^ (destination & (sourceColor ^ brushColor))) | 0xFF000000;
+                    } else if (rop == ROP_PSDPxax) { // P ^ (S & (D ^ P))
+                        UINT destination = *((UINT *) destinationPixel);
+                        *((UINT *)destinationPixel) = (brushColor ^ (sourceColor & (destination ^ brushColor))) | 0xFF000000;
+                    } else if (rop == SRCAND) { // dest = source AND dest
+                        UINT destination = *((UINT *) destinationPixel);
+                        *((UINT *)destinationPixel) = (sourceColor & destination) | 0xFF000000;
+                    } else
+                        *((UINT *)destinationPixel) = sourceColor;
+                    break;
+                }
+                default:
+                    break;
             }
         }
+    }
 }
 
 UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq) {
