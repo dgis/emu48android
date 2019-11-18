@@ -35,7 +35,7 @@ import java.util.Set;
 public class MainScreenView extends PanAndScaleView {
 
     protected static final String TAG = "MainScreenView";
-    protected final boolean debug = false;
+    protected final boolean debug = true;
 
     private Paint paint = new Paint();
     private Bitmap bitmapMainScreen;
@@ -66,6 +66,42 @@ public class MainScreenView extends PanAndScaleView {
         enableZoomKeyboard = false;
 
         charmap = new HashMap<>();
+        charmap.put('A', 0x41); // A
+        charmap.put('B', 0x42); // B
+        charmap.put('C', 0x43); // C
+        charmap.put('D', 0x44); // D
+        charmap.put('E', 0x45); // E
+        charmap.put('F', 0x46); // F
+        charmap.put('G', 0x47); // G
+        charmap.put('H', 0x48); // H
+        charmap.put('I', 0x49); // I
+        charmap.put('J', 0x4A); // J
+        charmap.put('K', 0x4B); // K
+        charmap.put('L', 0x4C); // L
+        charmap.put('M', 0x4D); // M
+        charmap.put('N', 0x4E); // N
+        charmap.put('O', 0x4F); // O
+        charmap.put('P', 0x50); // P
+        charmap.put('Q', 0x51); // Q
+        charmap.put('R', 0x52); // R
+        charmap.put('S', 0x53); // S
+        charmap.put('T', 0x54); // T
+        charmap.put('U', 0x55); // U
+        charmap.put('V', 0x56); // V
+        charmap.put('W', 0x57); // W
+        charmap.put('X', 0x58); // X
+        charmap.put('Y', 0x59); // Y
+        charmap.put('Z', 0x5A); // Z
+        charmap.put('0', 0x60); // VK_0
+        charmap.put('1', 0x61); // VK_1
+        charmap.put('2', 0x62); // VK_2
+        charmap.put('3', 0x63); // VK_3
+        charmap.put('4', 0x64); // VK_4
+        charmap.put('5', 0x65); // VK_5
+        charmap.put('6', 0x66); // VK_6
+        charmap.put('7', 0x67); // VK_7
+        charmap.put('8', 0x68); // VK_8
+        charmap.put('9', 0x69); // VK_9
         charmap.put('+', 0x6B); // VK_ADD
         charmap.put('-', 0x6D); // VK_SUBTRACT
         charmap.put('*', 0x6A); // VK_MULTIPLY
