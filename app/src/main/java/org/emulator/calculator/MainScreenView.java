@@ -66,46 +66,12 @@ public class MainScreenView extends PanAndScaleView {
         enableZoomKeyboard = false;
 
         charmap = new HashMap<>();
-        charmap.put('A', 0x41); // A
-        charmap.put('B', 0x42); // B
-        charmap.put('C', 0x43); // C
-        charmap.put('D', 0x44); // D
-        charmap.put('E', 0x45); // E
-        charmap.put('F', 0x46); // F
-        charmap.put('G', 0x47); // G
-        charmap.put('H', 0x48); // H
-        charmap.put('I', 0x49); // I
-        charmap.put('J', 0x4A); // J
-        charmap.put('K', 0x4B); // K
-        charmap.put('L', 0x4C); // L
-        charmap.put('M', 0x4D); // M
-        charmap.put('N', 0x4E); // N
-        charmap.put('O', 0x4F); // O
-        charmap.put('P', 0x50); // P
-        charmap.put('Q', 0x51); // Q
-        charmap.put('R', 0x52); // R
-        charmap.put('S', 0x53); // S
-        charmap.put('T', 0x54); // T
-        charmap.put('U', 0x55); // U
-        charmap.put('V', 0x56); // V
-        charmap.put('W', 0x57); // W
-        charmap.put('X', 0x58); // X
-        charmap.put('Y', 0x59); // Y
-        charmap.put('Z', 0x5A); // Z
-        charmap.put('0', 0x60); // VK_0
-        charmap.put('1', 0x61); // VK_1
-        charmap.put('2', 0x62); // VK_2
-        charmap.put('3', 0x63); // VK_3
-        charmap.put('4', 0x64); // VK_4
-        charmap.put('5', 0x65); // VK_5
-        charmap.put('6', 0x66); // VK_6
-        charmap.put('7', 0x67); // VK_7
-        charmap.put('8', 0x68); // VK_8
-        charmap.put('9', 0x69); // VK_9
         charmap.put('+', 0x6B); // VK_ADD
         charmap.put('-', 0x6D); // VK_SUBTRACT
         charmap.put('*', 0x6A); // VK_MULTIPLY
         charmap.put('/', 0x6F); // VK_DIVIDE
+        charmap.put('[', 0xDB); // VK_OEM_4
+        charmap.put(']', 0xDD); // VK_OEM_6
 
         vkmap = new SparseIntArray();
         //vkmap.put(KeyEvent.KEYCODE_BACK, 0x08); // VK_BACK
@@ -151,16 +117,16 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_X, 0x58); // X
         vkmap.put(KeyEvent.KEYCODE_Y, 0x59); // Y
         vkmap.put(KeyEvent.KEYCODE_Z, 0x5A); // Z
-        vkmap.put(KeyEvent.KEYCODE_0, 0x60); // VK_NUMPAD0
-        vkmap.put(KeyEvent.KEYCODE_1, 0x61); // VK_NUMPAD1
-        vkmap.put(KeyEvent.KEYCODE_2, 0x62); // VK_NUMPAD2
-        vkmap.put(KeyEvent.KEYCODE_3, 0x63); // VK_NUMPAD3
-        vkmap.put(KeyEvent.KEYCODE_4, 0x64); // VK_NUMPAD4
-        vkmap.put(KeyEvent.KEYCODE_5, 0x65); // VK_NUMPAD5
-        vkmap.put(KeyEvent.KEYCODE_6, 0x66); // VK_NUMPAD6
-        vkmap.put(KeyEvent.KEYCODE_7, 0x67); // VK_NUMPAD7
-        vkmap.put(KeyEvent.KEYCODE_8, 0x68); // VK_NUMPAD8
-        vkmap.put(KeyEvent.KEYCODE_9, 0x69); // VK_NUMPAD9
+        vkmap.put(KeyEvent.KEYCODE_0, 0x30); //VK_0   0x60); // VK_NUMPAD0
+        vkmap.put(KeyEvent.KEYCODE_1, 0x31); //VK_1   0x61); // VK_NUMPAD1
+        vkmap.put(KeyEvent.KEYCODE_2, 0x32); //VK_2   0x62); // VK_NUMPAD2
+        vkmap.put(KeyEvent.KEYCODE_3, 0x33); //VK_3   0x63); // VK_NUMPAD3
+        vkmap.put(KeyEvent.KEYCODE_4, 0x34); //VK_4   0x64); // VK_NUMPAD4
+        vkmap.put(KeyEvent.KEYCODE_5, 0x35); //VK_5   0x65); // VK_NUMPAD5
+        vkmap.put(KeyEvent.KEYCODE_6, 0x36); //VK_6   0x66); // VK_NUMPAD6
+        vkmap.put(KeyEvent.KEYCODE_7, 0x37); //VK_7   0x67); // VK_NUMPAD7
+        vkmap.put(KeyEvent.KEYCODE_8, 0x38); //VK_8   0x68); // VK_NUMPAD8
+        vkmap.put(KeyEvent.KEYCODE_9, 0x39); //VK_9   0x69); // VK_NUMPAD9
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_0, 0x60); // VK_NUMPAD0
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_1, 0x61); // VK_NUMPAD1
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_2, 0x62); // VK_NUMPAD2
@@ -179,13 +145,11 @@ public class MainScreenView extends PanAndScaleView {
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DOT, 0x6E); // VK_DECIMAL
         vkmap.put(KeyEvent.KEYCODE_SLASH, 0x6F); // VK_DIVIDE
         vkmap.put(KeyEvent.KEYCODE_NUMPAD_DIVIDE, 0x6F); // VK_DIVIDE
-//        vkmap.put(KeyEvent.KEYCODE_SEMICOLON, 0xBA); // VK_OEM_1 (:);)
         vkmap.put(KeyEvent.KEYCODE_COMMA, 0xBC); // VK_OEM_COMMA
         vkmap.put(KeyEvent.KEYCODE_PERIOD, 0xBE); // VK_OEM_PERIOD
-//        vkmap.put(KeyEvent.0x2C, 0xBF); // VK_OEM_2 (?)
-//        vkmap.put(KeyEvent.0x32, 0xC0); // VK_OEM_3 (~)
-//        vkmap.put(KeyEvent.KEYCODE_LEFT_BRACKET, 0xDB); // VK_OEM_4 ([{)
-//        vkmap.put(KeyEvent.0x27, 0xDE);  // VK_OEM_7 (‘ »)
+        vkmap.put(KeyEvent.KEYCODE_SEMICOLON, 0xBA); // VK_OEM_1 (:);)
+        vkmap.put(KeyEvent.KEYCODE_APOSTROPHE, 0xDE);  // VK_OEM_7 (‘ »)
+        vkmap.put(KeyEvent.KEYCODE_BACKSLASH, 0xDC);  // VK_OEM_5 (\|)
 
         this.setFocusable(true);
         this.setFocusableInTouchMode(true);
@@ -234,14 +198,15 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            if(debug) Log.d(TAG, "onKeyDown is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
+            if(debug) Log.d(TAG, String.format("onKeyDown keyCode: 0x%x (%d), unicodeChar: '%c' 0x%x (%d) -> windowsKeycode: 0x%x (%d)",
+                    keyCode, keyCode, pressedKey, (int)pressedKey, (int)pressedKey, windowsKeycode, windowsKeycode));
             if (windowsKeycode != 0)
                 NativeLib.keyDown(windowsKeycode);
             else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
-            if(keyCode == KeyEvent.KEYCODE_BACK)
+            if(keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_TAB)
                 return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -251,14 +216,15 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
             char pressedKey = (char) event.getUnicodeChar();
-            if(debug) Log.d(TAG, "onKeyUp is: " + pressedKey);
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
                 windowsKeycode = vkmap.get(keyCode);
+            if(debug) Log.d(TAG, String.format("onKeyUp keyCode: 0x%x (%d), unicodeChar: '%c' 0x%x (%d) -> windowsKeycode: 0x%x (%d)",
+                    keyCode, keyCode, pressedKey, (int)pressedKey, (int)pressedKey, windowsKeycode, windowsKeycode));
             if (windowsKeycode != 0)
                 NativeLib.keyUp(windowsKeycode);
             else if(debug) Log.e(TAG, String.format("Unknown keyCode: %d", keyCode));
-            if(keyCode == KeyEvent.KEYCODE_BACK)
+            if(keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_TAB)
                 return true;
         }
         return super.onKeyUp(keyCode, event);

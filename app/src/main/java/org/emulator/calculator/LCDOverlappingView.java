@@ -159,7 +159,6 @@ public class LCDOverlappingView extends View {
                 previousY1 = -1.0f;
                 break;
             case MotionEvent.ACTION_CANCEL:
-                break;
             case MotionEvent.ACTION_OUTSIDE:
                 break;
             default:
@@ -187,7 +186,6 @@ public class LCDOverlappingView extends View {
             return -1;
         switch (type) {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
-                //if(debug) Log.d(TAG, "PAINT updateCallback() postInvalidate()");
                 if(debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE");
                 if(bitmapLCD.getWidth() > 1)
                     postInvalidate();
