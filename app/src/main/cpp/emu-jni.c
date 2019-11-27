@@ -731,8 +731,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onObjectSave(JNIEn
 
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onViewCopy(JNIEnv *env, jobject thisz, jobject bitmapScreen) {
 
-    //jobject bitmapScreen = (*env)->NewGlobalRef(env, bitmapScreen0);
-
     AndroidBitmapInfo bitmapScreenInfo;
     int ret = AndroidBitmap_getInfo(env, bitmapScreen, &bitmapScreenInfo);
     if (ret < 0) {

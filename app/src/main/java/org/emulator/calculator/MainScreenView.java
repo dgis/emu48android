@@ -35,7 +35,7 @@ import java.util.Set;
 public class MainScreenView extends PanAndScaleView {
 
     protected static final String TAG = "MainScreenView";
-    protected final boolean debug = true;
+    protected final boolean debug = false;
 
     private Paint paint = new Paint();
     private Bitmap bitmapMainScreen;
@@ -259,20 +259,31 @@ public class MainScreenView extends PanAndScaleView {
                         ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
                     if (autoZoom) {
-                        //((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                         if (imageRatio < 1.0f != viewRatio < 1.0f) {
                             // With have different screens orientations, so we automatically zoom
                             float translateX, translateY, scale;
                             if(viewRatio > imageRatio) {
                                 float alpha = viewRatio / imageRatio;
                                 scale = Math.min(2, alpha) * viewSizeWidth / virtualSizeWidth;
-                                translateX = viewSizeWidth - scale * virtualSizeWidth;
+                                float screenHorizontalPositionRatio = ((float)NativeLib.getScreenPositionX() + (float)NativeLib.getScreenWidth() * 0.5f ) / (virtualSizeWidth + 0.1f);
+                                if(screenHorizontalPositionRatio < 0.5f)
+                                    // Screen seems to be at the left
+                                    translateX = 0;
+                                else
+                                    // Screen seems to be at the right
+                                    translateX = viewSizeWidth - scale * virtualSizeWidth;
                                 translateY = (viewSizeHeight - scale * virtualSizeHeight) / 2.0f;
                             } else {
                                 float beta = imageRatio / viewRatio;
                                 scale = Math.min(2, beta) * viewSizeHeight / virtualSizeHeight;
                                 translateX = (viewSizeWidth - scale * virtualSizeWidth) / 2.0f;
-                                translateY = 0.0f;
+                                float screenVerticalPositionRatio = ((float)NativeLib.getScreenPositionY() + (float)NativeLib.getScreenHeight() * 0.5f ) / (virtualSizeHeight + 0.1f);
+                                if(screenVerticalPositionRatio < 0.5f)
+                                    // Screen seems to be at the top
+                                    translateY = 0.0f;
+                                else
+                                    // Screen seems to be at the bottom
+                                    translateY = viewSizeHeight - scale * virtualSizeHeight;
                             }
 
                             viewScaleFactorX = scale;
@@ -313,7 +324,7 @@ public class MainScreenView extends PanAndScaleView {
         canvas.drawBitmap(bitmapMainScreen, 0, 0, paint);
     }
 
-    public int updateCallback(int type, int param1, int param2, String param3, String param4) {
+    public void updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
                 //Log.d(TAG, "PAINT updateCallback() postInvalidate()");
@@ -341,7 +352,6 @@ public class MainScreenView extends PanAndScaleView {
                 }
                 break;
         }
-        return -1;
     }
 
     public void setRotationMode(int rotationMode, boolean isDynamic) {

@@ -87,6 +87,7 @@
     <string name="message_printer_share_graphic">Save printer paper as image</string>
     <string name="message_printer_out_of_paper">Out of paper error for the graphic printer (max line: %d, max pixel line: %d).</string>
     <string name="message_change_overlapping_lcd_mode_to_manual">The overlapping LCD mode has been changed to "Manual".</string>
+    <string name="message_change_overlapping_lcd_mode_to_auto">The overlapping LCD mode has been changed to "Auto".</string>
 
 
     <string name="settings_category_general_title">General</string>

@@ -848,7 +848,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnViewPrinter() {
-        fragmentPrinterSimulator.show(getSupportFragmentManager(), "Hello Fragment");
+        fragmentPrinterSimulator.show(getSupportFragmentManager(), "PrinterSimulatorFragment");
     }
 
     private void showKMLPicker(boolean changeKML) {
@@ -1570,13 +1570,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     mainScreenView.setAllowPinchZoom(sharedPreferences.getBoolean("settings_allow_pinch_zoom", true));
                     break;
                 case "settings_lcd_overlapping_mode":
-                    int overlappingLCDMode = 0;
+                    int overlappingLCDMode = LCDOverlappingView.OVERLAPPING_LCD_MODE_NONE;
                     try {
                         overlappingLCDMode = Integer.parseInt(sharedPreferences.getString("settings_lcd_overlapping_mode", "0"));
                     } catch (NumberFormatException ex) {
                         // Catch bad number format
                     }
-                    lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode, isDynamic);
+                    lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode);
                     break;
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":

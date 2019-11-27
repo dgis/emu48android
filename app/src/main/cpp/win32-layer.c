@@ -116,6 +116,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 #endif
 
     TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
+    TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, contentScheme);
 
     if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML) {
         // When we open a new E48 state document
@@ -156,7 +157,10 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
     }
 
-    if(!forceNormalFile && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0) && foundDocumentScheme == NULL) {
+    if(!forceNormalFile
+    && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0)
+    && foundDocumentScheme == NULL
+    && urlContentSchemeFound == NULL) {
         // Asset file
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;
@@ -201,7 +205,6 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                 lpFileName = filename + 1;
         }
 
-        TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, contentScheme);
         if(urlContentSchemeFound) {
             // Case of an absolute file with the scheme content://
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);

@@ -40,11 +40,6 @@ public class PanAndScaleView extends View {
 	protected static final String TAG = "PanAndScaleView";
 	protected final boolean debug = false;
 
-	protected float viewSizeWidth = 0.0f;
-	protected float viewSizeHeight = 0.0f;
-	protected float virtualSizeWidth = 0f;
-	protected float virtualSizeHeight = 0f;
-
     protected ScaleGestureDetector scaleDetector;
     protected GestureDetector gestureDetector;
     protected OverScroller scroller;
@@ -75,10 +70,15 @@ public class PanAndScaleView extends View {
 	protected OnTapListener onTapDownListener;
 	protected OnTapListener onTapUpListener;
 
-	public float viewPanOffsetX;
-	public float viewPanOffsetY;
-	public float viewScaleFactorX;
-	public float viewScaleFactorY;
+	public float viewSizeWidth = 0.0f; // pixel of the view
+	public float viewSizeHeight = 0.0f; // pixel of the view
+	public float virtualSizeWidth = 0f; // pixel of the pan and zoom bitmap
+	public float virtualSizeHeight = 0f; // pixel of the pan and zoom bitmap
+
+	public float viewPanOffsetX; // pixel of the view
+	public float viewPanOffsetY; // pixel of the view
+	public float viewScaleFactorX; // pixel of the view / pixel of the pan and zoom bitmap
+	public float viewScaleFactorY; // pixel of the view / pixel of the pan and zoom bitmap
 
 	protected float previousViewPanOffsetX;
 	protected float previousViewPanOffsetY;
