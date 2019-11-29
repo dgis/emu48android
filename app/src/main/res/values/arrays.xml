@@ -38,8 +38,8 @@
 
     <string-array name="settings_lcd_overlapping_mode_item">
         <item>No Overlapping LCD</item>
-        <item>Auto</item>
-        <item>Manual</item>
+        <item>Auto (Double touch)</item>
+        <item>Manual (Zoom or pan)</item>
     </string-array>
     <string-array name="settings_lcd_overlapping_mode_value">
         <item>0</item>

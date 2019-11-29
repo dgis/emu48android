@@ -54,12 +54,12 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.7beta3 (2019-11-24)
+Version 1.7beta3 (2019-11-28)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.61+ that was merged from Christoph Gießelink's Emu48 version 1.62.
 - Allow to take a screenshot of the fullscreen including the skin.
 - Add the KML Icon if present in the navigation menu header (only support PNG or 32bits BMP in the ICO file).
-- Add an optional overlapping LCD part stuck to the screen when swiping the 2 calc parts (Experimental).
+- Add an optional overlapping LCD part stuck to the screen when swiping the 2 calc parts.
 - Improve loading speed by caching the KML folder.
 - Support the transparency in the KML Global Color.
 

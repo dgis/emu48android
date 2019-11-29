@@ -1,3 +1,17 @@
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 package org.emulator.calculator;
 
 import android.app.Activity;
@@ -221,8 +235,7 @@ public class LCDOverlappingView extends View {
             return;
         switch (type) {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
-                //if(debug) Log.d(TAG, "PAINT updateCallback() postInvalidate()");
-                if(debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE");
+                //if(debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE");
                 if(bitmapLCD.getWidth() > 1)
                     postInvalidate();
                 break;
@@ -265,32 +278,22 @@ public class LCDOverlappingView extends View {
             int lcdHeight = Math.max(1, NativeLib.getScreenHeight());
 
             if(this.overlappingLCDMode == OVERLAPPING_LCD_MODE_AUTO) {
-                float viewPanOffsetX = this.mainScreenView.viewPanOffsetX;
-                float viewPanOffsetY = this.mainScreenView.viewPanOffsetY;
-                float viewScaleFactorX = this.mainScreenView.viewScaleFactorX;
-                float viewScaleFactorY = this.mainScreenView.viewScaleFactorY;
-
-                int finalViewWidth = (int) (lcdWidth * viewScaleFactorX);
-                int finalViewHeight = (int) (lcdHeight * viewScaleFactorY);
                 post(() -> {
-                    FrameLayout.LayoutParams viewFlowLayout = new FrameLayout.LayoutParams(finalViewWidth, finalViewHeight);
-                    if(viewPanOffsetX > 0)
-                        viewFlowLayout.leftMargin = (int)(viewScaleFactorX * NativeLib.getScreenPositionX() + viewPanOffsetX);
-                    else
-                        viewFlowLayout.leftMargin = this.mainScreenView.getWidth() - (int)(viewScaleFactorX * (this.mainScreenView.virtualSizeWidth - NativeLib.getScreenPositionX()));
-                    if(viewPanOffsetY >= 0)
-                        viewFlowLayout.topMargin = (int)(viewScaleFactorY * NativeLib.getScreenPositionY() + viewPanOffsetY);
-                    else
-                        viewFlowLayout.topMargin = (int)(viewScaleFactorY * NativeLib.getScreenPositionY());
-                    int tolerance = 80;
-                    if (viewFlowLayout.leftMargin + finalViewWidth < tolerance)
+                    int viewLCDWidth = (int) (lcdWidth * this.mainScreenView.defaultViewScaleFactorX);
+                    int viewLCDHeight = (int) (lcdHeight * this.mainScreenView.defaultViewScaleFactorY);
+                    FrameLayout.LayoutParams viewFlowLayout = new FrameLayout.LayoutParams(viewLCDWidth, viewLCDHeight);
+                    viewFlowLayout.leftMargin = (int)(this.mainScreenView.defaultViewScaleFactorX * (float)NativeLib.getScreenPositionX() + this.mainScreenView.defaultViewPanOffsetX);
+                    viewFlowLayout.topMargin = (int)(this.mainScreenView.defaultViewScaleFactorY * (float)NativeLib.getScreenPositionY() + this.mainScreenView.defaultViewPanOffsetY);
+
+                    int tolerance = 80; // In case of miscalculation
+                    if (viewFlowLayout.leftMargin + viewLCDWidth < tolerance)
                         viewFlowLayout.leftMargin = 0;
                     if (viewFlowLayout.leftMargin + tolerance > this.mainScreenView.getWidth())
-                        viewFlowLayout.leftMargin = this.mainScreenView.getWidth() - finalViewWidth;
-                    if (viewFlowLayout.topMargin + finalViewHeight < tolerance)
+                        viewFlowLayout.leftMargin = this.mainScreenView.getWidth() - viewLCDWidth;
+                    if (viewFlowLayout.topMargin + viewLCDHeight < tolerance)
                         viewFlowLayout.topMargin = 0;
                     if (viewFlowLayout.topMargin + tolerance > this.mainScreenView.getHeight())
-                        viewFlowLayout.topMargin = this.mainScreenView.getHeight() - finalViewHeight;
+                        viewFlowLayout.topMargin = this.mainScreenView.getHeight() - viewLCDHeight;
                     if(debug) Log.d(TAG, "updateLayout() leftMargin: " + viewFlowLayout.leftMargin + ", topMargin: " + viewFlowLayout.topMargin
                             + ", width: " + viewFlowLayout.width + ", height: " + viewFlowLayout.height);
                     setLayoutParams(viewFlowLayout);
@@ -299,39 +302,37 @@ public class LCDOverlappingView extends View {
             } else if(this.overlappingLCDMode == OVERLAPPING_LCD_MODE_MANUAL) {
                 if(firstTime) {
                     firstTime = false;
-                    float scale = sharedPreferences.getFloat("settings_lcd_overlapping_scale", 1.0f);
-                    if (scale < 0.01f)
-                        scale = 0.01f;
-                    int viewWidth = (int) (lcdWidth * scale);
-                    int viewHeight = (int) (lcdHeight * scale);
-                    if (viewWidth < minViewSize && viewHeight < minViewSize) {
-                        if (bitmapRatio > 0.0f) {
-                            if (bitmapRatio < 1.0f) {
-                                viewWidth = (int) minViewSize;
-                                viewHeight = (int) (viewWidth * bitmapRatio);
-                            } else {
-                                viewHeight = (int) minViewSize;
-                                viewWidth = (int) (viewHeight / bitmapRatio);
-                            }
-                        } else {
-                            viewWidth = (int) minViewSize;
-                            viewHeight = (int) minViewSize;
-                        }
-                    }
-
-                    int finalViewWidth = viewWidth;
-                    int finalViewHeight = viewHeight;
                     post(() -> {
-                        FrameLayout.LayoutParams viewFlowLayout = new FrameLayout.LayoutParams(finalViewWidth, finalViewHeight);
+                        float scale = sharedPreferences.getFloat("settings_lcd_overlapping_scale", 1.0f);
+                        if (scale < 0.01f)
+                            scale = 0.01f;
+                        int viewWidth = (int) (lcdWidth * scale);
+                        int viewHeight = (int) (lcdHeight * scale);
+                        if (viewWidth < minViewSize && viewHeight < minViewSize) {
+                            if (bitmapRatio > 0.0f) {
+                                if (bitmapRatio < 1.0f) {
+                                    viewWidth = (int) minViewSize;
+                                    viewHeight = (int) (viewWidth * bitmapRatio);
+                                } else {
+                                    viewHeight = (int) minViewSize;
+                                    viewWidth = (int) (viewHeight / bitmapRatio);
+                                }
+                            } else {
+                                viewWidth = (int) minViewSize;
+                                viewHeight = (int) minViewSize;
+                            }
+                        }
+
+                        FrameLayout.LayoutParams viewFlowLayout = new FrameLayout.LayoutParams(viewWidth, viewHeight);
                         viewFlowLayout.leftMargin = sharedPreferences.getInt("settings_lcd_overlapping_x", 20);
                         viewFlowLayout.topMargin = sharedPreferences.getInt("settings_lcd_overlapping_y", 80);
                         int tolerance = 80;
-                        if (viewFlowLayout.leftMargin + finalViewWidth < tolerance)
-                            viewFlowLayout.leftMargin = tolerance - finalViewWidth;
+                        if (viewFlowLayout.leftMargin + viewWidth < tolerance)
+                            viewFlowLayout.leftMargin = tolerance - viewWidth;
                         if (viewFlowLayout.leftMargin + tolerance > this.mainScreenView.getWidth())
                             viewFlowLayout.leftMargin = this.mainScreenView.getWidth() - tolerance;
-                        if (viewFlowLayout.topMargin + finalViewHeight < tolerance)
-                            viewFlowLayout.topMargin = tolerance - finalViewHeight;
+                        if (viewFlowLayout.topMargin + viewHeight < tolerance)
+                            viewFlowLayout.topMargin = tolerance - viewHeight;
                         if (viewFlowLayout.topMargin + tolerance > this.mainScreenView.getHeight())
                             viewFlowLayout.topMargin = this.mainScreenView.getHeight() - tolerance;
                         if(debug) Log.d(TAG, "updateLayout() leftMargin: " + viewFlowLayout.leftMargin + ", topMargin: " + viewFlowLayout.topMargin

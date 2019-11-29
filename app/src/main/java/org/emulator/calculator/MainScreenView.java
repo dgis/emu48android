@@ -50,6 +50,12 @@ public class MainScreenView extends PanAndScaleView {
     private boolean autoRotation = false;
     private boolean autoZoom = false;
 
+    public float defaultViewScaleFactorX = 1.0f;
+    public float defaultViewScaleFactorY = 1.0f;
+    public float defaultViewPanOffsetX = 0.0f;
+    public float defaultViewPanOffsetY = 0.0f;
+
+
     public MainScreenView(Context context) {
         super(context);
 
@@ -294,6 +300,12 @@ public class MainScreenView extends PanAndScaleView {
                             viewPanOffsetY = translateY;
 
                             constrainPan();
+
+                            defaultViewScaleFactorX = viewScaleFactorX;
+                            defaultViewScaleFactorY = viewScaleFactorY;
+                            defaultViewPanOffsetX = viewPanOffsetX;
+                            defaultViewPanOffsetY = viewPanOffsetY;
+
                             if(this.onUpdateLayoutListener != null)
                                 this.onUpdateLayoutListener.run();
                             return;
@@ -303,6 +315,11 @@ public class MainScreenView extends PanAndScaleView {
             }
             // Else, the screens orientations are the same, so we set the calculator in fullscreen
             resetViewport();
+
+            defaultViewScaleFactorX = viewScaleFactorX;
+            defaultViewScaleFactorY = viewScaleFactorY;
+            defaultViewPanOffsetX = viewPanOffsetX;
+            defaultViewPanOffsetY = viewPanOffsetY;
 
             if(this.onUpdateLayoutListener != null)
                 this.onUpdateLayoutListener.run();
