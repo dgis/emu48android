@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if(onFileOpen(documentToOpenUrl) != 0) {
                     saveLastDocument(documentToOpenUrl);
                     if(intent != null && documentToOpenUri != null)
-                        makeUriPersistable(intent, documentToOpenUri);
+                        Utils.makeUriPersistable(this, intent, documentToOpenUri);
                 }
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
@@ -1029,7 +1029,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             int openResult = onFileOpen(url);
                             if (openResult > 0) {
                                 saveLastDocument(url);
-                                makeUriPersistable(data, uri);
+                                Utils.makeUriPersistable(this, data, uri);
                             } else if(openResult == -2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // >= API 21
                                 // For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!
                                 new AlertDialog.Builder(this)
@@ -1047,7 +1047,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (NativeLib.onFileSaveAs(url) != 0) {
                                 showAlert(getString(R.string.message_state_saved));
                                 saveLastDocument(url);
-                                makeUriPersistable(data, uri);
+                                Utils.makeUriPersistable(this, data, uri);
                                 displayFilename(url);
                                 if (fileSaveAsCallback != null)
                                     fileSaveAsCallback.run();
@@ -1074,7 +1074,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             editor.putString("settings_kml_folder", url);
                             editor.apply();
                             updateFromPreferences("settings_kml", true);
-                            makeUriPersistableReadOnly(data, uri);
+                            Utils.makeUriPersistableReadOnly(this, data, uri);
 
                             switch (requestCode) {
                                 case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
@@ -1151,17 +1151,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if(url != null && !url.isEmpty())
             mruLinkedHashMap.put(url, null);
         navigationView.post(this::updateMRU);
-    }
-
-    private void makeUriPersistable(Intent data, Uri uri) {
-        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-            getContentResolver().takePersistableUriPermission(uri, takeFlags);
-    }
-    private void makeUriPersistableReadOnly(Intent data, Uri uri) {
-        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-            getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 
     private void showCalculatorView(boolean show) {

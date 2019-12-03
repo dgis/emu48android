@@ -219,8 +219,6 @@ public class LCDOverlappingView extends View {
     protected void onDraw(Canvas canvas) {
         //if(debug) Log.d(TAG, "onDraw()");
 
-        //canvas.drawColor(Color.RED);
-
         if(this.overlappingLCDMode != OVERLAPPING_LCD_MODE_NONE && bitmapLCD != null) {
             int x = NativeLib.getScreenPositionX();
             int y = NativeLib.getScreenPositionY();
@@ -304,8 +302,10 @@ public class LCDOverlappingView extends View {
                     firstTime = false;
                     post(() -> {
                         float scale = sharedPreferences.getFloat("settings_lcd_overlapping_scale", 1.0f);
-                        if (scale < 0.01f)
-                            scale = 0.01f;
+                        if (scale < 0.5f)
+                            scale = 0.5f;
+                        if (scale > 20.0f)
+                            scale = 20.0f;
                         int viewWidth = (int) (lcdWidth * scale);
                         int viewHeight = (int) (lcdHeight * scale);
                         if (viewWidth < minViewSize && viewHeight < minViewSize) {

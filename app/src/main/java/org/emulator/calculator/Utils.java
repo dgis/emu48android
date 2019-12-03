@@ -15,8 +15,10 @@
 package org.emulator.calculator;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
@@ -61,6 +63,17 @@ public class Utils {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public static void makeUriPersistable(Context context, Intent data, Uri uri) {
+        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
+    }
+    public static void makeUriPersistableReadOnly(Context context, Intent data, Uri uri) {
+        int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
     }
 
     public static String getFileName(Context context, String url) {

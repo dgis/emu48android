@@ -73,6 +73,8 @@
     <string name="message_do_you_want_to_save">Do you want to save changes?\n(BACK to cancel)</string>
     <string name="message_yes">Yes</string>
     <string name="message_no">No</string>
+    <string name="message_ok">Ok</string>
+    <string name="message_cancel">Cancel</string>
     <string name="message_object_load">Warning: Trying to load an object while the emulator is busy will certainly result in a memory lost. Before loading an object you should be sure that the calculator is in idle state. Do you want to see this warning next time you try to load an object?</string>
     <string name="message_object_save_program">Select Program</string>
     <string name="message_screenshot">Screenshot</string>
@@ -112,6 +114,7 @@
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
     <string name="settings_hide_button_menu">Hide the button menu</string>
     <string name="settings_sound_volume_title">Sound Volume</string>
+    <string name="settings_sound_volume_dialog_title">Sound Volume (0-255)</string>
     <string name="settings_haptic_feedback_title">Allow haptic feedback</string>
 
     <string name="settings_category_background_title">Background Color</string>

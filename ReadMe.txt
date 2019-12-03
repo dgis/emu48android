@@ -169,6 +169,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 TODO
 
 - Autosave only works once a manual save has been done (William Hostman from comment).
+    SO, INVITE TO SAVE JUST AFTER THE NEW TO PREVENT TO LOOSE EVERYTHING
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.
@@ -183,7 +184,7 @@ TODO
 
 BUILD
 
-Emu48 for Android is built with Android Studio 3.4 (2019).
+Emu48 for Android is built with Android Studio 3.5 (2019).
 And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:
