@@ -71,6 +71,7 @@
     <string name="message_open_security_retry_description">I hope now you could open again the state file.</string>
     <string name="message_state_saved">State saved</string>
     <string name="message_do_you_want_to_save">Do you want to save changes?\n(BACK to cancel)</string>
+    <string name="message_save_new_file">Do you want to save this new state file?\n(To avoid losing the state of the machine)</string>
     <string name="message_yes">Yes</string>
     <string name="message_no">No</string>
     <string name="message_ok">Ok</string>

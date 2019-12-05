@@ -602,12 +602,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void ensureDocumentSaved(Runnable continueCallback) {
-        ensureDocumentSaved(continueCallback, false);
-    }
-
     private Runnable fileSaveAsCallback = null;
+    private void ensureDocumentSaved(Runnable continueCallback) {
+        ensureDocumentSaved(continueCallback, false, false);
+    }
     private void ensureDocumentSaved(Runnable continueCallback, boolean forceRequest) {
+        ensureDocumentSaved(continueCallback, forceRequest, false);
+    }
+    private void ensureDocumentSaved(Runnable continueCallback, boolean forceRequest, boolean simpleSave) {
         if(NativeLib.isDocumentAvailable()) {
             String currentFilename = NativeLib.getCurrentFilename();
             boolean hasFilename = (currentFilename != null && currentFilename.length() > 0);
@@ -629,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             };
 
-            if(!forceRequest && hasFilename && sharedPreferences.getBoolean("settings_autosave", true)) {
+            if(simpleSave || (!forceRequest && hasFilename && sharedPreferences.getBoolean("settings_autosave", true))) {
                 onClickListener.onClick(null, DialogInterface.BUTTON_POSITIVE);
             } else {
                 new AlertDialog.Builder(this)
@@ -646,7 +648,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // By default Port1 is set
         setPort1Settings(true, true);
 
-        ensureDocumentSaved(() -> showKMLPicker(false));
+        ensureDocumentSaved(() -> showKMLPicker(false) );
     }
 
     private void newFileFromKML(String kmlScriptFilename) {
@@ -655,9 +657,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             showCalculatorView(true);
             displayFilename("");
             showKMLLog();
+            suggestToSaveNewFile();
         } else
             showKMLLogForce();
         updateNavigationDrawerItems();
+    }
+
+    private void suggestToSaveNewFile() {
+        new AlertDialog.Builder(this)
+                .setMessage(getString(R.string.message_save_new_file))
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> OnFileSaveAs())
+                .setNegativeButton(android.R.string.no, (dialog, which) -> {})
+                .show();
     }
 
     private void OnFileOpen() {
@@ -670,7 +681,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
     private void OnFileSave() {
-        ensureDocumentSaved(null);
+        ensureDocumentSaved(null, false, true);
     }
     private void OnFileSaveAs() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -1228,7 +1239,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showKMLLog() {
-        if(sharedPreferences.getBoolean("settings_alwaysdisplog", true)) {
+        if(sharedPreferences.getBoolean("settings_alwaysdisplog", false)) {
             showKMLLogForce();
         }
     }

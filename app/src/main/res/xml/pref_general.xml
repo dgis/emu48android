@@ -22,7 +22,7 @@
             <SwitchPreference
                 android:key="settings_alwaysdisplog"
                 android:title="@string/settings_alwaysdisplog_title"
-                android:defaultValue="true" />
+                android:defaultValue="false" />
         </PreferenceCategory>
 
         <PreferenceCategory android:title="@string/settings_category_ui_title">
