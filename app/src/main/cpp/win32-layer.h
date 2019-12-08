@@ -1350,3 +1350,6 @@ extern int WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
 extern int WSACleanup();
 
 typedef struct addrinfo ADDRINFO;
+
+extern int closesocket(SOCKET s);
+

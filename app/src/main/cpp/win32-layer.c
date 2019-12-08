@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <android/bitmap.h>
+#include <sys/socket.h>
 #include "core/resource.h"
 #include "win32-layer.h"
 #include "emu.h"
@@ -3062,4 +3063,19 @@ int WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData) {
 
 int WSACleanup() {
     return 0;
+}
+
+int closesocket(SOCKET s) {
+    int err = shutdown(s, SHUT_RDWR);
+    err = close(s);
+}
+
+int win32_select(int __fd_count, fd_set* __read_fds, fd_set* __write_fds, fd_set* __exception_fds, struct timeval* __timeout) {
+//    struct timeval timeout;
+//    if(__timeout == NULL) {
+//        timeout.tv_sec = 5; //0;
+//        timeout.tv_usec = 0; //500000;
+//        __timeout = &timeout;
+//    }
+    return select(__fd_count, __read_fds, __write_fds, __exception_fds, __timeout);
 }
