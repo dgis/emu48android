@@ -54,7 +54,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.7beta3 (2019-11-28)
+Version 1.7 (2019-12-12)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.61+ that was merged from Christoph Gießelink's Emu48 version 1.62.
 - Allow to take a screenshot of the fullscreen including the skin.
@@ -62,6 +62,8 @@ Version 1.7beta3 (2019-11-28)
 - Add an optional overlapping LCD part stuck to the screen when swiping the 2 calc parts.
 - Improve loading speed by caching the KML folder.
 - Support the transparency in the KML Global Color.
+- Improve the New and Save menus.
+- Sound volume can be adjusted by number by touching the number.
 
 
 Version 1.6 (2019-07-15)

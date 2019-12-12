@@ -54,7 +54,7 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.7beta3 (2019-11-28)
+Version 1.7 (2019-12-12)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.61+ that was merged from Christoph Gießelink's Emu48 version 1.62.
 - Allow to take a screenshot of the fullscreen including the skin.
@@ -62,6 +62,8 @@ Version 1.7beta3 (2019-11-28)
 - Add an optional overlapping LCD part stuck to the screen when swiping the 2 calc parts.
 - Improve loading speed by caching the KML folder.
 - Support the transparency in the KML Global Color.
+- Improve the New and Save menus.
+- Sound volume can be adjusted by number by touching the number.
 
 
 Version 1.6 (2019-07-15)
@@ -168,18 +170,14 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
-- Autosave only works once a manual save has been done (William Hostman from comment).
-    SO, INVITE TO SAVE JUST AFTER THE NEW TO PREVENT TO LOOSE EVERYTHING
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.
 - Add the possibility to load and save the flash in another file.
 - Sometimes, the calculator seems to lag and finally freeze.
 - In Chrome OS:
-    - The timezone seems to be GMT (localtime_r not right?)!
     - sometimes there is no OK button in the KML Script Compilation Result.
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?).
-- Add a separation between the pixels (Suggestion from Jaime Meza).
 
 
 BUILD
