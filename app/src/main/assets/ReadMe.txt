@@ -54,6 +54,11 @@ NOT WORKING YET
 
 CHANGES
 
+Version 1.8beta1 (2019-12-18)
+
+- Try to better detect a physical keyboard to modify the mapping of the keys.
+
+
 Version 1.7 (2019-12-12)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.61+ that was merged from Christoph Gießelink's Emu48 version 1.62.

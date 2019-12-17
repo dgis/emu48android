@@ -25,6 +25,7 @@ import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -202,7 +203,9 @@ public class MainScreenView extends PanAndScaleView {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
+        if(event.getDeviceId() != -1
+        && (event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
+        && (event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
             char pressedKey = (char) event.getUnicodeChar();
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
@@ -220,7 +223,9 @@ public class MainScreenView extends PanAndScaleView {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0) {
+        if(event.getDeviceId() != -1
+        && (event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
+        && (event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
             char pressedKey = (char) event.getUnicodeChar();
             Integer windowsKeycode = charmap.get(pressedKey);
             if(windowsKeycode == null)
