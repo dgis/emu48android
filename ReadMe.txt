@@ -54,9 +54,9 @@ NOT WORKING YET
 
 CHANGES
 
-Version 1.8beta1 (2019-12-18)
+Version 1.8beta2 (2019-12-19)
 
-- Try to better detect a physical keyboard to modify the mapping of the keys.
+- Intercept the ESC keyboard key to allow the use of the BACK soft key.
 
 
 Version 1.7 (2019-12-12)
