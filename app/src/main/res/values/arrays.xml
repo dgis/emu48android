@@ -2,9 +2,9 @@
 <resources>
 
     <string-array name="settings_background_fallback_color_item">
-        <item>Black (default)</item>
-        <item>Status bar color</item>
-        <!--<item>Custom color</item>-->
+        <item>@string/settings_background_fallback_color_item_0</item>
+        <item>@string/settings_background_fallback_color_item_1</item>
+        <!--<item>@string/settings_background_fallback_color_item_2</item>-->
     </string-array>
     <string-array name="settings_background_fallback_color_value">
         <item>0</item>
@@ -13,10 +13,10 @@
     </string-array>
 
     <string-array name="settings_auto_layout_item">
-        <item>None</item>
-        <item>Auto Rotation (default)</item>
-        <item>Auto Zoom</item>
-        <item>Fill Screen</item>
+        <item>@string/settings_auto_layout_item_0</item>
+        <item>@string/settings_auto_layout_item_1</item>
+        <item>@string/settings_auto_layout_item_2</item>
+        <item>@string/settings_auto_layout_item_3</item>
     </string-array>
     <string-array name="settings_auto_layout_value">
         <item>0</item>
@@ -26,9 +26,9 @@
     </string-array>
 
     <string-array name="settings_rotation_item">
-        <item>Allow rotation</item>
-        <item>Portrait</item>
-        <item>Landscape (left or right following the sensor)</item>
+        <item>@string/settings_rotation_item_0</item>
+        <item>@string/settings_rotation_item_1</item>
+        <item>@string/settings_rotation_item_2</item>
     </string-array>
     <string-array name="settings_rotation_value">
         <item>0</item>
@@ -37,9 +37,9 @@
     </string-array>
 
     <string-array name="settings_lcd_overlapping_mode_item">
-        <item>No Overlapping LCD</item>
-        <item>Auto (Double touch)</item>
-        <item>Manual (Zoom or pan)</item>
+        <item>@string/settings_lcd_overlapping_mode_item_0</item>
+        <item>@string/settings_lcd_overlapping_mode_item_1</item>
+        <item>@string/settings_lcd_overlapping_mode_item_2</item>
     </string-array>
     <string-array name="settings_lcd_overlapping_mode_value">
         <item>0</item>
@@ -48,19 +48,19 @@
     </string-array>
 
     <string-array name="ram_cards">
-        <item>32kb (1 port: 2)</item>
-        <item>128kb (1 port: 2)</item>
-        <item>256kb (2 ports: 2,3)</item>
-        <item>512kb (4 ports: 2 through 5)</item>
-        <item>1mb (8 ports: 2 through 9)</item>
-        <item>2mb (16 ports: 2 through 17)</item>
-        <item>4mb (32 ports: 2 through 33)</item>
+        <item>@string/ram_cards_item_0</item>
+        <item>@string/ram_cards_item_1</item>
+        <item>@string/ram_cards_item_2</item>
+        <item>@string/ram_cards_item_3</item>
+        <item>@string/ram_cards_item_4</item>
+        <item>@string/ram_cards_item_5</item>
+        <item>@string/ram_cards_item_6</item>
     </string-array>
 
     <string-array name="settings_printer_model_item">
-        <item>HP82240A</item>
-        <item>HP82240B (default)</item>
-        <!--<item>Generic Serial</item>-->
+        <item>@string/settings_printer_model_item_0</item>
+        <item>@string/settings_printer_model_item_1</item>
+        <!--<item>@string/settings_printer_model_item_2</item>-->
     </string-array>
     <string-array name="settings_printer_model_value">
         <item>0</item>

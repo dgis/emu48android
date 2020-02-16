@@ -64,7 +64,14 @@
     <string name="menu_printer_simulator_share_graphic">Share Graphic</string>
     <string name="menu_printer_simulator_change_paper">Change Paper (Erase)</string>
 
-    <string name="create_ram_card_title">Create RAM Card</string>
+	<string name="create_ram_card_title">Create RAM Card</string>
+	<string name="ram_cards_item_0">32kb (1 port: 2)</string>
+	<string name="ram_cards_item_1">128kb (1 port: 2)</string>
+	<string name="ram_cards_item_2">256kb (2 ports: 2,3)</string>
+	<string name="ram_cards_item_3">512kb (4 ports: 2 through 5)</string>
+	<string name="ram_cards_item_4">1mb (8 ports: 2 through 9)</string>
+	<string name="ram_cards_item_5">2mb (16 ports: 2 through 17)</string>
+	<string name="ram_cards_item_6">4mb (32 ports: 2 through 33)</string>
     <string name="message_open_security">Permission Denied</string>
     <string name="message_open_security_description">For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!</string>
     <string name="message_open_security_retry">Please, open again</string>
@@ -103,13 +110,23 @@
     <string name="settings_category_ui_title">UI</string>
     <string name="settings_auto_layout_title">Layout</string>
     <string name="settings_auto_layout_summary">Following the calculator screen ratio and the current device orientation, find the best layout compromise</string>
+	<string name="settings_auto_layout_item_0">None</string>
+	<string name="settings_auto_layout_item_1">Auto Rotation (default)</string>
+	<string name="settings_auto_layout_item_2">Auto Zoom</string>
+	<string name="settings_auto_layout_item_3">Fill Screen</string>
 
     <string name="settings_rotation_title">Rotation</string>
     <string name="settings_rotation_summary">Allow to rotate, or force Portrait or Landscape orientation</string>
+	<string name="settings_rotation_item_0">Allow rotation</string>
+	<string name="settings_rotation_item_1">Portrait</string>
+	<string name="settings_rotation_item_2">Landscape (left or right following the sensor)</string>
 
     <string name="settings_allow_pinch_zoom_title">Allow to pinch to zoom</string>
     <string name="settings_lcd_overlapping_mode_title">Overlapping LCD mode</string>
     <string name="settings_lcd_overlapping_mode_summary">Select the overlapping LCD mode. A pan or pinch gesture will change the mode to manual.</string>
+	<string name="settings_lcd_overlapping_mode_item_0">No Overlapping LCD</string>
+	<string name="settings_lcd_overlapping_mode_item_1">Auto (Double touch)</string>
+	<string name="settings_lcd_overlapping_mode_item_2">Manual (Zoom or pan)</string>
 
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
@@ -122,7 +139,10 @@
     <string name="settings_background_kml_color_title">Use KML color</string>
     <string name="settings_background_kml_color_summary">Use default KML transparency color of the background bitmap (if exist)</string>
     <string name="settings_background_fallback_color_title">Other possible colors</string>
-    <string name="settings_background_fallback_color_summary">Else if the KML color is not used</string>
+	<string name="settings_background_fallback_color_summary">Else if the KML color is not used</string>
+	<string name="settings_background_fallback_color_item_0">Black (default)</string>
+	<string name="settings_background_fallback_color_item_1">Status bar color</string>
+	<string name="settings_background_fallback_color_item_2">Custom color</string>
     <string name="settings_background_custom_color_title">Custom color</string>
     <string name="settings_background_custom_color_summary">Used when selecting the \'Custom color\' in the \'Other possible colors\'</string>
 
@@ -135,7 +155,10 @@
 
     <string name="settings_category_printer_title">Printer Simulator</string>
     <string name="settings_printer_model_title">Printer Model</string>
-    <string name="settings_printer_model_summary">You can choose the printer model</string>
+	<string name="settings_printer_model_summary">You can choose the printer model</string>
+	<string name="settings_printer_model_item_0">HP82240A</string>
+	<string name="settings_printer_model_item_1">HP82240B (default)</string>
+	<string name="settings_printer_model_item_2">Generic Serial</string>
     <string name="settings_printer_prevent_line_wrap">Prevent Line Wrapping</string>
     <string name="settings_printer_prevent_line_wrap_summary">Prevent the calc to wrap the line in the textual printer simulator</string>
 
