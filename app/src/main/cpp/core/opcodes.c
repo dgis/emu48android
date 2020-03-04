@@ -4,7 +4,7 @@
  *   This file is part of Emu48
  *
  *   Copyright (C) 1995 Sebastien Carlier
- *   Copyright (C) 1999 Christoph Gießelink
+ *   Copyright (C) 1999 Christoph Gieï¿½elink
  *
  */
 #include "pch.h"
@@ -25,7 +25,7 @@
 
 #pragma intrinsic(memset,memcpy)
 
-#include "Ops.h"
+#include "ops.h"
 
 // Fields start and length
 UINT F_s[16] = {0/*P*/,0,2,0,15,3,0,0,0,0,0,0,0,0,0,0};

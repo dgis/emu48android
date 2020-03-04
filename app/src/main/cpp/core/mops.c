@@ -9,7 +9,7 @@
 #include "pch.h"
 #include "Emu48.h"
 #include "ops.h"
-#include "opcodes.h"
+#include "Opcodes.h"
 #include "io.h"
 #include "i28f160.h"						// flash support
 
