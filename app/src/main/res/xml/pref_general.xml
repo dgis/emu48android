@@ -57,7 +57,11 @@
                 android:entryValues="@array/settings_lcd_overlapping_mode_value"
                 android:defaultValue="0"
                 />
-
+	        <SwitchPreference
+		        android:key="settings_lcd_pixel_borders"
+		        android:title="@string/settings_lcd_pixel_borders_title"
+		        android:summary="@string/settings_lcd_pixel_borders_summary"
+		        android:defaultValue="false" />
 
             <SwitchPreference
                 android:key="settings_hide_bar_status"

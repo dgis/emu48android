@@ -8,7 +8,7 @@
         https://github.com/google/material-design-icons/tree/master/action/drawable-anydpi-v21
     -->
 
-    <group android:checkableBehavior="single">
+    <group android:checkableBehavior="none">
         <item
             android:id="@+id/nav_new"
             android:icon="@drawable/ic_insert_drive_file_black_24dp"

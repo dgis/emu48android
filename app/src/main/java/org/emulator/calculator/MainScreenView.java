@@ -22,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -38,8 +39,10 @@ public class MainScreenView extends PanAndScaleView {
     protected static final String TAG = "MainScreenView";
     protected final boolean debug = false;
 
-    private Paint paint = new Paint();
+    private Paint paintFullCalc = new Paint();
+	private Paint paintLCD = new Paint();
     private Bitmap bitmapMainScreen;
+	private Rect srcBitmapCopy = new Rect();
     private SparseIntArray vkmap;
     private HashMap<Character, Integer> charmap;
     private int kmlBackgroundColor = Color.BLACK;
@@ -49,7 +52,8 @@ public class MainScreenView extends PanAndScaleView {
     private boolean viewSized = false;
     private int rotationMode = 0;
     private boolean autoRotation = false;
-    private boolean autoZoom = false;
+	private boolean autoZoom = false;
+	private boolean usePixelBorders = false;
 
     public float defaultViewScaleFactorX = 1.0f;
     public float defaultViewScaleFactorY = 1.0f;
@@ -63,8 +67,12 @@ public class MainScreenView extends PanAndScaleView {
         setShowScaleThumbnail(true);
         setAllowDoubleTapZoom(false);
 
-        paint.setFilterBitmap(true);
-        paint.setAntiAlias(true);
+	    paintFullCalc.setFilterBitmap(true);
+	    paintFullCalc.setAntiAlias(true);
+
+	    paintLCD.setStyle(Paint.Style.STROKE);
+	    paintLCD.setStrokeWidth(1.0f);
+	    paintLCD.setAntiAlias(false);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -248,6 +256,7 @@ public class MainScreenView extends PanAndScaleView {
         updateLayout();
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     protected void updateLayout() {
         if(bitmapMainScreen != null && virtualSizeHeight > 1) {
             if (virtualSizeWidth > 0.0f && viewSizeWidth > 0.0f) {
@@ -335,13 +344,55 @@ public class MainScreenView extends PanAndScaleView {
         this.onUpdateLayoutListener = onUpdateLayoutListener;
     }
 
+	@Override
+	protected void onCustomDraw(Canvas canvas) {
+		//Log.d(TAG, "onCustomDraw()");
+
+		canvas.drawColor(getBackgroundColor());
+
+		// Copy the full calculator with antialiasing
+		canvas.drawBitmap(bitmapMainScreen, 0, 0, paintFullCalc);
+
+		if(usePixelBorders) {
+			// Copy the LCD part only without antialiasing
+			int x = NativeLib.getScreenPositionX();
+			int y = NativeLib.getScreenPositionY();
+			srcBitmapCopy.set(x, y, x + NativeLib.getScreenWidth(), y + NativeLib.getScreenHeight());
+			canvas.drawBitmap(bitmapMainScreen, srcBitmapCopy, srcBitmapCopy, paintLCD);
+		}
+	}
 
     @Override
-    protected void onCustomDraw(Canvas canvas) {
-        //Log.d(TAG, "onCustomDraw()");
+    public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
 
-        canvas.drawColor(getBackgroundColor());
-        canvas.drawBitmap(bitmapMainScreen, 0, 0, paint);
+        if(usePixelBorders) {
+	        int lcdPositionX = NativeLib.getScreenPositionX();
+	        int lcdPositionY = NativeLib.getScreenPositionY();
+	        int lcdWidth = NativeLib.getScreenWidth();
+	        int lcdHeight = NativeLib.getScreenHeight();
+	        int lcdWidthNative = NativeLib.getScreenWidthNative();
+	        int lcdHeightNative = NativeLib.getScreenHeightNative();
+
+	        float screenPositionX = lcdPositionX * viewScaleFactorX + viewPanOffsetX;
+            float screenPositionY = lcdPositionY * viewScaleFactorY + viewPanOffsetY;
+            float screenWidth = lcdWidth * viewScaleFactorX;
+            float screenHeight = lcdHeight * viewScaleFactorY;
+
+	        // Draw the LCD grid lines without antialiasing to emulate the genuine pixels borders
+	        int lcdBackgroundColor = 0xFF000000 | NativeLib.getLCDBackgroundColor();
+	        paintLCD.setColor(lcdBackgroundColor);
+	        float stepX = screenWidth / lcdWidthNative;
+	        for(int x = 0; x < lcdWidthNative; x++) {
+	        	float screenX = screenPositionX + x * stepX;
+		        canvas.drawLine(screenX, screenPositionY, screenX, screenPositionY + screenHeight, paintLCD);
+	        }
+	        float stepY = screenHeight / lcdHeightNative;
+            for(int y = 0; y < lcdHeightNative; y++) {
+	            float screenY = screenPositionY + y * stepY;
+	            canvas.drawLine(screenPositionX, screenY, screenPositionX + screenWidth, screenY, paintLCD);
+            }
+        }
     }
 
     public void updateCallback(int type, int param1, int param2, String param3, String param4) {
@@ -405,6 +456,11 @@ public class MainScreenView extends PanAndScaleView {
     public void setStatusBarColor(int statusBarColor) {
         this.statusBarColor = statusBarColor;
     }
+
+	public void setUsePixelBorders(boolean usePixelBorders) {
+		this.usePixelBorders = usePixelBorders;
+		postInvalidate();
+	}
 
 
 

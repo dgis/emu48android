@@ -63,9 +63,11 @@ LINKS
 
 CHANGES
 
-Version 1.8beta2 (2019-12-19)
+Version 1.8beta3 (2020-04-XX)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
+- Add LCD pixel borders.
+- Add support for the dark theme.
 
 
 Version 1.7 (2019-12-12)

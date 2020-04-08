@@ -306,6 +306,7 @@ DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh) {
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
         return (DWORD) AAsset_getLength64(hFile->fileAsset);
     }
+    return 0;
 }
 
 //** https://www.ibm.com/developerworks/systems/library/es-MigratingWin32toLinux.html
@@ -554,7 +555,7 @@ extern int jniDetachCurrentThread();
 #define MAX_CREATED_THREAD 30
 static HANDLE threads[MAX_CREATED_THREAD];
 
-static DWORD ThreadStart(LPVOID lpThreadParameter) {
+static void ThreadStart(LPVOID lpThreadParameter) {
     HANDLE handle = (HANDLE)lpThreadParameter;
     if(handle) {
         handle->threadStartAddress(handle->threadParameter);

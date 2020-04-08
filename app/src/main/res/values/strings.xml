@@ -128,6 +128,9 @@
 	<string name="settings_lcd_overlapping_mode_item_1">Auto (Double touch)</string>
 	<string name="settings_lcd_overlapping_mode_item_2">Manual (Zoom or pan)</string>
 
+	<string name="settings_lcd_pixel_borders_title">Show the LCD pixel borders</string>
+	<string name="settings_lcd_pixel_borders_summary">Experimental feature which show a more realistic pixel. Note: Due to the difference in screen resolution between Android and the calculator, the pixels are not necessarily uniform in size.</string>
+
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
     <string name="settings_hide_button_menu">Hide the button menu</string>

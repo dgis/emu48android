@@ -63,7 +63,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setStyle(AppCompatDialogFragment.STYLE_NO_FRAME, android.R.style.Theme_Material);
+	    setStyle(AppCompatDialogFragment.STYLE_NO_FRAME, Utils.resId(this, "style", "AppTheme"));
     }
 
     @NonNull
@@ -241,6 +241,8 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         private void commonInitialization() {
             setShowScaleThumbnail(true);
             scaleThumbnailColor = Color.GRAY;
+
+	        paintBitmap.setAntiAlias(false);
         }
 
         public void setBitmap(Bitmap bitmap) {

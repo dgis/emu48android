@@ -69,7 +69,6 @@ import org.emulator.calculator.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -702,9 +701,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 filename = emuXX + "-state.e38";
                 break;
             case 'E': // HP39G/(HP39G+/HP39GS)/HP40G/HP40GS
-                filename = emuXX + "-state.e39";
-                break;
-            case 'P': // HP39G+/HP39GS
+	        case 'P': // HP39G+/HP39GS
                 filename = emuXX + "-state.e39";
                 break;
             case '2': // HP48GII
@@ -1122,8 +1119,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         fileOutputStream.flush();
                                         fileOutputStream.close();
                                     }
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -1259,7 +1254,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public int updateCallback(int type, int param1, int param2, String param3, String param4) {
 
         mainScreenView.updateCallback(type, param1, param2, param3, param4);
-        lcdOverlappingView.updateCallback(type, param1, param2, param3, param4);
         return -1;
     }
 
@@ -1531,7 +1525,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int isDynamicValue = isDynamic ? 1 : 0;
         if(key == null) {
             String[] settingKeys = {
-                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom", "settings_lcd_overlapping_mode",
+                    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom", "settings_lcd_overlapping_mode", "settings_lcd_pixel_borders",
                     "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
                     "settings_background_kml_color", "settings_background_fallback_color",
                     "settings_printer_model", "settings_printer_prevent_line_wrap", "settings_macro",
@@ -1578,6 +1572,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode);
                     break;
+	            case "settings_lcd_pixel_borders":
+		            mainScreenView.setUsePixelBorders(sharedPreferences.getBoolean("settings_lcd_pixel_borders", false));
+		            break;
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":
                 case "settings_hide_bar_nav":

@@ -1112,7 +1112,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
 }
 
 JNIEXPORT jboolean JNICALL Java_org_emulator_calculator_NativeLib_isPortExtensionPossible(JNIEnv *env, jobject thisz) {
-    return (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0 ? JNI_TRUE : JNI_FALSE);
+    return (uint8_t)(cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0 ? JNI_TRUE : JNI_FALSE);
 }
 
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getState(JNIEnv *env, jobject thisz) {
@@ -1130,4 +1130,18 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenWidth(JNI
 }
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenHeight(JNIEnv *env, jobject thisz) {
     return SCREENHEIGHT*nLcdZoom*nGdiYZoom;
+}
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenWidthNative(JNIEnv *env, jobject thisz) {
+    return 131;
+}
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenHeightNative(JNIEnv *env, jobject thisz) {
+    return SCREENHEIGHT;
+}
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getLCDBackgroundColor(JNIEnv *env, jobject thisz) {
+	if (hLcdDC && hLcdDC->realizedPalette && hLcdDC->realizedPalette->paletteLog &&
+	    hLcdDC->realizedPalette->paletteLog->palPalEntry) {
+		PALETTEENTRY *palPalEntry = hLcdDC->realizedPalette->paletteLog->palPalEntry;
+		return palPalEntry[0].peRed << 16 | palPalEntry[0].peGreen << 8 | palPalEntry[0].peBlue;
+	}
+	return -1;
 }
