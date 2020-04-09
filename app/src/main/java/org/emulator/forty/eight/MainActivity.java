@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private int selectedRAMSize = -1;
     private boolean[] objectsToSaveItemChecked = null;
 
+    // Most Recently Used state files
     private int MRU_ID_START = 10000;
     private int MAX_MRU = 5;
     private LinkedHashMap<String, String> mruLinkedHashMap = new LinkedHashMap<String, String>(5, 1.0f, true) {
@@ -254,8 +255,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Set<String> mruLinkedHashMapKeySet = mruLinkedHashMap.keySet();
             String[] mrus = mruLinkedHashMapKeySet.toArray(new String[0]);
             for (int i = mrus.length - 1; i >= 0; i--) {
-                String displayName = getFilenameFromURL(mrus[i]);
-                recentsSubMenu.add(Menu.NONE, MRU_ID_START + i, Menu.NONE, displayName);
+            	String mostRecentlyUsedFile = mrus[i];
+                String displayName = getFilenameFromURL(mostRecentlyUsedFile);
+                if(displayName == null || displayName.equals("") || displayName.equals(mostRecentlyUsedFile)) {
+                	// We should remove this file because it seems impossible to get the display name of this Most Recently Used state file.
+	                // It might be deleted or the permissions does not allow to reach it anymore.
+	                mruLinkedHashMap.remove(mostRecentlyUsedFile);
+                } else
+	                recentsSubMenu.add(Menu.NONE, MRU_ID_START + i, Menu.NONE, displayName);
             }
         }
     }
@@ -398,6 +405,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ensureDocumentSaved(() -> {
                 if(onFileOpen(url) != 0) {
                     saveLastDocument(url);
+                } else {
+	                // We should remove this file from the MRU list because it might be deleted or the permissions does not allow to reach it anymore.
+	                mruLinkedHashMap.remove(url);
+	                navigationView.post(this::updateMRU);
                 }
             });
 
