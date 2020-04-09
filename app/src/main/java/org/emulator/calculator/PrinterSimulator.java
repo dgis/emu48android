@@ -51,6 +51,8 @@ public class PrinterSimulator {
         } catch(Exception ex) {
             Log.d(TAG, "Cannot get the MaximumTextureSize (Set default to 2048). Error: " + ex.getMessage());
         }
+        if(maxBitmapHeight == 0)
+            maxBitmapHeight = 1024;
 
         maxBitmapHeight = Math.min(maxBitmapHeight, 8192); //32768);
         MAXPRTLINES = maxBitmapHeight / LINE_HEIGHT;
