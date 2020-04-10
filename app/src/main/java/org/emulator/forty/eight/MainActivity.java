@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String kmlMimeType = "application/vnd.google-earth.kml+xml";
     private boolean kmlFolderUseDefault = true;
     private String kmlFolderURL = "";
-    private boolean kmFolderChange = true;
+    private boolean kmlFolderChange = true;
 
     private int selectedRAMSize = -1;
     private boolean[] objectsToSaveItemChecked = null;
@@ -454,8 +454,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     ArrayList<KMLScriptItem> kmlScripts;
     private void extractKMLScripts() {
-        if(kmlScripts == null || kmFolderChange) {
-            kmFolderChange = false;
+        if(kmlScripts == null || kmlFolderChange) {
+            kmlFolderChange = false;
 
             kmlScripts = new ArrayList<>();
 
@@ -885,13 +885,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else
             kmlScriptsForCurrentModel = kmlScripts;
 
-        boolean hasEmbeddedKMLs = getPackageName().contains("org.emulator.forty.eight");
+        boolean showDefaultKMLScriptFolderItem = !kmlFolderUseDefault && getPackageName().contains("org.emulator.forty.eight");
         int lastIndex = kmlScriptsForCurrentModel.size();
-        String[] kmlScriptTitles = new String[lastIndex + (hasEmbeddedKMLs ? 2 : 1)];
+        String[] kmlScriptTitles = new String[lastIndex + (showDefaultKMLScriptFolderItem ? 2 : 1)];
         for (int i = 0; i < kmlScriptsForCurrentModel.size(); i++)
             kmlScriptTitles[i] = kmlScriptsForCurrentModel.get(i).title;
         kmlScriptTitles[lastIndex] = getResources().getString(R.string.load_custom_kml);
-        if(hasEmbeddedKMLs)
+        if(showDefaultKMLScriptFolderItem)
             kmlScriptTitles[lastIndex + 1] = getResources().getString(R.string.load_default_kml);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle(getResources().getString(R.string.pick_calculator))
@@ -1437,7 +1437,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Not found, so we search in the default KML asset folder
         kmlFolderUseDefault = true;
-        kmFolderChange = true;
+        kmlFolderChange = true;
 
         extractKMLScripts();
 
@@ -1639,7 +1639,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         // https://stackoverflow.com/questions/44185477/intent-action-open-document-tree-doesnt-seem-to-return-a-real-path-to-drive/44185706
                         // https://stackoverflow.com/questions/26744842/how-to-use-the-new-sd-card-access-api-presented-for-android-5-0-lollipop
                     }
-                    kmFolderChange = true;
+                    kmlFolderChange = true;
                     break;
 
                 case "settings_macro":
