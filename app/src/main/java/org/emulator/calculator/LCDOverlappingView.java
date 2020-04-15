@@ -29,6 +29,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import static org.emulator.calculator.MainScreenView.drawPixelBorder;
+
 public class LCDOverlappingView extends View {
 
     protected static final String TAG = "LCDOverlappingView";
@@ -47,6 +49,7 @@ public class LCDOverlappingView extends View {
     private MainScreenView mainScreenView;
     private boolean viewSized = false;
     private boolean firstTime = true;
+	private boolean usePixelBorders = true;
 
     public LCDOverlappingView(Context context, MainScreenView mainScreenView) {
         super(context);
@@ -56,8 +59,10 @@ public class LCDOverlappingView extends View {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-        paint.setFilterBitmap(true);
-        paint.setAntiAlias(true);
+        //paint.setFilterBitmap(true);
+	    paint.setStyle(Paint.Style.STROKE);
+	    paint.setStrokeWidth(1.0f);
+        paint.setAntiAlias(false); //true);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -217,11 +222,19 @@ public class LCDOverlappingView extends View {
         //if(debug) Log.d(TAG, "onDraw()");
 
         if(this.overlappingLCDMode != OVERLAPPING_LCD_MODE_NONE) {
-            int x = NativeLib.getScreenPositionX();
-            int y = NativeLib.getScreenPositionY();
-            srcBitmapCopy.set(x, y, x + NativeLib.getScreenWidth(), y + NativeLib.getScreenHeight());
+            int lcdPositionX = NativeLib.getScreenPositionX();
+            int lcdPositionY = NativeLib.getScreenPositionY();
+            srcBitmapCopy.set(lcdPositionX, lcdPositionY, lcdPositionX + NativeLib.getScreenWidth(), lcdPositionY + NativeLib.getScreenHeight());
             dstBitmapCopy.set(0, 0, getWidth(), getHeight());
             canvas.drawBitmap(mainScreenView.getBitmap(), srcBitmapCopy, dstBitmapCopy, paint);
+
+	        if(usePixelBorders) {
+		        int lcdWidthNative = NativeLib.getScreenWidthNative();
+		        if(lcdWidthNative > 0) {
+			        int lcdHeightNative = NativeLib.getScreenHeightNative();
+			        drawPixelBorder(canvas, lcdWidthNative, lcdHeightNative, 0.0f, 0.0f, getWidth(), getHeight(), paint);
+		        }
+	        }
         }
     }
 
@@ -364,4 +377,9 @@ public class LCDOverlappingView extends View {
                 this.updateLayout();
         }
     }
+
+	public void setUsePixelBorders(boolean usePixelBorders) {
+		this.usePixelBorders = usePixelBorders;
+		postInvalidate();
+	}
 }

@@ -33,7 +33,7 @@ NOTES
   But it works exactly like with Windows. If you can write in the ROM file,
   it should save the content of port 2 in the ROM file with Android too.
   To save the port 2 in the HP49/50 with Emu48 for Android:
-  * copy "real50g-lc.kml", "real50g-lc.png", "keyb4950.kmi",  "rom.49g" in a FOLDER of your Android device,
+  * copy "real50g-lc.kml", "real50g-lc.png", "keyb4950.kmi", "rom.49g" in a FOLDER of your Android device,
   * in the menu:
    - touch "New..." to create a new device
    - or touch "Change KML Script..." to change the current KML script and ROM location
@@ -52,11 +52,26 @@ NOT WORKING YET
 - Serial Ports (Wire or Ir)
 
 
+LINKS
+
+- Original Emu48 for Windows from Christoph Giesselink and Sébastien Carlier: https://hp.giesselink.com/emu48.htm
+- Emu48+ for Windows from Eric Rechlin and Cyrille de Brebission: https://www.hpcalc.org/details/6523
+- Droid48 Reader app: https://play.google.com/store/apps/details?id=com.drehersoft.droid48reader or https://www.hpcalc.org/details/7366
+- Smart Charlemagne (HP48SX Skins for Android): https://www.hpmuseum.org/forum/thread-14197-post-125336.html or https://www.hpcalc.org/details/9115
+- The Museum of HP Calculators Forum: https://www.hpmuseum.org/forum/thread-12540.html
+
+
 CHANGES
 
-Version 1.8beta2 (2019-12-19)
+Version 1.8beta3 (2020-04-XX)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
+- Add LCD pixel borders.
+- Add support for the dark theme.
+- Fix issues with Linux build (Fix #11).
+- Remove the non loadable file from the MRU file list (Fix #13).
+- Hide the menu [Default KML script folder] when the default is already displayed (Fix #5).
+- Fix: Overlapping window source position when Background/Offset is not (0,0).
 
 
 Version 1.7 (2019-12-12)

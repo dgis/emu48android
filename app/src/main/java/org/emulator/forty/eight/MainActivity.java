@@ -1584,7 +1584,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode);
                     break;
 	            case "settings_lcd_pixel_borders":
-		            mainScreenView.setUsePixelBorders(sharedPreferences.getBoolean("settings_lcd_pixel_borders", false));
+	            	boolean usePixelBorders = sharedPreferences.getBoolean("settings_lcd_pixel_borders", false);
+		            mainScreenView.setUsePixelBorders(usePixelBorders);
+		            lcdOverlappingView.setUsePixelBorders(usePixelBorders);
 		            break;
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":

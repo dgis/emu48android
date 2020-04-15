@@ -367,35 +367,40 @@ public class MainScreenView extends PanAndScaleView {
         super.onDraw(canvas);
 
         if(usePixelBorders) {
-	        int lcdPositionX = NativeLib.getScreenPositionX();
-	        int lcdPositionY = NativeLib.getScreenPositionY();
-	        int lcdWidth = NativeLib.getScreenWidth();
-	        int lcdHeight = NativeLib.getScreenHeight();
 	        int lcdWidthNative = NativeLib.getScreenWidthNative();
-	        int lcdHeightNative = NativeLib.getScreenHeightNative();
+	        if(lcdWidthNative > 0) {
+		        int lcdHeightNative = NativeLib.getScreenHeightNative();
+		        int lcdPositionX = NativeLib.getScreenPositionX();
+		        int lcdPositionY = NativeLib.getScreenPositionY();
+		        int lcdWidth = NativeLib.getScreenWidth();
+		        int lcdHeight = NativeLib.getScreenHeight();
 
-	        float screenPositionX = lcdPositionX * viewScaleFactorX + viewPanOffsetX;
-            float screenPositionY = lcdPositionY * viewScaleFactorY + viewPanOffsetY;
-            float screenWidth = lcdWidth * viewScaleFactorX;
-            float screenHeight = lcdHeight * viewScaleFactorY;
-
-	        // Draw the LCD grid lines without antialiasing to emulate the genuine pixels borders
-	        int lcdBackgroundColor = 0xFF000000 | NativeLib.getLCDBackgroundColor();
-	        paintLCD.setColor(lcdBackgroundColor);
-	        float stepX = screenWidth / lcdWidthNative;
-	        for(int x = 0; x < lcdWidthNative; x++) {
-	        	float screenX = screenPositionX + x * stepX;
-		        canvas.drawLine(screenX, screenPositionY, screenX, screenPositionY + screenHeight, paintLCD);
+		        float screenPositionX = lcdPositionX * viewScaleFactorX + viewPanOffsetX;
+		        float screenPositionY = lcdPositionY * viewScaleFactorY + viewPanOffsetY;
+		        float screenWidth = lcdWidth * viewScaleFactorX;
+		        float screenHeight = lcdHeight * viewScaleFactorY;
+		        drawPixelBorder(canvas, lcdWidthNative, lcdHeightNative, screenPositionX, screenPositionY, screenWidth, screenHeight, paintLCD);
 	        }
-	        float stepY = screenHeight / lcdHeightNative;
-            for(int y = 0; y < lcdHeightNative; y++) {
-	            float screenY = screenPositionY + y * stepY;
-	            canvas.drawLine(screenPositionX, screenY, screenPositionX + screenWidth, screenY, paintLCD);
-            }
         }
     }
 
-    public void updateCallback(int type, int param1, int param2, String param3, String param4) {
+	static void drawPixelBorder(Canvas canvas, int lcdWidthNative, int lcdHeightNative, float screenPositionX, float screenPositionY, float screenWidth, float screenHeight, Paint paintLCD) {
+		// Draw the LCD grid lines without antialiasing to emulate the genuine pixels borders
+		int lcdBackgroundColor = 0xFF000000 | NativeLib.getLCDBackgroundColor();
+		paintLCD.setColor(lcdBackgroundColor);
+		float stepX = screenWidth / lcdWidthNative;
+		for (int x = 0; x < lcdWidthNative; x++) {
+			float screenX = screenPositionX + x * stepX;
+			canvas.drawLine(screenX, screenPositionY, screenX, screenPositionY + screenHeight, paintLCD);
+		}
+		float stepY = screenHeight / lcdHeightNative;
+		for (int y = 0; y < lcdHeightNative; y++) {
+			float screenY = screenPositionY + y * stepY;
+			canvas.drawLine(screenPositionX, screenY, screenPositionX + screenWidth, screenY, paintLCD);
+		}
+	}
+
+	public void updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
                 //Log.d(TAG, "PAINT updateCallback() postInvalidate()");

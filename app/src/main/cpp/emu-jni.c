@@ -1120,10 +1120,10 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getState(JNIEnv *e
 }
 
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenPositionX(JNIEnv *env, jobject thisz) {
-    return nLcdX;
+	return nLcdX - nBackgroundX;
 }
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenPositionY(JNIEnv *env, jobject thisz) {
-    return nLcdY;
+	return nLcdY - nBackgroundY;
 }
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getScreenWidth(JNIEnv *env, jobject thisz) {
     return 131*nLcdZoom*nGdiXZoom;

@@ -68,6 +68,10 @@ Version 1.8beta3 (2020-04-XX)
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
 - Add LCD pixel borders.
 - Add support for the dark theme.
+- Fix issues with Linux build (Fix #11).
+- Remove the non loadable file from the MRU file list (Fix #13).
+- Hide the menu [Default KML script folder] when the default is already displayed (Fix #5).
+- Fix: Overlapping window source position when Background/Offset is not (0,0).
 
 
 Version 1.7 (2019-12-12)
@@ -186,6 +190,8 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Anyway that the layout settings (zoom mode, fill screen...) be part of the saved state, rather than being global to the app (Vincent Weber).
+- Overlapping windows not refresh correctly at the very start (new file).
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.
