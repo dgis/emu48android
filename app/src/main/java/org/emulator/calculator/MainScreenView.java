@@ -37,7 +37,7 @@ import java.util.Set;
 public class MainScreenView extends PanAndScaleView {
 
     protected static final String TAG = "MainScreenView";
-    protected final boolean debug = false;
+    protected final boolean debug = true;
 
     private Paint paintFullCalc = new Paint();
 	private Paint paintLCD = new Paint();
@@ -338,15 +338,21 @@ public class MainScreenView extends PanAndScaleView {
         }
     }
 
-    private Runnable onUpdateLayoutListener = null;
+	private Runnable onUpdateLayoutListener = null;
 
-    public void setOnUpdateLayoutListener(Runnable onUpdateLayoutListener) {
-        this.onUpdateLayoutListener = onUpdateLayoutListener;
-    }
+	public void setOnUpdateLayoutListener(Runnable onUpdateLayoutListener) {
+		this.onUpdateLayoutListener = onUpdateLayoutListener;
+	}
+
+	private Runnable onUpdateDisplayListener = null;
+
+	public void setOnUpdateDisplayListener(Runnable onUpdateDisplayListener) {
+		this.onUpdateDisplayListener = onUpdateDisplayListener;
+	}
 
 	@Override
 	protected void onCustomDraw(Canvas canvas) {
-		//Log.d(TAG, "onCustomDraw()");
+		if (debug) Log.d(TAG, "onCustomDraw()");
 
 		canvas.drawColor(getBackgroundColor());
 
@@ -364,6 +370,9 @@ public class MainScreenView extends PanAndScaleView {
 
     @Override
     public void onDraw(Canvas canvas) {
+	    if (debug)
+	    	Log.d(TAG, "onDraw()");
+
         super.onDraw(canvas);
 
         if(usePixelBorders) {
@@ -403,10 +412,13 @@ public class MainScreenView extends PanAndScaleView {
 	public void updateCallback(int type, int param1, int param2, String param3, String param4) {
         switch (type) {
             case NativeLib.CALLBACK_TYPE_INVALIDATE:
-                //Log.d(TAG, "PAINT updateCallback() postInvalidate()");
+	            if (debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_INVALIDATE postInvalidate()");
                 postInvalidate();
-                break;
+	            if(this.onUpdateDisplayListener != null)
+		            this.onUpdateDisplayListener.run();
+	            break;
             case NativeLib.CALLBACK_TYPE_WINDOW_RESIZE:
+	            if (debug) Log.d(TAG, "updateCallback() CALLBACK_TYPE_WINDOW_RESIZE()");
                 // New Bitmap size
                 if(bitmapMainScreen == null || bitmapMainScreen.getWidth() != param1 || bitmapMainScreen.getHeight() != param2) {
                     if(debug) Log.d(TAG, "updateCallback() Bitmap.createBitmap(x: " + Math.max(1, param1) + ", y: " + Math.max(1, param2) + ")");

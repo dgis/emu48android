@@ -191,7 +191,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 TODO
 
 - Anyway that the layout settings (zoom mode, fill screen...) be part of the saved state, rather than being global to the app (Vincent Weber).
-- Overlapping windows not refresh correctly at the very start (new file).
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.

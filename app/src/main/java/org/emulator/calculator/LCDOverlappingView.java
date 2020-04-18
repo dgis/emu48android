@@ -17,9 +17,7 @@ package org.emulator.calculator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
@@ -34,7 +32,7 @@ import static org.emulator.calculator.MainScreenView.drawPixelBorder;
 public class LCDOverlappingView extends View {
 
     protected static final String TAG = "LCDOverlappingView";
-    protected final boolean debug = false;
+    protected final boolean debug = true;
 
     private SharedPreferences sharedPreferences;
     private Paint paint = new Paint();
@@ -55,14 +53,14 @@ public class LCDOverlappingView extends View {
         super(context);
 
         this.mainScreenView = mainScreenView;
-        this.mainScreenView.setOnUpdateLayoutListener(this::updateLayout);
+	    this.mainScreenView.setOnUpdateLayoutListener(this::updateLayout);
+	    this.mainScreenView.setOnUpdateDisplayListener(this::postInvalidate);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-        //paint.setFilterBitmap(true);
 	    paint.setStyle(Paint.Style.STROKE);
 	    paint.setStrokeWidth(1.0f);
-        paint.setAntiAlias(false); //true);
+        paint.setAntiAlias(false);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -219,7 +217,8 @@ public class LCDOverlappingView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //if(debug) Log.d(TAG, "onDraw()");
+        if(debug)
+        	Log.d(TAG, "onDraw()");
 
         if(this.overlappingLCDMode != OVERLAPPING_LCD_MODE_NONE) {
             int lcdPositionX = NativeLib.getScreenPositionX();
