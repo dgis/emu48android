@@ -32,7 +32,7 @@ import static org.emulator.calculator.MainScreenView.drawPixelBorder;
 public class LCDOverlappingView extends View {
 
     protected static final String TAG = "LCDOverlappingView";
-    protected final boolean debug = true;
+    protected final boolean debug = false;
 
     private SharedPreferences sharedPreferences;
     private Paint paint = new Paint();
