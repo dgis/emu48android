@@ -72,6 +72,8 @@ Version 1.8beta3 (2020-04-XX)
 - Remove the non loadable file from the MRU file list (Fix #13).
 - Hide the menu [Default KML script folder] when the default is already displayed (Fix #5).
 - Fix: Overlapping window source position when Background/Offset is not (0,0).
+- Wrap the table of content in the former help documentation.
+- Save the settings at the end of the state file.
 
 
 Version 1.7 (2019-12-12)

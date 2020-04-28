@@ -24,8 +24,8 @@ public class NativeLib {
         System.loadLibrary("native-lib");
     }
 
-    public static final int CALLBACK_TYPE_INVALIDATE = 0;
-    public static final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
+    static final int CALLBACK_TYPE_INVALIDATE = 0;
+    static final int CALLBACK_TYPE_WINDOW_RESIZE = 1;
 
     public static native void start(AssetManager mgr, Activity activity);
     public static native void stop();

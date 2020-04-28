@@ -14,9 +14,11 @@
 
 package org.emulator.calculator;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,15 +26,27 @@ public class InfoWebActivity extends AppCompatActivity {
 
 	private int homeId;
 
+	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setContentView(Utils.resId(this, "layout", "activity_web_info"));
 		homeId = Utils.resId(this, "id", "home");
+
 		WebView webView = findViewById(Utils.resId(this, "id", "webViewInfo"));
-		String url = getString(Utils.resId(this, "string", "help_url"));
-		webView.loadUrl(url);
+		webView.getSettings().setJavaScriptEnabled(true);
+		webView.setWebViewClient(new WebViewClient() {
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				super.onPageFinished(view, url);
+
+				if(url != null)
+					// Inject a CSS style to wrap the table of content if needed
+					view.evaluateJavascript("javascript:(function(){var css=document.createElement(\"style\");css.type=\"text/css\";css.innerHTML=\".nav1{overflow-wrap:break-word;}\";document.head.appendChild(css);})();", null);
+			}
+		});
+		webView.loadUrl(getString(Utils.resId(this, "string", "help_url")));
 	}
 
 	@Override

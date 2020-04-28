@@ -15,7 +15,6 @@
 package org.emulator.forty.eight;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -23,9 +22,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -36,28 +35,32 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceDataStore;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 
+import org.emulator.calculator.EmuApplication;
 import org.emulator.calculator.NativeLib;
+import org.emulator.calculator.Settings;
 import org.emulator.calculator.Utils;
 
-public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsActivity extends AppCompatActivity {
 
-    //private static final String TAG = "SettingsActivity";
-    private static SharedPreferences sharedPreferences;
+    private static final String TAG = "SettingsActivity";
+	protected final boolean debug = false;
+
+    private static Settings settings;
     private HashSet<String> settingsKeyChanged = new HashSet<>();
-
+	private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = (sharedPreferences, key) -> settingsKeyChanged.add(key);
     private GeneralPreferenceFragment generalPreferenceFragment;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+	    settings = EmuApplication.getSettings();
+	    settings.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -71,7 +74,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
     @Override
     protected void onDestroy() {
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        settings.unregisterOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
         super.onDestroy();
     }
 
@@ -91,12 +94,6 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         resultIntent.putExtra("changedKeys", settingsKeyChanged.toArray(new String[0]));
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
-        //super.onBackPressed();
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        settingsKeyChanged.add(key);
     }
 
     /**
@@ -107,9 +104,13 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
         Preference preferencePort2load = null;
 
-        @Override
+	    @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-            addPreferencesFromResource(R.xml.pref_general);
+		    getPreferenceManager().setPreferenceDataStore(EmuApplication.getSettings());
+
+		    // Load the preferences from an XML resource
+	        setPreferencesFromResource(R.xml.pref_general, rootKey);
+
             setHasOptionsMenu(true);
 
             // Sound settings
@@ -165,7 +166,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                 };
                 preferenceBackgroundFallbackColor.setOnPreferenceChangeListener(onPreferenceChangeListenerBackgroundFallbackColor);
                 onPreferenceChangeListenerBackgroundFallbackColor.onPreferenceChange(preferenceBackgroundFallbackColor,
-                        sharedPreferences.getString(preferenceBackgroundFallbackColor.getKey(), "0"));
+                        settings.getString(preferenceBackgroundFallbackColor.getKey(), "0"));
 
 
                 //preferenceBackgroundCustomColor.setColorValue(customColor);
@@ -194,7 +195,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     return true;
                 };
                 preferenceMacroRealSpeed.setOnPreferenceChangeListener(onPreferenceChangeListenerMacroRealSpeed);
-                onPreferenceChangeListenerMacroRealSpeed.onPreferenceChange(preferenceMacroRealSpeed, sharedPreferences.getBoolean(preferenceMacroRealSpeed.getKey(), true));
+                onPreferenceChangeListenerMacroRealSpeed.onPreferenceChange(preferenceMacroRealSpeed, settings.getBoolean(preferenceMacroRealSpeed.getKey(), true));
             }
 
             // Ports 1 & 2 settings
@@ -215,7 +216,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     return true;
                 };
                 preferencePort1en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort1en);
-                onPreferenceChangeListenerPort1en.onPreferenceChange(preferencePort1en, sharedPreferences.getBoolean(preferencePort1en.getKey(), false));
+                onPreferenceChangeListenerPort1en.onPreferenceChange(preferencePort1en, settings.getBoolean(preferencePort1en.getKey(), false));
 
                 Preference.OnPreferenceChangeListener onPreferenceChangeListenerPort2en = (preference, value) -> {
                     preferencePort2en.setEnabled(enablePortPreferences);
@@ -224,9 +225,9 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                     return true;
                 };
                 preferencePort2en.setOnPreferenceChangeListener(onPreferenceChangeListenerPort2en);
-                onPreferenceChangeListenerPort2en.onPreferenceChange(preferencePort2en, sharedPreferences.getBoolean(preferencePort2en.getKey(), false));
+                onPreferenceChangeListenerPort2en.onPreferenceChange(preferencePort2en, settings.getBoolean(preferencePort2en.getKey(), false));
 
-                updatePort2LoadFilename(sharedPreferences.getString(preferencePort2load.getKey(), ""));
+                updatePort2LoadFilename(settings.getString(preferencePort2load.getKey(), ""));
                 preferencePort2load.setOnPreferenceClickListener(preference -> {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -258,13 +259,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         if(resultCode == Activity.RESULT_OK && data != null) {
             if(requestCode == MainActivity.INTENT_PORT2LOAD) {
                 Uri uri = data.getData();
-                //Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
                 String url;
                 if (uri != null) {
+	                if(debug) Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + uri.toString());
                     url = uri.toString();
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("settings_port2load", url);
-                    editor.apply();
+	                settings.putString("settings_port2load", url);
                     makeUriPersistable(data, uri);
                     if(generalPreferenceFragment != null)
                         generalPreferenceFragment.updatePort2LoadFilename(url);

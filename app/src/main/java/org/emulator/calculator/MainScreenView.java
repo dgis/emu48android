@@ -481,7 +481,7 @@ public class MainScreenView extends PanAndScaleView {
 
 
 
-    private int getBackgroundColor() {
+    public int getBackgroundColor() {
         if(useKmlBackgroundColor) {
             return kmlBackgroundColor;
         } else switch(fallbackBackgroundColorType) {

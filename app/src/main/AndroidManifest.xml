@@ -3,6 +3,7 @@
     package="org.emulator.forty.eight">
 
     <application
+	    android:name="org.emulator.calculator.EmuApplication"
         android:allowBackup="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"

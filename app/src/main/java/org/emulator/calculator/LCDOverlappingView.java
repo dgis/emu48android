@@ -14,13 +14,12 @@
 
 package org.emulator.calculator;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -29,12 +28,13 @@ import android.widget.FrameLayout;
 
 import static org.emulator.calculator.MainScreenView.drawPixelBorder;
 
+@SuppressLint("ViewConstructor")
 public class LCDOverlappingView extends View {
 
     protected static final String TAG = "LCDOverlappingView";
     protected final boolean debug = false;
 
-    private SharedPreferences sharedPreferences;
+    private Settings settings;
     private Paint paint = new Paint();
     private Rect srcBitmapCopy = new Rect();
     private Rect dstBitmapCopy = new Rect();
@@ -45,7 +45,6 @@ public class LCDOverlappingView extends View {
     public static int OVERLAPPING_LCD_MODE_MANUAL = 2;
     private int overlappingLCDMode = OVERLAPPING_LCD_MODE_AUTO;
     private MainScreenView mainScreenView;
-    private boolean viewSized = false;
     private boolean firstTime = true;
 	private boolean usePixelBorders = true;
 
@@ -56,7 +55,7 @@ public class LCDOverlappingView extends View {
 	    this.mainScreenView.setOnUpdateLayoutListener(this::updateLayout);
 	    this.mainScreenView.setOnUpdateDisplayListener(this::postInvalidate);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+	    settings = EmuApplication.getSettings();
 
 	    paint.setStyle(Paint.Style.STROKE);
 	    paint.setStrokeWidth(1.0f);
@@ -91,6 +90,7 @@ public class LCDOverlappingView extends View {
         return deltaX * deltaX + deltaY * deltaY < 100 * 100;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(debug) Log.d(TAG, "onTouchEvent() getAction(): " + event.getAction() + ", getPointerCount(): " + event.getPointerCount());
@@ -243,7 +243,6 @@ public class LCDOverlappingView extends View {
 
         if(debug) Log.d(TAG, "onSizeChanged() width: " + w + ", height: " + h);
 
-        viewSized = true;
         updateLayout();
     }
 
@@ -279,7 +278,7 @@ public class LCDOverlappingView extends View {
                 if(firstTime) {
                     firstTime = false;
                     post(() -> {
-                        float scale = sharedPreferences.getFloat("settings_lcd_overlapping_scale", 1.0f);
+                        float scale = settings.getFloat("settings_lcd_overlapping_scale", 1.0f);
                         if (scale < 0.5f)
                             scale = 0.5f;
                         if (scale > 20.0f)
@@ -302,8 +301,8 @@ public class LCDOverlappingView extends View {
                         }
 
                         FrameLayout.LayoutParams viewFlowLayout = new FrameLayout.LayoutParams(viewWidth, viewHeight);
-                        viewFlowLayout.leftMargin = sharedPreferences.getInt("settings_lcd_overlapping_x", 20);
-                        viewFlowLayout.topMargin = sharedPreferences.getInt("settings_lcd_overlapping_y", 80);
+                        viewFlowLayout.leftMargin = settings.getInt("settings_lcd_overlapping_x", 20);
+                        viewFlowLayout.topMargin = settings.getInt("settings_lcd_overlapping_y", 80);
                         int tolerance = 80;
                         if (viewFlowLayout.leftMargin + viewWidth < tolerance)
                             viewFlowLayout.leftMargin = tolerance - viewWidth;
@@ -327,20 +326,16 @@ public class LCDOverlappingView extends View {
         if(this.overlappingLCDMode == OVERLAPPING_LCD_MODE_NONE)
             return;
         FrameLayout.LayoutParams viewFlowLayout = (FrameLayout.LayoutParams)getLayoutParams();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
-        editor.putInt("settings_lcd_overlapping_x", viewFlowLayout.leftMargin);
-        editor.putInt("settings_lcd_overlapping_y", viewFlowLayout.topMargin);
-        editor.putFloat("settings_lcd_overlapping_scale", (float)viewFlowLayout.width / (float)Math.max(1, NativeLib.getScreenWidth()));
-        editor.apply();
+        settings.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
+        settings.putInt("settings_lcd_overlapping_x", viewFlowLayout.leftMargin);
+        settings.putInt("settings_lcd_overlapping_y", viewFlowLayout.topMargin);
+        settings.putFloat("settings_lcd_overlapping_scale", (float)viewFlowLayout.width / (float)Math.max(1, NativeLib.getScreenWidth()));
     }
 
     private void changeOverlappingLCDModeToManual() {
         if(this.overlappingLCDMode == OVERLAPPING_LCD_MODE_AUTO) { // Mode Auto
             this.overlappingLCDMode = OVERLAPPING_LCD_MODE_MANUAL; // We change the mode to Manual
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
-            editor.apply();
+	        settings.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
             Context context = getContext();
             if(context != null)
                 Utils.showAlert(context, context.getString(Utils.resId(context, "string", "message_change_overlapping_lcd_mode_to_manual")));
@@ -349,9 +344,7 @@ public class LCDOverlappingView extends View {
 
     private void changeOverlappingLCDModeToAuto() {
         this.overlappingLCDMode = OVERLAPPING_LCD_MODE_AUTO; // We change the mode to Auto
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
-        editor.apply();
+	    settings.putString("settings_lcd_overlapping_mode", Integer.toString(this.overlappingLCDMode));
         Context context = getContext();
         if(context != null)
             Utils.showAlert(context, context.getString(Utils.resId(context, "string", "message_change_overlapping_lcd_mode_to_auto")));

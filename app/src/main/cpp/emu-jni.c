@@ -554,7 +554,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv 
             hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
         }
 
-        MruAdd(szBufferFilename);
+        //MruAdd(szBufferFilename);
     }
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
@@ -1056,8 +1056,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
         BOOL bPort2AttChange = FALSE;
 
         // HP48SX/GX port2 change settings detection
-        if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0)
-        {
+        if (cCurrentRomType=='S' || cCurrentRomType=='G' || cCurrentRomType==0) {
             if(settingsPort2en && settingsPort2load) {
                 if(_tcscmp(szPort2Filename, settingsPort2load) != 0) {
                     _tcscpy(szPort2Filename, settingsPort2load);
