@@ -48,7 +48,7 @@ public class Settings extends PreferenceDataStore {
 	private final SharedPreferences defaultSettings;
 	private final HashMap<String, Object> embeddedStateSettings = new HashMap<>();
 	private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
-	private static String magic = "DGIS";
+	private static String magic = "MYHP";
 
 
 	private boolean isDefaultSettings = true;
