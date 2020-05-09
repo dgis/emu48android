@@ -70,14 +70,6 @@ public class PrinterSimulator {
         m_bPrinter82240A = enable;
     }
 
-    /**
-     * true to prevent the line wrapping for the textual printer when the character '\4' is sent by the calc.
-     * @param preventLineWrap true to prevent the line wrapping; false otherwise.
-     */
-    public void setPreventLineWrap(boolean preventLineWrap) {
-        this.preventLineWrap = preventLineWrap;
-    }
-
 
     /**
      * Change the paper, so we cleanup everything.
@@ -252,8 +244,6 @@ public class PrinterSimulator {
 
     // Text Printer
 
-    private boolean preventLineWrap = false;
-
     /**
      * ROMAN8 Unicode table
      */
@@ -303,7 +293,7 @@ public class PrinterSimulator {
     private void addTextData(int byData) {
         do {
             // special LF and LF characters
-            if (/*!preventLineWrap &&*/ byData == 0x04 || byData == 0x0A) {
+            if (byData == 0x04 || byData == 0x0A) {
                 textUpdate.append('\r');
                 textUpdate.append('\n');
                 if(debug) Log.d(TAG, "addTextData(" + byData + ")");

@@ -14,6 +14,7 @@
 
 package org.emulator.calculator;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -33,226 +34,82 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class Settings extends PreferenceDataStore {
 
 	private static final String TAG = "Settings";
-	protected final boolean debug = true;
+	protected final boolean debug = false;
 
-	private final SharedPreferences defaultSettings;
+	private final SharedPreferences androidSettings;
+	private List<String> applicationSettingKeys = Arrays.asList("settings_kml_default", "settings_kml_folder", "lastDocument", "MRU");
+	private final HashMap<String, Object> applicationSettings = new HashMap<>();
+	private final HashMap<String, Object> commonSettings = new HashMap<>();
 	private final HashMap<String, Object> embeddedStateSettings = new HashMap<>();
-	private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
+	private boolean isCommonSettings = true;
+
+	public interface OnOneKeyChangedListener {
+		void onOneKeyChanged(String keyChanged);
+	}
+	private OnOneKeyChangedListener oneKeyChangedListener;
 	private static String magic = "MYHP";
 
-
-	private boolean isDefaultSettings = true;
 
 
 	public Settings(@NonNull SharedPreferences sharedPreferences) {
 		if(debug) Log.d(TAG, "Settings()");
-		this.defaultSettings = sharedPreferences;
+		androidSettings = sharedPreferences;
+
+		loadApplicationSettings();
 	}
 
-	public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-		if(debug) Log.d(TAG, "registerOnSharedPreferenceChangeListener()");
-		sharedPreferenceChangeListener = listener;
+	public void registerOnOneKeyChangeListener(OnOneKeyChangedListener listener) {
+		if(debug) Log.d(TAG, "registerOnOneKeyChangeListener()");
+		oneKeyChangedListener = listener;
 	}
 
-	public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
-		if(debug) Log.d(TAG, "unregisterOnSharedPreferenceChangeListener()");
-		sharedPreferenceChangeListener = null;
+	public void unregisterOnOneKeyChangeListener() {
+		if(debug) Log.d(TAG, "unregisterOnOneKeyChangeListener()");
+		oneKeyChangedListener = null;
 	}
 
-	@Override
-	public void putString(String key, @Nullable String value) {
-		putString(key, value, false);
-	}
-	public void putString(String key, @Nullable String value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putString(key: '" + key + "' value: '" + value + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putString(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
+	private void putValue(String key, @Nullable Object value) {
+		if(applicationSettingKeys.indexOf(key) != -1)
+			applicationSettings.put(key, value);
+		else if(isCommonSettings)
+			commonSettings.put(key, value);
+		else
 			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
+		if(oneKeyChangedListener != null)
+			oneKeyChangedListener.onOneKeyChanged(key);
+	}
+
+	private Object getValue(String key) {
+		Object value = null;
+		if(!isCommonSettings)
+			value = embeddedStateSettings.get(key);
+		if(value == null) {
+			if(applicationSettingKeys.indexOf(key) != -1)
+				value = applicationSettings.get(key);
+			else
+				value = commonSettings.get(key);
 		}
+		return value;
 	}
 
-	@Override
-	public void putStringSet(String key, @Nullable Set<String> value) {
-		putStringSet(key, value, false);
-	}
-	public void putStringSet(String key, @Nullable Set<String> value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putStringSet(key: '" + key + "' value: '" + "" + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putStringSet(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
-			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
-		}
+	public boolean getIsDefaultSettings() {
+		return isCommonSettings;
 	}
 
-	@Override
-	public void putInt(String key, int value) {
-		putInt(key, value, false);
-	}
-	public void putInt(String key, int value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putInt(key: '" + key + "' value: '" + value + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putInt(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
-			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
-		}
-	}
-
-	@Override
-	public void putLong(String key, long value){
-		putLong(key,value,false);
-	}
-	public void putLong(String key, long value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putLong(key: '" + key + "' value: '" + value + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putLong(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
-			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
-		}
-	}
-
-	@Override
-	public void putFloat(String key, float value){
-		putFloat(key,value,false);
-	}
-	public void putFloat(String key, float value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putFloat(key: '" + key + "' value: '" + value + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putFloat(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
-			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
-		}
-	}
-
-	@Override
-	public void putBoolean(String key, boolean value){
-		putBoolean(key,value,false);
-	}
-	public void putBoolean(String key, boolean value, boolean forceDefault) {
-		if(debug) Log.d(TAG, (isDefaultSettings ? "DEFAULT" : "LOCAL") + " putBoolean(key: '" + key + "' value: '" + value + "')");
-		if(isDefaultSettings || forceDefault) {
-			defaultSettings.edit().putBoolean(key, value).apply();
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(defaultSettings, key);
-		} else {
-			embeddedStateSettings.put(key, value);
-			if(sharedPreferenceChangeListener != null)
-				sharedPreferenceChangeListener.onSharedPreferenceChanged(null, key);
-		}
-	}
-
-	@Nullable
-	@Override
-	public String getString(String key, @Nullable String defValue) {
-		if(debug) Log.d(TAG, "getString(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result instanceof String)
-				return (String) result;
-		}
-		return defaultSettings.getString(key, defValue);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Nullable
-	@Override
-	public Set<String> getStringSet(String key, @Nullable Set<String> defValues) {
-		if(debug) Log.d(TAG, "getStringSet(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result instanceof Set<?>)
-				try {
-					return (Set<String>) result;
-				} catch (Exception ignored) {}
-		}
-		return defaultSettings.getStringSet(key, defValues);
-	}
-
-	@Override
-	public int getInt(String key, int defValue) {
-		if(debug) Log.d(TAG, "getInt(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result != null)
-				try {
-					return (Integer) result;
-				} catch (Exception ignored) {}
-		}
-		return defaultSettings.getInt(key, defValue);
-	}
-
-	@Override
-	public long getLong(String key, long defValue) {
-		if(debug) Log.d(TAG, "getLong(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result != null)
-				try {
-					return (Long) result;
-				} catch (Exception ignored) {}
-		}
-		return defaultSettings.getLong(key, defValue);
-	}
-
-	@Override
-	public float getFloat(String key, float defValue) {
-		if(debug) Log.d(TAG, "getFloat(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result != null)
-				try {
-					return (Float) result;
-				} catch (Exception ignored) {}
-		}
-		return defaultSettings.getFloat(key, defValue);
-	}
-
-	@Override
-	public boolean getBoolean(String key, boolean defValue) {
-		if(debug) Log.d(TAG, "getBoolean(key: '" + key + "')");
-		if(!isDefaultSettings) {
-			Object result =  embeddedStateSettings.get(key);
-			if(result != null)
-				try {
-					return (Boolean) result;
-				} catch (Exception ignored) {}
-		}
-		return defaultSettings.getBoolean(key, defValue);
-	}
-
-
-	public void setDefaultSettings(boolean defaultSettings) {
-		isDefaultSettings = defaultSettings;
+	public void setIsDefaultSettings(boolean isDefaultSettings) {
+		this.isCommonSettings = isDefaultSettings;
 	}
 
 	private static String toJSON(Collection<String> array) {
@@ -340,31 +197,47 @@ public class Settings extends PreferenceDataStore {
 
 	public void saveInStateFile(Context context, String url) {
 		if(debug) Log.d(TAG, "saveInStateFile(url: '" + url + "')");
-		Uri uri = Uri.parse(url);
-		try {
-			ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "wa");
-			if(pfd != null) {
-				FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-				String json = toJSON(embeddedStateSettings);
-				byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
-				int jsonLength = jsonBytes.length;
-				fileOutputStream.write(jsonBytes);
-				// The JSON text should not be more than 64KB
-				fileOutputStream.write((jsonLength >> 8) & 0xFF);
-				fileOutputStream.write(jsonLength & 0xFF);
-				for (int i = 0; i < magic.length(); i++) {
-					fileOutputStream.write(magic.charAt(i));
+
+		// Consolidate common and embedded settings but without the app only settings
+		Map<String, Object> stateSettings = new HashMap<>();
+		stateSettings.putAll(commonSettings);
+		stateSettings.putAll(embeddedStateSettings);
+
+		String json = toJSON(stateSettings);
+		byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
+		int jsonLength = jsonBytes.length;
+
+		if(jsonLength < 65536) {
+			Uri uri = Uri.parse(url);
+			try {
+				ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "wa");
+				if (pfd != null) {
+					FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+
+					fileOutputStream.write(jsonBytes);
+					// The JSON text should not be more than 64KB
+					fileOutputStream.write((jsonLength >> 8) & 0xFF);
+					fileOutputStream.write(jsonLength & 0xFF);
+					for (int i = 0; i < magic.length(); i++) {
+						fileOutputStream.write(magic.charAt(i));
+					}
+					fileOutputStream.flush();
+					fileOutputStream.close();
 				}
-				fileOutputStream.flush();
-				fileOutputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
 	public void clearEmbeddedStateSettings() {
 		embeddedStateSettings.clear();
+	}
+
+	@SuppressLint("ApplySharedPref")
+	public void clearCommonDefaultSettings() {
+		embeddedStateSettings.clear();
+		commonSettings.clear();
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
@@ -383,7 +256,7 @@ public class Settings extends PreferenceDataStore {
 					fileInputStream.read(lastChunk, 0, lastChunk.length);
 				} else {
 					int lastChunkOffset = lastChunk.length - (int)fileSize;
-					fileInputStream.read(lastChunk, lastChunkOffset, lastChunk.length);
+					fileInputStream.read(lastChunk, lastChunkOffset, (int)fileSize);
 				}
 				fileInputStream.close();
 
@@ -407,5 +280,155 @@ public class Settings extends PreferenceDataStore {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void loadApplicationSettings() {
+		commonSettings.clear();
+		Map<String, ?> keyValuePairs = androidSettings.getAll();
+		for (String key : keyValuePairs.keySet()) {
+			if (applicationSettingKeys.indexOf(key) != -1)
+				applicationSettings.put(key, keyValuePairs.get(key));
+			else
+				commonSettings.put(key, keyValuePairs.get(key));
+		}
+	}
+
+	public void saveApplicationSettings() {
+		if(debug) Log.d(TAG, "saveApplicationSettings()");
+
+		SharedPreferences.Editor settingsEditor = androidSettings.edit();
+		for (String key : commonSettings.keySet()) {
+			Object value = commonSettings.get(key);
+			putKeyValueInEditor(settingsEditor, key, value);
+		}
+		for (String key : applicationSettingKeys) {
+			Object value = applicationSettings.get(key);
+			putKeyValueInEditor(settingsEditor, key, value);
+		}
+
+		settingsEditor.apply();
+	}
+
+	private void putKeyValueInEditor(SharedPreferences.Editor settingsEditor, String key, Object value) {
+		if (value instanceof Integer)
+			settingsEditor.putInt(key, ((Number)value).intValue());
+		else if (value instanceof Long)
+			settingsEditor.putLong(key, ((Number)value).longValue());
+		else if (value instanceof Boolean)
+			settingsEditor.putBoolean(key, (Boolean) value);
+		else if (value instanceof Float || value instanceof Double)
+			settingsEditor.putFloat(key, ((Number)value).floatValue());
+		else if (value instanceof String)
+			settingsEditor.putString(key, (String) value);
+		else if (value instanceof Set<?>)
+			settingsEditor.putStringSet(key, (Set<String>) value);
+		else
+			settingsEditor.putString(key, null);
+	}
+
+
+	// PreferenceDataStore
+
+	@Override
+	public void putString(String key, @Nullable String value) {
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putString(key: '" + key + "' value: '" + value + "')");
+		putValue(key, value);
+	}
+
+	@Override
+	public void putStringSet(String key, @Nullable Set<String> value) {
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putStringSet(key: '" + key + "' value: '" + "" + "')");
+		putValue(key, value);
+	}
+
+	@Override
+	public void putInt(String key, int value) {
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putInt(key: '" + key + "' value: '" + value + "')");
+		putValue(key, value);
+	}
+
+	@Override
+	public void putLong(String key, long value){
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putLong(key: '" + key + "' value: '" + value + "')");
+		putValue(key, value);
+	}
+
+	@Override
+	public void putFloat(String key, float value){
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putFloat(key: '" + key + "' value: '" + value + "')");
+		putValue(key, value);
+	}
+
+	@Override
+	public void putBoolean(String key, boolean value){
+		if(debug) Log.d(TAG, (isCommonSettings ? "DEFAULT" : "LOCAL") + " putBoolean(key: '" + key + "' value: '" + value + "')");
+		putValue(key, value);
+	}
+
+	@Nullable
+	@Override
+	public String getString(String key, @Nullable String defValue) {
+		if(debug) Log.d(TAG, "getString(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result instanceof String)
+			return (String) result;
+		return defValue;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Nullable
+	@Override
+	public Set<String> getStringSet(String key, @Nullable Set<String> defValues) {
+		if(debug) Log.d(TAG, "getStringSet(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result instanceof Set<?>)
+			try {
+				return (Set<String>) result;
+			} catch (Exception ignored) {}
+		return defValues;
+	}
+
+	@Override
+	public int getInt(String key, int defValue) {
+		if(debug) Log.d(TAG, "getInt(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result != null)
+			try {
+				return ((Number) result).intValue();
+			} catch (Exception ignored) {}
+		return defValue;
+	}
+
+	@Override
+	public long getLong(String key, long defValue) {
+		if(debug) Log.d(TAG, "getLong(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result != null)
+			try {
+				return ((Number) result).longValue();
+			} catch (Exception ignored) {}
+		return defValue;
+	}
+
+	@Override
+	public float getFloat(String key, float defValue) {
+		if(debug) Log.d(TAG, "getFloat(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result != null)
+			try {
+				return ((Number) result).floatValue();
+			} catch (Exception ignored) {}
+		return defValue;
+	}
+
+	@Override
+	public boolean getBoolean(String key, boolean defValue) {
+		if(debug) Log.d(TAG, "getBoolean(key: '" + key + "')");
+		Object result = getValue(key);
+		if(result != null)
+			try {
+				return (Boolean) result;
+			} catch (Exception ignored) {}
+		return defValue;
 	}
 }

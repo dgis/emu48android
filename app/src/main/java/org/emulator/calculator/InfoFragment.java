@@ -14,34 +14,65 @@
 
 package org.emulator.calculator;
 
+import android.app.Dialog;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.text.util.Linkify;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.appcompat.widget.Toolbar;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class InfoActivity extends AppCompatActivity {
-
-	private int homeId;
+public class InfoFragment extends AppCompatDialogFragment {
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setStyle(AppCompatDialogFragment.STYLE_NO_FRAME, Utils.resId(this, "style", "AppTheme"));
+	}
 
-		setContentView(Utils.resId(this, "layout", "activity_info"));
-		String filepath = getString(Utils.resId(this, "string", "info_readme"));
-		homeId = Utils.resId(this, "id", "home");
+	@NonNull
+	@Override
+	public Dialog onCreateDialog(Bundle savedInstanceState) {
+		Dialog dialog = super.onCreateDialog(savedInstanceState);
+		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		return dialog;
+	}
+
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+		String title = getString(Utils.resId(this, "string", "title_fragment_info"));
+		Dialog dialog = getDialog();
+		if(dialog != null)
+			dialog.setTitle(title);
+
+		View view = inflater.inflate(Utils.resId(this, "layout", "fragment_info"), container, false);
+
+		// Toolbar
+
+		Toolbar toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
+		toolbar.setTitle(title);
+		Utils.colorizeDrawableWithColor(requireContext(), toolbar.getNavigationIcon(), android.R.attr.colorForeground);
+		toolbar.setNavigationOnClickListener(v -> {
+			dismiss();
+		});
 
 		// Programmatically load text from an asset and place it into the
         // text view.  Note that the text we are loading is ASCII, so we
         // need to convert it to UTF-16.
         try {
-            InputStream is = getAssets().open(filepath);
+            InputStream is = requireContext().getAssets().open(getString(Utils.resId(this, "string", "info_readme")));
             
             // We guarantee that the available method returns the total
             // size of the asset...  of course, this does mean that a single
@@ -58,23 +89,11 @@ public class InfoActivity extends AppCompatActivity {
             String text = new String(buffer);
             
             // Finally stick the string into the text view.
-			TextView textViewInfo = findViewById(Utils.resId(this, "id", "textViewInfo"));
+	        TextView textViewInfo = view.findViewById(Utils.resId(this, "id", "textViewInfo"));
             textViewInfo.setMovementMethod(new ScrollingMovementMethod());
             textViewInfo.setText(text);
             Linkify.addLinks(textViewInfo, Linkify.ALL);
-        } catch (IOException e) {
-            // Should never happen!
-            //throw new RuntimeException(e);
-        }
+        } catch (IOException ignored) { }
+        return view;
 	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if(item.getItemId() == homeId) {
-			finish();
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
 }

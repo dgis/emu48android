@@ -16,17 +16,24 @@ package org.emulator.calculator;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -43,29 +50,49 @@ public class Utils {
         toast.show();
     }
 
-    static int resId(Context context, String resourcename, String variableName)
-    {
+    static int resId(Context context, String resourceName, String variableName) {
         try {
-            return context.getResources().getIdentifier(variableName, resourcename, context.getApplicationContext().getPackageName());
+            return context.getResources().getIdentifier(variableName, resourceName, context.getApplicationContext().getPackageName());
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
         }
     }
 
-    static int resId(Fragment fragment, String resourcename, String variableName)
-    {
+    public static int resId(Fragment fragment, String resourceName, String variableName) {
         try {
             Context context = fragment.getContext();
             if(context != null)
-                return fragment.getResources().getIdentifier(variableName, resourcename, context.getApplicationContext().getPackageName());
+                return fragment.getResources().getIdentifier(variableName, resourceName, context.getApplicationContext().getPackageName());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return -1;
     }
 
-    public static void makeUriPersistable(Context context, Intent data, Uri uri) {
+	public static int getThemedColor(Context context, int attr) {
+		Resources.Theme theme = context.getTheme();
+		if (theme != null) {
+			TypedValue tv = new TypedValue();
+			theme.resolveAttribute(attr, tv, true);
+			Resources resources = context.getResources();
+			if(resources != null)
+				return ContextCompat.getColor(context, tv.resourceId);
+		}
+		return 0;
+	}
+
+	public static void colorizeDrawableWithColor(Context context, Drawable icon, int colorAttribute) {
+		if(icon != null) {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+				icon.setColorFilter(new BlendModeColorFilter(Utils.getThemedColor(context, colorAttribute), BlendMode.SRC_ATOP));
+			else
+				icon.setColorFilter(Utils.getThemedColor(context, colorAttribute), PorterDuff.Mode.SRC_ATOP);
+		}
+	}
+
+
+	public static void makeUriPersistable(Context context, Intent data, Uri uri) {
         int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
             context.getContentResolver().takePersistableUriPermission(uri, takeFlags);

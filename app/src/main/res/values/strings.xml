@@ -1,17 +1,21 @@
 <resources>
 
-    <!-- InfoActivity -->
+    <!-- InfoFragment -->
 
-    <string name="title_activity_info">About</string>
+    <string name="title_fragment_info">About</string>
     <string name="info_readme">ReadMe.txt</string>
 
-    <!-- InfoWebActivity -->
-    <string name="title_web_activity_info">Help</string>
+    <!-- InfoWebFragment -->
+    <string name="title_web_fragment_info">Help</string>
     <string name="help_url">file:///android_asset/Emu48.htm</string>
 
-    <!-- SettingsActivity -->
+    <!-- SettingsFragment -->
 
-    <string name="title_activity_settings">Settings</string>
+	<string name="dialog_common_settings_title">Common Settings</string>
+	<string name="dialog_state_settings_title">Settings (Saved in state file)</string>
+
+	<string name="menu_settings_reset_to_default">Reset to Default</string>
+	<string name="menu_settings_reset_to_common">Reset to Common</string>
 
     <!-- MainActivity -->
 
@@ -129,7 +133,7 @@
 	<string name="settings_lcd_overlapping_mode_item_2">Manual (Zoom or pan)</string>
 
 	<string name="settings_lcd_pixel_borders_title">Show the LCD pixel borders</string>
-	<string name="settings_lcd_pixel_borders_summary">Experimental feature which show a more realistic pixel. Note: Due to the difference in screen resolution between Android and the calculator, the pixels are not necessarily uniform in size.</string>
+	<string name="settings_lcd_pixel_borders_summary">Experimental feature which shows a more realistic pixel. Note: Due to the difference in screen resolution between Android and the calculator, the pixels are not necessarily uniform in size.</string>
 
     <string name="settings_hide_bar_status">Hide the status bar</string>
     <string name="settings_hide_bar_nav">Hide the navigation bar</string>
@@ -162,8 +166,6 @@
 	<string name="settings_printer_model_item_0">HP82240A</string>
 	<string name="settings_printer_model_item_1">HP82240B (default)</string>
 	<string name="settings_printer_model_item_2">Generic Serial</string>
-    <string name="settings_printer_prevent_line_wrap">Prevent Line Wrapping</string>
-    <string name="settings_printer_prevent_line_wrap_summary">Prevent the calc to wrap the line in the textual printer simulator</string>
 
     <string name="settings_category_macro_title">Macro</string>
     <string name="settings_macro_real_speed_title">Use Real Replay Speed</string>

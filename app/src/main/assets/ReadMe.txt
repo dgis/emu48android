@@ -74,6 +74,8 @@ Version 1.8beta3 (2020-04-XX)
 - Fix: Overlapping window source position when Background/Offset is not (0,0).
 - Wrap the table of content in the former help documentation.
 - Save the settings at the end of the state file.
+- Transform all child activities with dialog fragments (to prevent unwanted state save).
+- Fix an issue with the numpad keys which send the arrow keys and the numbers at the same time.
 
 
 Version 1.7 (2019-12-12)

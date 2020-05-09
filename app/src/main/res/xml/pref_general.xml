@@ -121,12 +121,6 @@
                 android:entryValues="@array/settings_printer_model_value"
                 android:defaultValue="1"
                 />
-            <!--<SwitchPreference-->
-                <!--android:defaultValue="false"-->
-                <!--android:key="settings_printer_prevent_line_wrap"-->
-                <!--android:summary="@string/settings_printer_prevent_line_wrap_summary"-->
-                <!--android:title="@string/settings_printer_prevent_line_wrap"-->
-                <!--/>-->
         </PreferenceCategory>
 
 

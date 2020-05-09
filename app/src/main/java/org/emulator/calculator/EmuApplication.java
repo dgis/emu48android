@@ -15,7 +15,7 @@
 package org.emulator.calculator;
 
 import android.app.Application;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 public class EmuApplication extends Application {
 

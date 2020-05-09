@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -32,7 +31,6 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.SparseArray;
-import android.util.TypedValue;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,10 +45,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -59,8 +55,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 
 import org.emulator.calculator.EmuApplication;
-import org.emulator.calculator.InfoActivity;
-import org.emulator.calculator.InfoWebActivity;
+import org.emulator.calculator.InfoFragment;
+import org.emulator.calculator.InfoWebFragment;
 import org.emulator.calculator.LCDOverlappingView;
 import org.emulator.calculator.MainScreenView;
 import org.emulator.calculator.NativeLib;
@@ -96,7 +92,8 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
-    private Settings settings;
+	private boolean debug = false;
+	private Settings settings;
     private NavigationView navigationView;
     private DrawerLayout drawer;
     private MainScreenView mainScreenView;
@@ -107,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_GETSAVEFILENAME = 2;
     public static final int INTENT_OBJECT_LOAD = 3;
     public static final int INTENT_OBJECT_SAVE = 4;
-    public static final int INTENT_SETTINGS = 5;
     public static final int INTENT_PORT2LOAD = 6;
     public static final int INTENT_PICK_KML_FOLDER_FOR_NEW_FILE = 7;
     public static final int INTENT_PICK_KML_FOLDER_FOR_CHANGING = 8;
@@ -144,20 +140,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setVisibility(View.GONE);
 
         drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
 
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
 	    settings = EmuApplication.getSettings();
-	    settings.setDefaultSettings(true);
+	    settings.setIsDefaultSettings(true);
 
 
 	    ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
@@ -193,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
         updateMRU();
-        updateFromPreferences(null);
+        updateFromPreferences(null, false);
 
         updateNavigationDrawerItems();
 
@@ -240,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Utils.makeUriPersistable(this, intent, documentToOpenUri);
                 }
             } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
+                if(debug) Log.e(TAG, e.getMessage());
             }
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
@@ -285,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStop() {
         //TODO We cannot make the difference between going to the settings or loading/saving a file and a real app stop/kill!
         // -> Maybe by settings some flags when loading/saving
-	    settings.putStringSet("MRU", mruLinkedHashMap.keySet(), true);
+	    settings.putStringSet("MRU", mruLinkedHashMap.keySet());
         if(lcdOverlappingView != null)
             lcdOverlappingView.saveViewLayout();
 
@@ -294,6 +284,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    if (currentFilename != null && currentFilename.length() > 0)
 			    onFileSave();
 	    }
+
+	    settings.saveApplicationSettings();
 
         clearFolderCache();
 
@@ -534,7 +526,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	                    String url = file.getUri().toString();
 	                    String name = file.getName();
 	                    String mime = file.getType();
-	                    Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
+		                if(debug) Log.d(TAG, "url: " + url + ", name: " + name + ", mime: " + mime);
 	                    if(kmlMimeType.equals(mime)) {
 	                        calculatorsAssetFilenames.add(url);
 	                    }
@@ -662,7 +654,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void newFileFromKML(String kmlScriptFilename) {
         int result = NativeLib.onFileNew(kmlScriptFilename);
         if(result > 0) {
-	        settings.setDefaultSettings(false);
+	        settings.setIsDefaultSettings(false);
 	        settings.clearEmbeddedStateSettings();
 	        showCalculatorView(true);
             displayFilename("");
@@ -731,7 +723,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void OnFileClose() {
         ensureDocumentSaved(() -> {
             NativeLib.onFileClose();
-	        settings.setDefaultSettings(true);
+	        settings.setIsDefaultSettings(true);
 	        settings.clearEmbeddedStateSettings();
 	        showCalculatorView(false);
             saveLastDocument("");
@@ -744,7 +736,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnSettings() {
-        startActivityForResult(new Intent(this, SettingsActivity.class), INTENT_SETTINGS);
+	    SettingsFragment settingsFragment = new SettingsFragment();
+	    settingsFragment.registerOnSettingsKeyChangedListener(settingsKeyChanged -> {
+		    HashSet<String> changedKeysCleaned = new HashSet<>();
+		    for (String key : settingsKeyChanged) {
+			    if(debug) Log.d(TAG, "ChangedKey): " + key);
+			    switch (key) {
+				    case "settings_port1en":
+				    case "settings_port1wr":
+					    changedKeysCleaned.add("settings_port1");
+					    break;
+				    case "settings_port2en":
+				    case "settings_port2wr":
+				    case "settings_port2load":
+					    changedKeysCleaned.add("settings_port2");
+					    break;
+				    default:
+					    changedKeysCleaned.add(key);
+					    break;
+			    }
+		    }
+		    for (String key : changedKeysCleaned) {
+			    updateFromPreferences(key, true);
+		    }
+		    settingsFragment.unregisterOnSettingsKeyChangedListener();
+	    });
+	    settingsFragment.show(getSupportFragmentManager(), "SettingsFragment");
     }
 
     private void openDocument() {
@@ -911,7 +928,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     } else if(which == lastIndex + 1) {
                         // Reset to default KML folder
-	                    settings.putBoolean("settings_kml_default", true, true);
+	                    settings.putBoolean("settings_kml_default", true);
                         updateFromPreferences("settings_kml", true);
                         if(changeKML)
                             OnViewScript();
@@ -1002,156 +1019,129 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void OnTopics() {
-        startActivity(new Intent(this, InfoWebActivity.class));
+	    new InfoWebFragment().show(getSupportFragmentManager(), "InfoWebFragment");
     }
     private void OnAbout() {
-        startActivity(new Intent(this, InfoActivity.class));
+	    new InfoFragment().show(getSupportFragmentManager(), "InfoFragment");
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if(resultCode == Activity.RESULT_OK && data != null) {
-            if(requestCode == INTENT_SETTINGS) {
-                String[] changedKeys = data.getStringArrayExtra("changedKeys");
-                if(changedKeys != null) {
-                    HashSet<String> changedKeysCleaned = new HashSet<>();
-                    for (String key : changedKeys) {
-                        //Log.d(TAG, "ChangedKey): " + key);
-                        switch (key) {
-                            case "settings_port1en":
-                            case "settings_port1wr":
-                                changedKeysCleaned.add("settings_port1");
-                                break;
-                            case "settings_port2en":
-                            case "settings_port2wr":
-                            case "settings_port2load":
-                                changedKeysCleaned.add("settings_port2");
-                                break;
-                            default:
-                                changedKeysCleaned.add(key);
-                                break;
+            Uri uri = data.getData();
+            String url = null;
+            if (uri != null)
+                url = uri.toString();
+            if (url != null) {
+                switch (requestCode) {
+                    case INTENT_GETOPENFILENAME: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
+                        int openResult = onFileOpen(url);
+                        if (openResult > 0) {
+                            saveLastDocument(url);
+                            Utils.makeUriPersistable(this, data, uri);
+                        } else if(openResult == -2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // >= API 21
+                            // For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!
+                            new AlertDialog.Builder(this)
+                                    .setTitle(getString(R.string.message_open_security))
+                                    .setMessage(getString(R.string.message_open_security_description))
+                                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                                        startActivityForResult(intent, INTENT_PICK_KML_FOLDER_FOR_SECURITY);
+                                    }).show();
                         }
+                        break;
                     }
-                    for (String key : changedKeysCleaned) {
-                        updateFromPreferences(key, true);
+                    case INTENT_GETSAVEFILENAME: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
+                        if (NativeLib.onFileSaveAs(url) != 0) {
+                            showAlert(getString(R.string.message_state_saved));
+                            settings.saveInStateFile(this, url);
+                            saveLastDocument(url);
+                            Utils.makeUriPersistable(this, data, uri);
+                            displayFilename(url);
+                            if (fileSaveAsCallback != null)
+                                fileSaveAsCallback.run();
+                        }
+                        break;
                     }
-                }
-            } else {
-                Uri uri = data.getData();
-                String url = null;
-                if (uri != null)
-                    url = uri.toString();
-                if (url != null) {
-                    switch (requestCode) {
-                        case INTENT_GETOPENFILENAME: {
-                            //Log.d(TAG, "onActivityResult INTENT_GETOPENFILENAME " + url);
-                            int openResult = onFileOpen(url);
-                            if (openResult > 0) {
-                                saveLastDocument(url);
-                                Utils.makeUriPersistable(this, data, uri);
-                            } else if(openResult == -2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // >= API 21
-                                // For security reason, you must select the folder where are the KML and ROM files and then, reopen this file!
+                    case INTENT_OBJECT_LOAD: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
+                        NativeLib.onObjectLoad(url);
+                        break;
+                    }
+                    case INTENT_OBJECT_SAVE: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                        NativeLib.onObjectSave(url, null);
+                        break;
+                    }
+                    case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                    case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                    case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
+                    case INTENT_PICK_KML_FOLDER_FOR_SECURITY: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
+                        settings.putBoolean("settings_kml_default", false);
+                        settings.putString("settings_kml_folder", url);
+                        updateFromPreferences("settings_kml", true);
+                        Utils.makeUriPersistableReadOnly(this, data, uri);
+
+                        switch (requestCode) {
+                            case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
+                                OnFileNew();
+                                break;
+                            case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
+                                OnViewScript();
+                                break;
+                            case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
+                                break;
+                            case INTENT_PICK_KML_FOLDER_FOR_SECURITY:
                                 new AlertDialog.Builder(this)
-                                        .setTitle(getString(R.string.message_open_security))
-                                        .setMessage(getString(R.string.message_open_security_description))
+                                        .setTitle(getString(R.string.message_open_security_retry))
+                                        .setMessage(getString(R.string.message_open_security_retry_description))
                                         .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                                            startActivityForResult(intent, INTENT_PICK_KML_FOLDER_FOR_SECURITY);
                                         }).show();
-                            }
-                            break;
+                                break;
                         }
-                        case INTENT_GETSAVEFILENAME: {
-                            //Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
-                            if (NativeLib.onFileSaveAs(url) != 0) {
-                                showAlert(getString(R.string.message_state_saved));
-                                settings.saveInStateFile(this, url);
-                                saveLastDocument(url);
-                                Utils.makeUriPersistable(this, data, uri);
-                                displayFilename(url);
-                                if (fileSaveAsCallback != null)
-                                    fileSaveAsCallback.run();
-                            }
-                            break;
-                        }
-                        case INTENT_OBJECT_LOAD: {
-                            //Log.d(TAG, "onActivityResult INTENT_OBJECT_LOAD " + url);
-                            NativeLib.onObjectLoad(url);
-                            break;
-                        }
-                        case INTENT_OBJECT_SAVE: {
-                            //Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
-                            NativeLib.onObjectSave(url, null);
-                            break;
-                        }
-                        case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
-                        case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
-                        case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
-                        case INTENT_PICK_KML_FOLDER_FOR_SECURITY: {
-                            //Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
-	                        settings.putBoolean("settings_kml_default", false, true);
-	                        settings.putString("settings_kml_folder", url, true);
-                            updateFromPreferences("settings_kml", true);
-                            Utils.makeUriPersistableReadOnly(this, data, uri);
-
-                            switch (requestCode) {
-                                case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
-                                    OnFileNew();
-                                    break;
-                                case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
-                                    OnViewScript();
-                                    break;
-                                case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
-                                    break;
-                                case INTENT_PICK_KML_FOLDER_FOR_SECURITY:
-                                    new AlertDialog.Builder(this)
-                                            .setTitle(getString(R.string.message_open_security_retry))
-                                            .setMessage(getString(R.string.message_open_security_retry_description))
-                                            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                                            }).show();
-                                    break;
-                            }
-                            break;
-                        }
-                        case INTENT_CREATE_RAM_CARD: {
-                            //Log.d(TAG, "onActivityResult INTENT_CREATE_RAM_CARD " + url);
-                            if(selectedRAMSize > 0) {
-                                int size = 2 * selectedRAMSize;
-                                FileOutputStream fileOutputStream;
-                                try {
-                                    ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w");
-                                    if(pfd != null) {
-                                        fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-                                        byte[] zero = new byte[1024];
-                                        Arrays.fill(zero, (byte) 0);
-                                        for (int i = 0; i < size; i++)
-                                            fileOutputStream.write(zero);
-                                        fileOutputStream.flush();
-                                        fileOutputStream.close();
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                selectedRAMSize = -1;
-                            }
-
-                            break;
-                        }
-                        case INTENT_MACRO_LOAD: {
-                            //Log.d(TAG, "onActivityResult INTENT_MACRO_LOAD " + url);
-                            NativeLib.onToolMacroPlay(url);
-                            updateNavigationDrawerItems();
-                            break;
-                        }
-                        case INTENT_MACRO_SAVE: {
-                            //Log.d(TAG, "onActivityResult INTENT_MACRO_SAVE " + url);
-                            NativeLib.onToolMacroNew(url);
-                            updateNavigationDrawerItems();
-                            break;
-                        }
-                        default:
-                            break;
+                        break;
                     }
+                    case INTENT_CREATE_RAM_CARD: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_CREATE_RAM_CARD " + url);
+                        if(selectedRAMSize > 0) {
+                            int size = 2 * selectedRAMSize;
+                            FileOutputStream fileOutputStream;
+                            try {
+                                ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w");
+                                if(pfd != null) {
+                                    fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+                                    byte[] zero = new byte[1024];
+                                    Arrays.fill(zero, (byte) 0);
+                                    for (int i = 0; i < size; i++)
+                                        fileOutputStream.write(zero);
+                                    fileOutputStream.flush();
+                                    fileOutputStream.close();
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            selectedRAMSize = -1;
+                        }
+
+                        break;
+                    }
+                    case INTENT_MACRO_LOAD: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_MACRO_LOAD " + url);
+                        NativeLib.onToolMacroPlay(url);
+                        updateNavigationDrawerItems();
+                        break;
+                    }
+                    case INTENT_MACRO_SAVE: {
+	                    if(debug) Log.d(TAG, "onActivityResult INTENT_MACRO_SAVE " + url);
+                        NativeLib.onToolMacroNew(url);
+                        updateNavigationDrawerItems();
+                        break;
+                    }
+                    default:
+                        break;
                 }
             }
         }
@@ -1160,7 +1150,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void saveLastDocument(String url) {
-	    settings.putString("lastDocument", url, true);
+	    settings.putString("lastDocument", url);
 
         if(url != null && !url.isEmpty())
             mruLinkedHashMap.put(url, null);
@@ -1177,14 +1167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             mainScreenView.setEnablePanAndScale(false);
             mainScreenView.setVisibility(View.GONE);
-
-	        Resources.Theme theme = getTheme();
-	        if (theme != null) {
-		        TypedValue tv = new TypedValue();
-		        theme.resolveAttribute(android.R.attr.colorForeground, tv, true);
-		        int iconColor = getResources().getColor(tv.resourceId);
-		        imageButtonMenu.setColorFilter(iconColor);
-	        }
+	        imageButtonMenu.setColorFilter(Utils.getThemedColor(this, android.R.attr.colorForeground));
         }
     }
 
@@ -1192,18 +1175,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     	// Eventually, close the previous state file
 	    NativeLib.onFileClose();
-	    settings.setDefaultSettings(true);
+	    settings.setIsDefaultSettings(true);
 	    showCalculatorView(false);
 	    displayFilename("");
 
 	    // Pre-Load the embedded settings from the end of the classic state file
-	    settings.setDefaultSettings(false);
+	    settings.setIsDefaultSettings(false);
 	    settings.clearEmbeddedStateSettings();
 	    settings.loadFromStateFile(this, url);
 
 
 	    // Update the Emu VM with the new settings
-	    updateFromPreferences(null);
+	    updateFromPreferences(null, false);
 
 	    // Load the genuine state file
 	    int result = NativeLib.onFileOpen(url);
@@ -1214,7 +1197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             showKMLLog();
         } else {
         	// Because it failed to load the state file, we switch to the default settings
-	        settings.setDefaultSettings(true);
+	        settings.setIsDefaultSettings(true);
 	        settings.clearEmbeddedStateSettings();
 	        showKMLLogForce();
         }
@@ -1564,147 +1547,140 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateFromPreferences("settings_port1", true);
     }
 
-	private void updateFromPreferences(Set<String> keys) {
-    	if(keys != null) {
-		    for (String settingKey : keys)
-			    updateFromPreferences(settingKey, false);
-	    } else {
-		    String[] settingKeys = {
-				    "settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom", "settings_lcd_overlapping_mode", "settings_lcd_pixel_borders",
-				    "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
-				    "settings_background_kml_color", "settings_background_fallback_color",
-				    "settings_printer_model", "settings_printer_prevent_line_wrap", "settings_macro",
-				    "settings_kml", "settings_port1", "settings_port2" };
-		    for (String settingKey : settingKeys)
-			    updateFromPreferences(settingKey, false);
-	    }
-	}
 	private void updateFromPreferences(String key, boolean isDynamic) {
         int isDynamicValue = isDynamic ? 1 : 0;
-        switch (key) {
-            case "settings_realspeed":
-                NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
-                break;
-            case "settings_grayscale":
-                NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
-                break;
+		if(key == null) {
+			String[] settingKeys = {
+					"settings_realspeed", "settings_grayscale", "settings_rotation", "settings_auto_layout", "settings_allow_pinch_zoom", "settings_lcd_overlapping_mode", "settings_lcd_pixel_borders",
+					"settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
+					"settings_background_kml_color", "settings_background_fallback_color",
+					"settings_printer_model", "settings_macro",
+					"settings_kml", "settings_port1", "settings_port2" };
+			for (String settingKey : settingKeys)
+				updateFromPreferences(settingKey, false);
+		} else {
+			switch (key) {
+				case "settings_realspeed":
+					NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
+					break;
+				case "settings_grayscale":
+					NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
+					break;
 
-            case "settings_rotation":
-                int rotationMode = 0;
-                try {
-                    rotationMode = Integer.parseInt(settings.getString("settings_rotation", "0"));
-                } catch (NumberFormatException ex) {
-                    // Catch bad number format
-                }
-                mainScreenView.setRotationMode(rotationMode, isDynamic);
-                break;
-            case "settings_auto_layout":
-                int autoLayoutMode = 1;
-                try {
-                    autoLayoutMode = Integer.parseInt(settings.getString("settings_auto_layout", "1"));
-                } catch (NumberFormatException ex) {
-                    // Catch bad number format
-                }
-                mainScreenView.setAutoLayout(autoLayoutMode, isDynamic);
-                break;
-            case "settings_allow_pinch_zoom":
-                mainScreenView.setAllowPinchZoom(settings.getBoolean("settings_allow_pinch_zoom", true));
-                break;
-            case "settings_lcd_overlapping_mode":
-                int overlappingLCDMode = LCDOverlappingView.OVERLAPPING_LCD_MODE_NONE;
-                try {
-                    overlappingLCDMode = Integer.parseInt(settings.getString("settings_lcd_overlapping_mode", "0"));
-                } catch (NumberFormatException ex) {
-                    // Catch bad number format
-                }
-                lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode);
-                break;
-            case "settings_lcd_pixel_borders":
-                boolean usePixelBorders = settings.getBoolean("settings_lcd_pixel_borders", false);
-	            mainScreenView.setUsePixelBorders(usePixelBorders);
-	            lcdOverlappingView.setUsePixelBorders(usePixelBorders);
-	            break;
-            case "settings_hide_bar":
-            case "settings_hide_bar_status":
-            case "settings_hide_bar_nav":
-                if(settings.getBoolean("settings_hide_bar_status", false)
-                || settings.getBoolean("settings_hide_bar_nav", false))
-                    hideSystemUI();
-                else
-                    showSystemUI();
-                break;
-            case "settings_hide_button_menu":
-                imageButtonMenu.setVisibility(settings.getBoolean("settings_hide_button_menu", false) ? View.GONE : View.VISIBLE);
-                break;
+				case "settings_rotation":
+					int rotationMode = 0;
+					try {
+						rotationMode = Integer.parseInt(settings.getString("settings_rotation", "0"));
+					} catch (NumberFormatException ex) {
+						// Catch bad number format
+					}
+					mainScreenView.setRotationMode(rotationMode, isDynamic);
+					break;
+				case "settings_auto_layout":
+					int autoLayoutMode = 1;
+					try {
+						autoLayoutMode = Integer.parseInt(settings.getString("settings_auto_layout", "1"));
+					} catch (NumberFormatException ex) {
+						// Catch bad number format
+					}
+					mainScreenView.setAutoLayout(autoLayoutMode, isDynamic);
+					break;
+				case "settings_allow_pinch_zoom":
+					mainScreenView.setAllowPinchZoom(settings.getBoolean("settings_allow_pinch_zoom", true));
+					break;
+				case "settings_lcd_overlapping_mode":
+					int overlappingLCDMode = LCDOverlappingView.OVERLAPPING_LCD_MODE_NONE;
+					try {
+						overlappingLCDMode = Integer.parseInt(settings.getString("settings_lcd_overlapping_mode", "0"));
+					} catch (NumberFormatException ex) {
+						// Catch bad number format
+					}
+					lcdOverlappingView.setOverlappingLCDMode(overlappingLCDMode);
+					break;
+				case "settings_lcd_pixel_borders":
+					boolean usePixelBorders = settings.getBoolean("settings_lcd_pixel_borders", false);
+					mainScreenView.setUsePixelBorders(usePixelBorders);
+					lcdOverlappingView.setUsePixelBorders(usePixelBorders);
+					break;
+				case "settings_hide_bar":
+				case "settings_hide_bar_status":
+				case "settings_hide_bar_nav":
+					if (settings.getBoolean("settings_hide_bar_status", false)
+							|| settings.getBoolean("settings_hide_bar_nav", false))
+						hideSystemUI();
+					else
+						showSystemUI();
+					break;
+				case "settings_hide_button_menu":
+					imageButtonMenu.setVisibility(settings.getBoolean("settings_hide_button_menu", false) ? View.GONE : View.VISIBLE);
+					break;
 
-            case "settings_sound_volume": {
-                int volumeOption = settings.getInt("settings_sound_volume", 64);
-                NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeOption, 0, null);
-                break;
-            }
-            case "settings_haptic_feedback":
-                // Nothing to do
-                break;
+				case "settings_sound_volume": {
+					int volumeOption = settings.getInt("settings_sound_volume", 64);
+					NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeOption, 0, null);
+					break;
+				}
+				case "settings_haptic_feedback":
+					// Nothing to do
+					break;
 
-            case "settings_background_kml_color":
-                mainScreenView.setBackgroundKmlColor(settings.getBoolean("settings_background_kml_color", false));
-                break;
-            case "settings_background_fallback_color":
-                try {
-                    mainScreenView.setBackgroundFallbackColor(Integer.parseInt(settings.getString("settings_background_fallback_color", "0")));
-                } catch (NumberFormatException ex) {
-                    // Catch bad number format
-                }
-                break;
-            case "settings_printer_model":
-                try {
-                    printerSimulator.setPrinterModel82240A(Integer.parseInt(settings.getString("settings_printer_model", "1")) == 0);
-                } catch (NumberFormatException ex) {
-                    // Catch bad number format
-                }
-                break;
-            case "settings_printer_prevent_line_wrap":
-                printerSimulator.setPreventLineWrap(settings.getBoolean("settings_printer_prevent_line_wrap", false));
-                break;
+				case "settings_background_kml_color":
+					mainScreenView.setBackgroundKmlColor(settings.getBoolean("settings_background_kml_color", false));
+					break;
+				case "settings_background_fallback_color":
+					try {
+						mainScreenView.setBackgroundFallbackColor(Integer.parseInt(settings.getString("settings_background_fallback_color", "0")));
+					} catch (NumberFormatException ex) {
+						// Catch bad number format
+					}
+					break;
+				case "settings_printer_model":
+					try {
+						printerSimulator.setPrinterModel82240A(Integer.parseInt(settings.getString("settings_printer_model", "1")) == 0);
+					} catch (NumberFormatException ex) {
+						// Catch bad number format
+					}
+					break;
 
-            case "settings_kml":
-            case "settings_kml_default":
-            case "settings_kml_folder":
-                kmlFolderUseDefault = settings.getBoolean("settings_kml_default", true);
-                if(!kmlFolderUseDefault) {
-                    kmlFolderURL = settings.getString("settings_kml_folder", "");
-                    // https://github.com/googlesamples/android-DirectorySelection
-                    // https://stackoverflow.com/questions/44185477/intent-action-open-document-tree-doesnt-seem-to-return-a-real-path-to-drive/44185706
-                    // https://stackoverflow.com/questions/26744842/how-to-use-the-new-sd-card-access-api-presented-for-android-5-0-lollipop
-                }
-                kmlFolderChange = true;
-                break;
+				case "settings_kml":
+				case "settings_kml_default":
+				case "settings_kml_folder":
+					kmlFolderUseDefault = settings.getBoolean("settings_kml_default", true);
+					if (!kmlFolderUseDefault) {
+						kmlFolderURL = settings.getString("settings_kml_folder", "");
+						// https://github.com/googlesamples/android-DirectorySelection
+						// https://stackoverflow.com/questions/44185477/intent-action-open-document-tree-doesnt-seem-to-return-a-real-path-to-drive/44185706
+						// https://stackoverflow.com/questions/26744842/how-to-use-the-new-sd-card-access-api-presented-for-android-5-0-lollipop
+					}
+					kmlFolderChange = true;
+					break;
 
-            case "settings_macro":
-            case "settings_macro_real_speed":
-            case "settings_macro_manual_speed":
-                boolean macroRealSpeed = settings.getBoolean("settings_macro_real_speed", true);
-                int macroManualSpeed = settings.getInt("settings_macro_manual_speed", 500);
-                NativeLib.setConfiguration("settings_macro", isDynamicValue, macroRealSpeed ? 1 : 0, macroManualSpeed, null);
-                break;
+				case "settings_macro":
+				case "settings_macro_real_speed":
+				case "settings_macro_manual_speed":
+					boolean macroRealSpeed = settings.getBoolean("settings_macro_real_speed", true);
+					int macroManualSpeed = settings.getInt("settings_macro_manual_speed", 500);
+					NativeLib.setConfiguration("settings_macro", isDynamicValue, macroRealSpeed ? 1 : 0, macroManualSpeed, null);
+					break;
 
-            case "settings_port1":
-            case "settings_port1en":
-            case "settings_port1wr":
-                NativeLib.setConfiguration("settings_port1", isDynamicValue,
-                        settings.getBoolean("settings_port1en", false) ? 1 : 0,
-                        settings.getBoolean("settings_port1wr", false) ? 1 : 0,
-                        null);
-                break;
-            case "settings_port2":
-            case "settings_port2en":
-            case "settings_port2wr":
-            case "settings_port2load":
-                NativeLib.setConfiguration("settings_port2", isDynamicValue,
-                        settings.getBoolean("settings_port2en", false) ? 1 : 0,
-                        settings.getBoolean("settings_port2wr", false) ? 1 : 0,
-                        settings.getString("settings_port2load", ""));
-                break;
+				case "settings_port1":
+				case "settings_port1en":
+				case "settings_port1wr":
+					NativeLib.setConfiguration("settings_port1", isDynamicValue,
+							settings.getBoolean("settings_port1en", false) ? 1 : 0,
+							settings.getBoolean("settings_port1wr", false) ? 1 : 0,
+							null);
+					break;
+				case "settings_port2":
+				case "settings_port2en":
+				case "settings_port2wr":
+				case "settings_port2load":
+					NativeLib.setConfiguration("settings_port2", isDynamicValue,
+							settings.getBoolean("settings_port2en", false) ? 1 : 0,
+							settings.getBoolean("settings_port2wr", false) ? 1 : 0,
+							settings.getString("settings_port2load", ""));
+					break;
+			}
         }
     }
 

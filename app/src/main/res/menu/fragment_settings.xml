@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_settings_reset_to_default"
+        android:title="@string/menu_settings_reset_to_default" />
+
+    <item
+        android:id="@+id/menu_settings_reset_to_common"
+        android:title="@string/menu_settings_reset_to_common" />
+</menu>
