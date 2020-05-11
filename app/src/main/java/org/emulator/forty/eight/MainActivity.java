@@ -47,7 +47,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -1180,7 +1179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     	// Eventually, close the previous state file
 	    NativeLib.onFileClose();
-	    //settings.setIsDefaultSettings(true);
 	    showCalculatorView(false);
 	    displayFilename("");
 
