@@ -39,7 +39,7 @@ import java.util.Set;
 public class MainScreenView extends PanAndScaleView {
 
     protected static final String TAG = "MainScreenView";
-    protected final boolean debug = true;
+    protected final boolean debug = false;
 
     private Paint paintFullCalc = new Paint();
 	private Paint paintLCD = new Paint();

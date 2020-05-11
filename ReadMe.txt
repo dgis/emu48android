@@ -76,6 +76,7 @@ Version 1.8beta3 (2020-04-XX)
 - Save the settings at the end of the state file.
 - Transform all child activities with dialog fragments (to prevent unwanted state save).
 - Fix an issue with the numpad keys which send the arrow keys and the numbers at the same time.
+- Fix a major issue which prevented to open a state file (with a custom KML script) with Android 10.
 
 
 Version 1.7 (2019-12-12)
@@ -194,7 +195,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
-- Add a settings to switch between dark and light theme.
 - Increase the loading speed (for Charlemagne faceplates) if possible.
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.

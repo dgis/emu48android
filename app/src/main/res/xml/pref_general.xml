@@ -26,7 +26,7 @@
         </PreferenceCategory>
 
         <PreferenceCategory android:title="@string/settings_category_ui_title">
-            <ListPreference
+	        <ListPreference
                 android:key="settings_auto_layout"
                 android:title="@string/settings_auto_layout_title"
                 android:dialogTitle="@string/settings_auto_layout_title"

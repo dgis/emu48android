@@ -76,6 +76,7 @@ Version 1.8beta3 (2020-04-XX)
 - Save the settings at the end of the state file.
 - Transform all child activities with dialog fragments (to prevent unwanted state save).
 - Fix an issue with the numpad keys which send the arrow keys and the numbers at the same time.
+- Fix a major issue which prevented to open a state file (with a custom KML script) with Android 10.
 
 
 Version 1.7 (2019-12-12)

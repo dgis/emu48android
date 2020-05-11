@@ -47,6 +47,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -107,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int INTENT_PORT2LOAD = 6;
     public static final int INTENT_PICK_KML_FOLDER_FOR_NEW_FILE = 7;
     public static final int INTENT_PICK_KML_FOLDER_FOR_CHANGING = 8;
-    public static final int INTENT_PICK_KML_FOLDER_FOR_SETTINGS = 9;
     public static final int INTENT_PICK_KML_FOLDER_FOR_SECURITY = 10;
     public static final int INTENT_CREATE_RAM_CARD = 11;
     public static final int INTENT_MACRO_LOAD = 12;
@@ -537,66 +537,63 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Pattern patternGlobalModel = Pattern.compile("\\s*Model\\s+\"(.*)\"");
                 Matcher m;
                 for (String calculatorFilename : calculatorsAssetFilenames) {
-                    if (calculatorFilename.toLowerCase().lastIndexOf(".kml") != -1) {
-                        BufferedReader reader = null;
-                        try {
-                            Uri calculatorsAssetFilenameUri = Uri.parse(calculatorFilename);
-                            DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
-                            if(documentFile != null) {
-	                            Uri fileUri = documentFile.getUri();
-	                            InputStream inputStream = getContentResolver().openInputStream(fileUri);
-	                            if(inputStream != null) {
-                                    reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                                    // do reading, usually loop until end of file reading
-                                    String mLine;
-                                    boolean inGlobal = false;
-                                    String title = null;
-                                    String model = null;
-                                    while ((mLine = reader.readLine()) != null) {
-                                        //process line
-                                        if (mLine.indexOf("Global") == 0) {
-                                            inGlobal = true;
-                                            title = null;
-                                            model = null;
-                                            continue;
+                    BufferedReader reader = null;
+                    try {
+                        Uri calculatorsAssetFilenameUri = Uri.parse(calculatorFilename);
+                        DocumentFile documentFile = DocumentFile.fromSingleUri(this, calculatorsAssetFilenameUri);
+                        if(documentFile != null) {
+                            Uri fileUri = documentFile.getUri();
+                            InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                            if(inputStream != null) {
+                                reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                                // do reading, usually loop until end of file reading
+                                String mLine;
+                                boolean inGlobal = false;
+                                String title = null;
+                                String model = null;
+                                while ((mLine = reader.readLine()) != null) {
+                                    //process line
+                                    if (mLine.indexOf("Global") == 0) {
+                                        inGlobal = true;
+                                        title = null;
+                                        model = null;
+                                        continue;
+                                    }
+                                    if (inGlobal) {
+                                        if (mLine.indexOf("End") == 0) {
+                                            KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+                                            newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
+                                            newKMLScriptItem.title = title;
+                                            newKMLScriptItem.model = model;
+                                            kmlScripts.add(newKMLScriptItem);
+                                            break;
                                         }
-                                        if (inGlobal) {
-                                            if (mLine.indexOf("End") == 0) {
-                                                KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                                newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
-                                                newKMLScriptItem.title = title;
-                                                newKMLScriptItem.model = model;
-                                                kmlScripts.add(newKMLScriptItem);
-                                                break;
-                                            }
 
-                                            m = patternGlobalTitle.matcher(mLine);
-                                            if (m.find()) {
-                                                title = m.group(1);
-                                            }
-                                            m = patternGlobalModel.matcher(mLine);
-                                            if (m.find()) {
-                                                model = m.group(1);
-                                            }
+                                        m = patternGlobalTitle.matcher(mLine);
+                                        if (m.find()) {
+                                            title = m.group(1);
+                                        }
+                                        m = patternGlobalModel.matcher(mLine);
+                                        if (m.find()) {
+                                            model = m.group(1);
                                         }
                                     }
                                 }
                             }
-                        } catch (IOException e) {
-                            //log the exception
-                            e.printStackTrace();
-                        } finally {
-                            if (reader != null) {
-                                try {
-                                    reader.close();
-                                } catch (IOException e) {
-                                    //log the exception
-                                }
+                        }
+                    } catch (IOException e) {
+                        //log the exception
+                        e.printStackTrace();
+                    } finally {
+                        if (reader != null) {
+                            try {
+                                reader.close();
+                            } catch (IOException e) {
+                                //log the exception
                             }
                         }
                     }
                 }
-
             }
 
             Collections.sort(kmlScripts, (lhs, rhs) -> lhs.title.compareTo(rhs.title));
@@ -652,10 +649,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void newFileFromKML(String kmlScriptFilename) {
-        int result = NativeLib.onFileNew(kmlScriptFilename);
+	    // Eventually, close the previous state file
+	    NativeLib.onFileClose();
+	    showCalculatorView(false);
+	    displayFilename("");
+
+	    // Reset the embedded settings to the common settings
+	    settings.setIsDefaultSettings(false);
+	    settings.clearEmbeddedStateSettings();
+
+	    // Update the Emu VM with the new settings
+	    updateFromPreferences(null, false);
+
+	    // Create a new genuine state file
+	    int result = NativeLib.onFileNew(kmlScriptFilename);
         if(result > 0) {
-	        settings.setIsDefaultSettings(false);
-	        settings.clearEmbeddedStateSettings();
 	        showCalculatorView(true);
             displayFilename("");
             showKMLLog();
@@ -1077,7 +1085,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     case INTENT_PICK_KML_FOLDER_FOR_NEW_FILE:
                     case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
-                    case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
                     case INTENT_PICK_KML_FOLDER_FOR_SECURITY: {
 	                    if(debug) Log.d(TAG, "onActivityResult INTENT_PICK_KML_FOLDER " + url);
                         settings.putBoolean("settings_kml_default", false);
@@ -1091,8 +1098,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 break;
                             case INTENT_PICK_KML_FOLDER_FOR_CHANGING:
                                 OnViewScript();
-                                break;
-                            case INTENT_PICK_KML_FOLDER_FOR_SETTINGS:
                                 break;
                             case INTENT_PICK_KML_FOLDER_FOR_SECURITY:
                                 new AlertDialog.Builder(this)
@@ -1175,7 +1180,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     	// Eventually, close the previous state file
 	    NativeLib.onFileClose();
-	    settings.setIsDefaultSettings(true);
+	    //settings.setIsDefaultSettings(true);
 	    showCalculatorView(false);
 	    displayFilename("");
 
