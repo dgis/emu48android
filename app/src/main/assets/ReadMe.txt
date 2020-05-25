@@ -63,7 +63,7 @@ LINKS
 
 CHANGES
 
-Version 1.8 (2020-05-14)
+Version 1.8 (2020-05-24)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
 - Add LCD pixel borders.
@@ -77,6 +77,7 @@ Version 1.8 (2020-05-14)
 - Transform all child activities with dialog fragments (to prevent unwanted state save).
 - Fix an issue with the numpad keys which send the arrow keys and the numbers at the same time.
 - Fix a major issue which prevented to open a state file (with a custom KML script) with Android 10.
+- Optimize the speed with -Ofast option.
 
 
 Version 1.7 (2019-12-12)

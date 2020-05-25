@@ -63,7 +63,7 @@ LINKS
 
 CHANGES
 
-Version 1.8 (2020-05-14)
+Version 1.8 (2020-05-24)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
 - Add LCD pixel borders.
@@ -77,6 +77,7 @@ Version 1.8 (2020-05-14)
 - Transform all child activities with dialog fragments (to prevent unwanted state save).
 - Fix an issue with the numpad keys which send the arrow keys and the numbers at the same time.
 - Fix a major issue which prevented to open a state file (with a custom KML script) with Android 10.
+- Optimize the speed with -Ofast option.
 
 
 Version 1.7 (2019-12-12)
@@ -195,7 +196,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
-- Increase the loading speed (for Charlemagne faceplates) if possible.
+- ANR in NativeLib.buttonUp(), should make Win32::InvalidateRect() asynchronous (may be the cause of the lag and freeze).
 - Add the name of the file in the toast "State saved".
 - The clock seems unsynchronized sometimes.
 - Retain a key by right clicking if it is from a mouse.
