@@ -49,10 +49,19 @@ public class Settings extends PreferenceDataStore {
 	protected final boolean debug = false;
 
 	private final SharedPreferences androidSettings;
+
+	// Defined the setting keys which are only defined at the application level.
 	private List<String> applicationSettingKeys = Arrays.asList("settings_kml_default", "settings_kml_folder", "lastDocument", "MRU");
+
+	// The settings only defined at the application level.
 	private final HashMap<String, Object> applicationSettings = new HashMap<>();
+
+	// The commonSettings are used when no calculator is loaded, and are the default settings of the embeddedStateSettings.
 	private final HashMap<String, Object> commonSettings = new HashMap<>();
+
+	// The embeddedStateSettings are saved in the calculator state file.
 	private final HashMap<String, Object> embeddedStateSettings = new HashMap<>();
+
 	private boolean isCommonSettings = true;
 
 	public interface OnOneKeyChangedListener {

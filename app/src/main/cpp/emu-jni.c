@@ -489,29 +489,37 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getMacroState(JNIE
 }
 
 
-JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename) {
-    if (bDocumentAvail)
-    {
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileNew(JNIEnv *env, jobject thisz, jstring kmlFilename, jstring kmlFolder) {
+    if (bDocumentAvail) {
         SwitchToState(SM_INVALID);
         if(bAutoSave) {
             SaveDocument();
         }
     }
 
-    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename, NULL);
     chooseCurrentKmlMode = ChooseKmlMode_FILE_NEW;
     _tcscpy(szChosenCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
-    TCHAR * fileScheme = _T("document:");
-    TCHAR * urlSchemeFound = _tcsstr(szChosenCurrentKml, fileScheme);
+    TCHAR * documentScheme = _T("document:");
+    TCHAR * urlSchemeFound = _tcsstr(szChosenCurrentKml, documentScheme);
     if(urlSchemeFound) {
-        _tcscpy(szEmuDirectory, szChosenCurrentKml + _tcslen(fileScheme) * sizeof(TCHAR));
-        TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
-        if(filename) {
-            *filename = _T('\0');
-        }
-        _tcscpy(szRomDirectory, szEmuDirectory);
+	    if(kmlFolder) {
+		    const char *kmlFolderUTF8 = (*env)->GetStringUTFChars(env, kmlFolder, NULL);
+	    	// The folder URL is separated from the script filename and comes from the JSON settings in the state file.
+		    _tcscpy(szEmuDirectory, kmlFolderUTF8);
+		    _tcscpy(szRomDirectory, kmlFolderUTF8);
+		    (*env)->ReleaseStringUTFChars(env, kmlFolder, kmlFolderUTF8);
+	    } else {
+	    	// Keep the compatibility by allowing to put the KML folder combined with the KML script filename with a document: scheme.
+		    _tcscpy(szEmuDirectory, szChosenCurrentKml + _tcslen(documentScheme) * sizeof(TCHAR));
+		    TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
+		    if(filename) {
+			    *filename = _T('\0');
+		    }
+		    _tcscpy(szRomDirectory, szEmuDirectory);
+	    }
     } else {
         _tcscpy(szEmuDirectory, "assets/calculators/");
         _tcscpy(szRomDirectory, "assets/calculators/");
@@ -535,26 +543,32 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileNew(JNIEnv *
     }
     return result;
 }
-JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename) {
-    if (bDocumentAvail)
-    {
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv *env, jobject thisz, jstring stateFilename, jstring kmlFolder) {
+    if (bDocumentAvail) {
         SwitchToState(SM_INVALID);
         if(bAutoSave) {
             SaveDocument();
         }
     }
-    const char *stateFilenameUTF8 = (*env)->GetStringUTFChars(env, stateFilename , NULL) ;
+    const char *stateFilenameUTF8 = (*env)->GetStringUTFChars(env, stateFilename, NULL);
     _tcscpy(szBufferFilename, stateFilenameUTF8);
+	(*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
 
-    chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
+	if(kmlFolder) {
+		const char *kmlFolderUTF8 = (*env)->GetStringUTFChars(env, kmlFolder, NULL);
+		// The folder URL is separated from the script filename (not in the document: URL) and comes from the JSON settings in the state file.
+		_tcscpy(szEmuDirectory, kmlFolderUTF8);
+		_tcscpy(szRomDirectory, kmlFolderUTF8);
+		(*env)->ReleaseStringUTFChars(env, kmlFolder, kmlFolderUTF8);
+	}
+
+	chooseCurrentKmlMode = ChooseKmlMode_FILE_OPEN;
     lastKMLFilename[0] = '\0';
     BOOL result = OpenDocument(szBufferFilename);
     if (result) {
         if(hLcdDC && hLcdDC->selectedBitmap) {
             hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
         }
-
-        //MruAdd(szBufferFilename);
     }
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);
@@ -562,7 +576,6 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv 
         if (pbyRom) SwitchToState(SM_RUN);
     }
     draw();
-    (*env)->ReleaseStringUTFChars(env, stateFilename, stateFilenameUTF8);
     if(securityExceptionOccured) {
         securityExceptionOccured = FALSE;
         result = -2;
@@ -692,6 +705,16 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onObjectLoad(JNIEn
     (*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
 
     return TRUE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_emulator_calculator_NativeLib_getCurrentKml(JNIEnv *env, jobject thisz) {
+	jstring result = (*env)->NewStringUTF(env, szCurrentKml);
+	return result;
+}
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setCurrentKml(JNIEnv *env, jobject thisz, jstring currentKml) {
+	const char *currentKmlUTF8 = (*env)->GetStringUTFChars(env, currentKml, NULL);
+	_tcscpy(szCurrentKml, currentKmlUTF8);
+	(*env)->ReleaseStringUTFChars(env, currentKml, currentKmlUTF8);
 }
 
 JNIEXPORT jobjectArray JNICALL Java_org_emulator_calculator_NativeLib_getObjectsToSave(JNIEnv *env, jobject thisz) {
@@ -849,55 +872,29 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onViewReset(JNIEnv
     SwitchToState(SM_RUN);
 }
 
-JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename) {
+JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEnv *env, jobject thisz, jstring kmlFilename, jstring kmlFolder) {
 
     TCHAR szKmlFile[MAX_PATH];
-//    BOOL  bKMLChanged,bSucc;
-    BYTE cType = cCurrentRomType;
     SwitchToState(SM_INVALID);
 
     // make a copy of the current KML script file name
-    _ASSERT(sizeof(szKmlFile) == sizeof(szCurrentKml));
     lstrcpyn(szKmlFile,szCurrentKml,ARRAYSIZEOF(szKmlFile));
 
     const char *filenameUTF8 = (*env)->GetStringUTFChars(env, kmlFilename , NULL) ;
     _tcscpy(szCurrentKml, filenameUTF8);
     (*env)->ReleaseStringUTFChars(env, kmlFilename, filenameUTF8);
 
-//    bKMLChanged = FALSE;					// KML script not changed
-    BOOL bSucc = TRUE;							// KML script successful loaded
+	const char *kmlFolderUTF8 = (*env)->GetStringUTFChars(env, kmlFolder, NULL);
+	if(kmlFolderUTF8) {
+		// The folder URL is separated from the script filename and comes from the JSON settings in the state file.
+		_tcscpy(szEmuDirectory, kmlFolderUTF8);
+		_tcscpy(szRomDirectory, kmlFolderUTF8);
+		(*env)->ReleaseStringUTFChars(env, kmlFolder, kmlFolderUTF8);
+	}
 
-    chooseCurrentKmlMode = ChooseKmlMode_CHANGE_KML;
+	chooseCurrentKmlMode = ChooseKmlMode_CHANGE_KML;
 
-//    do
-//    {
-//        if (!DisplayChooseKml(cType))		// quit with Cancel
-//        {
-//            if (!bKMLChanged)				// KML script not changed
-//                break;						// exit loop with current loaded KML script
-//
-//            // restore KML script file name
-//            lstrcpyn(szCurrentKml,szKmlFile,ARRAYSIZEOF(szCurrentKml));
-//
-//            // try to restore old KML script
-//            if ((bSucc = InitKML(szCurrentKml,FALSE)))
-//                break;						// exit loop with success
-//
-//            // restoring failed, save document
-//            if (IDCANCEL != SaveChanges(bAutoSave))
-//                break;						// exit loop with no success
-//
-//            _ASSERT(bSucc == FALSE);		// for continuing loop
-//        }
-//        else								// quit with Ok
-//        {
-//            bKMLChanged = TRUE;				// KML script changed
-            bSucc = InitKML(szCurrentKml,FALSE);
-//        }
-//    }
-//    while (!bSucc);							// retry if KML script is invalid
-
-    BOOL result = bSucc;
+	BOOL bSucc = InitKML(szCurrentKml,FALSE);
 
     if(!bSucc) {
         // restore KML script file name
@@ -912,8 +909,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEn
     }
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
 
-    if (bSucc)
-    {
+    if (bSucc) {
         if(hLcdDC && hLcdDC->selectedBitmap) {
             hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
         }
@@ -928,14 +924,12 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEn
             Chipset.wRomCrc = wRomCrc;		// update current ROM fingerprint
         }
         if (pbyRom) SwitchToState(SM_RUN);	// continue emulation
-    }
-    else
-    {
+    } else {
         ResetDocument();					// close document
         SetWindowTitle(NULL);
     }
 
-    return result;
+    return bSucc;
 }
 
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onBackupSave(JNIEnv *env, jobject thisz) {

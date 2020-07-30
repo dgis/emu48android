@@ -438,7 +438,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     class KMLScriptItem {
-        public String filename;
+	    public String filename;
+	    public String folder;
         public String title;
         public String model;
     }
@@ -450,6 +451,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             kmlScripts = new ArrayList<>();
 
             if(kmlFolderUseDefault) {
+            	// We use the default KML scripts and ROMs from the embedded asset folder inside the Android app.
                 AssetManager assetManager = getAssets();
                 String[] calculatorsAssetFilenames = new String[0];
                 try {
@@ -483,7 +485,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     if (inGlobal) {
                                         if (mLine.indexOf("End") == 0) {
                                             KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                            newKMLScriptItem.filename = calculatorFilename;
+	                                        newKMLScriptItem.filename = calculatorFilename;
+	                                        newKMLScriptItem.folder = null;
                                             newKMLScriptItem.title = title;
                                             newKMLScriptItem.model = model;
                                             kmlScripts.add(newKMLScriptItem);
@@ -516,7 +519,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             } else {
-                Uri kmlFolderUri = Uri.parse(kmlFolderURL);
+	            // We use the custom KML scripts and ROMs from a chosen folder.
+	            Uri kmlFolderUri = Uri.parse(kmlFolderURL);
                 List<String> calculatorsAssetFilenames = new LinkedList<>();
 
                 DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
@@ -561,7 +565,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     if (inGlobal) {
                                         if (mLine.indexOf("End") == 0) {
                                             KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                            newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
+	                                        //newKMLScriptItem.filename = kmlFolderUseDefault ? calculatorFilename : "document:" + kmlFolderURL + "|" + calculatorFilename;
+	                                        newKMLScriptItem.filename = "document:|" + calculatorFilename;
+	                                        newKMLScriptItem.folder = kmlFolderURL;
                                             newKMLScriptItem.title = title;
                                             newKMLScriptItem.model = model;
                                             kmlScripts.add(newKMLScriptItem);
@@ -647,7 +653,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ensureDocumentSaved(() -> showKMLPicker(false) );
     }
 
-    private void newFileFromKML(String kmlScriptFilename) {
+    private void newFileFromKML(String kmlScriptFilename, String kmlScriptFolder) {
 	    // Eventually, close the previous state file
 	    NativeLib.onFileClose();
 	    showCalculatorView(false);
@@ -661,12 +667,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    updateFromPreferences(null, false);
 
 	    // Create a new genuine state file
-	    int result = NativeLib.onFileNew(kmlScriptFilename);
+	    int result = NativeLib.onFileNew(kmlScriptFilename, kmlScriptFolder);
         if(result > 0) {
 	        showCalculatorView(true);
             displayFilename("");
             showKMLLog();
-            suggestToSaveNewFile();
+            // Note: kmlScriptFolder should be equal to kmlFolderURL!
+	        // We keep the global settings_kml_folder distinct from embedded settings_kml_folder_embedded.
+	        settings.putString("settings_kml_folder_embedded", kmlScriptFolder);
+	        suggestToSaveNewFile();
         } else
             showKMLLogForce();
         updateNavigationDrawerItems();
@@ -942,9 +951,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         else
                             OnFileNew();
                     } else {
-                        String kmlScriptFilename = kmlScriptsForCurrentModel.get(which).filename;
+	                    KMLScriptItem scriptItem = kmlScriptsForCurrentModel.get(which);
                         if(changeKML) {
-                            int result = NativeLib.onViewScript(kmlScriptFilename);
+                        	// We only change the KML script here.
+                            int result = NativeLib.onViewScript(scriptItem.filename, scriptItem.folder);
                             if(result > 0) {
                                 displayKMLTitle();
                                 showKMLLog();
@@ -952,7 +962,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 showKMLLogForce();
                             updateNavigationDrawerItems();
                         } else
-                            newFileFromKML(kmlScriptFilename);
+	                        // We create a new calculator with a specific KML script.
+                            newFileFromKML(scriptItem.filename, scriptItem.folder);
                     }
                 }).show();
     }
@@ -1062,11 +1073,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     case INTENT_GETSAVEFILENAME: {
 	                    if(debug) Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
                         if (NativeLib.onFileSaveAs(url) != 0) {
-                            showAlert(getString(R.string.message_state_saved));
                             settings.saveInStateFile(this, url);
                             saveLastDocument(url);
                             Utils.makeUriPersistable(this, data, uri);
                             displayFilename(url);
+	                        showAlert(String.format(Locale.US, getString(R.string.message_state_saved), getFilenameFromURL(url)));
                             if (fileSaveAsCallback != null)
                                 fileSaveAsCallback.run();
                         }
@@ -1187,14 +1198,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    settings.clearEmbeddedStateSettings();
 	    settings.loadFromStateFile(this, url);
 
+	    String kmlScriptFolder = settings.getString("settings_kml_folder_embedded", null);
 
 	    // Update the Emu VM with the new settings
 	    updateFromPreferences(null, false);
 
 	    // Load the genuine state file
-	    int result = NativeLib.onFileOpen(url);
+	    int result = NativeLib.onFileOpen(url, kmlScriptFolder);
         if(result > 0) {
             setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable()); //TODO is it in the true state file or in settings?
+	        if(kmlScriptFolder == null) {
+	        	// The KML folder is not in the JSON settings embedded in the state file,
+		        // so, we need to extract it and change the variable szCurrentKml
+		        String currentKml = NativeLib.getCurrentKml();
+		        Pattern patternKMLDocumentURL = Pattern.compile("document:([^|]*)\\|(.+)");
+		        Matcher m = patternKMLDocumentURL.matcher(currentKml);
+		        if (m.find() && m.groupCount() == 2) {
+			        kmlScriptFolder = m.group(1);
+			        String kmlScriptFilename = m.group(2);
+			        if(kmlScriptFolder != null && kmlScriptFolder.length() > 0) {
+				        settings.putString("settings_kml_folder_embedded", kmlScriptFolder);
+				        NativeLib.setCurrentKml("document:|" + kmlScriptFilename);
+			        } else {
+			        	//TODO We should prompt the user to choose the KML folder?
+				        // It should not happen here with custom KML folder because result should be 0!
+			        }
+		        }
+
+//		        String kmlScriptFolder = NativeLib.getEmuDirectory();
+//		        settings.putString("settings_kml_folder_embedded", kmlScriptFolder);
+	        }
 	        showCalculatorView(true);
             displayFilename(url);
             showKMLLog();
@@ -1210,8 +1243,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 	private void onFileSave() {
 		if (NativeLib.onFileSave() == 1) {
-			settings.saveInStateFile(this, NativeLib.getCurrentFilename());
-			showAlert(getString(R.string.message_state_saved));
+			String currentFilenameUrl = NativeLib.getCurrentFilename();
+			settings.saveInStateFile(this, currentFilenameUrl);
+			String currentFilename = getFilenameFromURL(currentFilenameUrl);
+			showAlert(String.format(Locale.US, getString(R.string.message_state_saved), currentFilename));
 		}
 	}
 

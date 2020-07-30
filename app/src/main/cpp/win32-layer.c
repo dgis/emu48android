@@ -41,6 +41,8 @@ size_t assetsPrefixLength;
 const TCHAR * contentScheme = _T("content://");
 size_t contentSchemeLength;
 const TCHAR * documentScheme = _T("document:");
+TCHAR szFilePathTmp[MAX_PATH];
+
 
 
 DWORD GetLastError(VOID) {
@@ -80,8 +82,9 @@ DWORD GetCurrentDirectory(DWORD nBufferLength, LPTSTR lpBuffer) {
     return 0;
 }
 
-BOOL SetCurrentDirectory(LPCTSTR path)
-{
+BOOL SetCurrentDirectory(LPCTSTR path) {
+	// Set the current directory for the next calls to CreateFile() API with a relative path.
+
     szCurrentContentDirectory = NULL;
     szCurrentAssetDirectory = NULL;
 
@@ -89,21 +92,22 @@ BOOL SetCurrentDirectory(LPCTSTR path)
         return FALSE;
 
     if(_tcsncmp(path, contentScheme, contentSchemeLength) == 0) {
+    	// Set the current directory with an URL with the scheme "content://".
         szCurrentContentDirectory = (LPTSTR) path;
         return TRUE;
     } else if(_tcsncmp(path, assetsPrefix, assetsPrefixLength) == 0) {
+	    // Set the current directory with a path to target the Android asset folders (embedded in the app).
         szCurrentAssetDirectory = (LPTSTR) (path + assetsPrefixLength * sizeof(TCHAR));
         return TRUE;
-    } else {
+    } else
+	    // Set the current directory using the file system "chdir" API. Deprecated, not supported by Android >= 10.
         return (BOOL) chdir(path);
-    }
 }
 
 extern BOOL settingsPort2en;
 extern BOOL settingsPort2wr;
 
-HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile)
-{
+HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile) {
     FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
     BOOL forceNormalFile = FALSE;
     securityExceptionOccured = FALSE;
@@ -120,65 +124,68 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
     TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, contentScheme);
 
     if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML) {
-        // When we open a new E48 state document
-        // Deal with the KML file and its containing folder
+        // A E48 state file can contain a path to the KML script.
 	    if(foundDocumentScheme) {
-		    // With a recorded "document:" scheme, extract the folder URL with content:// scheme
-		    // document: is only for a KML file
-		    _tcscpy(szEmuDirectory, lpFileName + _tcslen(documentScheme) * sizeof(TCHAR));
-		    TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
-		    if(filename) {
+		    // When the state file is created or saved with this Android version,
+		    // an URL like: document:content://<KMLFolderURL>|content://<KMLFileURL>
+		    // is created and saved in the state file.
+	    	// Here we want to open a file (lpFileName) which contains the prefix "document:"
+	    	// So, we are loading a KML script.
+		    // We extract the KML File URL with "content://" scheme (in the variable "filename"),
+		    // and we extract the folder URL with "content://" scheme (in the variable "szEmuDirectory"/"szRomDirectory" and "szCurrentContentDirectory")
+		    // which should contain the script and its dependencies like the includes, the images and the ROMs.
+		    _tcscpy(szFilePathTmp, lpFileName + _tcslen(documentScheme) * sizeof(TCHAR));
+		    TCHAR * filename = _tcschr(szFilePathTmp, _T('|'));
+		    if(filename)
 			    *filename = _T('\0');
+		    if(szFilePathTmp[0]) {
+		    	// If szFilePathTmp is empty, this mean that the variable "szEmuDirectory", "szRomDirectory"
+		    	// and "szCurrentContentDirectory" are set before that method, using the JSON settings embedded in the state file.
+			    _tcscpy(szEmuDirectory, szFilePathTmp);
+#if EMUXX == 48
+			    _tcscpy(szRomDirectory, szFilePathTmp);
+#endif
+			    SetCurrentDirectory(szFilePathTmp);
 		    }
-#if EMUXX == 48
-		    _tcscpy(szRomDirectory, szEmuDirectory);
-#endif
-		    SetCurrentDirectory(szEmuDirectory);
 	    } else {
-        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
-		    if (fileExtension &&
-		        ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
-                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
-        )) {
-            // And opening a KML file
-            if(lpFileName[0] == '/') {
-                // With a recorded standard file
-                _tcscpy(szEmuDirectory, lpFileName);
-                TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
-                if(filename) {
-                    *filename = _T('\0');
-                }
+	        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
+			    if (fileExtension &&
+			        ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
+	                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
+	        )) {
+	            if(lpFileName[0] == '/') {
+		            // We are loading a standard KML script from the folder inside the filesystem.
+		            // We directly set the variable "szEmuDirectory"/"szRomDirectory" and "szCurrentAssetDirectory" with the KML folder
+		            // which contain the script and its dependencies like the includes, the images and the ROMs.
+		            // Deprecated, not supported by Android >= 10.
+		            _tcscpy(szEmuDirectory, lpFileName);
+	                TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
+	                if(filename) {
+	                    *filename = _T('\0');
+	                }
 #if EMUXX == 48
-                _tcscpy(szRomDirectory, szEmuDirectory);
+	                _tcscpy(szRomDirectory, szEmuDirectory);
 #endif
-                SetCurrentDirectory(szEmuDirectory);
-//            } else if(foundDocumentScheme) {
-//                // With a recorded "document:" scheme, extract the folder URL with content:// scheme
-//                _tcscpy(szEmuDirectory, lpFileName + _tcslen(documentScheme) * sizeof(TCHAR));
-//                TCHAR * filename = _tcschr(szEmuDirectory, _T('|'));
-//                if(filename) {
-//                    *filename = _T('\0');
-//                }
-//#if EMUXX == 48
-//                _tcscpy(szRomDirectory, szEmuDirectory);
-//#endif
-//                SetCurrentDirectory(szEmuDirectory);
-            } else {
-                _tcscpy(szEmuDirectory, "assets/calculators/");
+	                SetCurrentDirectory(szEmuDirectory);
+	            } else {
+		            // We are loading a KML script from the embedded asset folder inside the Android App.
+		            // We directly set the variable "szEmuDirectory"/"szRomDirectory" and "szCurrentAssetDirectory" with the KML folder
+		            // which contain the script and its dependencies like the includes, the images and the ROMs.
+	                _tcscpy(szEmuDirectory, "assets/calculators/");
 #if EMUXX == 48
-                _tcscpy(szRomDirectory, "assets/calculators/");
+	                _tcscpy(szRomDirectory, "assets/calculators/");
 #endif
-                SetCurrentDirectory(szEmuDirectory);
-            }
-        }
-    }
+	                SetCurrentDirectory(szEmuDirectory);
+	            }
+	        }
+	    }
     }
 
     if(!forceNormalFile
     && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0)
     && foundDocumentScheme == NULL
     && urlContentSchemeFound == NULL) {
-        // Asset file
+        // Loading a file from the Android asset folders (embedded in the app)
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;
         szFileName[0] = _T('\0');
@@ -197,7 +204,10 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             return handle;
         }
     } else {
-        // Normal file
+        // Loading a "normal" file
+        // * either a file with the scheme "content://"
+        // * or a file with a simple name but within the current folder (szCurrentContentDirectory)
+        // * or a file with the scheme "file://". Deprecated not supported by Android >= 10.
         BOOL useOpenFileFromContentResolver = FALSE;
         int flags = O_RDWR;
         int fd = -1;
@@ -223,7 +233,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
         }
 
         if(urlContentSchemeFound) {
-            // Case of an absolute file with the scheme content://
+            // Case of an absolute file with the scheme "content://".
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd < 0) {
@@ -232,13 +242,14 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
                     securityExceptionOccured = TRUE;
             }
         } else if(szCurrentContentDirectory) {
-            // Case of a relative file to a folder with the scheme content://
+            // Case of a relative file to a folder with the scheme "content://".
             fd = openFileInFolderFromContentResolver(lpFileName, szCurrentContentDirectory, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
             if(fd == -1) {
                 FILE_LOGD("CreateFile() openFileFromContentResolver() %d", errno);
             }
         } else {
+	        // Case of an absolute file with the scheme "file://". Deprecated not supported by Android >= 10.
             TCHAR * urlFileSchemeFound = _tcsstr(lpFileName, _T("file://"));
             if(urlFileSchemeFound)
                 lpFileName = urlFileSchemeFound + 7;
