@@ -63,6 +63,14 @@ LINKS
 
 CHANGES
 
+Version 1.9 (2020-09-XX)
+
+- If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.
+- If the memory card file for the port 2 cannot be found, prompt the user to choose a new memory card file.
+- Move the KML folder in the JSON settings embedded in the state file because Windows cannot open the state file with KML url longer than 256 byte.
+- Prevent to auto save before launching the "Open...", "Save As...", "Load Object...", "Save Object...", etc...
+
+
 Version 1.8 (2020-05-24)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.
@@ -197,15 +205,6 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 TODO
 
 - Android 11 new storage issues :-(
-- Move the KML folder in the JSON settings embedded in the state file because Windows cannot open the state file with KML url longer than 256 byte.
-	* Need to set szEmuDirectory (and may be szRomDirectory for Emu48 only) in onFileNew() before NewDocument().
-	* If the JSON settings contains the KML folder, we need to set szEmuDirectory (and may be szRomDirectory for Emu48 only) in onFileOpen() before OpenDocument().
-	  Else if NO JSON settings contains the KML folder, we can extract the variable szCurrentKml after OpenDocument().
-      If szCurrentKml is using the old format, we remove the KML folder part in the variable szCurrentKml and set this KML folder in the JSON setting.
-      Else if szCurrentKml does not contain the KML folder part, we should prompt the user to select the KML folder (It should solve the next issue).
-    * Need to change the variable szCurrentKml before saving (in onFileSave()/onFileSaveAs() before SaveDocument()).
-    * onViewScript should be change too!
-- If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.
 - ANR in NativeLib.buttonUp(), should make Win32::InvalidateRect() asynchronous (may be the cause of the lag and freeze).
 - Add the name of the file in the toast "State saved".
 - Bug: In Xiaomi mi A3 under Android10, the haptic feedback does not work (add an intensity setting).

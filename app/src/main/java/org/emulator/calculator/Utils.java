@@ -44,7 +44,11 @@ import javax.microedition.khronos.egl.EGLDisplay;
 public class Utils {
 
     public static void showAlert(Context context, String text) {
-        Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+		showAlert(context, text, false);
+	}
+
+	public static void showAlert(Context context, String text, boolean lengthLong) {
+		Toast toast = Toast.makeText(context, text, lengthLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
         //View view = toast.getView();
         //view.setBackgroundColor(0x80000000);
         toast.show();

@@ -46,6 +46,10 @@ public class NativeLib {
     public static native boolean isBackup();
     public static native String getKMLLog();
     public static native String getKMLTitle();
+	public static native String getCurrentKml();
+	public static native void setCurrentKml(String currentKml);
+	public static native String getEmuDirectory();
+	public static native void setEmuDirectory(String emuDirectory);
     public static native boolean getPort1Plugged();
     public static native boolean getPort1Writable();
     public static native boolean getSoundEnabled();
@@ -58,8 +62,6 @@ public class NativeLib {
     public static native int onFileSaveAs(String newFilename);
     public static native int onFileClose();
     public static native int onObjectLoad(String filename);
-	public static native String getCurrentKml();
-	public static native void setCurrentKml(String currentKml);
 
     public static native String[] getObjectsToSave();
     public static native int onObjectSave(String filename, boolean[] objectsToSaveItemChecked);

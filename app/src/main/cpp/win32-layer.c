@@ -41,6 +41,7 @@ size_t assetsPrefixLength;
 const TCHAR * contentScheme = _T("content://");
 size_t contentSchemeLength;
 const TCHAR * documentScheme = _T("document:");
+size_t documentSchemeLength;
 TCHAR szFilePathTmp[MAX_PATH];
 
 
@@ -64,6 +65,7 @@ void win32Init() {
 
     assetsPrefixLength = _tcslen(assetsPrefix);
     contentSchemeLength = _tcslen(contentScheme);
+	documentSchemeLength = _tcslen(documentScheme);
 }
 
 int abs (int i) {
@@ -120,12 +122,13 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
     }
 #endif
 
-    TCHAR * foundDocumentScheme = _tcsstr(lpFileName, documentScheme);
-    TCHAR * urlContentSchemeFound = _tcsstr(lpFileName, contentScheme);
+	BOOL foundDocumentScheme = _tcsncmp(lpFileName, documentScheme, documentSchemeLength) == 0;
+	BOOL urlContentSchemeFound = _tcsncmp(lpFileName, contentScheme, contentSchemeLength) == 0;
 
-    if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML) {
+	if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN /*|| chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML*/) {
         // A E48 state file can contain a path to the KML script.
 	    if(foundDocumentScheme) {
+	    	// Keep for compatibility:
 		    // When the state file is created or saved with this Android version,
 		    // an URL like: document:content://<KMLFolderURL>|content://<KMLFileURL>
 		    // is created and saved in the state file.
@@ -147,44 +150,13 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 #endif
 			    SetCurrentDirectory(szFilePathTmp);
 		    }
-	    } else {
-	        TCHAR * fileExtension = _tcsrchr(lpFileName, _T('.'));
-			    if (fileExtension &&
-			        ((fileExtension[1] == 'K' && fileExtension[2] == 'M' && fileExtension[3] == 'L') ||
-	                (fileExtension[1] == 'k' && fileExtension[2] == 'm' && fileExtension[3] == 'l')
-	        )) {
-	            if(lpFileName[0] == '/') {
-		            // We are loading a standard KML script from the folder inside the filesystem.
-		            // We directly set the variable "szEmuDirectory"/"szRomDirectory" and "szCurrentAssetDirectory" with the KML folder
-		            // which contain the script and its dependencies like the includes, the images and the ROMs.
-		            // Deprecated, not supported by Android >= 10.
-		            _tcscpy(szEmuDirectory, lpFileName);
-	                TCHAR * filename = _tcsrchr(szEmuDirectory, _T('/'));
-	                if(filename) {
-	                    *filename = _T('\0');
-	                }
-#if EMUXX == 48
-	                _tcscpy(szRomDirectory, szEmuDirectory);
-#endif
-	                SetCurrentDirectory(szEmuDirectory);
-	            } else {
-		            // We are loading a KML script from the embedded asset folder inside the Android App.
-		            // We directly set the variable "szEmuDirectory"/"szRomDirectory" and "szCurrentAssetDirectory" with the KML folder
-		            // which contain the script and its dependencies like the includes, the images and the ROMs.
-	                _tcscpy(szEmuDirectory, "assets/calculators/");
-#if EMUXX == 48
-	                _tcscpy(szRomDirectory, "assets/calculators/");
-#endif
-	                SetCurrentDirectory(szEmuDirectory);
-	            }
-	        }
 	    }
     }
 
     if(!forceNormalFile
     && (szCurrentAssetDirectory || _tcsncmp(lpFileName, assetsPrefix, assetsPrefixLength) == 0)
-    && foundDocumentScheme == NULL
-    && urlContentSchemeFound == NULL) {
+    && !foundDocumentScheme
+    && !urlContentSchemeFound) {
         // Loading a file from the Android asset folders (embedded in the app)
         TCHAR szFileName[MAX_PATH];
         AAsset * asset = NULL;
@@ -236,10 +208,9 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
             // Case of an absolute file with the scheme "content://".
             fd = openFileFromContentResolver(lpFileName, dwDesiredAccess);
             useOpenFileFromContentResolver = TRUE;
-            if(fd < 0) {
+	        if(fd == -2) {
                 FILE_LOGD("CreateFile() openFileFromContentResolver() %d", errno);
-                if(fd == -2)
-                    securityExceptionOccured = TRUE;
+                securityExceptionOccured = TRUE;
             }
         } else if(szCurrentContentDirectory) {
             // Case of a relative file to a folder with the scheme "content://".
@@ -2920,21 +2891,17 @@ PIDLIST_ABSOLUTE SHBrowseForFolderA(LPBROWSEINFOA lpbi) {
     #define IDD_USERCODE 121
 #endif
 INT_PTR DialogBoxParam(HINSTANCE hInstance, LPCTSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
-    //TODO
     if(lpTemplateName == MAKEINTRESOURCE(IDD_CHOOSEKML)) {
         if(chooseCurrentKmlMode == ChooseKmlMode_UNKNOWN) {
         } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_NEW) {
             lstrcpy(szCurrentKml, szChosenCurrentKml);
-        } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN) {
+        } else if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN_WITH_FOLDER) {
         	// We are here because we open a state file and the embedded KML path is not reachable.
         	// So, we try to find a correct KML file in the current Custom KML scripts folder.
-            if(!getFirstKMLFilenameForType(Chipset.type, szCurrentKml, sizeof(szCurrentKml) / sizeof(szCurrentKml[0]))) {
-                showAlert(_T("Cannot find the KML template file, sorry."), 0);
+            if(!getFirstKMLFilenameForType(Chipset.type)) {
+	            kmlFileNotFound = TRUE;
                 return -1;
             }
-//            else {
-//                showAlert(_T("Cannot find the KML template file, so, try another one."), 0); //TODO is it right?
-//            }
         }
     } else if(lpTemplateName == MAKEINTRESOURCE(IDD_KMLLOG)) {
         lpDialogFunc(NULL, WM_INITDIALOG, 0, 0);
@@ -3149,3 +3116,4 @@ int win32_select(int __fd_count, fd_set* __read_fds, fd_set* __write_fds, fd_set
     }
     return select(__fd_count, __read_fds, __write_fds, __exception_fds, __timeout);
 }
+                                   

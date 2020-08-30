@@ -1222,7 +1222,8 @@ enum ChooseKmlMode {
     ChooseKmlMode_UNKNOWN,
     ChooseKmlMode_FILE_NEW,
     ChooseKmlMode_FILE_OPEN,
-	ChooseKmlMode_CHANGE_KML
+	ChooseKmlMode_FILE_OPEN_WITH_FOLDER,
+	ChooseKmlMode_CHANGE_KML //TODO To remove
 };
 extern enum ChooseKmlMode chooseCurrentKmlMode;
 enum DialogBoxMode {
@@ -1236,13 +1237,14 @@ enum DialogBoxMode {
 };
 extern enum DialogBoxMode currentDialogBoxMode;
 extern BOOL securityExceptionOccured;
+extern BOOL kmlFileNotFound;
 #define MAX_LABEL_SIZE 5000
 extern TCHAR labels[MAX_LABEL_SIZE];
 #define MAX_ITEMDATA 100
 extern int selItemDataIndex[MAX_ITEMDATA];
 extern int selItemDataCount;
 extern TCHAR getSaveObjectFilenameResult[MAX_PATH];
-BOOL getFirstKMLFilenameForType(BYTE chipsetType, TCHAR * firstKMLFilename, size_t firstKMLFilenameSize);
+BOOL getFirstKMLFilenameForType(BYTE chipsetType);
 void clipboardCopyText(const TCHAR * text);
 const TCHAR * clipboardPasteText();
 void performHapticFeedback();
