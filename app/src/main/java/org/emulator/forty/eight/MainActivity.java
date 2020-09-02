@@ -1322,11 +1322,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			// Copy the port1 settings from the state file to the settings (for the UI).
 	        setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable());
 			// State file successfully opened.
-		    if(kmlScriptFolder == null) {
+			String currentKml = NativeLib.getCurrentKml();
+		    if(kmlScriptFolder == null || currentKml.startsWith("document:")) {
 			    // Needed for compatibility:
 			    // The KML folder is not in the JSON settings embedded in the state file,
 			    // so, we need to extract it and change the variable szCurrentKml.
-			    String currentKml = NativeLib.getCurrentKml();
 			    Pattern patternKMLDocumentURL = Pattern.compile("document:([^|]+)\\|(.+)");
 			    Matcher m = patternKMLDocumentURL.matcher(currentKml);
 			    if (m.find() && m.groupCount() == 2) {

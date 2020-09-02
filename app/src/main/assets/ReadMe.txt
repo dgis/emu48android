@@ -63,6 +63,15 @@ LINKS
 
 CHANGES
 
+Version 1.9 (2020-09-XX)
+
+- If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.
+- If the memory card file for the port 2 cannot be found, prompt the user to choose a new memory card file.
+- Move the KML folder in the JSON settings embedded in the state file because Windows cannot open the state file with KML url longer than 256 byte.
+- Prevent to auto save before launching the "Open...", "Save As...", "Load Object...", "Save Object...", etc...
+- Prevent app not responding (ANR) in NativeLib.buttonUp().
+
+
 Version 1.8 (2020-05-24)
 
 - Intercept the ESC keyboard key to allow the use of the BACK soft key.

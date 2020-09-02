@@ -69,6 +69,7 @@ Version 1.9 (2020-09-XX)
 - If the memory card file for the port 2 cannot be found, prompt the user to choose a new memory card file.
 - Move the KML folder in the JSON settings embedded in the state file because Windows cannot open the state file with KML url longer than 256 byte.
 - Prevent to auto save before launching the "Open...", "Save As...", "Load Object...", "Save Object...", etc...
+- Prevent app not responding (ANR) in NativeLib.buttonUp().
 
 
 Version 1.8 (2020-05-24)
@@ -204,13 +205,10 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
-- Android 11 new storage issues :-(
-- ANR in NativeLib.buttonUp(), should make Win32::InvalidateRect() asynchronous (may be the cause of the lag and freeze).
-- Add the name of the file in the toast "State saved".
+- The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
 - Bug: In Xiaomi mi A3 under Android10, the haptic feedback does not work (add an intensity setting).
 - Somehow LEFT (Shift on the keyboard) + 7 activates the DIVIDE-key (z-Key)..., but with the NUM-Key it can make it work without problems...
   I think it might have something to do with the "/" sign on the Shifted-7-key.
-- The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
 - The clock seems unsynchronized sometimes (Michael P).
 - Retain a key by right clicking if it is from a mouse.
 - Add the possibility to load and save the flash in another file.

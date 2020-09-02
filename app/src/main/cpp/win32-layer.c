@@ -125,7 +125,7 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 	BOOL foundDocumentScheme = _tcsncmp(lpFileName, documentScheme, documentSchemeLength) == 0;
 	BOOL urlContentSchemeFound = _tcsncmp(lpFileName, contentScheme, contentSchemeLength) == 0;
 
-	if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN /*|| chooseCurrentKmlMode == ChooseKmlMode_CHANGE_KML*/) {
+	if(chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN || chooseCurrentKmlMode == ChooseKmlMode_FILE_OPEN_WITH_FOLDER) {
         // A E48 state file can contain a path to the KML script.
 	    if(foundDocumentScheme) {
 	    	// Keep for compatibility:

@@ -215,7 +215,9 @@ public class MainScreenView extends PanAndScaleView {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
-                NativeLib.buttonUp((int) ((event.getX(actionIndex) - viewPanOffsetX) / viewScaleFactorX), (int) ((event.getY(actionIndex) - viewPanOffsetY) / viewScaleFactorY));
+	            post(() -> {
+		            NativeLib.buttonUp((int) ((event.getX(actionIndex) - viewPanOffsetX) / viewScaleFactorX), (int) ((event.getY(actionIndex) - viewPanOffsetY) / viewScaleFactorY));
+	            });
                 currentButtonTouched.remove(actionIndex);
                 preventToScroll = currentButtonTouched.size() > 0;
                 if (debug) Log.d(TAG, "onTouchEvent() ACTION_UP, actionIndex: " + actionIndex + ", currentButtonTouched: " + currentButtonTouched.size() + ", preventToScroll: " + preventToScroll);
