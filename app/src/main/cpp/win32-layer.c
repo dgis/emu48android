@@ -885,11 +885,19 @@ static HBITMAP DecodeBMPIcon(LPBYTE imageBuffer, size_t imageSize) {
         // Inverse the height
         BYTE *source = imageBuffer + dwFileSize - stride;
         BYTE *destination = hBitmap->bitmapBits;
-        for (int i = 0; i < height; ++i) {
-            memcpy(destination, source, stride);
-            source -= stride;
-            destination += stride;
-        }
+	    DWORD width = pBmi->bmiHeader.biWidth;
+	    for (unsigned int y = 0; y < height; ++y) {
+		    for (unsigned int x = 0; x < width; ++x) {
+			    BYTE * sourcePixel = source + (x << 2);
+			    BYTE * destinationPixel = destination + (x << 2);
+			    destinationPixel[0] = sourcePixel[2];
+			    destinationPixel[1] = sourcePixel[1];
+			    destinationPixel[2] = sourcePixel[0];
+			    destinationPixel[3] = sourcePixel[3];
+		    }
+		    source -= stride;
+		    destination += stride;
+	    }
     }
     // Only support 32bits RGBA BMP for now.
     return hBitmap;
@@ -911,14 +919,14 @@ static HBITMAP DecodePNGIcon(LPBYTE imageBuffer, size_t imageSize) {
         bmi.bmiHeader.biCompression = BI_RGB;
 
         // bitmap dimensions
-        LONG lBytesPerLine = (((bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) + 31) / 32 * 4);
-        bmi.bmiHeader.biSizeImage = (DWORD) (lBytesPerLine * bmi.bmiHeader.biHeight);
+        LONG stride = (((bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) + 31) / 32 * 4);
+        bmi.bmiHeader.biSizeImage = (DWORD) (stride * bmi.bmiHeader.biHeight);
 
         // allocate buffer for pixels
         LPBYTE  pbyPixels;						// BMP buffer
         hBitmap = CreateDIBSection(hWindowDC, &bmi, DIB_RGB_COLORS, (VOID **)&pbyPixels, NULL, 0);
         if (hBitmap)
-            memcpy(pbyPixels, pbyImage, bmi.bmiHeader.biSizeImage);
+	        memcpy(pbyPixels, pbyImage, bmi.bmiHeader.biSizeImage);
     }
 
     if (pbyImage != NULL)
@@ -3116,4 +3124,3 @@ int win32_select(int __fd_count, fd_set* __read_fds, fd_set* __write_fds, fd_set
     }
     return select(__fd_count, __read_fds, __write_fds, __exception_fds, __timeout);
 }
-                                   
