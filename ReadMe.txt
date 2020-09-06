@@ -63,7 +63,7 @@ LINKS
 
 CHANGES
 
-Version 1.9 (2020-09-XX)
+Version 1.9 (2020-09-07)
 
 - If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.
 - If the memory card file for the port 2 cannot be found, prompt the user to choose a new memory card file.
