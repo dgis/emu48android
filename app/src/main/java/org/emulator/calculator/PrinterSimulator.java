@@ -249,6 +249,7 @@ public class PrinterSimulator {
      */
     private static final int[] wcRoman8 = new int[]
     {
+   		0x2591,
         0x00A0, 0x00F7, 0x00D7, 0x221A, 0x222B, 0x03A3, 0x25B6, 0x03C0,
         0x2202, 0x2264, 0x2265, 0x2260, 0x03B1, 0x2192, 0x2190, 0x00B5,
         0x240A, 0x00B0, 0x00AB, 0x00BB, 0x22A6, 0x2081, 0x2082, 0x00B2,
@@ -272,7 +273,8 @@ public class PrinterSimulator {
      */
     private static final int[] wcEcma94 = new int[]
     {
-        0x2221, 0x0101, 0x2207, 0x221A, 0x222B, 0x03A3, 0x25B6, 0x03C0,
+	    0x2591,
+	    0x2221, 0x0101, 0x2207, 0x221A, 0x222B, 0x03A3, 0x25B6, 0x03C0,
         0x2202, 0x2264, 0x2265, 0x2260, 0x03B1, 0x2192, 0x2190, 0x2193,
         0x2191, 0x03B3, 0x03B4, 0x03B5, 0x03B7, 0x03B8, 0x03BB, 0x03C1,
         0x03C3, 0x03C4, 0x03C9, 0x0394, 0x03A0, 0x03A9, 0x2587, 0x221E,
@@ -305,10 +307,13 @@ public class PrinterSimulator {
                 break;							// no print
 
             // normal 7bit ASCII character
-            if (byData < 128)
+            //if (byData < 128)
+	        if (byData < (256 - wcRoman8.length))
                 textUpdate.append((char)byData);
             else {
-                byData -= 128;					// index to table
+                //byData -= 128;					// index to table
+		        // index to table
+		        byData -= (256 - wcRoman8.length);
 
                 if (!m_bEcma94)
                     textUpdate.append((char)wcRoman8[byData]);
@@ -394,15 +399,19 @@ public class PrinterSimulator {
 
     private void SetSeparatorColumn()
     {
-        int byData = m_bUnderLined ? 0x80 : 0x00;
+	    if (m_nCurCol > 0)						// not in first column
+	    {
+		    int byData = m_bUnderLined ? 0x80 : 0x00;
 
-        // no. of separator columns
-        int i = m_bExpChar ? 2 : 1;
+		    // no. of separator columns
+		    int i = m_bExpChar ? 2 : 1;
 
-        while (--i >= 0)						// write separator columns
-        {
-            SetColumn(byData);					// set empty column
-        }
+		    // write separator columns when not in last column
+		    while (--i >= 0 && m_nCurCol < LINE_WIDTH)
+		    {
+			    SetColumn(byData);				// set empty column
+		    }
+	    }
     }
 
     private void addGraphData(int byData, boolean bGraphicData) {
@@ -452,10 +461,7 @@ public class PrinterSimulator {
 						  : sFontEcma94_B[byData];
                     }
 
-                    if (m_nCurCol > 0)			// not in first column
-                    {
-                        SetSeparatorColumn();
-                    }
+                    SetSeparatorColumn();
 
                     for (i = 0; i < 5; ++i)
                     {
@@ -472,10 +478,7 @@ public class PrinterSimulator {
                         }
                     }
 
-                    if (m_nCurCol < LINE_WIDTH)	// not in last column
-                    {
-                        SetSeparatorColumn();
-                    }
+                    SetSeparatorColumn();
                 }
             }
             while (false);

@@ -203,9 +203,9 @@ static void MakeBitmapTransparent(HBITMAP hBmp,COLORREF color,DWORD dwTol) {
 	DWORD dwGreen = 0x0000FF00;
 	DWORD dwBlue  = 0x000000FF;
 
-	color = EncodeColorBits((color >> 16), dwBlue)
-			| EncodeColorBits((color >>  8), dwGreen)
-			| EncodeColorBits((color >>  0), dwRed);
+	color = EncodeColorBits((color >> 0), dwBlue)
+	        | EncodeColorBits((color >>  8), dwGreen)
+	        | EncodeColorBits((color >>  16), dwRed);
 
 	DWORD dwBpp = (DWORD) (destinationBitCount >> 3);
 	LPBYTE pbyColor = pbyBits + (destinationHeight - 1) * destinationStride;

@@ -63,6 +63,12 @@ LINKS
 
 CHANGES
 
+Version 1.91 (2020-10-XX)
+
+- Fix transparency issue (RGB -> NGR).
+- Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
+
+
 Version 1.9 (2020-09-07)
 
 - If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.
