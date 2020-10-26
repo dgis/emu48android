@@ -170,6 +170,11 @@
                 android:title="@string/settings_port2load_title"
                 android:summary=""
                 />
+	        <Preference
+		        android:key="settings_flash_port2"
+		        android:title="@string/settings_flash_port2_title"
+		        android:summary=""
+		        />
         </PreferenceCategory>
 
     <!-- Peripheral -->

@@ -65,8 +65,9 @@ CHANGES
 
 Version 1.91 (2020-10-XX)
 
-- Fix transparency issue (RGB -> NGR).
+- Fix transparency issue (RGB -> BGR).
 - Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
+- For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
 
 
 Version 1.9 (2020-09-07)
@@ -212,6 +213,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Manage the HP 48 port 2 with the same kind of interface for the memory card.
 - The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
 - Bug: In Xiaomi mi A3 under Android10, the haptic feedback does not work (add an intensity setting).
 - Somehow LEFT (Shift on the keyboard) + 7 activates the DIVIDE-key (z-Key)..., but with the NUM-Key it can make it work without problems...

@@ -63,6 +63,13 @@ LINKS
 
 CHANGES
 
+Version 1.91 (2020-10-XX)
+
+- Fix transparency issue (RGB -> BGR).
+- Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
+- For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
+
+
 Version 1.9 (2020-09-07)
 
 - If the KML folder does not exist (like the first time), prompt the user to choose a new KML folder.

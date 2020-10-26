@@ -2948,6 +2948,9 @@ int MulDiv(int nNumber, int nNumerator, int nDenominator) {
 
 BOOL GetKeyboardLayoutName(LPSTR pwszKLID) {
     //TODO
+    //Trick to bypass UnmapROM in KillKML
+    if(pbyRom == NULL && pbyRomBackup)
+		pbyRom = pbyRomBackup;
     return 0;
 }
 

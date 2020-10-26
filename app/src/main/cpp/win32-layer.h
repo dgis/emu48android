@@ -1218,6 +1218,7 @@ extern int showAlert(const TCHAR * messageText, int flags);
 extern void sendMenuItemCommand(int menuItem);
 extern TCHAR szCurrentKml[MAX_PATH];
 extern TCHAR szChosenCurrentKml[MAX_PATH];
+extern LPBYTE pbyRomBackup;
 enum ChooseKmlMode {
     ChooseKmlMode_UNKNOWN,
     ChooseKmlMode_FILE_NEW,

@@ -78,6 +78,8 @@ public class NativeLib {
     public static native void onToolMacroPlay(String filename);
     public static native void onToolMacroStop();
 
+	public static native boolean onLoadFlashROM(String filename);
+
     public static native void setConfiguration(String key, int isDynamic, int intValue1, int intValue2, String stringValue);
     public static native boolean isPortExtensionPossible();
     public static native int getState();

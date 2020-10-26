@@ -32,11 +32,14 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.HapticFeedbackConstants;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -51,7 +54,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -68,10 +70,12 @@ import org.emulator.calculator.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -93,7 +97,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
-	private boolean debug = false;
+	private final boolean debug = false;
 	private Settings settings;
     private NavigationView navigationView;
     private DrawerLayout drawer;
@@ -111,15 +115,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final int INTENT_PICK_KML_FOLDER_FOR_SECURITY = 10;
 	public static final int INTENT_PICK_KML_FOLDER_FOR_KML_NOT_FOUND = 11;
     public static final int INTENT_CREATE_RAM_CARD = 12;
-    public static final int INTENT_MACRO_LOAD = 13;
-    public static final int INTENT_MACRO_SAVE = 14;
+	public static final int INTENT_MACRO_LOAD = 13;
+	public static final int INTENT_MACRO_SAVE = 14;
+	public static final int INTENT_CREATE_FLASH_ROM = 15;
+	public static final int INTENT_LOAD_FLASH_ROM = 16;
 
 	public static String intentPickKmlFolderForUrlToOpen;
 	public String urlToOpenInIntentPort2Load;
 	public String kmlScriptFolderInIntentPort2Load;
 
 
-	private String kmlMimeType = "application/vnd.google-earth.kml+xml";
+	private final String kmlMimeType = "application/vnd.google-earth.kml+xml";
     private boolean kmlFolderUseDefault = true;
     private String kmlFolderURL = "";
 	private boolean kmlFolderChange = true;
@@ -130,8 +136,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean[] objectsToSaveItemChecked = null;
 
     // Most Recently Used state files
-    private int MRU_ID_START = 10000;
-    private int MAX_MRU = 5;
+    private final int MRU_ID_START = 10000;
+    private final int MAX_MRU = 5;
     private LinkedHashMap<String, String> mruLinkedHashMap = new LinkedHashMap<String, String>(5, 1.0f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry eldest) {
@@ -139,8 +145,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     };
 
-    private PrinterSimulator printerSimulator = new PrinterSimulator();
-    private PrinterSimulatorFragment fragmentPrinterSimulator = new PrinterSimulatorFragment();
+    private final PrinterSimulator printerSimulator = new PrinterSimulator();
+    private final PrinterSimulatorFragment fragmentPrinterSimulator = new PrinterSimulatorFragment();
     private Bitmap bitmapIcon;
 
 
@@ -207,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         String documentToOpenUrl = settings.getString("lastDocument", "");
-        Uri documentToOpenUri = null;
+        Uri documentToOpenUri;
         Intent intent = getIntent();
         if(intent != null) {
             String action = intent.getAction();
@@ -235,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             	// FileOpen auto-open.
                 onFileOpen(documentToOpenUrl, intent, null);
             } catch (Exception e) {
-                if(debug) Log.e(TAG, e.getMessage());
+                if(debug && e.getMessage() != null) Log.e(TAG, e.getMessage());
             }
         else if(drawer != null)
             drawer.openDrawer(GravityCompat.START);
@@ -377,7 +383,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_show_printer) {
             OnViewPrinter();
         } else if (id == R.id.nav_create_ram_card) {
-            OnCreateRAMCard();
+	        OnCreateRAMCard();
+        } else if (id == R.id.nav_manage_flash_rom) {
+	        OnManageFlashROM();
         } else if (id == R.id.nav_macro_record) {
             OnMacroRecord();
         } else if (id == R.id.nav_macro_play) {
@@ -440,7 +448,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         menu.findItem(R.id.nav_backup_save).setEnabled(uRun);
         menu.findItem(R.id.nav_backup_restore).setEnabled(uRun && isBackup);
         menu.findItem(R.id.nav_backup_delete).setEnabled(uRun && isBackup);
-        menu.findItem(R.id.nav_change_kml_script).setEnabled(uRun);
+	    menu.findItem(R.id.nav_change_kml_script).setEnabled(uRun);
+	    menu.findItem(R.id.nav_manage_flash_rom).setEnabled(uRun && (cCurrentRomType == 'X' || cCurrentRomType == 'Q'));
         menu.findItem(R.id.nav_macro_record).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);
         menu.findItem(R.id.nav_macro_play).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);
         menu.findItem(R.id.nav_macro_stop).setEnabled(uRun && nMacroState != 0 /* MACRO_OFF */);
@@ -502,55 +511,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Matcher m;
                     for (String calculatorFilename : calculatorsAssetFilenames) {
                         if (calculatorFilename.toLowerCase().lastIndexOf(".kml") != -1) {
-                            BufferedReader reader = null;
-                            try {
-                                reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorFilename), StandardCharsets.UTF_8));
-                                // do reading, usually loop until end of file reading
-                                String mLine;
-                                boolean inGlobal = false;
-                                String title = null;
-                                String model = null;
-                                while ((mLine = reader.readLine()) != null) {
-                                    //process line
-                                    if (mLine.indexOf("Global") == 0) {
-                                        inGlobal = true;
-                                        title = null;
-                                        model = null;
-                                        continue;
-                                    }
-                                    if (inGlobal) {
-                                        if (mLine.indexOf("End") == 0) {
-                                            KMLScriptItem newKMLScriptItem = new KMLScriptItem();
-                                            newKMLScriptItem.filename = calculatorFilename;
-	                                        newKMLScriptItem.folder = null;
-                                            newKMLScriptItem.title = title;
-                                            newKMLScriptItem.model = model;
-                                            kmlScripts.add(newKMLScriptItem);
-                                            break;
-                                        }
+	                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open("calculators/" + calculatorFilename), StandardCharsets.UTF_8))) {
+		                        // do reading, usually loop until end of file reading
+		                        String mLine;
+		                        boolean inGlobal = false;
+		                        String title = null;
+		                        String model = null;
+		                        while ((mLine = reader.readLine()) != null) {
+			                        //process line
+			                        if (mLine.indexOf("Global") == 0) {
+				                        inGlobal = true;
+				                        title = null;
+				                        model = null;
+				                        continue;
+			                        }
+			                        if (inGlobal) {
+				                        if (mLine.indexOf("End") == 0) {
+					                        KMLScriptItem newKMLScriptItem = new KMLScriptItem();
+					                        newKMLScriptItem.filename = calculatorFilename;
+					                        newKMLScriptItem.folder = null;
+					                        newKMLScriptItem.title = title;
+					                        newKMLScriptItem.model = model;
+					                        kmlScripts.add(newKMLScriptItem);
+					                        break;
+				                        }
 
-                                        m = patternGlobalTitle.matcher(mLine);
-                                        if (m.find()) {
-                                            title = m.group(1);
-                                        }
-                                        m = patternGlobalModel.matcher(mLine);
-                                        if (m.find()) {
-                                            model = m.group(1);
-                                        }
-                                    }
-                                }
-                            } catch (IOException e) {
-                                //log the exception
-                                e.printStackTrace();
-                            } finally {
-                                if (reader != null) {
-                                    try {
-                                        reader.close();
-                                    } catch (IOException e) {
-                                        //log the exception
-                                    }
-                                }
-                            }
+				                        m = patternGlobalTitle.matcher(mLine);
+				                        if (m.find()) {
+					                        title = m.group(1);
+				                        }
+				                        m = patternGlobalModel.matcher(mLine);
+				                        if (m.find()) {
+					                        model = m.group(1);
+				                        }
+			                        }
+		                        }
+	                        } catch (IOException e) {
+		                        //log the exception
+		                        e.printStackTrace();
+	                        }
                         }
                     }
                 }
@@ -996,7 +995,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     	// We choose a calculator name from the list.
 	                    KMLScriptItem scriptItem = kmlScriptsForCurrentModel.get(which);
                         if(changeKML) {
-                        	// We only change the KML script here.
+                        	// Optionally load the flash ROM for HP49
+	                        updateFromPreferences("settings_flash_port2", true);
+	                        // We only change the KML script here.
                             int result = NativeLib.onViewScript(scriptItem.filename, scriptItem.folder);
                             if(result > 0) {
                                 displayKMLTitle();
@@ -1057,7 +1058,87 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }).show();
     }
 
-    private void OnMacroRecord() {
+	private void OnManageFlashROM() {
+    	//TODO Before loading a new flash, save the current flash ROM by closing the current Document and then opening it again!
+		//  -> IT IS POSSIBLE WITH UNMAPROM/MAPROM
+		//      -> Already done for Create because an unmap is done before (in KillKML)
+		//      -> Already done for Load because an unmap is done before (in KillKML)
+		//      -> Already done for Load because an unmap is done before (in KillKML)
+		//    For Close OK
+		//    For Save / Save As... ?
+    	String currentFlashPort2Url =  settings.getString("settings_flash_port2", null);
+		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this);
+		LayoutInflater inflater = this.getLayoutInflater();
+		View dialogView = inflater.inflate(R.layout.alert_manage_flash_rom, null);
+		Button buttonFlashROMCreate = dialogView.findViewById(R.id.buttonFlashROMCreate);
+		Button buttonFlashROMLoad = dialogView.findViewById(R.id.buttonFlashROMLoad);
+		Button buttonFlashROMReset = dialogView.findViewById(R.id.buttonFlashROMReset);
+		Button buttonFlashROMCancel = dialogView.findViewById(R.id.buttonFlashROMCancel);
+		dialogBuilder.setView(dialogView);
+		dialogBuilder.setTitle(getResources().getString(R.string.nav_manage_flash_rom));
+		AlertDialog alertDialog = dialogBuilder.show();
+		buttonFlashROMCreate.setOnClickListener(v -> {
+			// Save the current Flash ROM
+			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
+			intent.setType("*/*");
+			intent.putExtra(Intent.EXTRA_TITLE, "FlashROM.49g");
+			saveWhenLaunchingActivity = false;
+			startActivityForResult(intent, INTENT_CREATE_FLASH_ROM);
+			alertDialog.dismiss();
+		});
+		buttonFlashROMLoad.setOnClickListener(v -> {
+			Runnable flashROMLoad = () -> {
+				// Load a Flash ROM
+				Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+				intent.setType("*/*");
+				intent.putExtra(Intent.EXTRA_TITLE, "rom.49g");
+				saveWhenLaunchingActivity = false;
+				startActivityForResult(intent, INTENT_LOAD_FLASH_ROM);
+			};
+			if(currentFlashPort2Url != null && currentFlashPort2Url.length() > 0)
+				new AlertDialog.Builder(this)
+						.setTitle(getString(R.string.alert_losing_flash_rom_title))
+						.setMessage(getString(R.string.alert_losing_flash_rom_message))
+						.setPositiveButton(android.R.string.yes, (dialog, which) -> flashROMLoad.run())
+						.setNegativeButton(android.R.string.no, (dialog, which) -> {})
+						.show();
+			else
+				flashROMLoad.run();
+			alertDialog.dismiss();
+		});
+		buttonFlashROMReset.setOnClickListener(v -> {
+			resetToDefaultKMLFlashROM();
+			alertDialog.dismiss();
+		});
+		buttonFlashROMCancel.setOnClickListener(v -> {
+			// Cancel the alert dialog.
+			alertDialog.dismiss();
+		});
+	}
+
+	private void resetToDefaultKMLFlashROM() {
+		// Reset to default Flash ROM from the KML file
+		settings.putString("settings_flash_port2", null);
+		String kmlFilename = NativeLib.getCurrentKml();
+		if(kmlFilename.length() > 0) {
+			String kmlFolder = kmlFolderURL == null || kmlFolderURL.length() == 0 ? null : kmlFolderURL;
+			// Reset the flashROM
+			NativeLib.onLoadFlashROM("");
+			// Load the KML file again. TODO If it goes wrong, we are lost.
+			int result = NativeLib.onViewScript(kmlFilename, kmlFolder);
+			if (result > 0) {
+				displayKMLTitle();
+				displayFilename(NativeLib.getCurrentFilename());
+				//showKMLLog();
+			} else
+				showKMLLogForce();
+			updateNavigationDrawerItems();
+		}
+	}
+
+	private void OnMacroRecord() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -1108,10 +1189,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     	if(debug) Log.d(TAG, "onActivityResult INTENT_GETSAVEFILENAME " + url);
                         if (NativeLib.onFileSaveAs(url) != 0) {
                         	settings.saveInStateFile(this, url);
-                            saveLastDocument(url);
-                            Utils.makeUriPersistable(this, data, uri);
+
+	                        // Save and reload the flash ROM!
+	                        updateFromPreferences("settings_flash_port2", true);
                             displayFilename(url);
-	                        showAlert(String.format(Locale.US, getString(R.string.message_state_saved), getFilenameFromURL(url)));
+	                        String settingsFlashPort2Url = settings.getString("settings_flash_port2", null);
+                            if(settingsFlashPort2Url != null && settingsFlashPort2Url.length() > 0)
+	                            showAlert(String.format(Locale.US, getString(R.string.message_state_and_flash_saved), getFilenameFromURL(url), getFilenameFromURL(settingsFlashPort2Url)));
+                            else
+		                        showAlert(String.format(Locale.US, getString(R.string.message_state_saved), getFilenameFromURL(url)));
+
+	                        saveLastDocument(url);
+	                        Utils.makeUriPersistable(this, data, uri);
                             if (fileSaveAsCallback != null)
                                 fileSaveAsCallback.run();
                         }
@@ -1206,7 +1295,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         updateNavigationDrawerItems();
                         break;
                     }
-                    default:
+	                case INTENT_CREATE_FLASH_ROM: {
+		                if(debug) Log.d(TAG, "onActivityResult INTENT_CREATE_FLASH_ROM " + url);
+		                // Not possible to save the current FlashROM :-( [NativeLib.onSaveFlashROM(url);]
+		                // So, we are going to create a new one from the ROM loaded by the current KML script!
+		                String kmlFilename = NativeLib.getCurrentKml();
+		                if(kmlFilename != null && kmlFilename.length() > 0) {
+		                	if(kmlFolderURL != null && kmlFolderURL.length() > 0)
+				                copyROMFromFolder(kmlFilename, uri);
+			                else
+				                copyROMFromAsset(kmlFilename, uri);
+		                }
+
+		                new AlertDialog.Builder(this)
+				                .setTitle(getString(R.string.alert_load_new_flash_rom_title))
+				                .setPositiveButton(R.string.message_yes, (dialog, which) ->
+				                    loadFlashROM(uri, data))
+				                .setNegativeButton(R.string.message_no, (dialog, which) -> {})
+				                .show();
+		                break;
+	                }
+	                case INTENT_LOAD_FLASH_ROM: {
+		                if(debug) Log.d(TAG, "onActivityResult INTENT_LOAD_FLASH_ROM " + url);
+		                loadFlashROM(uri, data);
+		                break;
+	                }
+	                default:
                         break;
                 }
             }
@@ -1220,7 +1334,132 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void saveLastDocument(String url) {
+	private void loadFlashROM(Uri uri, Intent intent) {
+    	String url = uri != null ? uri.toString() : "";
+		if(NativeLib.onLoadFlashROM(url)) {
+			if (intent != null)
+				Utils.makeUriPersistable(this, intent, uri);
+			settings.putString("settings_flash_port2", url);
+		} else {
+			// The load failed, reset to the default Flash ROM
+			new AlertDialog.Builder(this)
+					.setTitle(getString(R.string.alert_load_flash_rom_error_title))
+					.setMessage(getString(R.string.alert_load_flash_rom_error_message))
+					.setPositiveButton(android.R.string.ok, (dialog, which) -> {})
+					.show();
+
+			resetToDefaultKMLFlashROM();
+		}
+		displayFilename(NativeLib.getCurrentFilename());
+	}
+
+	private String extractROMFilename(InputStream inputStream) {
+	    String romFilename = null;
+    	if(inputStream != null) {
+		    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+			    // do reading, usually loop until end of file reading
+			    Pattern patternGlobalROM = Pattern.compile("\\s*Rom\\s+\"(.*)\"");
+			    String mLine;
+			    boolean inGlobal = false;
+			    while ((mLine = reader.readLine()) != null) {
+				    //process line
+				    if (mLine.indexOf("Global") == 0) {
+					    inGlobal = true;
+					    romFilename = null;
+					    continue;
+				    }
+				    if (inGlobal) {
+					    if (mLine.indexOf("End") == 0) {
+						    break;
+					    }
+					    Matcher m = patternGlobalROM.matcher(mLine);
+					    if (m.find()) {
+						    romFilename = m.group(1);
+						    break;
+					    }
+				    }
+			    }
+		    } catch (IOException e) {
+			    //log the exception
+			    e.printStackTrace();
+		    }
+		    //log the exception
+	    }
+	    return romFilename;
+    }
+
+	private void copyROMFromFolder(String kmlFilename, Uri uri) {
+		Uri kmlFolderUri = Uri.parse(kmlFolderURL);
+		DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
+		if(kmlFolderDocumentFile != null) {
+			String romFilename = null;
+			for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
+				String name = file.getName();
+				if (name != null && name.compareTo(kmlFilename) == 0) {
+					try {
+						DocumentFile documentFile = DocumentFile.fromSingleUri(this, file.getUri());
+						if (documentFile != null) {
+							Uri fileUri = documentFile.getUri();
+							romFilename = extractROMFilename(getContentResolver().openInputStream(fileUri));
+						}
+					} catch (IOException e) {
+						//log the exception
+						e.printStackTrace();
+					}
+				}
+			}
+			if(romFilename != null && romFilename.length() > 0) {
+				ParcelFileDescriptor pfdROM = openFileInFolderFromContentResolverPFD(romFilename, kmlFolderURL, GENERIC_READ);
+				if(pfdROM != null) {
+					try {
+						InputStream romInputStream = new FileInputStream(pfdROM.getFileDescriptor());
+						copyROMtoFlashROM(romInputStream, uri);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} finally {
+						try {
+							pfdROM.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void copyROMFromAsset(String kmlFilename, Uri uri) {
+		AssetManager assetManager = getAssets();
+		InputStream kmlInputStream;
+		try {
+			kmlInputStream = assetManager.open("calculators/" + kmlFilename);
+			String romFilename = extractROMFilename(kmlInputStream);
+			if(romFilename != null && romFilename.length() > 0) {
+				InputStream romInputStream = assetManager.open("calculators/" + romFilename);
+				copyROMtoFlashROM(romInputStream, uri);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void copyROMtoFlashROM(InputStream romInputStream, Uri uri) throws IOException {
+		ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w");
+		if (pfd != null) {
+			OutputStream flashROMOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+			byte[] buffer = new byte[1024 * 1024];
+			int length;
+			while ((length = romInputStream.read(buffer)) > 0) {
+				flashROMOutputStream.write(buffer, 0, length);
+			}
+			flashROMOutputStream.flush();
+			flashROMOutputStream.close();
+			romInputStream.close();
+			pfd.close();
+		}
+	}
+
+	private void saveLastDocument(String url) {
 	    settings.putString("lastDocument", url);
 
         if(url != null && !url.isEmpty())
@@ -1259,7 +1498,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    // Make this file persistable to allow a next access to this same file.
 		    Utils.makeUriPersistable(this, intent, Uri.parse(url));
 
-	    String kmlScriptFolder = null;
+	    String kmlScriptFolder;
 	    String embeddedKMLScriptFolder = settings.getString("settings_kml_folder_embedded", null);
 
 	    if(openWithKMLScriptFolder != null)
@@ -1282,16 +1521,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			    Uri port2Uri = Uri.parse(port2Url);
 			    DocumentFile port2DocumentFile = DocumentFile.fromSingleUri(this, port2Uri);
 			    if (port2DocumentFile == null || !port2DocumentFile.exists()) {
-				    //showAlert("Cannot access to the port 2 file!");
 				    String port2Filename = getFilenameFromURL(port2Url);
-				    String finalKmlScriptFolder = kmlScriptFolder;
 				    new AlertDialog.Builder(this)
 					    .setTitle(getString(R.string.message_open_port2_file_not_found))
 					    .setMessage(String.format(Locale.US, getString(R.string.message_open_port2_file_not_found_description), port2Filename))
 					    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 
 						    urlToOpenInIntentPort2Load = url;
-						    kmlScriptFolderInIntentPort2Load = finalKmlScriptFolder;
+						    kmlScriptFolderInIntentPort2Load = kmlScriptFolder;
 
 						    Intent intentPort2 = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 						    intentPort2.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1302,7 +1539,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> {
 					    	// Deactivate the port2 because it is not reachable.
 					        settings.putBoolean("settings_port2en", false);
-						    onFileOpenNative(url, finalKmlScriptFolder);
+						    onFileOpenNative(url, kmlScriptFolder);
 			            }).show();
 				    return;
 			    }
@@ -1362,9 +1599,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 							    intentPickKmlFolderForUrlToOpen = url;
 							    saveWhenLaunchingActivity = false;
 							    startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), INTENT_PICK_KML_FOLDER_FOR_SECURITY);
-						    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-							    removeMRU(url);
-						    }).show();
+						    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> removeMRU(url)).show();
 			    else if(result == -3 || kmlScriptFolder == null) {
 				    // KML file (or a compatible KML file) has not been found, you must select the folder where are the KML and ROM files and then, reopen this file!
 				    String currentKml = NativeLib.getCurrentKml();
@@ -1383,9 +1618,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 							    intentPickKmlFolderForUrlToOpen = url;
 							    saveWhenLaunchingActivity = false;
 							    startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), INTENT_PICK_KML_FOLDER_FOR_KML_NOT_FOUND);
-						    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-							    removeMRU(url);
-				            }).show();
+						    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> removeMRU(url)).show();
 			    } else
 				    removeMRU(url);
 		    } else {
@@ -1401,13 +1634,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		if (NativeLib.onFileSave() == 1) {
 			String currentFilenameUrl = NativeLib.getCurrentFilename();
 			settings.saveInStateFile(this, currentFilenameUrl);
-			String currentFilename = getFilenameFromURL(currentFilenameUrl);
-			showAlert(String.format(Locale.US, getString(R.string.message_state_saved), currentFilename));
+
+			// Save and reload the flash ROM!
+			updateFromPreferences("settings_flash_port2", true);
+
+			String settingsFlashPort2Url = settings.getString("settings_flash_port2", null);
+			if(settingsFlashPort2Url != null && settingsFlashPort2Url.length() > 0)
+				showAlert(String.format(Locale.US, getString(R.string.message_state_and_flash_saved), getFilenameFromURL(currentFilenameUrl), getFilenameFromURL(settingsFlashPort2Url)));
+			else
+				showAlert(String.format(Locale.US, getString(R.string.message_state_saved), getFilenameFromURL(currentFilenameUrl)));
 		}
 	}
 
-    private void displayFilename(String url) {
-        String displayName = getFilenameFromURL(url);
+    private void displayFilename(String stateFileURL) {
+        String displayName = getFilenameFromURL(stateFileURL == null ? "" : stateFileURL);
+	    String port2FileURL = settings.getString("settings_flash_port2", null);
+        if(port2FileURL != null && port2FileURL.length() > 0)
+	        displayName += " " + getFilenameFromURL(port2FileURL);
         View headerView = displayKMLTitle();
         if(headerView != null) {
             TextView textViewSubtitle = headerView.findViewById(R.id.nav_header_subtitle);
@@ -1472,7 +1715,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Method used from JNI!
 
-    @SuppressWarnings("unused")
+	@SuppressWarnings("UnusedDeclaration")
     public int updateCallback(int type, int param1, int param2, String param3, String param4) {
 
         mainScreenView.updateCallback(type, param1, param2, param3, param4);
@@ -1483,7 +1726,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
     SparseArray<ParcelFileDescriptor> parcelFileDescriptorPerFd = null;
-    public int openFileFromContentResolver(String fileURL, int writeAccess) {
+	public int openFileFromContentResolver(String fileURL, int writeAccess) {
         //https://stackoverflow.com/a/31677287
         Uri uri = Uri.parse(fileURL);
         ParcelFileDescriptor filePfd;
@@ -1518,7 +1761,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         folderCache.clear();
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public int openFileInFolderFromContentResolver(String filename, String folderURL, int writeAccess) {
     	if(filename != null) {
     		if(filename.startsWith("content://"))
@@ -1539,7 +1782,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return -1;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public int closeFileFromContentResolver(int fd) {
         if(parcelFileDescriptorPerFd != null) {
             ParcelFileDescriptor filePfd = parcelFileDescriptorPerFd.get(fd);
@@ -1556,6 +1799,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return -1;
     }
 
+	public ParcelFileDescriptor openFileFromContentResolverPFD(String fileURL, int writeAccess) {
+		//https://stackoverflow.com/a/31677287
+		Uri uri = Uri.parse(fileURL);
+		ParcelFileDescriptor filePfd;
+		try {
+			String mode = "";
+			if((writeAccess & GENERIC_READ) == GENERIC_READ)
+				mode += "r";
+			if((writeAccess & GENERIC_WRITE) == GENERIC_WRITE)
+				mode += "w";
+			filePfd = getContentResolver().openFileDescriptor(uri, mode);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return filePfd;
+	}
+	public ParcelFileDescriptor openFileInFolderFromContentResolverPFD(String filename, String folderURL, int writeAccess) {
+		if(filename != null) {
+			if(filename.startsWith("content://"))
+				return openFileFromContentResolverPFD(filename, writeAccess);
+			if (folderURLCached == null || !folderURLCached.equals(folderURL)) {
+				folderURLCached = folderURL;
+				folderCache.clear();
+				Uri folderURI = Uri.parse(folderURL);
+				DocumentFile folderDocumentFile = DocumentFile.fromTreeUri(this, folderURI);
+				if (folderDocumentFile != null)
+					for (DocumentFile file : folderDocumentFile.listFiles())
+						folderCache.put(file.getName(), file.getUri().toString());
+			}
+			String filenameUrl = folderCache.get(filename);
+			if (filenameUrl != null)
+				return openFileFromContentResolverPFD(filenameUrl, writeAccess);
+		}
+		return null;
+	}
+
 	public void showAlert(String text) {
 		showAlert(text, false);
 	}
@@ -1564,7 +1844,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Utils.showAlert(this, text, lengthLong);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public void sendMenuItemCommand(int menuItem) {
         switch (menuItem) {
             case 1: // FILE_NEW
@@ -1643,7 +1923,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public int getFirstKMLFilenameForType(char chipsetType) {
     	if(!kmlFolderUseDefault) {
 		    extractKMLScripts();
@@ -1678,7 +1958,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return 0;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public void clipboardCopyText(String text) {
         // Gets a handle to the clipboard service.
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
@@ -1688,7 +1968,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             clipboard.setPrimaryClip(clip);
         }
     }
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public String clipboardPasteText() {
         ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboard != null && clipboard.hasPrimaryClip()) {
@@ -1704,18 +1984,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return "";
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public void performHapticFeedback() {
         if(settings.getBoolean("settings_haptic_feedback", true))
             mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public void sendByteUdp(int byteSent) {
         printerSimulator.write(byteSent);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("UnusedDeclaration")
     public synchronized void setKMLIcon(int imageWidth, int imageHeight, byte[] pixels) {
         if(imageWidth > 0 && imageHeight > 0 && pixels != null) {
             try {
@@ -1765,15 +2045,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     "settings_hide_bar", "settings_hide_button_menu", "settings_sound_volume", "settings_haptic_feedback",
                     "settings_background_kml_color", "settings_background_fallback_color",
 					"settings_printer_model", "settings_macro",
-                    "settings_kml", "settings_port1", "settings_port2" };
+                    "settings_kml", "settings_port1", "settings_port2",
+                    "settings_flash_port2" };
 			for (String settingKey : settingKeys)
                 updateFromPreferences(settingKey, false);
         } else {
             switch (key) {
                 case "settings_realspeed":
-					NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
-                    break;
-                case "settings_grayscale":
+	            case "settings_grayscale":
 					NativeLib.setConfiguration(key, isDynamicValue, settings.getBoolean(key, false) ? 1 : 0, 0, null);
                     break;
 
@@ -1883,6 +2162,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 							settings.getBoolean("settings_port2wr", false) ? 1 : 0,
 							settings.getString("settings_port2load", ""));
                     break;
+	            case "settings_flash_port2":
+		            String settingsFlashPort2Url = settings.getString("settings_flash_port2", null);
+	            	if(settingsFlashPort2Url != null)
+			            loadFlashROM(Uri.parse(settingsFlashPort2Url), null);
+		            break;
             }
         }
     }

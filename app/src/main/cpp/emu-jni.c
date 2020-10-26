@@ -29,7 +29,8 @@ static jobject mainActivity = NULL;
 jobject bitmapMainScreen = NULL;
 AndroidBitmapInfo androidBitmapInfo;
 enum DialogBoxMode currentDialogBoxMode;
-enum ChooseKmlMode  chooseCurrentKmlMode;
+LPBYTE pbyRomBackup;
+enum ChooseKmlMode chooseCurrentKmlMode;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];
 TCHAR szKmlLogBackup[10240];
@@ -582,7 +583,14 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv 
 
 	kmlFileNotFound = FALSE;
     lastKMLFilename[0] = '\0';
-    BOOL result = OpenDocument(szBufferFilename);
+	// It is to open a new document, so we will trick the next KillKML() to prevent to UnmapROM()!!!
+	// pbyRom is then restored in the unused win32 GetKeyboardLayoutName(), just after KillKML() but before the final InitKML(). Crazy!
+	if (pbyRom) {
+		pbyRomBackup = pbyRom;
+		pbyRom = NULL;
+	}
+	BOOL result = OpenDocument(szBufferFilename);
+    if(pbyRomBackup) pbyRomBackup = NULL;
     if (result) {
         if(hLcdDC && hLcdDC->selectedBitmap) {
             hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight = -abs(hLcdDC->selectedBitmap->bitmapInfoHeader->biHeight);
@@ -911,7 +919,14 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onViewScript(JNIEn
 
 	chooseCurrentKmlMode = ChooseKmlMode_CHANGE_KML;
 
+	// It is to open a new document, so we will trick the next KillKML() to prevent to UnmapROM()!!!
+	// pbyRom is then restored in the unused win32 GetKeyboardLayoutName(), just after KillKML() but before the final InitKML(). Crazy!
+	if (pbyRom) {
+		pbyRomBackup = pbyRom;
+		pbyRom = NULL;
+	}
 	BOOL bSucc = InitKML(szCurrentKml, FALSE);
+	if(pbyRomBackup) pbyRomBackup = NULL;
 
     if(!bSucc) {
         // restore KML script file name
@@ -994,6 +1009,39 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onToolMacroStop(JN
     OnToolMacroStop();
 }
 
+
+JNIEXPORT jboolean JNICALL Java_org_emulator_calculator_NativeLib_onLoadFlashROM(JNIEnv *env, jobject thisz, jstring filename) {
+	const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL);
+	if (bDocumentAvail)
+		SwitchToState(SM_INVALID);
+	UnmapRom();
+	BYTE cCurrentRomTypeBackup = cCurrentRomType;
+	cCurrentRomType = 'Q'; // Fake the model to allow to load the ROM in RW!
+	BOOL result = MapRom(filenameUTF8);
+	cCurrentRomType = cCurrentRomTypeBackup;
+	if(result) {
+		UpdatePatches(true);                    // Apply the patch again if needed (not tested!)
+		if (!CrcRom(&wRomCrc))				    // build patched ROM fingerprint and check for unpacked data
+			result = FALSE;
+		if (result && bDocumentAvail) {
+			if (Chipset.wRomCrc != wRomCrc)     // ROM changed
+			{
+				CpuReset();
+				Chipset.Shutdn = FALSE;         // automatic restart
+
+				Chipset.wRomCrc = wRomCrc;      // update current ROM fingerprint
+			}
+			if (pbyRom)
+				SwitchToState(SM_RUN);          // continue emulation
+		}
+	}
+	// If failed to load,
+	// either it is when opening a new document, so it will fall back to the default Flash ROM of the KML script,
+	// or it is when loading a Flash ROM, so we have to manually load the default Flash ROM by resetting (loading the same KML script (OnViewScript))
+	// or it is when saving the Flash ROM, so we have to manually load the default Flash ROM by resetting (loading the same KML script (OnViewScript))
+	(*env)->ReleaseStringUTFChars(env, filename, filenameUTF8);
+	return result ? JNI_TRUE : JNI_FALSE;
+}
 
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(JNIEnv *env, jobject thisz, jstring key, jint isDynamic, jint intValue1, jint intValue2, jstring stringValue) {
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;

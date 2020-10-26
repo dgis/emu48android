@@ -104,7 +104,11 @@
                 android:id="@+id/nav_create_ram_card"
                 android:icon="@drawable/ic_memory_black_24dp"
                 android:title="@string/nav_create_ram_card" />
-            <item
+	        <item
+		        android:id="@+id/nav_manage_flash_rom"
+		        android:icon="@drawable/ic_description_black_24dp"
+		        android:title="@string/nav_manage_flash_rom" />
+	        <item
                 android:id="@+id/nav_macro_record"
                 android:icon="@drawable/ic_fiber_manual_record_black_24dp"
                 android:title="@string/nav_macro_record" />
