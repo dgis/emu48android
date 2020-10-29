@@ -4,7 +4,7 @@
  *   This file is part of Emu48
  *
  *   Copyright (C) 2005 CdB for HP
- *   Copyright (C) 2006 Christoph Gieï¿½elink
+ *   Copyright (C) 2006 Christoph Gießelink
  *
  */
 #include "pch.h"
@@ -20,7 +20,7 @@
 
 #pragma intrinsic(memset,memcpy)
 
-#include "ops.h"
+#include "Ops.h"
 
 //
 // ROM buffer access functions
@@ -158,6 +158,35 @@ VOID o80B40(VOID)
 	return;
 }
 
+// BEEP2
+VOID o80B50(CHIPSET* w)
+{
+	BYTE  fbeep;
+	DWORD freq,dur;
+
+	freq = Npack(w->D,5);					// frequency in Hz
+	dur = Npack(w->C,5);					// duration in ms
+	Nread(&fbeep,0x80F0F,1);				// fetch system flags -53 to -56
+
+	w->carry = TRUE;						// setting of no beep
+	if (!(fbeep & 0x8) && freq)				// bit -56 clear and frequency > 0 Hz
+	{
+		if (freq > 4400) freq = 4400;		// high limit of HP (SX)
+
+		SoundBeep(freq,dur);				// beeping
+
+		// estimate cpu cycles for beeping time (4MHz)
+		w->cycles += dur * 4000;
+
+		// original routine return with...
+		w->P = 0;							// P=0
+		w->intk = TRUE;						// INTON
+		w->carry = FALSE;					// RTNCC
+	}
+	w->pc = rstkpop();
+	return;
+}
+
 // MOVEDOWN
 VOID o80B60(VOID)
 {
@@ -227,6 +256,38 @@ VOID o80B80(VOID)
 	dwC += 6;								// desired size + link field
 	Nunpack(w.B,dwC,5);						// B[A] = size + 6
 	Nunpack(w.C,dwC,5);						// C[A] = size + 6
+	return;
+}
+
+// RCKBp
+VOID o80B90(CHIPSET* w)						// ROM Check Beep patch
+{
+	DWORD dw2F,dwCpuFreq;
+	DWORD freq,dur;
+	BYTE f,d;
+
+	f = w->C[1];							// f = freq ctl
+	d = w->C[0];							// d = duration ctl
+
+	// CPU strobe frequency @ RATE 27 = 3.67MHz
+	// CPU strobe frequency @ RATE 29 = 3.93MHz
+	dwCpuFreq = ((27 + 1) * 524288) >> 2;
+
+	dw2F = f * 180 + 367;					// F=f*90+183.5
+
+	freq = dwCpuFreq / dw2F;
+	dur = (dw2F * (256 - 16 * d)) * 1000 / 2 / dwCpuFreq;
+
+	if (freq > 4400) freq = 4400;			// high limit of HP
+
+	SoundBeep(freq,dur);					// beeping
+
+	// estimate cpu cycles for beeping time (4MHz)
+	w->cycles += dur * 4000;
+
+	w->P = 0;								// P=0
+	w->carry = FALSE;						// RTNCC
+	w->pc = rstkpop();
 	return;
 }
 
@@ -327,11 +388,11 @@ VOID o80BExt(LPBYTE I) // Saturnator extentions
 	case 0x00: o80B00(); break; // RPL2 (preserve Carry)
 	case 0x03: o80B30(); break; // FALSE
 	case 0x04: o80B40(); break; // DOFALSE
-	case 0x05: External(&w); PCHANGED; break; // BEEP2 implemented using Emu48's beep
+	case 0x05: o80B50(&w); PCHANGED; break; // BEEP2 implemented using Emu48's beep
 	case 0x06: o80B60(); break; // MOVEDOWN
 	case 0x07: o80B70(); break; // MOVEUP
 	case 0x08: o80B80(); break; // CREATETEMP
-	case 0x09: RCKBp(&w); PCHANGED; break; // RCKBp
+	case 0x09: o80B90(&w); PCHANGED; break; // RCKBp (ROM Check Beep patch)
 	case 0x0A: break; // KEYDN not implemented
 	case 0x0B: break; // no doslow implemented
 	case 0x10: // simulate off function

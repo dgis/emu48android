@@ -589,21 +589,26 @@ VOID WriteToMenuDisplay(LPBYTE a, DWORD d, UINT s)
 	return;
 }
 
-VOID UpdateAnnunciators(VOID)
+VOID UpdateAnnunciators(DWORD dwUpdateMask)
 {
 	BYTE c;
+	UINT i;
 
 	c = (BYTE)(Chipset.IORam[ANNCTRL] | (Chipset.IORam[ANNCTRL+1]<<4));
 	// switch annunciators off if timer stopped
 	if ((c & AON) == 0 || (Chipset.IORam[TIMER2_CTRL] & RUN) == 0)
 		c = 0;
 
-	DrawAnnunciator(1,c&LA1);
-	DrawAnnunciator(2,c&LA2);
-	DrawAnnunciator(3,c&LA3);
-	DrawAnnunciator(4,c&LA4);
-	DrawAnnunciator(5,c&LA5);
-	DrawAnnunciator(6,c&LA6);
+	for (i = 1; i <= 6; ++i)
+	{
+		if ((dwUpdateMask & 0x1) != 0)		// annunciator changed?
+		{
+			DrawAnnunciator(i,c & 0x1);
+		}
+		dwUpdateMask >>= 1;
+		c >>= 1;
+	}
+	_ASSERT(dwUpdateMask == 0);
 	return;
 }
 

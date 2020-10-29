@@ -65,6 +65,7 @@ CHANGES
 
 Version 2.0 (2020-11-XX)
 
+- Updated source code from Eric Rechlin's Emu48 version 1.62+ that was merged from Christoph Gießelink's Emu48 version 1.63.
 - For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
 - Replaces the haptic feedback switch with a slider to adjust the vibration duration.
 - Fix transparency issue (RGB -> BGR).

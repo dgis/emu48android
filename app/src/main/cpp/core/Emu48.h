@@ -52,7 +52,6 @@
 #define DISP_POINTER	0x01				// defines for display area
 #define DISP_MAIN		0x02
 #define DISP_MENUE		0x04
-#define DISP_ANNUN		0x08
 
 #define ROMPAGESIZE		(1<<12)				// ROM dirty page size in nibbles
 
@@ -182,7 +181,7 @@ extern VOID UpdateMenuDisplay(VOID);
 extern VOID RefreshDisp0();    // CdB for HP: add apples display management
 extern VOID WriteToMainDisplay(LPBYTE a, DWORD d, UINT s);
 extern VOID WriteToMenuDisplay(LPBYTE a, DWORD d, UINT s);
-extern VOID UpdateAnnunciators(VOID);
+extern VOID UpdateAnnunciators(DWORD dwUpdateMask);
 extern VOID ResizeWindow(VOID);
 
 // Engine.c
@@ -373,10 +372,6 @@ extern UINT    RPL_Depth(VOID);
 extern DWORD   RPL_Pick(UINT l);
 extern VOID    RPL_Replace(DWORD n);
 extern VOID    RPL_Push(UINT l,DWORD n);
-
-// External.c
-extern VOID External(CHIPSET* w);
-extern VOID RCKBp(CHIPSET* w);
 
 // SndEnum.c
 extern VOID SetSoundDeviceList(HWND hWnd,UINT uDeviceID);

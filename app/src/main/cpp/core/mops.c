@@ -9,7 +9,7 @@
 #include "pch.h"
 #include "Emu48.h"
 #include "ops.h"
-#include "Opcodes.h"
+#include "opcodes.h"
 #include "io.h"
 #include "i28f160.h"						// flash support
 
@@ -1307,6 +1307,7 @@ VOID WriteIO(BYTE *a, DWORD d, DWORD s)
 	BOOL  bDISPADDR = FALSE;				// flag addr 0x120-0x124 changed
 	BOOL  bLINEOFFS = FALSE;				// flag addr 0x125-0x127 changed
 	BOOL  bMENUADDR = FALSE;				// flag addr 0x130-0x134 changed
+	DWORD dwAnnunciator = 0;				// no annunciator write
 
 	#if defined DEBUG_IO
 	{
@@ -1412,7 +1413,8 @@ VOID WriteIO(BYTE *a, DWORD d, DWORD s)
 			if (c & RST)
 			{
 				CpuReset();					// emulate NRES signal
-				disp |= (DISP_POINTER | DISP_MAIN | DISP_MENUE | DISP_ANNUN);
+				disp |= (DISP_POINTER | DISP_MAIN | DISP_MENUE);
+				dwAnnunciator = 0x3F;		// update all annunciators
 				bInterrupt = TRUE;			// SHUTDN
 			}
 			break;
@@ -1425,11 +1427,9 @@ VOID WriteIO(BYTE *a, DWORD d, DWORD s)
 // 0010B @  Annunciator control [LA4 LA3 LA2 LA1] = [ alarm alpha -> <- ]
 		case 0x0B:
 		case 0x0C:
-			if (c!=Chipset.IORam[d])
-			{
-				Chipset.IORam[d] = c;
-				disp |= DISP_ANNUN;
-			}
+			// annunciator changed
+			dwAnnunciator |= ((Chipset.IORam[d] ^c) << ((d - 0x0B) * 4)) & 0x3F;
+			Chipset.IORam[d] = c;
 			break;
 
 // 0010D =  NS:BAUD
@@ -1759,7 +1759,7 @@ VOID WriteIO(BYTE *a, DWORD d, DWORD s)
 				StartTimers();
 			else
 				StopTimers();
-			disp |= DISP_ANNUN;				// update annunciators
+			dwAnnunciator = 0x3F;			// update all annunciators
 			break;
 
 // 00130 =  NS:MENUADDR
@@ -1842,10 +1842,9 @@ finish:
 		disp &= ~DISP_POINTER;				// display pointer updated
 		UpdateDisplayPointers();
 	}
-	if (disp & DISP_ANNUN)
+	if (dwAnnunciator)
 	{
-		disp &= ~DISP_ANNUN;				// annunciators updated
-		UpdateAnnunciators();
+		UpdateAnnunciators(dwAnnunciator);
 	}
 	return;
 }

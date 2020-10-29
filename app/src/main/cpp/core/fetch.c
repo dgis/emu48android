@@ -321,7 +321,7 @@ static JMPTAB o8A_[] =
 static JMPTAB o81B_[] =
 {
 	(LPCVOID) o_invalid4,	F,
-	(LPCVOID) o81B1,		F,				// normally o_invalid4, beep patch, Apple: LOOP
+	(LPCVOID) o81B1,		F,				// normally o_invalid4, Apple: LOOP
 	(LPCVOID) o81B2,		F,
 	(LPCVOID) o81B3,		F,
 	(LPCVOID) o81B4,		F,

@@ -73,7 +73,7 @@ static DWORD dwOldCyc;						// cpu cycles at last event
 static DWORD dwSpeedRef;					// timer value at last event
 static DWORD dwTickRef;						// sample timer ticks
 
-#include "ops.h"
+#include "Ops.h"
 
 // save last instruction in circular instruction buffer
 static __inline VOID SaveInstrAddr(DWORD dwAddr)
@@ -285,7 +285,6 @@ static __inline VOID CheckDisp(BOOL bSync)
 	_ASSERT((disp & DISP_POINTER) == 0);	// display pointer already updated
 	if (disp & DISP_MAIN)  UpdateMainDisplay();
 	if (disp & DISP_MENUE) UpdateMenuDisplay();
-	_ASSERT((disp & DISP_ANNUN) == 0);		// annunciators already updated
 	disp = 0;								// display updated
 	return;
 }
@@ -599,7 +598,7 @@ loop:
 			UpdateMainDisplay();
 			UpdateMenuDisplay();
 			RefreshDisp0();    // CdB for HP: add apples display management
-			UpdateAnnunciators();
+			UpdateAnnunciators(0x3F);
 			// init speed reference
 			dwOldCyc = (DWORD) (Chipset.cycles & 0xFFFFFFFF);
 			QueryPerformanceCounter(&lDummyInt);

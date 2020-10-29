@@ -1017,8 +1017,16 @@ BOOL OpenDocument(LPCTSTR szFilename)
 	case 0xFE: // Win48 2.1 / Emu4x 0.99.x format
 		// read length of KML script name
 		ReadFile(hFile,&nLength,sizeof(nLength),&lBytesRead,NULL);
+
 		// KML script name too long for file buffer
-		if (nLength >= ARRAYSIZEOF(szCurrentKml)) goto read_err;
+		if (nLength >= ARRAYSIZEOF(szCurrentKml))
+		{
+			// skip heading KML script name characters until remainder fits into file buffer
+			UINT nSkip = nLength - (ARRAYSIZEOF(szCurrentKml) - 1);
+			SetFilePointer(hFile, nSkip, NULL, FILE_CURRENT);
+
+			nLength = ARRAYSIZEOF(szCurrentKml) - 1;
+		}
 		#if defined _UNICODE
 		{
 			LPSTR szTmp = (LPSTR) malloc(nLength);
@@ -2575,7 +2583,7 @@ static BOOL LabColorCmp(DWORD dwColor1,DWORD dwColor2,DWORD dwTol)
 	nDiffCol = (INT) (dwColor1 & 0xFF) - (INT) (dwColor2 & 0xFF);
 	dwDiff += (DWORD) (nDiffCol * nDiffCol);
 	dwTol *= dwTol;
-	
+
 	return dwDiff > dwTol;					// FALSE = colors match
 }
 

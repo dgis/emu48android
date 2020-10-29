@@ -4,7 +4,7 @@
  *   This file is part of Emu48
  *
  *   Copyright (C) 1995 Sebastien Carlier
- *   Copyright (C) 1999 Christoph Gieï¿½elink
+ *   Copyright (C) 1999 Christoph Gießelink
  *
  */
 #include "pch.h"
@@ -25,7 +25,7 @@
 
 #pragma intrinsic(memset,memcpy)
 
-#include "ops.h"
+#include "Ops.h"
 
 // Fields start and length
 UINT F_s[16] = {0/*P*/,0,2,0,15,3,0,0,0,0,0,0,0,0,0,0};
@@ -2444,7 +2444,7 @@ VOID o_goyes5(LPBYTE I)
 }
 
 //////// EXTENSIONS ////////
-VOID o81B1(LPBYTE I)						// beep patch
+VOID o81B1(LPBYTE I)
 {
 	if (cCurrentRomType=='Q' || cCurrentRomType=='2' || cCurrentRomType=='P')
 	{
@@ -2454,9 +2454,8 @@ VOID o81B1(LPBYTE I)						// beep patch
 	}
 	else
 	{
-		// Emu48 borrows this opcode for the beep patch on the non-ARM-based calculators
-		External(&w);						// beep patch
-		PCHANGED;							// update field select table
+		// this opcode was used for the beep patch on the non-ARM-based calculators, not used any more
+		o_invalid4(I);
 	}
 	return;
 }
