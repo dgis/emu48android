@@ -90,7 +90,7 @@ public class Settings extends PreferenceDataStore {
 	}
 
 	private void putValue(String key, @Nullable Object value) {
-		if(applicationSettingKeys.indexOf(key) != -1)
+		if(applicationSettingKeys.contains(key))
 			applicationSettings.put(key, value);
 		else if(isCommonSettings)
 			commonSettings.put(key, value);
@@ -105,12 +105,33 @@ public class Settings extends PreferenceDataStore {
 		if(!isCommonSettings)
 			value = embeddedStateSettings.get(key);
 		if(value == null) {
-			if(applicationSettingKeys.indexOf(key) != -1)
+			if(applicationSettingKeys.contains(key))
 				value = applicationSettings.get(key);
 			else
 				value = commonSettings.get(key);
 		}
 		return value;
+	}
+
+	public void removeValue(String key) {
+		if(applicationSettingKeys.contains(key))
+			applicationSettings.remove(key);
+		else if(isCommonSettings)
+			commonSettings.remove(key);
+		else
+			embeddedStateSettings.remove(key);
+		if(oneKeyChangedListener != null)
+			oneKeyChangedListener.onOneKeyChanged(key);
+	}
+
+	public boolean hasValue(String key) {
+		if(debug) Log.d(TAG, "has(key: '" + key + "')");
+		if(applicationSettingKeys.contains(key))
+			return applicationSettings.containsKey(key);
+		else if(isCommonSettings)
+			return commonSettings.containsKey(key);
+		else
+			return embeddedStateSettings.containsKey(key);
 	}
 
 	public boolean getIsDefaultSettings() {

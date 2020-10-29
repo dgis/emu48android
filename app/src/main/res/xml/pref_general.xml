@@ -82,10 +82,14 @@
                 android:min="0"
                 android:max="255"
                 app:showSeekBarValue="true" />
-            <SwitchPreference
-                android:key="settings_haptic_feedback"
-                android:title="@string/settings_haptic_feedback_title"
-                android:defaultValue="true" />
+	        <SeekBarPreference
+		        android:key="settings_haptic_feedback_duration"
+		        android:title="@string/settings_haptic_feedback_title"
+		        android:summary="@string/settings_haptic_feedback_summary"
+		        android:defaultValue="25"
+		        android:min="0"
+		        android:max="50"
+		        app:showSeekBarValue="true" />
         </PreferenceCategory>
 
         <PreferenceCategory android:title="@string/settings_category_background_title">

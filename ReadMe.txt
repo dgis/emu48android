@@ -63,11 +63,12 @@ LINKS
 
 CHANGES
 
-Version 1.91 (2020-10-XX)
+Version 2.0 (2020-11-XX)
 
+- For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
+- Replaces the haptic feedback switch with a slider to adjust the vibration duration.
 - Fix transparency issue (RGB -> BGR).
 - Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
-- For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
 
 
 Version 1.9 (2020-09-07)

@@ -1858,7 +1858,10 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
             destinationStride = (float)(4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
 
-        HPALETTE palette = hdcDest->realizedPalette;
+	    x -= hdcDest->windowOriginX;
+	    y -= hdcDest->windowOriginY;  // TODO DSTINVERT in screen does not work!!!
+
+	    HPALETTE palette = hdcDest->realizedPalette;
         if(!palette)
             palette = hdcDest->selectedPalette;
         PALETTEENTRY * palPalEntry = palette && palette->paletteLog && palette->paletteLog->palPalEntry ?

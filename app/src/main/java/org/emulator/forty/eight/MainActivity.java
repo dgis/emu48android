@@ -29,9 +29,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.os.Vibrator;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,7 +39,6 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -104,8 +103,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MainScreenView mainScreenView;
     private LCDOverlappingView lcdOverlappingView;
     private ImageButton imageButtonMenu;
+	private Vibrator vibrator;
 
-    public static final int INTENT_GETOPENFILENAME = 1;
+
+	public static final int INTENT_GETOPENFILENAME = 1;
     public static final int INTENT_GETSAVEFILENAME = 2;
     public static final int INTENT_OBJECT_LOAD = 3;
     public static final int INTENT_OBJECT_SAVE = 4;
@@ -163,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    settings = EmuApplication.getSettings();
 	    settings.setIsDefaultSettings(true);
 
+	    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this);
@@ -1481,6 +1483,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+	private void migrateDeprecatedSettings() {
+		if(settings.hasValue("settings_haptic_feedback")) {
+			settings.removeValue("settings_haptic_feedback");
+			settings.putInt("settings_haptic_feedback_duration", 25);
+		}
+	}
+
     private void onFileOpen(String url, Intent intent, String openWithKMLScriptFolder) {
 
     	// Eventually, close the previous state file
@@ -1493,6 +1502,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    settings.setIsDefaultSettings(false);
 	    settings.clearEmbeddedStateSettings();
 	    settings.loadFromStateFile(this, url);
+
+	    migrateDeprecatedSettings();
 
 	    if(intent != null)
 		    // Make this file persistable to allow a next access to this same file.
@@ -1986,11 +1997,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressWarnings("UnusedDeclaration")
     public void performHapticFeedback() {
-        if(settings.getBoolean("settings_haptic_feedback", true))
-            mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+//        if(settings.getBoolean("settings_haptic_feedback", true))
+//	        //mainScreenView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+//		    mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+//		    //mainScreenView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+
+	    Utils.vibrate(vibrator, settings.getInt("settings_haptic_feedback_duration", 25));
     }
 
-    @SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("UnusedDeclaration")
     public void sendByteUdp(int byteSent) {
         printerSimulator.write(byteSent);
     }
@@ -2109,9 +2124,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeOption, 0, null);
                     break;
                 }
-                case "settings_haptic_feedback":
-                    // Nothing to do
-                    break;
+	            case "settings_haptic_feedback":
+	            case "settings_haptic_feedback_duration":
+		            // Nothing to do
+		            break;
 
                 case "settings_background_kml_color":
 					mainScreenView.setBackgroundKmlColor(settings.getBoolean("settings_background_kml_color", false));

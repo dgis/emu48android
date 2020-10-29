@@ -16,6 +16,7 @@ package org.emulator.forty.eight;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.BlendMode;
@@ -25,6 +26,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -211,6 +213,41 @@ public class SettingsFragment extends AppCompatDialogFragment {
 						return true;
 					});
 				}
+			}
+
+			// Haptic feedback settings
+
+			Vibrator vibrator = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+			SeekBarPreference preferenceHapticFeedbackDuration = findPreference("settings_haptic_feedback_duration");
+			if(preferenceHapticFeedbackDuration != null) {
+				preferenceHapticFeedbackDuration.setOnPreferenceChangeListener((preference, newValue) -> {
+					if(newValue instanceof Integer)
+						Utils.vibrate(vibrator, (int)newValue);
+					return true;
+				});
+				preferenceHapticFeedbackDuration.setOnPreferenceClickListener(preference -> {
+					AlertDialog.Builder alert = new AlertDialog.Builder(requireContext());
+					alert.setTitle(R.string.settings_haptic_feedback_dialog_title);
+					final EditText input = new EditText(getContext());
+					input.setInputType(InputType.TYPE_CLASS_NUMBER);
+					input.setRawInputType(Configuration.KEYBOARD_12KEY);
+					input.setFocusable(true);
+					input.setText(String.format(Locale.US,"%d", preferenceHapticFeedbackDuration.getValue()));
+					alert.setView(input);
+					alert.setPositiveButton(R.string.message_ok, (dialog, whichButton) -> {
+						String newValueText = input.getText().toString();
+						try {
+							int newValue = Integer.parseInt(newValueText);
+							if(newValue >= preferenceHapticFeedbackDuration.getMin() && newValue <= preferenceHapticFeedbackDuration.getMax()) {
+								preferenceHapticFeedbackDuration.setValue(newValue);
+								Utils.vibrate(vibrator, newValue);
+							}
+						} catch (NumberFormatException ignored) {}
+					});
+					alert.setNegativeButton(R.string.message_cancel, (dialog, whichButton) -> {});
+					alert.show();
+					return true;
+				});
 			}
 
 			// Background color settings
