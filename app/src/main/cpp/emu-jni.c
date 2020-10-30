@@ -29,7 +29,7 @@ static jobject mainActivity = NULL;
 jobject bitmapMainScreen = NULL;
 AndroidBitmapInfo androidBitmapInfo;
 enum DialogBoxMode currentDialogBoxMode;
-LPBYTE pbyRomBackup;
+LPBYTE pbyRomBackup = NULL;
 enum ChooseKmlMode chooseCurrentKmlMode;
 TCHAR szChosenCurrentKml[MAX_PATH];
 TCHAR szKmlLog[10240];

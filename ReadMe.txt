@@ -70,6 +70,7 @@ Version 2.0 (2020-11-XX)
 - Replaces the haptic feedback switch with a slider to adjust the vibration duration.
 - Fix transparency issue (RGB -> BGR).
 - Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
+- Fix the KML button Type 3 with a Background offset which was not display at the right location (Fix #15).
 
 
 Version 1.9 (2020-09-07)

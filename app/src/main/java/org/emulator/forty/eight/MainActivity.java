@@ -53,6 +53,7 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -105,8 +106,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ImageButton imageButtonMenu;
 	private Vibrator vibrator;
 
-
-	public static final int INTENT_GETOPENFILENAME = 1;
+    public static final int INTENT_GETOPENFILENAME = 1;
     public static final int INTENT_GETSAVEFILENAME = 2;
     public static final int INTENT_OBJECT_LOAD = 3;
     public static final int INTENT_OBJECT_SAVE = 4;
@@ -116,15 +116,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final int INTENT_PICK_KML_FOLDER_FOR_SECURITY = 10;
 	public static final int INTENT_PICK_KML_FOLDER_FOR_KML_NOT_FOUND = 11;
     public static final int INTENT_CREATE_RAM_CARD = 12;
-	public static final int INTENT_MACRO_LOAD = 13;
-	public static final int INTENT_MACRO_SAVE = 14;
+    public static final int INTENT_MACRO_LOAD = 13;
+    public static final int INTENT_MACRO_SAVE = 14;
 	public static final int INTENT_CREATE_FLASH_ROM = 15;
 	public static final int INTENT_LOAD_FLASH_ROM = 16;
 
 	public static String intentPickKmlFolderForUrlToOpen;
 	public String urlToOpenInIntentPort2Load;
 	public String kmlScriptFolderInIntentPort2Load;
-
 
 	private final String kmlMimeType = "application/vnd.google-earth.kml+xml";
     private boolean kmlFolderUseDefault = true;
@@ -1737,7 +1736,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
     SparseArray<ParcelFileDescriptor> parcelFileDescriptorPerFd = null;
-	public int openFileFromContentResolver(String fileURL, int writeAccess) {
+    public int openFileFromContentResolver(String fileURL, int writeAccess) {
         //https://stackoverflow.com/a/31677287
         Uri uri = Uri.parse(fileURL);
         ParcelFileDescriptor filePfd;
@@ -1997,11 +1996,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressWarnings("UnusedDeclaration")
     public void performHapticFeedback() {
-//        if(settings.getBoolean("settings_haptic_feedback", true))
-//	        //mainScreenView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-//		    mainScreenView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-//		    //mainScreenView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-
 	    Utils.vibrate(vibrator, settings.getInt("settings_haptic_feedback_duration", 25));
     }
 
@@ -2124,10 +2118,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     NativeLib.setConfiguration("settings_sound_volume", isDynamicValue, volumeOption, 0, null);
                     break;
                 }
-	            case "settings_haptic_feedback":
+                case "settings_haptic_feedback":
 	            case "settings_haptic_feedback_duration":
-		            // Nothing to do
-		            break;
+                    // Nothing to do
+                    break;
 
                 case "settings_background_kml_color":
 					mainScreenView.setBackgroundKmlColor(settings.getBoolean("settings_background_kml_color", false));

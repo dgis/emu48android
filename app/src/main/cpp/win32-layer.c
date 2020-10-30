@@ -1859,7 +1859,7 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
         }
 
 	    x -= hdcDest->windowOriginX;
-	    y -= hdcDest->windowOriginY;  // TODO DSTINVERT in screen does not work!!!
+	    y -= hdcDest->windowOriginY;
 
 	    HPALETTE palette = hdcDest->realizedPalette;
         if(!palette)

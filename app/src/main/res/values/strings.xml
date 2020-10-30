@@ -89,7 +89,7 @@
 	<string name="alert_load_flash_rom_error_title">Error when Loading Flash ROM</string>
 	<string name="alert_load_flash_rom_error_message">Cannot load the Flash ROM. Reset to the default Flash ROM (from the current KML script). Please, try to load it again from the menu.</string>
 
-	<string name="message_open_security">Permission Denied</string>
+    <string name="message_open_security">Permission Denied</string>
     <string name="message_open_security_description">For security reason, you must select the folder where are the KML and ROM files, please.</string>
     <string name="message_open_security_retry">Please, open again</string>
     <string name="message_open_security_retry_description">I hope now you could open again the state file.</string>
@@ -99,7 +99,7 @@
 	<string name="message_open_kml_not_found_description3">The KML script "%s" cannot be found in the folder "%s". You must select the folder where are the KML and ROM files, please.</string>
 	<string name="message_open_port2_file_not_found">Port 2 File not Found</string>
 	<string name="message_open_port2_file_not_found_description">The port 2 file "%s" cannot be found. You should select it again, please.</string>
-	<string name="message_state_saved">State saved in %s</string>
+    <string name="message_state_saved">State saved in %s</string>
 	<string name="message_state_and_flash_saved">State %s and flash %s saved</string>
     <string name="message_do_you_want_to_save">Do you want to save changes?\n(BACK to cancel)</string>
     <string name="message_save_new_file">Do you want to save this new state file?\n(To avoid losing the state of the machine)</string>
@@ -180,7 +180,7 @@
     <string name="settings_port1wr_title">Port 1 is Writable</string>
     <string name="settings_port2en_title">Port 2 is Plugged</string>
     <string name="settings_port2wr_title">Port 2 is Writable</string>
-	<string name="settings_port2load_title">Port 2 File</string>
+    <string name="settings_port2load_title">Port 2 File</string>
 	<string name="settings_flash_port2_title">Port 2 Flash File</string>
 
     <string name="settings_category_printer_title">Printer Simulator</string>
