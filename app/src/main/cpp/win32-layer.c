@@ -2631,6 +2631,14 @@ static void initTimer() {
     lastTimerId = 0;
 }
 
+static void dumpTimers() {
+	TIMER_LOGD("dumpTimers()");
+	for (struct timerEvent * nextTimer = timersList.next; nextTimer != &timersList; nextTimer = nextTimer->next) {
+		TIMER_LOGD("\ttimerId: %d (%x), uDelay: %d, dwUser: %d, fuEvent: %d, triggerTime: %ld)",
+		           nextTimer->timerId, nextTimer, nextTimer->uDelay, nextTimer->dwUser, nextTimer->fuEvent, nextTimer->triggerTime);
+	}
+}
+
 MMRESULT timeKillEvent(UINT uTimerID) {
     TIMER_LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
 
@@ -2647,10 +2655,14 @@ MMRESULT timeKillEvent(UINT uTimerID) {
             break;
         }
     }
+#if defined(TIMER_LOGD)
+	dumpTimers();
+#endif
     if(timersList.next == &timersList) {
         // The list is empty
         // Leave the thread?
         timerThreadToEnd = TRUE;
+	    TIMER_LOGD("timeKillEvent(uTimerID: [%d]) timerThreadToEnd = TRUE ", uTimerID);
     }
     pthread_mutex_unlock(&timerEventsLock);
 
@@ -2672,18 +2684,15 @@ static void insertTimer(struct timerEvent * newTimer) {
     newTimer->prev = nextTimer->prev;
     nextTimer->prev->next = newTimer;
     nextTimer->prev = newTimer;
-}
 
-static void dumpTimers() {
-    TIMER_LOGD("dumpTimers()");
-    for (struct timerEvent * nextTimer = timersList.next; nextTimer != &timersList; nextTimer = nextTimer->next) {
-        TIMER_LOGD("\ttimerId: %d (%x), uDelay: %d, dwUser: %d, fuEvent: %d, triggerTime: %ld)",
-                nextTimer->timerId, nextTimer, nextTimer->uDelay, nextTimer->dwUser, nextTimer->fuEvent, nextTimer->triggerTime);
-    }
+#if defined(TIMER_LOGD)
+	dumpTimers();
+#endif
 }
 
 static void timerThreadStart(LPVOID lpThreadParameter) {
-    pthread_mutex_lock(&timerEventsLock);
+	LOGD("timerThreadStart() START");
+	pthread_mutex_lock(&timerEventsLock);
     while (!timerThreadToEnd) {
         TIMER_LOGD("timerThreadStart() %ld", GetTickCount64());
 
@@ -2737,12 +2746,13 @@ static void timerThreadStart(LPVOID lpThreadParameter) {
             continue;
 
         pthread_mutex_unlock(&timerEventsLock);
-        Sleep(sleep_time);
+        Sleep(sleep_time > 100 ? 100 : sleep_time);
         pthread_mutex_lock(&timerEventsLock);
     }
     timerThreadId = 0;
     pthread_mutex_unlock(&timerEventsLock);
     jniDetachCurrentThread();
+	LOGD("timerThreadStart() END");
 }
 
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
@@ -2767,6 +2777,7 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
 
     if(!timerThreadId) {
         // If not yet created, create the thread which will handle all the timers
+	    LOGD("timeSetEvent() pthread_create");
         if (pthread_create(&timerThreadId, NULL, (void *(*)(void *)) timerThreadStart, NULL) != 0) {
             LOGD("timeSetEvent() ERROR in pthread_create, errno: %d (EAGAIN 11 / EINVAL 22 / EPERM 1)", errno);
             //        EAGAIN Insufficient resources to create another thread.
