@@ -63,7 +63,7 @@ LINKS
 
 CHANGES
 
-Version 2.0 (2020-11-XX)
+Version 2.0 (2020-11-15)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.62+ that was merged from Christoph Gießelink's Emu48 version 1.63.
 - For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
@@ -72,6 +72,7 @@ Version 2.0 (2020-11-XX)
 - Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
 - Fix the KML button Type 3 with a Background offset which was not display at the right location (Fix #15).
 - Fix a timer issue.
+- Fix a freeze with a hp48 sx or gx, when switching on/off several times port 1 and 2!
 
 
 Version 1.9 (2020-09-07)
@@ -219,21 +220,18 @@ TODO
 
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
 - The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
-- Bug: In Xiaomi mi A3 under Android10, the haptic feedback does not work (add an intensity setting).
 - Somehow LEFT (Shift on the keyboard) + 7 activates the DIVIDE-key (z-Key)..., but with the NUM-Key it can make it work without problems...
   I think it might have something to do with the "/" sign on the Shifted-7-key.
 - The clock seems unsynchronized sometimes (Michael P).
 - Retain a key by right clicking if it is from a mouse.
-- Add the possibility to load and save the flash in another file.
 - Sometimes, the calculator seems to lag and finally freeze.
-- In Chrome OS:
-    - sometimes there is no OK button in the KML Script Compilation Result.
+- In Chrome OS, sometimes there is no OK button in the KML Script Compilation Result.
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?).
 
 
 BUILD
 
-Emu48 for Android is built with Android Studio 4.0 (2020).
+Emu48 for Android is built with Android Studio 4.1 (2020).
 And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:

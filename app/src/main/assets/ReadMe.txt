@@ -63,7 +63,7 @@ LINKS
 
 CHANGES
 
-Version 2.0 (2020-11-XX)
+Version 2.0 (2020-11-15)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.62+ that was merged from Christoph Gießelink's Emu48 version 1.63.
 - For the HP49/50 port 2, it is now possible to load a new Flash ROM file (It fully replaces the ROM).
@@ -72,6 +72,7 @@ Version 2.0 (2020-11-XX)
 - Fix a printer issue from Christoph Gießelink's HP82240B Printer Simulator version 1.12.
 - Fix the KML button Type 3 with a Background offset which was not display at the right location (Fix #15).
 - Fix a timer issue.
+- Fix a freeze with a hp48 sx or gx, when switching on/off several times port 1 and 2!
 
 
 Version 1.9 (2020-09-07)

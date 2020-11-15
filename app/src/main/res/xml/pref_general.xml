@@ -1,204 +1,179 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- General -->
-        <PreferenceCategory android:title="@string/settings_category_general_title">
-            <SwitchPreference
-                android:key="settings_realspeed"
-                android:title="@string/settings_realspeed_title"
-                android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_grayscale"
-                android:title="@string/settings_grayscale_title"
-                android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_autosave"
-                android:title="@string/settings_autosave_title"
-                android:defaultValue="true" />
-            <SwitchPreference
-                android:key="settings_objectloadwarning"
-                android:title="@string/settings_objectloadwarning_title"
-                android:defaultValue="true" />
-            <SwitchPreference
-                android:key="settings_alwaysdisplog"
-                android:title="@string/settings_alwaysdisplog_title"
-                android:defaultValue="false" />
-        </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings_category_general_title">
+        <SwitchPreference
+            android:key="settings_realspeed"
+            android:title="@string/settings_realspeed_title"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="settings_grayscale"
+            android:title="@string/settings_grayscale_title"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="settings_autosave"
+            android:title="@string/settings_autosave_title"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="settings_objectloadwarning"
+            android:title="@string/settings_objectloadwarning_title"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="settings_alwaysdisplog"
+            android:title="@string/settings_alwaysdisplog_title"
+            android:defaultValue="false" />
+    </PreferenceCategory>
 
-        <PreferenceCategory android:title="@string/settings_category_ui_title">
-            <ListPreference
-                android:key="settings_auto_layout"
-                android:title="@string/settings_auto_layout_title"
-                android:dialogTitle="@string/settings_auto_layout_title"
-                android:summary="@string/settings_auto_layout_summary"
-                android:entries="@array/settings_auto_layout_item"
-                android:entryValues="@array/settings_auto_layout_value"
-                android:defaultValue="1"
-                />
-            <ListPreference
-                android:key="settings_rotation"
-                android:title="@string/settings_rotation_title"
-                android:dialogTitle="@string/settings_rotation_title"
-                android:summary="@string/settings_rotation_summary"
-                android:entries="@array/settings_rotation_item"
-                android:entryValues="@array/settings_rotation_value"
-                android:defaultValue="0"
-                />
-            <SwitchPreference
-                android:key="settings_allow_pinch_zoom"
-                android:title="@string/settings_allow_pinch_zoom_title"
-                android:defaultValue="true" />
-            <ListPreference
-                android:key="settings_lcd_overlapping_mode"
-                android:title="@string/settings_lcd_overlapping_mode_title"
-                android:dialogTitle="@string/settings_lcd_overlapping_mode_title"
-                android:summary="@string/settings_lcd_overlapping_mode_summary"
-                android:entries="@array/settings_lcd_overlapping_mode_item"
-                android:entryValues="@array/settings_lcd_overlapping_mode_value"
-                android:defaultValue="0"
-                />
-	        <SwitchPreference
-		        android:key="settings_lcd_pixel_borders"
-		        android:title="@string/settings_lcd_pixel_borders_title"
-		        android:summary="@string/settings_lcd_pixel_borders_summary"
-		        android:defaultValue="false" />
+    <PreferenceCategory android:title="@string/settings_category_ui_title">
+        <ListPreference
+            android:key="settings_auto_layout"
+            android:title="@string/settings_auto_layout_title"
+            android:dialogTitle="@string/settings_auto_layout_title"
+            android:summary="@string/settings_auto_layout_summary"
+            android:entries="@array/settings_auto_layout_item"
+            android:entryValues="@array/settings_auto_layout_value"
+            android:defaultValue="1"
+            />
+        <ListPreference
+            android:key="settings_rotation"
+            android:title="@string/settings_rotation_title"
+            android:dialogTitle="@string/settings_rotation_title"
+            android:summary="@string/settings_rotation_summary"
+            android:entries="@array/settings_rotation_item"
+            android:entryValues="@array/settings_rotation_value"
+            android:defaultValue="0"
+            />
+        <SwitchPreference
+            android:key="settings_allow_pinch_zoom"
+            android:title="@string/settings_allow_pinch_zoom_title"
+            android:defaultValue="true" />
+        <ListPreference
+            android:key="settings_lcd_overlapping_mode"
+            android:title="@string/settings_lcd_overlapping_mode_title"
+            android:dialogTitle="@string/settings_lcd_overlapping_mode_title"
+            android:summary="@string/settings_lcd_overlapping_mode_summary"
+            android:entries="@array/settings_lcd_overlapping_mode_item"
+            android:entryValues="@array/settings_lcd_overlapping_mode_value"
+            android:defaultValue="0"
+            />
+        <SwitchPreference
+	        android:key="settings_lcd_pixel_borders"
+	        android:title="@string/settings_lcd_pixel_borders_title"
+	        android:summary="@string/settings_lcd_pixel_borders_summary"
+	        android:defaultValue="false" />
 
-            <SwitchPreference
-                android:key="settings_hide_bar_status"
-                android:title="@string/settings_hide_bar_status"
-                android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_hide_bar_nav"
-                android:title="@string/settings_hide_bar_nav"
-                android:defaultValue="false" />
-            <SwitchPreference
-                android:key="settings_hide_button_menu"
-                android:title="@string/settings_hide_button_menu"
-                android:defaultValue="false" />
-            <SeekBarPreference
-                android:key="settings_sound_volume"
-                android:title="@string/settings_sound_volume_title"
-                android:defaultValue="64"
-                android:min="0"
-                android:max="255"
-                app:showSeekBarValue="true" />
-	        <SeekBarPreference
-		        android:key="settings_haptic_feedback_duration"
-		        android:title="@string/settings_haptic_feedback_title"
-		        android:summary="@string/settings_haptic_feedback_summary"
-		        android:defaultValue="25"
-		        android:min="0"
-		        android:max="50"
-		        app:showSeekBarValue="true" />
-        </PreferenceCategory>
+        <SwitchPreference
+            android:key="settings_hide_bar_status"
+            android:title="@string/settings_hide_bar_status"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="settings_hide_bar_nav"
+            android:title="@string/settings_hide_bar_nav"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="settings_hide_button_menu"
+            android:title="@string/settings_hide_button_menu"
+            android:defaultValue="false" />
+        <SeekBarPreference
+            android:key="settings_sound_volume"
+            android:title="@string/settings_sound_volume_title"
+            android:defaultValue="64"
+            android:min="0"
+            android:max="255"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+	        android:key="settings_haptic_feedback_duration"
+	        android:title="@string/settings_haptic_feedback_title"
+	        android:summary="@string/settings_haptic_feedback_summary"
+	        android:defaultValue="25"
+	        android:min="0"
+	        android:max="50"
+	        app:showSeekBarValue="true" />
+    </PreferenceCategory>
 
-        <PreferenceCategory android:title="@string/settings_category_background_title">
-            <SwitchPreference
-                android:key="settings_background_kml_color"
-                android:title="@string/settings_background_kml_color_title"
-                android:summary="@string/settings_background_kml_color_summary"
-                android:defaultValue="false" />
-            <ListPreference
-                android:key="settings_background_fallback_color"
-                android:title="@string/settings_background_fallback_color_title"
-                android:dialogTitle="@string/settings_background_fallback_color_title"
-                android:summary="@string/settings_background_fallback_color_summary"
-                android:entries="@array/settings_background_fallback_color_item"
-                android:entryValues="@array/settings_background_fallback_color_value"
-                android:defaultValue="0"
-                />
-            <!--<org.emulator.calculator.helpers.colorpicker.ColorPickerPreferenceCompat-->
-                <!--android:key="settings_background_custom_color"-->
-                <!--android:title="@string/settings_background_custom_color_title"-->
-                <!--android:summary="@string/settings_background_custom_color_summary"-->
-                <!--android:defaultValue="#FF000000"-->
-                <!--/>-->
-        </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings_category_background_title">
+        <SwitchPreference
+            android:key="settings_background_kml_color"
+            android:title="@string/settings_background_kml_color_title"
+            android:summary="@string/settings_background_kml_color_summary"
+            android:defaultValue="false" />
+        <ListPreference
+            android:key="settings_background_fallback_color"
+            android:title="@string/settings_background_fallback_color_title"
+            android:dialogTitle="@string/settings_background_fallback_color_title"
+            android:summary="@string/settings_background_fallback_color_summary"
+            android:entries="@array/settings_background_fallback_color_item"
+            android:entryValues="@array/settings_background_fallback_color_value"
+            android:defaultValue="0"
+            />
+        <!--<org.emulator.calculator.helpers.colorpicker.ColorPickerPreferenceCompat-->
+            <!--android:key="settings_background_custom_color"-->
+            <!--android:title="@string/settings_background_custom_color_title"-->
+            <!--android:summary="@string/settings_background_custom_color_summary"-->
+            <!--android:defaultValue="#FF000000"-->
+            <!--/>-->
+    </PreferenceCategory>
 
-        <PreferenceCategory android:title="@string/settings_category_printer_title">
-            <ListPreference
-                android:key="settings_printer_model"
-                android:title="@string/settings_printer_model_title"
-                android:dialogTitle="@string/settings_printer_model_title"
-                android:summary="@string/settings_printer_model_summary"
-                android:entries="@array/settings_printer_model_item"
-                android:entryValues="@array/settings_printer_model_value"
-                android:defaultValue="1"
-                />
-        </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings_category_printer_title">
+        <ListPreference
+            android:key="settings_printer_model"
+            android:title="@string/settings_printer_model_title"
+            android:dialogTitle="@string/settings_printer_model_title"
+            android:summary="@string/settings_printer_model_summary"
+            android:entries="@array/settings_printer_model_item"
+            android:entryValues="@array/settings_printer_model_value"
+            android:defaultValue="1"
+            />
+    </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/settings_category_macro_title">
+        <SwitchPreference
+            android:key="settings_macro_real_speed"
+            android:title="@string/settings_macro_real_speed_title"
+            android:defaultValue="true" />
+        <SeekBarPreference
+            android:key="settings_macro_manual_speed"
+            android:title="@string/settings_macro_manual_speed_title"
+            android:defaultValue="500"
+            android:min="0"
+            android:max="500"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
 
-        <PreferenceCategory android:title="@string/settings_category_macro_title">
-            <SwitchPreference
-                android:key="settings_macro_real_speed"
-                android:title="@string/settings_macro_real_speed_title"
-                android:defaultValue="true" />
-            <SeekBarPreference
-                android:key="settings_macro_manual_speed"
-                android:title="@string/settings_macro_manual_speed_title"
-                android:defaultValue="500"
-                android:min="0"
-                android:max="500"
-                app:showSeekBarValue="true" />
-        </PreferenceCategory>
+	<PreferenceCategory android:title="@string/settings_category_memory_cards_hp48_title">
+		<SwitchPreference
+			android:key="settings_port1en"
+			android:title="@string/settings_port1en_title"
+			android:defaultValue="false"
+			/>
+		<SwitchPreference
+			android:key="settings_port1wr"
+			android:title="@string/settings_port1wr_title"
+			android:defaultValue="false"
+			/>
+		<SwitchPreference
+			android:key="settings_port2en"
+			android:title="@string/settings_port2en_title"
+			android:defaultValue="false"
+			/>
+		<SwitchPreference
+			android:key="settings_port2wr"
+			android:title="@string/settings_port2wr_title"
+			android:defaultValue="false"
+			/>
+		<Preference
+			android:key="settings_port2load"
+			android:title="@string/settings_port2load_title"
+			android:summary=""
+			/>
+	</PreferenceCategory>
 
-        <!--<PreferenceCategory app:title="Disassembler">
-            "HP Mnemonics",IDC_DISASM_HP
-            "Class Mnemonics",IDC_DISASM_CLASS
-        </PreferenceCategory>-->
-
-    <!-- Memory -->
-        <PreferenceCategory android:title="@string/settings_category_memory_cards_title">
-            <SwitchPreference
-                android:key="settings_port1en"
-                android:title="@string/settings_port1en_title"
-                android:defaultValue="false"
-                />
-            <SwitchPreference
-                android:key="settings_port1wr"
-                android:title="@string/settings_port1wr_title"
-                android:defaultValue="false"
-                />
-            <SwitchPreference
-                android:key="settings_port2en"
-                android:title="@string/settings_port2en_title"
-                android:defaultValue="false"
-                />
-            <SwitchPreference
-                android:key="settings_port2wr"
-                android:title="@string/settings_port2wr_title"
-                android:defaultValue="false"
-                />
-            <Preference
-                android:key="settings_port2load"
-                android:title="@string/settings_port2load_title"
-                android:summary=""
-                />
-	        <Preference
-		        android:key="settings_flash_port2"
-		        android:title="@string/settings_flash_port2_title"
-		        android:summary=""
-		        />
-        </PreferenceCategory>
-
-    <!-- Peripheral -->
-        <!--<PreferenceCategory app:title="Sound">-->
-            <!--"Volume",IDC_STATIC,14,21,24,8-->
-            <!--"Slider1",IDC_SOUND_SLIDER,"msctls_trackbar32",-->
-            <!--"Device",IDC_STATIC,13,42,24,8-->
-            <!--COMBOBOX        IDC_SOUND_DEVICE,44,40,193,87,CBS_DROPDOWNLIST |-->
-        <!--</PreferenceCategory>-->
-        <!--<PreferenceCategory app:title="Infrared PrinterSimulator">
-            "IP Address:",IDC_STATIC
-            "Port:",IDC_STATIC
-            IDC_IR_ADDR
-            IDC_IR_PORT
-        </PreferenceCategory>-->
-        <!--<PreferenceCategory app:title="Serial Ports">
-            "Wire:",IDC_STATIC
-            COMBOBOX        IDC_WIRE
-            "IR:",IDC_STATIC
-            COMBOBOX        IDC_IR
-        </PreferenceCategory>-->
+	<PreferenceCategory android:title="@string/settings_category_memory_cards_hp49_title">
+        <Preference
+	        android:key="settings_flash_port2"
+	        android:title="@string/settings_flash_port2_title"
+	        android:summary=""
+	        />
+    </PreferenceCategory>
 
 </PreferenceScreen>

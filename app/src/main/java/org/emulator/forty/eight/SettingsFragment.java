@@ -350,25 +350,27 @@ public class SettingsFragment extends AppCompatDialogFragment {
 
 			Preference preferenceFlashPort2 = findPreference("settings_flash_port2");
 			if(preferenceFlashPort2 != null) {
-				String flashPort2Filename = settings.getString(preferenceFlashPort2.getKey(), "");
-				String displayName = flashPort2Filename;
-				try {
-					displayName = Utils.getFileName(getActivity(), flashPort2Filename);
-				} catch (Exception e) {
-					// Do nothing
-				}
-				preferenceFlashPort2.setSummary(displayName);
-				//TODO offer the possibility to manage the Flash from here too.
-//				preferenceFlashPort2.setOnPreferenceClickListener(preference -> {
-//					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//					intent.addCategory(Intent.CATEGORY_OPENABLE);
-//					intent.setType("*/*");
-//					intent.putExtra(Intent.EXTRA_TITLE, "shared.bin");
-//					Fragment parentFragment = getParentFragment();
-//					if (parentFragment != null)
-//						parentFragment.startActivityForResult(intent, MainActivity.INTENT_PORT2LOAD);
-//					return true;
-//				});
+				int cCurrentRomType = NativeLib.getCurrentModel();
+				if(cCurrentRomType == 'X' || cCurrentRomType == 'Q') {
+					String flashPort2Filename = settings.getString(preferenceFlashPort2.getKey(), "");
+					String displayName = flashPort2Filename;
+					try {
+						displayName = Utils.getFileName(getActivity(), flashPort2Filename);
+					} catch (Exception e) {
+						// Do nothing
+					}
+					preferenceFlashPort2.setSummary(displayName);
+					//TODO offer the possibility to manage the Flash from here too.
+					preferenceFlashPort2.setOnPreferenceClickListener(preference -> {
+						new AlertDialog.Builder(requireContext())
+								.setTitle(getString(R.string.settings_flash_port2_title))
+								.setMessage(getString(R.string.settings_flash_port2_dialog_description))
+								.setPositiveButton(android.R.string.ok, (dialog1, which1) -> {
+								}).show();
+						return true;
+					});
+				} else
+					preferenceFlashPort2.setEnabled(false);
 			}
 		}
 

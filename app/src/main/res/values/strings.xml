@@ -47,7 +47,7 @@
     <string name="nav_change_kml_script">Change KML Script...</string>
     <string name="nav_show_printer">Show the Printer Simulator...</string>
     <string name="nav_tool">Tool</string>
-	<string name="nav_create_ram_card">Create RAM Card...</string>
+	<string name="nav_create_ram_card">Create RAM Card (HP48)...</string>
 	<string name="nav_manage_flash_rom">Manage Flash ROM (HP49)...</string>
     <string name="nav_macro_record">Record Macro...</string>
     <string name="nav_macro_play">Play Macro...</string>
@@ -175,13 +175,15 @@
     <string name="settings_background_custom_color_title">Custom color</string>
     <string name="settings_background_custom_color_summary">Used when selecting the \'Custom color\' in the \'Other possible colors\'</string>
 
-    <string name="settings_category_memory_cards_title">Memory Cards</string>
+    <string name="settings_category_memory_cards_hp48_title">Memory Cards HP48</string>
     <string name="settings_port1en_title">Port 1 is Plugged</string>
     <string name="settings_port1wr_title">Port 1 is Writable</string>
     <string name="settings_port2en_title">Port 2 is Plugged</string>
     <string name="settings_port2wr_title">Port 2 is Writable</string>
     <string name="settings_port2load_title">Port 2 File</string>
+	<string name="settings_category_memory_cards_hp49_title">Memory Cards HP49/50</string>
 	<string name="settings_flash_port2_title">Port 2 Flash File</string>
+	<string name="settings_flash_port2_dialog_description">This file can be set from the main menu item "Manage Flash ROM (HP49)...".</string>
 
     <string name="settings_category_printer_title">Printer Simulator</string>
     <string name="settings_printer_model_title">Printer Model</string>

@@ -1047,7 +1047,9 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
     const char *configKey = (*env)->GetStringUTFChars(env, key, NULL) ;
     const char *configStringValue = stringValue ? (*env)->GetStringUTFChars(env, stringValue, NULL) : NULL;
 
-    bAutoSave = FALSE;
+	//LOGE("NativeLib_setConfiguration(%s, %d, %d, %s)", configKey, intValue1, intValue2, configStringValue);
+
+	bAutoSave = FALSE;
     bAutoSaveOnExit = FALSE;
     bLoadObjectWarning = FALSE;
     bAlwaysDisplayLog = TRUE;
@@ -1081,7 +1083,9 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
         if (Chipset.Port1Size && (cCurrentRomType!='X' || cCurrentRomType!='2' || cCurrentRomType!='Q'))   // CdB for HP: add apples
         {
             UINT nOldState = SwitchToState(SM_SLEEP);
-            // save old card status
+	        //LOGE("NativeLib_setConfiguration port1 start SwitchToState %d -> SM_SLEEP", nOldState);
+
+	        // save old card status
             BYTE byCardsStatus = Chipset.cards_status;
 
             // port1 disabled?
@@ -1103,7 +1107,9 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
                 Chipset.SoftInt = TRUE;	// set interrupt
                 bInterrupt = TRUE;
             }
+	        //LOGE("NativeLib_setConfiguration port1 end SwitchToState %d", nOldState);
             SwitchToState(nOldState);
+	        while (nState!=nNextState) Sleep(0);
         }
     } else if(_tcscmp(_T("settings_port2"), configKey) == 0) {
         settingsPort2en = (BOOL)intValue1;
@@ -1139,6 +1145,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
         if (bPort2CfgChange)			// slot2 configuration changed
         {
             UINT nOldState = SwitchToState(SM_INVALID);
+	        //LOGE("NativeLib_setConfiguration port2 start SwitchToState %d -> SM_INVALID", nOldState);
 
             UnmapPort2();				// unmap port2
 
@@ -1159,6 +1166,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
                 // save fingerprint of port2
                 Chipset.wPort2Crc = wPort2Crc;
             }
+	        //LOGE("NativeLib_setConfiguration port2 end SwitchToState %d", nOldState);
             SwitchToState(nOldState);
         }
     }

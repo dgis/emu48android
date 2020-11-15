@@ -612,8 +612,19 @@ DWORD ResumeThread(HANDLE hThread) {
 
 BOOL SetThreadPriority(HANDLE hThread, int nPriority) {
     THREAD_LOGD("SetThreadPriority()");
-    //TODO
-    return 0;
+//	if(hThread->handleType == HANDLE_TYPE_THREAD) {
+//		int policy;
+//		struct sched_param param;
+//		int result = pthread_getschedparam(hThread->threadId, &policy, &param);
+//		if(nPriority == THREAD_PRIORITY_HIGHEST) {
+//			param.sched_priority = sched_get_priority_min(policy);
+//			param.sched_priority = sched_get_priority_max(policy);
+//		}
+//		result = pthread_setschedparam(hThread->threadId, policy, &param);
+//      // THIS DOES NOT WORK WITH ANDROID!
+//		return TRUE;
+//	}
+    return FALSE;
 }
 
 
@@ -733,14 +744,19 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
     return FALSE;
 }
 
-void Sleep(int ms)
-{
-    time_t seconds = ms / 1000;
-    long milliseconds = ms - 1000 * seconds;
-    struct timespec timeOut, remains;
-    timeOut.tv_sec = seconds;
-    timeOut.tv_nsec = milliseconds * 1000000; /* 50 milliseconds */
-    nanosleep(&timeOut, &remains);
+void Sleep(int ms) {
+	if(ms == 0) {
+		// Because sched_yield() does not seem to work with Android, try to increase the pause duration,
+		// hoping to switch to the others thread (WorkerThread).
+		ms = 1;
+	}
+	sched_yield();
+	time_t seconds = ms / 1000;
+	long milliseconds = ms - 1000 * seconds;
+	struct timespec timeOut, remains;
+	timeOut.tv_sec = seconds;
+	timeOut.tv_nsec = milliseconds * 1000000;
+	nanosleep(&timeOut, &remains);
 }
 
 BOOL QueryPerformanceFrequency(PLARGE_INTEGER l) {
