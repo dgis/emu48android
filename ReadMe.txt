@@ -224,7 +224,7 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
-- Bug: Sometimes the haptic feedback is reset to its default! Actually, the full settings are gone!!! Searching a scenario to reproduce...
+- Add a Cancel button to the HP48 memory card creator dialog.
 - Show KML log on request.
 - Serial port support (via USB OTG and maybe Bluetooth).
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
