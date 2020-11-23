@@ -63,6 +63,12 @@ LINKS
 
 CHANGES
 
+
+Version 2.1 (2020-11-23)
+
+- Fix an issue which prevents to save all the settings (Save in onPause instead of onStop).
+
+
 Version 2.0 (2020-11-15)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.62+ that was merged from Christoph Gießelink's Emu48 version 1.63.

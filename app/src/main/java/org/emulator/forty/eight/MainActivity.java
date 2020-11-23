@@ -274,18 +274,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
     protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-    	if(saveWhenLaunchingActivity) {
+    	// Following the Activity lifecycle (https://developer.android.com/reference/android/app/Activity),
+	    // the data must be saved in the onPause() event instead of onStop() simply because the onStop
+	    // method is killable and may lead to the data half saved!
+	    if(saveWhenLaunchingActivity) {
 		    settings.putStringSet("MRU", mruLinkedHashMap.keySet());
 		    if (lcdOverlappingView != null)
 			    lcdOverlappingView.saveViewLayout();
@@ -301,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    clearFolderCache();
 	    }
 
-        super.onStop();
+        super.onPause();
     }
 
     @Override
@@ -1483,7 +1476,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 	private void migrateDeprecatedSettings() {
-		if(settings.hasValue("settings_haptic_feedback")) {
+		if(!settings.hasValue("settings_haptic_feedback_duration") && settings.hasValue("settings_haptic_feedback")) {
 			settings.removeValue("settings_haptic_feedback");
 			settings.putInt("settings_haptic_feedback_duration", 25);
 		}

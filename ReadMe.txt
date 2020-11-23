@@ -63,6 +63,12 @@ LINKS
 
 CHANGES
 
+
+Version 2.1 (2020-11-23)
+
+- Fix an issue which prevents to save all the settings (Save in onPause instead of onStop).
+
+
 Version 2.0 (2020-11-15)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.62+ that was merged from Christoph Gießelink's Emu48 version 1.63.
@@ -218,6 +224,9 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 TODO
 
+- Bug: Sometimes the haptic feedback is reset to its default! Actually, the full settings are gone!!! Searching a scenario to reproduce...
+- Show KML log on request.
+- Serial port support (via USB OTG and maybe Bluetooth).
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
 - The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
 - Somehow LEFT (Shift on the keyboard) + 7 activates the DIVIDE-key (z-Key)..., but with the NUM-Key it can make it work without problems...

@@ -251,10 +251,10 @@ public class Settings extends PreferenceDataStore {
 					for (int i = 0; i < magic.length(); i++) {
 						fileOutputStream.write(magic.charAt(i));
 					}
-					fileOutputStream.flush();
 					fileOutputStream.close();
 				}
 			} catch (IOException e) {
+				if(debug) Log.d(TAG, "saveInStateFile() Error");
 				e.printStackTrace();
 			}
 		}
@@ -398,8 +398,8 @@ public class Settings extends PreferenceDataStore {
 	@Nullable
 	@Override
 	public String getString(String key, @Nullable String defValue) {
-		if(debug) Log.d(TAG, "getString(key: '" + key + "')");
 		Object result = getValue(key);
+		if(debug) Log.d(TAG, "getString(key: '" + key + "') -> " + result);
 		if(result instanceof String)
 			return (String) result;
 		return defValue;
@@ -420,8 +420,8 @@ public class Settings extends PreferenceDataStore {
 
 	@Override
 	public int getInt(String key, int defValue) {
-		if(debug) Log.d(TAG, "getInt(key: '" + key + "')");
 		Object result = getValue(key);
+		if(debug) Log.d(TAG, "getInt(key: '" + key + "') -> " + result);
 		if(result != null)
 			try {
 				return ((Number) result).intValue();
@@ -431,8 +431,8 @@ public class Settings extends PreferenceDataStore {
 
 	@Override
 	public long getLong(String key, long defValue) {
-		if(debug) Log.d(TAG, "getLong(key: '" + key + "')");
 		Object result = getValue(key);
+		if(debug) Log.d(TAG, "getLong(key: '" + key + "') -> " + result);
 		if(result != null)
 			try {
 				return ((Number) result).longValue();
@@ -442,8 +442,8 @@ public class Settings extends PreferenceDataStore {
 
 	@Override
 	public float getFloat(String key, float defValue) {
-		if(debug) Log.d(TAG, "getFloat(key: '" + key + "')");
 		Object result = getValue(key);
+		if(debug) Log.d(TAG, "getFloat(key: '" + key + "') -> " + result);
 		if(result != null)
 			try {
 				return ((Number) result).floatValue();
@@ -453,8 +453,8 @@ public class Settings extends PreferenceDataStore {
 
 	@Override
 	public boolean getBoolean(String key, boolean defValue) {
-		if(debug) Log.d(TAG, "getBoolean(key: '" + key + "')");
 		Object result = getValue(key);
+		if(debug) Log.d(TAG, "getBoolean(key: '" + key + "') -> " + result);
 		if(result != null)
 			try {
 				return (Boolean) result;

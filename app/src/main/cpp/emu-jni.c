@@ -1020,7 +1020,7 @@ JNIEXPORT jboolean JNICALL Java_org_emulator_calculator_NativeLib_onLoadFlashROM
 	BOOL result = MapRom(filenameUTF8);
 	cCurrentRomType = cCurrentRomTypeBackup;
 	if(result) {
-		UpdatePatches(true);                    // Apply the patch again if needed (not tested!)
+		UpdatePatches(TRUE);                    // Apply the patch again if needed (not tested!)
 		if (!CrcRom(&wRomCrc))				    // build patched ROM fingerprint and check for unpacked data
 			result = FALSE;
 		if (result && bDocumentAvail) {
