@@ -994,6 +994,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	                        // We only change the KML script here.
                             int result = NativeLib.onViewScript(scriptItem.filename, scriptItem.folder);
                             if(result > 0) {
+                            	//TODO no need to call changeKMLFolder(scriptItem.folder);
+	                            settings.putString("settings_kml_folder_embedded", scriptItem.folder);
                                 displayKMLTitle();
                                 showKMLLog();
                             } else

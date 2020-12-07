@@ -63,6 +63,10 @@ LINKS
 
 CHANGES
 
+Version 2.2 (2020-12-08)
+
+- The KML folder is now saved when changing the KML script for a custom one via the menu "Change KML Script...".
+
 
 Version 2.1 (2020-11-23)
 
