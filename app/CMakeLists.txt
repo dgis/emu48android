@@ -19,7 +19,6 @@ cmake_minimum_required(VERSION 3.4.1)
 #add_compile_options(-DDEBUG_ANDROID_FILE)
 
 #add_compile_options(-DNEW_WIN32_SOUND_ENGINE)
-#add_compile_options(-DWIN32_TIMER_THREAD) # old timer algorithm which stop when no more thread!
 
 add_compile_options(-DEMUXX=48)
 

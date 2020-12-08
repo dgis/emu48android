@@ -2498,128 +2498,6 @@ HANDLE WINAPI GetClipboardData(UINT uFormat) {
     return szText;
 }
 
-#if defined WIN32_TIMER_THREAD
-struct timerEvent {
-    BOOL valid;
-    int timerId;
-    LPTIMECALLBACK fptc;
-    DWORD_PTR dwUser;
-    UINT fuEvent;
-    timer_t timer;
-};
-
-#define MAX_TIMER 10
-struct timerEvent timerEvents[MAX_TIMER];
-pthread_mutex_t timerEventsLock;
-static void initTimer() {
-    for (int i = 0; i < MAX_TIMER; ++i) {
-        timerEvents[i].valid = FALSE;
-    }
-}
-
-void deleteTimeEvent(UINT uTimerID) {
-    pthread_mutex_lock(&timerEventsLock);
-    timer_delete(timerEvents[uTimerID - 1].timer);
-    timerEvents[uTimerID - 1].valid = FALSE;
-    pthread_mutex_unlock(&timerEventsLock);
-}
-
-MMRESULT timeKillEvent(UINT uTimerID) {
-    TIMER_LOGD("timeKillEvent(uTimerID: [%d])", uTimerID);
-    deleteTimeEvent(uTimerID);
-    return 0; //No error
-}
-
-void timerCallback(int timerId) {
-    if(timerId >= 0 && timerId < MAX_TIMER && timerEvents[timerId].valid) {
-        timerEvents[timerId].fptc((UINT) (timerId + 1), 0, (DWORD) timerEvents[timerId].dwUser, 0, 0);
-
-        if(timerEvents[timerId].fuEvent == TIME_ONESHOT) {
-            TIMER_LOGD("timerCallback remove timer uTimerID [%d]", timerId + 1);
-            deleteTimeEvent((UINT) (timerId + 1));
-        }
-
-        jniDetachCurrentThread();
-    }
-}
-MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
-    TIMER_LOGD("timeSetEvent(uDelay: %d, fuEvent: %d)", uDelay, fuEvent);
-
-    pthread_mutex_lock(&timerEventsLock);
-
-    // Find a timer id
-    int timerId = -1;
-    for (int i = 0; i < MAX_TIMER; ++i) {
-        if(!timerEvents[i].valid) {
-            timerId = i;
-            break;
-        }
-    }
-    if(timerId == -1) {
-        LOGD("timeSetEvent() ERROR: No more timer available");
-        pthread_mutex_unlock(&timerEventsLock);
-        return NULL;
-    }
-    timerEvents[timerId].timerId = timerId;
-    timerEvents[timerId].fptc = fptc;
-    timerEvents[timerId].dwUser = dwUser;
-    timerEvents[timerId].fuEvent = fuEvent;
-
-
-    struct sigevent sev;
-    sev.sigev_notify = SIGEV_THREAD;
-    sev.sigev_notify_function = (void (*)(sigval_t)) timerCallback; //this function will be called when timer expires
-    sev.sigev_value.sival_int = timerEvents[timerId].timerId; //this argument will be passed to cbf
-    sev.sigev_notify_attributes = NULL;
-    timer_t * timer = &(timerEvents[timerId].timer);
-
-    // CLOCK_REALTIME 0 OK but X intervals only
-    // CLOCK_MONOTONIC 1 OK but X intervals only
-    // CLOCK_PROCESS_CPUTIME_ID 2 NOTOK, not working with PERIODIC!
-    // CLOCK_THREAD_CPUTIME_ID 3 NOTOK
-    // CLOCK_MONOTONIC_RAW 4 NOTOK
-    // CLOCK_REALTIME_COARSE 5 NOTOK
-    // CLOCK_MONOTONIC_COARSE 6 NOTOK
-    // CLOCK_BOOTTIME 7 OK but X intervals only
-    // CLOCK_REALTIME_ALARM 8 NOTOK EPERM
-    // CLOCK_BOOTTIME_ALARM 9 NOTOK EPERM
-    // CLOCK_SGI_CYCLE 10 NOTOK EINVAL
-    // CLOCK_TAI 11
-
-    if (timer_create(CLOCK_REALTIME, &sev, timer) == -1) {
-        LOGD("timeSetEvent() ERROR in timer_create, errno: %d (EAGAIN 11 / EINVAL 22 / ENOMEM 12)", errno);
-        //        EAGAIN Temporary error during kernel allocation of timer structures.
-        //        EINVAL Clock ID, sigev_notify, sigev_signo, or sigev_notify_thread_id is invalid.
-        //        ENOMEM Could not allocate memory.
-        pthread_mutex_unlock(&timerEventsLock);
-        return NULL;
-    }
-
-    long freq_nanosecs = uDelay;
-    struct itimerspec its;
-    its.it_value.tv_sec = freq_nanosecs / 1000;
-    its.it_value.tv_nsec = (freq_nanosecs % 1000) * 1000000;
-    if(fuEvent == TIME_PERIODIC) {
-        its.it_interval.tv_sec = its.it_value.tv_sec;
-        its.it_interval.tv_nsec = its.it_value.tv_nsec;
-    } else /*if(fuEvent == TIME_ONESHOT)*/ {
-        its.it_interval.tv_sec = 0;
-        its.it_interval.tv_nsec = 0;
-    }
-    if (timer_settime(timerEvents[timerId].timer, 0, &its, NULL) == -1) {
-        LOGD("timeSetEvent() ERROR in timer_settime, errno: %d (EFAULT 14 / EINVAL 22)", errno);
-        //        EFAULT new_value, old_value, or curr_value is not a valid pointer.
-        //        EINVAL timerid is invalid. Or new_value.it_value is negative; or new_value.it_value.tv_nsec is negative or greater than 999,999,999.
-        timer_delete(timerEvents[timerId].timer);
-        pthread_mutex_unlock(&timerEventsLock);
-        return NULL;
-    }
-    timerEvents[timerId].valid = TRUE;
-    TIMER_LOGD("timeSetEvent() -> timerId+1: [%d]", timerId + 1);
-    pthread_mutex_unlock(&timerEventsLock);
-    return (MMRESULT) (timerId + 1); // No error
-}
-#else
 struct timerEvent {
     int timerId;
     UINT uDelay;
@@ -2707,7 +2585,7 @@ static void insertTimer(struct timerEvent * newTimer) {
 }
 
 static void timerThreadStart(LPVOID lpThreadParameter) {
-	LOGD("timerThreadStart() START");
+	TIMER_LOGD("timerThreadStart() START");
 	pthread_mutex_lock(&timerEventsLock);
     while (!timerThreadToEnd) {
         TIMER_LOGD("timerThreadStart() %ld", GetTickCount64());
@@ -2768,7 +2646,7 @@ static void timerThreadStart(LPVOID lpThreadParameter) {
     timerThreadId = 0;
     pthread_mutex_unlock(&timerEventsLock);
     jniDetachCurrentThread();
-	LOGD("timerThreadStart() END");
+	TIMER_LOGD("timerThreadStart() END");
 }
 
 MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_PTR dwUser, UINT fuEvent) {
@@ -2793,9 +2671,9 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
 
     if(!timerThreadId) {
         // If not yet created, create the thread which will handle all the timers
-	    LOGD("timeSetEvent() pthread_create");
+	    TIMER_LOGD("timeSetEvent() pthread_create");
         if (pthread_create(&timerThreadId, NULL, (void *(*)(void *)) timerThreadStart, NULL) != 0) {
-            LOGD("timeSetEvent() ERROR in pthread_create, errno: %d (EAGAIN 11 / EINVAL 22 / EPERM 1)", errno);
+            TIMER_LOGD("timeSetEvent() ERROR in pthread_create, errno: %d (EAGAIN 11 / EINVAL 22 / EPERM 1)", errno);
             //        EAGAIN Insufficient resources to create another thread.
             //        EINVAL Invalid settings in attr.
             //        ENOMEM No permission to set the scheduling policy and parameters specified in attr.
@@ -2808,7 +2686,6 @@ MMRESULT timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK fptc, DWORD_
     pthread_mutex_unlock(&timerEventsLock);
     return (MMRESULT) newTimer->timerId; // No error
 }
-#endif
 
 MMRESULT timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc) {
     if(ptc) {

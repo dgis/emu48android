@@ -994,7 +994,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	                        // We only change the KML script here.
                             int result = NativeLib.onViewScript(scriptItem.filename, scriptItem.folder);
                             if(result > 0) {
-                            	//TODO no need to call changeKMLFolder(scriptItem.folder);
 	                            settings.putString("settings_kml_folder_embedded", scriptItem.folder);
                                 displayKMLTitle();
                                 showKMLLog();
@@ -1515,8 +1514,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    // Change the default KMLFolder to allow getFirstKMLFilenameForType() to find in the specific folder!
 		    Uri kmlFolderUri = Uri.parse(kmlScriptFolder);
 		    DocumentFile kmlFolderDocumentFile = DocumentFile.fromTreeUri(this, kmlFolderUri);
-		    if(kmlFolderDocumentFile != null && kmlFolderDocumentFile.exists())
-		    	changeKMLFolder(kmlScriptFolder);
+		    if(kmlFolderDocumentFile != null) {
+			    // Check the permission of the folder kmlScriptFolder
+			    if (!kmlFolderDocumentFile.canRead()) {
+				    // Permission denied, switch to the default asset folder
+				    changeKMLFolder(null);
+				    kmlScriptFolder = null;
+				    showAlert(getString(R.string.message_open_kml_folder_permission_lost), true);
+			    } else if (kmlFolderDocumentFile.exists())
+				    changeKMLFolder(kmlScriptFolder);
+		    } else {
+		    	// We are using the API < 21, so we
+			    changeKMLFolder(null);
+			    kmlScriptFolder = null;
+		    }
 	    }
 
 	    if(settings.getBoolean("settings_port2en", false)) {
@@ -1527,13 +1538,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			    DocumentFile port2DocumentFile = DocumentFile.fromSingleUri(this, port2Uri);
 			    if (port2DocumentFile == null || !port2DocumentFile.exists()) {
 				    String port2Filename = getFilenameFromURL(port2Url);
+				    String finalKmlScriptFolder = kmlScriptFolder;
 				    new AlertDialog.Builder(this)
 					    .setTitle(getString(R.string.message_open_port2_file_not_found))
 					    .setMessage(String.format(Locale.US, getString(R.string.message_open_port2_file_not_found_description), port2Filename))
 					    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 
 						    urlToOpenInIntentPort2Load = url;
-						    kmlScriptFolderInIntentPort2Load = kmlScriptFolder;
+						    kmlScriptFolderInIntentPort2Load = finalKmlScriptFolder;
 
 						    Intent intentPort2 = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 						    intentPort2.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1544,7 +1556,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					    }).setNegativeButton(android.R.string.cancel, (dialog, which) -> {
 					    	// Deactivate the port2 because it is not reachable.
 					        settings.putBoolean("settings_port2en", false);
-						    onFileOpenNative(url, kmlScriptFolder);
+						    onFileOpenNative(url, finalKmlScriptFolder);
 			            }).show();
 				    return;
 			    }
@@ -1936,7 +1948,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    for (int i = 0; i < kmlScripts.size(); i++) {
 			    KMLScriptItem kmlScriptItem = kmlScripts.get(i);
 			    if (kmlScriptItem.model.charAt(0) == chipsetType) {
-				    showAlert(String.format(Locale.US, "Existing KML script not found. Trying the compatible script: %s", kmlScriptItem.filename), true);
+				    showAlert(String.format(Locale.US, getString(R.string.message_open_kml_not_found_alert_trying_other1), kmlScriptItem.filename), true);
 				    NativeLib.setCurrentKml(kmlScriptItem.filename);
 				    NativeLib.setEmuDirectory(kmlFolderURL);
 				    return 1;
@@ -1953,13 +1965,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         for (int i = 0; i < kmlScripts.size(); i++) {
             KMLScriptItem kmlScriptItem = kmlScripts.get(i);
             if (kmlScriptItem.model.charAt(0) == chipsetType) {
-	            showAlert(String.format(Locale.US, "Existing KML script not found. Trying the embedded and compatible script: %s", kmlScriptItem.filename), true);
+	            showAlert(String.format(Locale.US, getString(R.string.message_open_kml_not_found_alert_trying_other2), kmlScriptItem.filename), true);
 	            NativeLib.setCurrentKml(kmlScriptItem.filename);
 	            NativeLib.setEmuDirectory("assets/calculators/");
                 return 1;
             }
         }
-	    showAlert("Cannot find the KML template file, sorry.", true);
+	    showAlert(getString(R.string.message_open_kml_not_found_alert), true);
         return 0;
     }
 
