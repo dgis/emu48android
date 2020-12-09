@@ -65,6 +65,10 @@ android {
             if (canSign) {
                 signingConfig signingConfigs.release
             }
+
+            ndk {
+                debugSymbolLevel 'FULL' // { SYMBOL_TABLE | FULL }
+            }
         }
     }
     externalNativeBuild {
