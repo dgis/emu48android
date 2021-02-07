@@ -192,11 +192,28 @@ public class MainScreenView extends PanAndScaleView {
         this.setFocusableInTouchMode(true);
     }
 
-    // Prevent accidental scroll when taping a calc button
+	private boolean previousRightMouseButtonStateDown = false;
+
+	// Prevent accidental scroll when taping a calc button
     protected Set<Integer> currentButtonTouched = new HashSet<>();
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
-        int actionIndex = event.getActionIndex();
+	    if(event.getSource() == InputDevice.SOURCE_MOUSE) {
+	    	// Support the right mouse button click effect with Android version >= 5.0
+		    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+			    boolean rightMouseButtonStateDown = event.isButtonPressed(MotionEvent.BUTTON_SECONDARY);
+			    if(rightMouseButtonStateDown != previousRightMouseButtonStateDown) {
+				    // Right button pressed or released.
+				    previousRightMouseButtonStateDown = rightMouseButtonStateDown;
+				    if(!previousRightMouseButtonStateDown) {
+				    	// Allows pressing a calculator button but prevents its release to allow the On+A+F key combination.
+				        return true;
+				    }
+			    }
+		    }
+	    }
+
+	    int actionIndex = event.getActionIndex();
         int action = event.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -235,7 +252,7 @@ public class MainScreenView extends PanAndScaleView {
         return super.onTouchEvent(event);
     }
 
-    @Override
+	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
         && (event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
