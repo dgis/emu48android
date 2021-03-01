@@ -83,7 +83,8 @@ h3 { color:red; font-size:1.1em; }
     <a href="#ss12.2">12.2 About Emu48...</a>
     </span></p>
   <p><a class="nav1" href="#s13">13. DDE Server</a></p>
-  <p><a class="nav1" href="#s14">14. License</a></p>
+  <p><a class="nav1" href="#s14">14. Emu48+ Changes</a></p>
+  <p><a class="nav1" href="#s15">15. License</a></p>
 </div>
 <div id="main">
   <h1><a name=s1>1. General</a></h1>
@@ -395,19 +396,14 @@ h3 { color:red; font-size:1.1em; }
     </ul>
   <h3><a name=ss8.6.3>8.6.3 Settings Peripheral</a></h3>
   <h4>8.6.3.1 Section Sound</h4>
-      <p>A new implementation of the sound engine made ROM patches for sound
+    <p>A new implementation of the sound engine made ROM patches for sound
       output obsolete. The new sound engine emulates the behaviour of the
       beeper output ports and only work in connection with a sound card.
       Using the legacy PC speaker mode isn't possible any more. The old
-      beeper method with a ROM patch is still working but deprecated, it's
-      strongly recommended to remove all beep patches from your current KML
-      scripts to enable the new sound engine. The support of the old sound
-      implementation by a ROM patch maybe removed in later versions of the
-      emulator and remaining beep patches will corrupt the ROM with an
-      illegal opcode then. Actually the program informs you when
-      detecting ROM beep patches by opening the &quot;KML Script Compilation
-      Result&quot; dialog. To prevent this, remove the ROM beep patches
-      from the KML script.
+      beeper method with a ROM patch has been removed, so you have to remove
+      the ROM beep patches from your KML scripts. Actually the program
+      informs you when detecting ROM beep patches by opening the &quot;KML
+      Script Compilation Result&quot; dialog reporting an error.
     </p>
     <p>For the sound generation the calculator must know his own CPU strobe
       frequency. On the real calculator the speed depends on various settings
@@ -599,9 +595,51 @@ h3 { color:red; font-size:1.1em; }
         <td width="66%" align="center">HP object (normal HP object)</td>
       </tr>
     </table>
-  <h1><a name=s14>14. License</a></h1>
+  <h1><a name=s14>14. Emu48+ Changes</a></h1>
+    <p>Emu48+ is a modified version of Emu48 to add support for the ARM-based 
+    calculators.  It does not emulate the ARM CPU, but it enhances the 
+    Saturn emulation to more closely match the emulation provided by the 
+    Saturn emulator on the ARM-based calculators.</p>
+    <p>Emu48+ adds support for many of the Saturn+ instructions, including 
+    some of the BUSCC instructions, and it also adds support for the 80-line 
+    display used on the 49g+ and 50g.</p>
+    <p>At present, the additional calculators supported in Emu48+ are the 
+    49g+, 48gII (hardware revision 1), 50g, and 39g+/39gs/40gs.</p>
+    <p>To create KML scripts for the additional calculator models, use the 
+    following model codes:</p>
+    <table border="0" cellpadding="0" cellspacing="0" width="651" summary="DDE settings">
+      <tr>
+        <td width="111">39g+/39gs:</td>
+        <td width="536">Model  "P"<br>
+         Class  39</td>
+      </tr>
+      <tr>
+        <td width="111">40gs:</td>
+        <td width="536">Model  "P"<br>
+         Class  40</td>
+      </tr>
+      <tr>
+        <td width="111">48gII:</td>
+        <td width="536">Model  "2"</td>
+      </tr>
+      <tr>
+        <td width="111">49g+:</td>
+        <td width="536">Model  "Q"</td>
+      </tr>
+      <tr>
+        <td width="111">50g:</td>
+        <td width="536">Model  "Q"<br>
+         Class  50</td>
+      </tr>
+    </table>
+    <p>Most of the code that was changed in Emu48+ over Emu48 was provided by
+    Cyrille de Brebisson of Hewlett-Packard.</p>
+  <h1><a name=s15>15. License</a></h1>
     <p>Emu48 - A HP38G/39G/40G/48SX/48GX/49G Emulator<br>
-    Copyright (C) 2019 Christoph Gie&szlig;elink</p>
+    Copyright (C) 2020 Christoph Gie&szlig;elink</p>
+    <p>Emu48+ - A 39g+/39gs/40gs/48gII/49g+/50g Emulator<br>
+    Copyright (C) 2020 Cyrille de Brebisson<br>
+    Additional changes by Bill Graves and Eric Rechlin</p>
     <p>This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
     Software Foundation; either version 2 of the License, or (at your option)
