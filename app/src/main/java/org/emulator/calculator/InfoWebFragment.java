@@ -16,8 +16,8 @@ package org.emulator.calculator;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +29,8 @@ import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDialogFragment;
 import androidx.appcompat.widget.Toolbar;
+
+import java.util.Locale;
 
 public class InfoWebFragment extends AppCompatDialogFragment {
 
@@ -62,9 +64,7 @@ public class InfoWebFragment extends AppCompatDialogFragment {
 		Toolbar toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
 		toolbar.setTitle(title);
 		Utils.colorizeDrawableWithColor(requireContext(), toolbar.getNavigationIcon(), android.R.attr.colorForeground);
-		toolbar.setNavigationOnClickListener(v -> {
-			dismiss();
-		});
+		toolbar.setNavigationOnClickListener(v -> dismiss());
 
 		WebView webView = view.findViewById(Utils.resId(this, "id", "webViewInfo"));
 		webView.getSettings().setJavaScriptEnabled(true);
@@ -76,6 +76,16 @@ public class InfoWebFragment extends AppCompatDialogFragment {
 				if(url != null)
 					// Inject a CSS style to wrap the table of content if needed
 					view.evaluateJavascript("javascript:(function(){var css=document.createElement(\"style\");css.type=\"text/css\";css.innerHTML=\".nav1{overflow-wrap:break-word;}\";document.head.appendChild(css);})();", null);
+			}
+
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				if(url != null && url.toLowerCase(Locale.ENGLISH).matches("^https?://.*")) {
+					// External pages should be loaded in external web browser.
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+					return true;
+				}
+				return super.shouldOverrideUrlLoading(view, url);
 			}
 		});
 		webView.loadUrl(getString(Utils.resId(this, "string", "help_url")));
