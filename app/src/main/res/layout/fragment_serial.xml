@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/frameLayout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<androidx.appcompat.widget.Toolbar
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:minHeight="?attr/actionBarSize"
+		app:layout_constraintTop_toTopOf="parent"
+		app:navigationIcon="?android:attr/homeAsUpIndicator" />
+
+	<androidx.fragment.app.FragmentContainerView
+		android:id="@+id/serialport_devices_fragment"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+<!--	android:name="com.example.serialport.ui.home.DevicesFragment"-->
+
+<!--	<androidx.constraintlayout.widget.ConstraintLayout-->
+<!--		android:id="@+id/serial_fragment_container"-->
+<!--		android:layout_width="match_parent"-->
+<!--		android:layout_height="0dp"-->
+<!--		app:layout_constraintBottom_toBottomOf="parent"-->
+<!--		app:layout_constraintTop_toBottomOf="@+id/my_toolbar">-->
+
+<!--	</androidx.constraintlayout.widget.ConstraintLayout>-->
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -475,6 +475,38 @@ struct _HDC {
 	int windowOriginY;
 };
 
+// Comm
+
+typedef struct _DCB {
+	DWORD DCBlength;
+	DWORD BaudRate;
+	DWORD fBinary: 1;
+	DWORD fParity: 1;
+	DWORD fOutxCtsFlow:1;
+	DWORD fOutxDsrFlow:1;
+	DWORD fDtrControl:2;
+	DWORD fDsrSensitivity:1;
+	DWORD fTXContinueOnXoff: 1;
+	DWORD fOutX: 1;
+	DWORD fInX: 1;
+	DWORD fErrorChar: 1;
+	DWORD fNull: 1;
+	DWORD fRtsControl:2;
+	DWORD fAbortOnError:1;
+	DWORD fDummy2:17;
+	WORD wReserved;
+	WORD XonLim;
+	WORD XoffLim;
+	BYTE ByteSize;
+	BYTE Parity;
+	BYTE StopBits;
+	char XonChar;
+	char XoffChar;
+	char ErrorChar;
+	char EofChar;
+	char EvtChar;
+	WORD wReserved1;
+} DCB, *LPDCB;
 
 // Handle
 
@@ -511,41 +543,62 @@ enum HANDLE_TYPE {
 	HANDLE_TYPE_THREAD,
 	HANDLE_TYPE_WINDOW,
 	HANDLE_TYPE_ICON,
+	HANDLE_TYPE_COM,
 };
 struct _HANDLE {
     enum HANDLE_TYPE handleType;
+	union {
+		struct {
+			// HANDLE_TYPE_FILE*
+		    int fileDescriptor;
+		    BOOL fileOpenFileFromContentResolver;
 
-    // HANDLE_TYPE_FILE*
-    int fileDescriptor;
-    BOOL fileOpenFileFromContentResolver;
+		    AAsset* fileAsset;
 
-    AAsset* fileAsset;
+		    // HANDLE_TYPE_FILE_MAPPING*
+		    off_t fileMappingOffset;
+		    size_t fileMappingSize;
+		    void* fileMappingAddress;
+			DWORD fileMappingProtect;
+		};
 
-    // HANDLE_TYPE_FILE_MAPPING*
-    off_t fileMappingOffset;
-    size_t fileMappingSize;
-    void* fileMappingAddress;
-	DWORD fileMappingProtect;
+		struct {
+			// HANDLE_TYPE_THREAD
+		    pthread_t threadId;
+		    DWORD (*threadStartAddress)(LPVOID);
+		    LPVOID threadParameter;
+		    struct _HANDLE * threadEventMessage;
+		    struct tagMSG threadMessage;
+			int threadIndex;
+		};
 
-	// HANDLE_TYPE_THREAD
-    pthread_t threadId;
-    DWORD (*threadStartAddress)(LPVOID);
-    LPVOID threadParameter;
-    struct _HANDLE * threadEventMessage;
-    struct tagMSG threadMessage;
-	int threadIndex;
+		struct {
+			// HANDLE_TYPE_EVENT
+		    pthread_cond_t eventCVariable;
+		    pthread_mutex_t eventMutex;
+		    BOOL eventAutoReset;
+		    BOOL eventState;
+		};
 
-	// HANDLE_TYPE_EVENT
-    pthread_cond_t eventCVariable;
-    pthread_mutex_t eventMutex;
-    BOOL eventAutoReset;
-    BOOL eventState;
+	    struct {
+		    // HANDLE_TYPE_WINDOW
+	        HDC windowDC;
+	    };
 
-    // HANDLE_TYPE_WINDOW
-    HDC windowDC;
+	    struct {
+		    // HANDLE_TYPE_ICON
+		    HBITMAP icon;
+	    };
 
-    // HANDLE_TYPE_ICON
-    HBITMAP icon;
+	    struct {
+		    // HANDLE_TYPE_COM
+		    LPDCB commState;
+		    struct _HANDLE * commEvent;
+		    int commIndex;
+		    int commId;
+		    int commEventMask;
+	    };
+    };
 };
 typedef struct _HANDLE * HANDLE;
 
@@ -1214,6 +1267,13 @@ extern void mainViewResizeCallback(int x, int y);
 extern int openFileFromContentResolver(const TCHAR * fileURL, int writeAccess);
 extern int openFileInFolderFromContentResolver(const TCHAR * filename, const TCHAR * folderURL, int writeAccess);
 extern int closeFileFromContentResolver(int fd);
+extern int openSerialPort(const TCHAR * serialPort);
+extern int closeSerialPort(int serialPortId);
+extern int setSerialPortParameters(int serialPortId, int baudRate);
+extern int readSerialPort(int serialPortId, LPBYTE buffer, int nNumberOfBytesToRead);
+extern int writeSerialPort(int serialPortId, LPBYTE buffer, int bufferSize);
+extern int serialPortSetBreak(int serialPortId);
+extern int serialPortClearBreak(int serialPortId);
 extern int showAlert(const TCHAR * messageText, int flags);
 extern void sendMenuItemCommand(int menuItem);
 extern TCHAR szCurrentKml[MAX_PATH];
@@ -1292,38 +1352,8 @@ typedef struct _COMMTIMEOUTS {
 	DWORD WriteTotalTimeoutConstant;
 } COMMTIMEOUTS,*LPCOMMTIMEOUTS;
 
-typedef struct _DCB {
-	DWORD DCBlength;
-	DWORD BaudRate;
-	DWORD fBinary: 1;
-	DWORD fParity: 1;
-	DWORD fOutxCtsFlow:1;
-	DWORD fOutxDsrFlow:1;
-	DWORD fDtrControl:2;
-	DWORD fDsrSensitivity:1;
-	DWORD fTXContinueOnXoff: 1;
-	DWORD fOutX: 1;
-	DWORD fInX: 1;
-	DWORD fErrorChar: 1;
-	DWORD fNull: 1;
-	DWORD fRtsControl:2;
-	DWORD fAbortOnError:1;
-	DWORD fDummy2:17;
-	WORD wReserved;
-	WORD XonLim;
-	WORD XoffLim;
-	BYTE ByteSize;
-	BYTE Parity;
-	BYTE StopBits;
-	char XonChar;
-	char XoffChar;
-	char ErrorChar;
-	char EofChar;
-	char EvtChar;
-	WORD wReserved1;
-} DCB, *LPDCB;
-
 extern BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumberOfBytesTransferred, BOOL bWait);
+extern void commEvent(int commId, int eventMask);
 extern BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped);
 extern BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat);
 extern BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts);

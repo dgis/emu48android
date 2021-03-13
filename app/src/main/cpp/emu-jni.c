@@ -291,6 +291,119 @@ void setKMLIcon(int imageWidth, int imageHeight, LPBYTE buffer, int bufferSize) 
     }
 }
 
+int openSerialPort(const TCHAR * serialPort) {
+	int result = -1;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "openSerialPort", "(Ljava/lang/String;)I");
+			jstring utfFileURL = (*jniEnv)->NewStringUTF(jniEnv, serialPort);
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, utfFileURL);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+int closeSerialPort(int serialPortId) {
+	int result = -1;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "closeSerialPort", "(I)I");
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, serialPortId);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+int setSerialPortParameters(int serialPortId, int baudRate) {
+	int result = -1;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "setSerialPortParameters", "(II)I");
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, serialPortId, baudRate);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+int readSerialPort(int serialPortId, LPBYTE buffer, int nNumberOfBytesToRead) {
+	int nNumberOfReadBytes = 0;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv && buffer && nNumberOfBytesToRead > 0) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "readSerialPort", "(II)[B");
+			jbyteArray readBytes = (jbyteArray)(*jniEnv)->CallObjectMethod(jniEnv, mainActivity, midStr, serialPortId, nNumberOfBytesToRead);
+			nNumberOfReadBytes = (*jniEnv)->GetArrayLength(jniEnv, readBytes);
+			jbyte* elements = (*jniEnv)->GetByteArrayElements(jniEnv, readBytes, NULL);
+			if (elements) {
+				for(int i = 0; i < nNumberOfReadBytes; i++)
+					buffer[i] = elements[i];
+				(*jniEnv)->ReleaseByteArrayElements(jniEnv, readBytes, elements, JNI_ABORT);
+			}
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return nNumberOfReadBytes;
+}
+
+int writeSerialPort(int serialPortId, LPBYTE buffer, int bufferSize) {
+	int result = 0;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "writeSerialPort", "(I[B)I");
+
+			jbyteArray javaBuffer = NULL;
+			if(buffer) {
+				javaBuffer = (*jniEnv)->NewByteArray(jniEnv, bufferSize);
+				(*jniEnv)->SetByteArrayRegion(jniEnv, javaBuffer, 0, bufferSize, (jbyte *) buffer);
+			}
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, serialPortId, javaBuffer);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+int serialPortSetBreak(int serialPortId) {
+	int result = 0;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "serialPortSetBreak", "(I)I");
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, serialPortId);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+int serialPortClearBreak(int serialPortId) {
+	int result = 0;
+	JNIEnv *jniEnv = getJNIEnvironment();
+	if(jniEnv) {
+		jclass mainActivityClass = (*jniEnv)->GetObjectClass(jniEnv, mainActivity);
+		if(mainActivityClass) {
+			jmethodID midStr = (*jniEnv)->GetMethodID(jniEnv, mainActivityClass, "serialPortClearBreak", "(I)I");
+			result = (*jniEnv)->CallIntMethod(jniEnv, mainActivity, midStr, serialPortId);
+			(*jniEnv)->DeleteLocalRef(jniEnv, mainActivityClass);
+		}
+	}
+	return result;
+}
+
+
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_start(JNIEnv *env, jobject thisz, jobject assetMgr, jobject activity) {
 
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
@@ -1169,6 +1282,10 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
 	        //LOGE("NativeLib_setConfiguration port2 end SwitchToState %d", nOldState);
             SwitchToState(nOldState);
         }
+    } else if(_tcscmp(_T("settings_serial_ports_wire"), configKey) == 0) {
+	    _tcsncpy(szSerialWire, _tcscmp(_T("0,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue, sizeof(szSerialWire));
+    } else if(_tcscmp(_T("settings_serial_ports_ir"), configKey) == 0) {
+	    _tcsncpy(szSerialIr, _tcscmp(_T("0,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue, sizeof(szSerialIr));
     }
 
     if(configKey)
@@ -1210,4 +1327,8 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_getLCDBackgroundCo
 		return palPalEntry[0].peRed << 16 | palPalEntry[0].peGreen << 8 | palPalEntry[0].peBlue;
 	}
 	return -1;
+}
+
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_commEvent(JNIEnv *env, jclass clazz, jint commId, jint eventMask) {
+	commEvent(commId, eventMask);
 }

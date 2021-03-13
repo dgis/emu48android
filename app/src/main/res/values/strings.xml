@@ -127,8 +127,23 @@
     <string name="message_change_overlapping_lcd_mode_to_manual">The overlapping LCD mode has been changed to "Manual".</string>
     <string name="message_change_overlapping_lcd_mode_to_auto">The overlapping LCD mode has been changed to "Auto".</string>
 
+	<string name="serial_fragment_title">USB Devices</string>
+	<string name="serial_device_list_header">USB Devices</string>
+	<string name="serial_no_device">no USB devices found</string>
+	<string name="serial_ports_device">%s (%04X:%04X) [%d,%d]</string>
+	<string name="serial_ports_device_no_driver">No driver</string>
+	<string name="serial_ports_device_item_title">%s, Port %d</string>
+	<string name="serial_ports_device_item_description">Vendor %04X, Product %04X</string>
+	<string name="serial_connection_failed_device_not_found">Failed to connect the USB serial device: device not found (check the settings).</string>
+	<string name="serial_connection_failed_no_driver_for_device">Failed to connect the USB serial device: no driver for device (check the settings).</string>
+	<string name="serial_connection_failed_not_enough_ports_at_device">Failed to connect the USB serial device: not enough ports at device (check the settings).</string>
+	<string name="serial_connection_failed_user_has_not_given_permission">Failed to connect the USB serial device: user has not given permission.</string>
+	<string name="serial_connection_failed_for_unknown_reason">Failed to connect the USB serial device: for unknown reason.</string>
+	<string name="serial_connection_failed_permission_denied">Failed to connect the USB serial device: permission denied.</string>
+	<string name="serial_connection_failed_open_device_failed">Failed to connect the USB serial device: open device failed.</string>
+	<string name="serial_connection_failed_open_failed">Failed to connect the USB serial device: open failed.</string>
 
-    <string name="settings_category_general_title">General</string>
+	<string name="settings_category_general_title">General</string>
     <string name="settings_realspeed_title">Authentic Calculator Speed</string>
     <string name="settings_grayscale_title">Enable Virtual LCD Delay</string>
     <string name="settings_autosave_title">Automatically Save Files</string>
@@ -199,5 +214,9 @@
     <string name="settings_category_macro_title">Macro</string>
     <string name="settings_macro_real_speed_title">Use Real Replay Speed</string>
     <string name="settings_macro_manual_speed_title">Manual Replay Speed</string>
+
+	<string name="settings_category_serial_ports_title">Serial Ports</string>
+	<string name="settings_serial_ports_wire_title">Wire</string>
+	<string name="settings_serial_ports_ir_title">Infrared (2400 baud)</string>
 
 </resources>

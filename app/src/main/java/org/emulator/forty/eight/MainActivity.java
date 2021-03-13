@@ -65,8 +65,10 @@ import org.emulator.calculator.MainScreenView;
 import org.emulator.calculator.NativeLib;
 import org.emulator.calculator.PrinterSimulator;
 import org.emulator.calculator.PrinterSimulatorFragment;
+import org.emulator.calculator.Serial;
 import org.emulator.calculator.Settings;
 import org.emulator.calculator.Utils;
+import org.emulator.calculator.usbserial.DevicesFragment;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -152,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         drawer = findViewById(R.id.drawer_layout);
@@ -2031,7 +2033,87 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         changeHeaderIcon();
     }
 
-    private Bitmap getApplicationIconBitmap() {
+	private int serialIndex = 1;
+	private HashMap<Integer, Serial> serialsById = new HashMap<>();
+
+	@SuppressWarnings("UnusedDeclaration")
+	int openSerialPort(String serialPort) {
+		Integer serialPortId = serialIndex;
+		Serial serial = new Serial(this, serialPortId);
+		if(serial.connect(serialPort)) {
+			serialsById.put(serialPortId, serial);
+			serialIndex++;
+			return serialPortId;
+		} else {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					Toast.makeText(MainActivity.this, Utils.resId(MainActivity.this, "string", serial.getConnectionStatus()), Toast.LENGTH_LONG).show();
+				}
+			});
+			return 0;
+		}
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int closeSerialPort(int serialPortId) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null) {
+			serialsById.remove(serialPortIdInt);
+			serial.disconnect();
+			return 1;
+		}
+		return 0;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int setSerialPortParameters(int serialPortId, int baudRate) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null && serial.setParameters(baudRate))
+			return 1;
+		return 0;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	byte[] readSerialPort(int serialPortId, int nNumberOfBytesToRead) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null)
+			return serial.receive(nNumberOfBytesToRead);
+		return new byte[0];
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int writeSerialPort(int serialPortId, byte[] buffer) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null)
+			return serial.send(buffer);
+		return 0;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int serialPortSetBreak(int serialPortId) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null)
+			return serial.setBreak();
+		return 0;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int serialPortClearBreak(int serialPortId) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null)
+			return serial.clearBreak();
+		return 0;
+	}
+
+
+	private Bitmap getApplicationIconBitmap() {
         Drawable drawable = getApplicationInfo().loadIcon(getPackageManager());
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
@@ -2062,7 +2144,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     "settings_background_kml_color", "settings_background_fallback_color",
 					"settings_printer_model", "settings_macro",
                     "settings_kml", "settings_port1", "settings_port2",
-                    "settings_flash_port2" };
+                    "settings_flash_port2",
+                    "settings_serial_ports_wire", "settings_serial_ports_ir" };
 			for (String settingKey : settingKeys)
                 updateFromPreferences(settingKey, false);
         } else {
@@ -2183,6 +2266,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		            String settingsFlashPort2Url = settings.getString("settings_flash_port2", null);
 	            	if(settingsFlashPort2Url != null)
 			            loadFlashROM(Uri.parse(settingsFlashPort2Url), null);
+		            break;
+	            case "settings_serial_ports_wire":
+		            NativeLib.setConfiguration("settings_serial_ports_wire", isDynamicValue, 0, 0,
+				            DevicesFragment.SerialConnectParameters.fromSettingsString(settings.getString("settings_serial_ports_wire", "")).toWin32String());
+	            	break;
+	            case "settings_serial_ports_ir":
+		            NativeLib.setConfiguration("settings_serial_ports_ir", isDynamicValue, 0, 0,
+				            DevicesFragment.SerialConnectParameters.fromSettingsString(settings.getString("settings_serial_ports_ir", "")).toWin32String());
 		            break;
             }
         }

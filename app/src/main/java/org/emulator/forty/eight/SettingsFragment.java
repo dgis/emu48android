@@ -19,12 +19,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.InputType;
@@ -51,6 +46,8 @@ import org.emulator.calculator.EmuApplication;
 import org.emulator.calculator.NativeLib;
 import org.emulator.calculator.Settings;
 import org.emulator.calculator.Utils;
+import org.emulator.calculator.usbserial.DevicesDialogFragment;
+import org.emulator.calculator.usbserial.DevicesFragment;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -371,6 +368,41 @@ public class SettingsFragment extends AppCompatDialogFragment {
 					});
 				} else
 					preferenceFlashPort2.setEnabled(false);
+			}
+
+
+			// Serial ports
+
+			Preference preferenceSerialPortsWire = findPreference("settings_serial_ports_wire");
+			if(preferenceSerialPortsWire != null) {
+				String serialPortsWire = settings.getString(preferenceSerialPortsWire.getKey(), "");
+				serialPortsWire = DevicesFragment.SerialConnectParameters.fromSettingsString(serialPortsWire).toDisplayString(requireContext());
+				preferenceSerialPortsWire.setSummary(serialPortsWire);
+				preferenceSerialPortsWire.setOnPreferenceClickListener(preference -> {
+					DevicesDialogFragment devicesDialogFragment = new DevicesDialogFragment();
+					devicesDialogFragment.setOnSerialDeviceClickedListener((serialConnectParameters) -> {
+						preferenceSerialPortsWire.setSummary(serialConnectParameters.toDisplayString(requireContext()));
+						settings.putString(preferenceSerialPortsWire.getKey(), serialConnectParameters.toSettingsString());
+					});
+					devicesDialogFragment.show(getChildFragmentManager(), "DevicesDialogFragment");
+					return true;
+				});
+			}
+
+			Preference preferenceSerialPortsIr = findPreference("settings_serial_ports_ir");
+			if(preferenceSerialPortsIr != null) {
+				String serialPortsIr = settings.getString(preferenceSerialPortsIr.getKey(), "");
+				serialPortsIr = DevicesFragment.SerialConnectParameters.fromSettingsString(serialPortsIr).toDisplayString(requireContext());
+				preferenceSerialPortsIr.setSummary(serialPortsIr);
+				preferenceSerialPortsIr.setOnPreferenceClickListener(preference -> {
+					DevicesDialogFragment devicesDialogFragment = new DevicesDialogFragment();
+					devicesDialogFragment.setOnSerialDeviceClickedListener((serialConnectParameters) -> {
+						preferenceSerialPortsIr.setSummary(serialConnectParameters.toDisplayString(requireContext()));
+						settings.putString(preferenceSerialPortsIr.getKey(), serialConnectParameters.toSettingsString());
+					});
+					devicesDialogFragment.show(getChildFragmentManager(), "DevicesDialogFragment");
+					return true;
+				});
 			}
 		}
 

@@ -56,7 +56,7 @@ public class Utils {
         toast.show();
     }
 
-    static int resId(Context context, String resourceName, String variableName) {
+	public static int resId(Context context, String resourceName, String variableName) {
         try {
             return context.getResources().getIdentifier(variableName, resourceName, context.getApplicationContext().getPackageName());
         } catch (Exception e) {
@@ -91,9 +91,9 @@ public class Utils {
 	public static void colorizeDrawableWithColor(Context context, Drawable icon, int colorAttribute) {
 		if(icon != null) {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-				icon.setColorFilter(new BlendModeColorFilter(Utils.getThemedColor(context, colorAttribute), BlendMode.SRC_ATOP));
+				icon.setColorFilter(new BlendModeColorFilter(getThemedColor(context, colorAttribute), BlendMode.SRC_ATOP));
 			else
-				icon.setColorFilter(Utils.getThemedColor(context, colorAttribute), PorterDuff.Mode.SRC_ATOP);
+				icon.setColorFilter(getThemedColor(context, colorAttribute), PorterDuff.Mode.SRC_ATOP);
 		}
 	}
 
@@ -212,5 +212,16 @@ public class Utils {
 				//deprecated in API 26
 				vibrator.vibrate(durationInMilliSecond);
 		}
+	}
+
+	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+	public static String bytesToHex(byte[] bytes) {
+		char[] hexChars = new char[bytes.length * 2];
+		for (int j = 0; j < bytes.length; j++) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+			hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+		}
+		return new String(hexChars);
 	}
 }

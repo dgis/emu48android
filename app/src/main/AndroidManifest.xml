@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.emulator.forty.eight">
 
+	<uses-feature android:name="android.hardware.usb.host" android:required="false"/>
+
 	<uses-permission android:name="android.permission.VIBRATE" />
+
     <application
 	    android:name="org.emulator.calculator.EmuApplication"
         android:allowBackup="true"

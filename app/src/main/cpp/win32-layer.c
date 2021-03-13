@@ -42,6 +42,8 @@ const TCHAR * contentScheme = _T("content://");
 size_t contentSchemeLength;
 const TCHAR * documentScheme = _T("document:");
 size_t documentSchemeLength;
+const TCHAR * comPrefix = _T("\\\\.\\");
+size_t comPrefixLength;
 TCHAR szFilePathTmp[MAX_PATH];
 
 
@@ -66,6 +68,7 @@ void win32Init() {
     assetsPrefixLength = _tcslen(assetsPrefix);
     contentSchemeLength = _tcslen(contentScheme);
 	documentSchemeLength = _tcslen(documentScheme);
+	comPrefixLength = _tcslen(comPrefix);
 }
 
 int abs (int i) {
@@ -109,8 +112,42 @@ BOOL SetCurrentDirectory(LPCTSTR path) {
 extern BOOL settingsPort2en;
 extern BOOL settingsPort2wr;
 
+#define MAX_CREATED_COMM 30
+static HANDLE comms[MAX_CREATED_COMM];
+static pthread_mutex_t commsLock;
+
+
 HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, LPVOID hTemplateFile) {
     FILE_LOGD("CreateFile(lpFileName: \"%s\", dwDesiredAccess: 0x%08x)", lpFileName, dwShareMode);
+
+	BOOL foundCOMPrefix = _tcsncmp(lpFileName, comPrefix, comPrefixLength) == 0;
+	if(foundCOMPrefix) {
+
+		int serialPortId = openSerialPort(lpFileName);
+		if(serialPortId > 0) {
+			// We try to open a COM/Serial port
+			HANDLE handle = malloc(sizeof(struct _HANDLE));
+			memset(handle, 0, sizeof(struct _HANDLE));
+			handle->handleType = HANDLE_TYPE_COM;
+			handle->commEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+			handle->commId = serialPortId;
+
+			pthread_mutex_lock(&commsLock);
+			handle->commIndex = -1;
+			for(int i = 0; i < MAX_CREATED_COMM; i++) {
+				if(comms[i] == NULL) {
+					handle->commIndex = i;
+					comms[handle->commIndex] = handle;
+					break;
+				}
+			}
+			pthread_mutex_unlock(&commsLock);
+
+			return handle;
+		} else
+			return (HANDLE) INVALID_HANDLE_VALUE;
+	}
+
     BOOL forceNormalFile = FALSE;
     securityExceptionOccured = FALSE;
 #if EMUXX == 48
@@ -249,6 +286,8 @@ BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD
         readByteCount = (DWORD) read(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToRead);
     } else if(hFile->handleType == HANDLE_TYPE_FILE_ASSET) {
         readByteCount = (DWORD) AAsset_read(hFile->fileAsset, lpBuffer, nNumberOfBytesToRead);
+    } else if(hFile->handleType == HANDLE_TYPE_COM) {
+	    readByteCount = (DWORD) readSerialPort(hFile->commId, lpBuffer, nNumberOfBytesToRead);
     }
     if(lpNumberOfBytesRead)
         *lpNumberOfBytesRead = readByteCount;
@@ -257,12 +296,19 @@ BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD
 
 BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped) {
     FILE_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d)", hFile, lpBuffer, nNumberOfBytesToWrite);
-    if(hFile->handleType == HANDLE_TYPE_FILE_ASSET)
-        return FALSE;
-    ssize_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
-    if(lpNumberOfBytesWritten)
-        *lpNumberOfBytesWritten = (DWORD) writenByteCount;
-    return writenByteCount >= 0;
+	if(hFile->handleType == HANDLE_TYPE_FILE) {
+		ssize_t writenByteCount = write(hFile->fileDescriptor, lpBuffer, nNumberOfBytesToWrite);
+		if(lpNumberOfBytesWritten)
+			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
+		return writenByteCount >= 0;
+	} else if(hFile->handleType == HANDLE_TYPE_COM) {
+		ssize_t writenByteCount = writeSerialPort(hFile->commId, lpBuffer, nNumberOfBytesToWrite);
+		commEvent(hFile->commId, EV_TXEMPTY); // Not sure about that (not the same thread)!
+		if(lpNumberOfBytesWritten)
+			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
+		return writenByteCount >= 0;
+	}
+	return FALSE;
 }
 
 DWORD SetFilePointer(HANDLE hFile, LONG lDistanceToMove, PLONG lpDistanceToMoveHigh, DWORD dwMoveMethod) {
@@ -472,8 +518,7 @@ BOOL SetEvent(HANDLE hEvent) {
     return 0;
 }
 
-BOOL ResetEvent(HANDLE hEvent)
-{
+BOOL ResetEvent(HANDLE hEvent) {
     if(hEvent) {
         int result = pthread_mutex_lock(&hEvent->eventMutex);
         _ASSERT(result == 0);
@@ -488,8 +533,7 @@ BOOL ResetEvent(HANDLE hEvent)
     return FALSE;
 }
 
-int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds)
-{
+int UnlockedWaitForEvent(HANDLE hHandle, uint64_t milliseconds) {
     int result = 0;
     if (!hHandle->eventState)
     {
@@ -670,6 +714,8 @@ DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 
 BOOL WINAPI CloseHandle(HANDLE hObject) {
     FILE_LOGD("CloseHandle(hObject: %p)", hObject);
+    if(hObject)
+    	return FALSE;
     //https://msdn.microsoft.com/en-us/9b84891d-62ca-4ddc-97b7-c4c79482abd9
     // Can be a thread/event/file handle!
     switch(hObject->handleType) {
@@ -738,6 +784,29 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             hObject->threadParameter = NULL;
             free(hObject);
             return TRUE;
+	    case HANDLE_TYPE_COM: {
+		    FILE_LOGD("CloseHandle() HANDLE_TYPE_COM");
+
+		    closeSerialPort(hObject->commId);
+		    hObject->commId = 0;
+
+		    hObject->handleType = HANDLE_TYPE_INVALID;
+		    if(hObject->commState) {
+			    free(hObject->commState);
+			    hObject->commState = NULL;
+		    }
+		    if(hObject->commEvent) {
+			    CloseHandle(hObject->commEvent);
+			    hObject->commEvent = NULL;
+		    }
+		    if(hObject->commIndex != -1) {
+			    pthread_mutex_lock(&commsLock);
+			    comms[hObject->commIndex] = NULL;
+			    pthread_mutex_unlock(&commsLock);
+		    }
+		    free(hObject);
+		    return TRUE;
+	    }
         default:
             break;
     }
@@ -2971,8 +3040,36 @@ BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumb
     //TODO
     return FALSE;
 }
+
+// This is not a win32 API
+void commEvent(int commId, int eventMask) {
+	HANDLE commHandleFound = NULL;
+	pthread_mutex_lock(&commsLock);
+	for(int i = 0; i < MAX_CREATED_COMM; i++) {
+		HANDLE commHandle = comms[i];
+		if (commHandle && commHandle->commId == commId) {
+			commHandleFound = commHandle;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&commsLock);
+	if(commHandleFound) {
+		commHandleFound->commEventMask = eventMask;
+		SetEvent(commHandleFound->commEvent);
+	}
+}
+
 BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped) {
-    //TODO
+	if(hFile && hFile->handleType == HANDLE_TYPE_COM) {
+		WaitForSingleObject(hFile->commEvent, INFINITE);
+		pthread_mutex_lock(&commsLock);
+		if(lpEvtMask && hFile->commEventMask) {
+			*lpEvtMask = hFile->commEventMask; //EV_RXCHAR | EV_TXEMPTY | EV_ERR
+			hFile->commEventMask = 0;
+		}
+		pthread_mutex_unlock(&commsLock);
+		return TRUE;
+	}
     return FALSE;
 }
 BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat) {
@@ -2985,10 +3082,26 @@ BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts) {
 }
 BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask) {
     //TODO
+	if(hFile && hFile->handleType == HANDLE_TYPE_COM) {
+		if(dwEvtMask == 0) {
+			// When 0, clear all events and force WaitCommEvent to return.
+			SetEvent(hFile->commEvent);
+			return TRUE;
+		}
+	}
     return FALSE;
 }
 BOOL SetCommState(HANDLE hFile, LPDCB lpDCB) {
-    //TODO
+    if(hFile && hFile->handleType == HANDLE_TYPE_COM && lpDCB) {
+	    int result = setSerialPortParameters(hFile->commId, lpDCB->BaudRate); //TODO 2 stop bits?
+	    if(result > 0) {
+		    if (hFile->commState)
+			    free(hFile->commState);
+		    hFile->commState = malloc(sizeof(struct _DCB));
+		    memcpy(hFile->commState, lpDCB, sizeof(struct _DCB));
+	    }
+	    return TRUE;
+    }
     return FALSE;
 }
 BOOL PurgeComm(HANDLE hFile, DWORD dwFlags) {
@@ -2996,13 +3109,16 @@ BOOL PurgeComm(HANDLE hFile, DWORD dwFlags) {
     return FALSE;
 }
 BOOL SetCommBreak(HANDLE hFile) {
-    //TODO
-    return FALSE;
+	if(hFile && hFile->handleType == HANDLE_TYPE_COM)
+		return serialPortSetBreak(hFile->commId);
+	return FALSE;
 }
 BOOL ClearCommBreak(HANDLE hFile) {
-    //TODO
-    return FALSE;
+	if(hFile && hFile->handleType == HANDLE_TYPE_COM)
+		return serialPortClearBreak(hFile->commId);
+	return FALSE;
 }
+
 
 int WSAGetLastError() {
     //TODO

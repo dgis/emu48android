@@ -176,4 +176,17 @@
 	        />
     </PreferenceCategory>
 
+	<PreferenceCategory android:title="@string/settings_category_serial_ports_title">
+		<Preference
+			android:key="settings_serial_ports_wire"
+			android:title="@string/settings_serial_ports_wire_title"
+			android:summary=""
+			/>
+		<Preference
+			android:key="settings_serial_ports_ir"
+			android:title="@string/settings_serial_ports_ir_title"
+			android:summary=""
+			/>
+	</PreferenceCategory>
+
 </PreferenceScreen>

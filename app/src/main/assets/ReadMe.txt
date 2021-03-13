@@ -30,26 +30,18 @@ NOTES
   And then, to use with the HP48SX or the HP48GX, you must select this generated file in the "Settings/Port2 File".
 - By default when you create a new HP49/50 with the embedded readonly file "rom.49g",
   everything that you store in port 2 is lost just because the file "rom.49g" is READONLY.
-  But it works exactly like with Windows. If you can write in the ROM file,
-  it should save the content of port 2 in the ROM file with Android too.
-  To save the port 2 in the HP49/50 with Emu48 for Android:
-  * copy "real50g-lc.kml", "real50g-lc.png", "keyb4950.kmi", "rom.49g" in a FOLDER of your Android device,
-  * in the menu:
-   - touch "New..." to create a new device
-   - or touch "Change KML Script..." to change the current KML script and ROM location
-  * select "[Custom KML script...]"
-  * select the FOLDER
-  * pick the calculator (which should be "Eric's Real 50g (Large Cropped)")!
-  And because, the file "FOLDER/rom.49g" is not readonly anymore, you can save your port 2.
-  BUT for the moment, it is saved ONLY when you CLOSE (or change) the state file. Not when you end the application.
+  Since version 2.0, it is now possible from the menu to manage the Flash ROM file (it will fully replaces the ROM).
 - To speed up printing, set the 'delay' to 0 in the calculator's print options.
+- The serial ports, wire or infrared (infrared limited to 2400 baud) are now supported through the USB port in mode OTG.
+  It uses the library https://github.com/mik3y/usb-serial-for-android, which allows to plug most of the serial USB adapters (only tested with Prolific),
+  without the need to be root. If it is not automatic, please, activate the OTG mode in your Android device, and then,
+  you should be able to see it in the Emu48 settings. If the adapter is unplugged then plugged back in, you may need to set the option again.
 
 
 NOT WORKING YET
 
 - Disassembler
 - Debugger
-- Serial Ports (Wire or Ir)
 
 
 LINKS
@@ -62,6 +54,18 @@ LINKS
 
 
 CHANGES
+
+Version 2.3 (2021-02-xx)
+
+- Add the serial port support (via USB OTG).
+	TODO: When stop the app, Serial exception seems to delay the save of the calc state!!!!
+	TODO: Inform if the connection is not possible.
+	TODO: What's happen if I hot unplug?
+	TODO: Check the self test about UART (http://regis.cosnier.free.fr/private/private.php?journal=HP48&index=-4637&nomenu)
+- Allows pressing a calculator button with the right button of the mouse but prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
+- Update the embedded help file "Emu48.html" to the latest version.
+- Open an external web browser when you click an external links in the Help.
+
 
 Version 2.2 (2020-12-09)
 
@@ -225,3 +229,5 @@ You should have received a copy of the GNU General Public License along with thi
 
 Note: some included files are not covered by the GPL; these include ROM image files (copyrighted by HP), KML files and faceplate images (copyrighted by their authors).
 The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this application with the kind permission of Eric Rechlin.
+
+Portions of this source code (about the usb-serial) were originally created by Google Inc. in 2011-2013 and Mike Wakerly in 2013.
