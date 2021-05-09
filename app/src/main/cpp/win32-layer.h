@@ -59,6 +59,11 @@
 #   define FILE_LOGD(...)
 #endif
 
+#if defined DEBUG_ANDROID_SERIAL
+#   define SERIAL_LOGD(...) LOGD(__VA_ARGS__)
+#else
+#   define SERIAL_LOGD(...)
+#endif
 
 #define _MSC_VER 1914
 #define GetWindowLongPtr	GetWindowLong

@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class Serial {
 
 	private static final String TAG = "Serial";
-	private final boolean debug = true;
+	private final boolean debug = false;
 
 	private final Context context;
 	private final int serialPortId;
@@ -136,6 +136,7 @@ public class Serial {
 			PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(INTENT_ACTION_GRANT_USB), 0);
 			usbManager.requestPermission(driver.getDevice(), usbPermissionIntent);
 			if(debug) Log.d(TAG, "Request permission");
+			connectionStatus = "serial_connection_failed_user_has_not_given_permission";
 			return false;
 		}
 		if(usbConnection == null) {

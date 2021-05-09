@@ -28,11 +28,11 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         applicationId "org.emulator.forty.eight"
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 20
         versionName "2.2"
         setProperty("archivesBaseName", "Emu48-v$versionName")

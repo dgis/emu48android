@@ -17,6 +17,7 @@ cmake_minimum_required(VERSION 3.4.1)
 #add_compile_options(-DDEBUG_ANDROID_PAINT)
 #add_compile_options(-DDEBUG_ANDROID_THREAD)
 #add_compile_options(-DDEBUG_ANDROID_FILE)
+#add_compile_options(-DDEBUG_ANDROID_SERIAL)
 
 #add_compile_options(-DNEW_WIN32_SOUND_ENGINE)
 

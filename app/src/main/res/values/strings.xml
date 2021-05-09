@@ -90,6 +90,7 @@
 	<string name="alert_load_flash_rom_error_message">Cannot load the Flash ROM. Reset to the default Flash ROM (from the current KML script). Please, try to load it again from the menu.</string>
 
     <string name="message_open_security">Permission Denied</string>
+	<string name="message_open_security_open_last_document">Permission denied to open the last calculator state file.</string>
     <string name="message_open_security_description">For security reason, you must select the folder where are the KML and ROM files, please.</string>
     <string name="message_open_security_retry">Please, open again</string>
     <string name="message_open_security_retry_description">I hope now you could open again the state file.</string>

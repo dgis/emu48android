@@ -243,6 +243,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             try {
             	// FileOpen auto-open.
                 onFileOpen(documentToOpenUrl, intent, null);
+            } catch (SecurityException e) {
+	            showAlert(getString(R.string.message_open_security_open_last_document), true);
+	            if(debug && e.getMessage() != null) Log.e(TAG, e.getMessage());
             } catch (Exception e) {
                 if(debug && e.getMessage() != null) Log.e(TAG, e.getMessage());
             }
@@ -2045,10 +2048,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			serialIndex++;
 			return serialPortId;
 		} else {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					Toast.makeText(MainActivity.this, Utils.resId(MainActivity.this, "string", serial.getConnectionStatus()), Toast.LENGTH_LONG).show();
+			runOnUiThread(() -> {
+				String connectionStatus = serial.getConnectionStatus();
+				try {
+					int resId = Utils.resId(MainActivity.this, "string", connectionStatus);
+					Toast.makeText(MainActivity.this, resId, Toast.LENGTH_LONG).show();
+				} catch (Exception ex) {
+					Log.e(TAG, ex.getMessage());
+					Toast.makeText(MainActivity.this, "Unknown error, connectionStatus: " + connectionStatus, Toast.LENGTH_LONG).show();
 				}
 			});
 			return 0;

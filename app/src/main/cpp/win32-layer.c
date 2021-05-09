@@ -143,6 +143,8 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
 			}
 			pthread_mutex_unlock(&commsLock);
 
+			SERIAL_LOGD("CreateFile(lpFileName: \"%s\", ...) commId: %d, commIndex: %d", lpFileName, handle->commId, handle->commIndex);
+
 			return handle;
 		} else
 			return (HANDLE) INVALID_HANDLE_VALUE;
@@ -279,6 +281,27 @@ HANDLE CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, 
     return (HANDLE) INVALID_HANDLE_VALUE;
 }
 
+char * dumpToHexAscii(char * buffer, int inputSize, int charWidth) {
+	int numLines = 1 + inputSize / charWidth;
+	char * hexAsciiDump = malloc(4 * inputSize  + 3 * numLines + 10);
+	unsigned char * pBuff = (unsigned char *)buffer;
+	char * pDump = hexAsciiDump;
+	for (int l = 0, n = 0; l < numLines; ++l) {
+		*pDump++ = (char)'\t';
+		for (int c = 0; c < charWidth && n + c < inputSize; ++c) {
+			sprintf((char *const)pDump, "%02X ", pBuff[c]);
+			pDump += 3;
+		}
+		for (int c = 0; c < charWidth && n + c < inputSize; ++c)
+			*pDump++ = isprint(pBuff[c]) ? ((char *)pBuff)[c] : '.';
+		*pDump++ = '\n';
+		pBuff += charWidth;
+		n += charWidth;
+	}
+	*pDump++ = '\0';
+	return hexAsciiDump;
+}
+
 BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped) {
     FILE_LOGD("ReadFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToRead: %d)", hFile, lpBuffer, nNumberOfBytesToRead);
     DWORD readByteCount = 0;
@@ -288,6 +311,11 @@ BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD
         readByteCount = (DWORD) AAsset_read(hFile->fileAsset, lpBuffer, nNumberOfBytesToRead);
     } else if(hFile->handleType == HANDLE_TYPE_COM) {
 	    readByteCount = (DWORD) readSerialPort(hFile->commId, lpBuffer, nNumberOfBytesToRead);
+#if defined DEBUG_ANDROID_SERIAL
+	    char * hexAsciiDump = dumpToHexAscii(lpBuffer, readByteCount, 8);
+	    SERIAL_LOGD("ReadFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToRead: %d) -> %d bytes\n%s", hFile, lpBuffer, nNumberOfBytesToRead, readByteCount, hexAsciiDump);
+	    free(hexAsciiDump);
+#endif
     }
     if(lpNumberOfBytesRead)
         *lpNumberOfBytesRead = readByteCount;
@@ -302,7 +330,13 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;
 	} else if(hFile->handleType == HANDLE_TYPE_COM) {
+		Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
 		ssize_t writenByteCount = writeSerialPort(hFile->commId, lpBuffer, nNumberOfBytesToWrite);
+#if defined DEBUG_ANDROID_SERIAL
+		char * hexAsciiDump = dumpToHexAscii(lpBuffer, writenByteCount, 8);
+		SERIAL_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d) -> %d bytes\n%s", hFile, lpBuffer, nNumberOfBytesToWrite, writenByteCount, hexAsciiDump);
+		free(hexAsciiDump);
+#endif
 		commEvent(hFile->commId, EV_TXEMPTY); // Not sure about that (not the same thread)!
 		if(lpNumberOfBytesWritten)
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
@@ -785,7 +819,7 @@ BOOL WINAPI CloseHandle(HANDLE hObject) {
             free(hObject);
             return TRUE;
 	    case HANDLE_TYPE_COM: {
-		    FILE_LOGD("CloseHandle() HANDLE_TYPE_COM");
+		    SERIAL_LOGD("CloseHandle(hObject: %p) for HANDLE_TYPE_COM", hObject);
 
 		    closeSerialPort(hObject->commId);
 		    hObject->commId = 0;
@@ -3043,6 +3077,8 @@ BOOL GetOverlappedResult(HANDLE hFile, LPOVERLAPPED lpOverlapped, LPDWORD lpNumb
 
 // This is not a win32 API
 void commEvent(int commId, int eventMask) {
+	SERIAL_LOGD("commEvent(commId: %d, eventMask: 0x%08x)", commId, eventMask);
+
 	HANDLE commHandleFound = NULL;
 	pthread_mutex_lock(&commsLock);
 	for(int i = 0; i < MAX_CREATED_COMM; i++) {
@@ -3060,8 +3096,11 @@ void commEvent(int commId, int eventMask) {
 }
 
 BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped) {
+	SERIAL_LOGD("WaitCommEvent(hFile: %p, lpEvtMask: %p)", hFile, lpEvtMask);
 	if(hFile && hFile->handleType == HANDLE_TYPE_COM) {
+		SERIAL_LOGD("WaitCommEvent(hFile: %p, lpEvtMask: %p) -> WaitForSingleObject locking", hFile, lpEvtMask);
 		WaitForSingleObject(hFile->commEvent, INFINITE);
+		SERIAL_LOGD("WaitCommEvent(hFile: %p, lpEvtMask: %p) -> WaitForSingleObject unlocked", hFile, lpEvtMask);
 		pthread_mutex_lock(&commsLock);
 		if(lpEvtMask && hFile->commEventMask) {
 			*lpEvtMask = hFile->commEventMask; //EV_RXCHAR | EV_TXEMPTY | EV_ERR
@@ -3073,18 +3112,22 @@ BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped) {
     return FALSE;
 }
 BOOL ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat) {
+	SERIAL_LOGD("ClearCommError(hFile: %p, lpErrors: %p, lpStat: %p) TODO", hFile, lpErrors, lpStat);
     //TODO
     return FALSE;
 }
 BOOL SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts) {
+	SERIAL_LOGD("SetCommTimeouts(hFile: %p, lpCommTimeouts: %p) TODO", hFile, lpCommTimeouts);
     //TODO
     return FALSE;
 }
 BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask) {
+	SERIAL_LOGD("SetCommMask(hFile: %p, dwEvtMask: 0x%08X) TODO", hFile, dwEvtMask);
     //TODO
 	if(hFile && hFile->handleType == HANDLE_TYPE_COM) {
 		if(dwEvtMask == 0) {
 			// When 0, clear all events and force WaitCommEvent to return.
+			SERIAL_LOGD("SetCommMask(hFile: %p, dwEvtMask: 0x%08X) SetEvent(hEvent: %p)", hFile, dwEvtMask, hFile->commEvent);
 			SetEvent(hFile->commEvent);
 			return TRUE;
 		}
@@ -3092,6 +3135,7 @@ BOOL SetCommMask(HANDLE hFile, DWORD dwEvtMask) {
     return FALSE;
 }
 BOOL SetCommState(HANDLE hFile, LPDCB lpDCB) {
+	SERIAL_LOGD("SetCommState(hFile: %p, lpDCB: %p)", hFile, lpDCB);
     if(hFile && hFile->handleType == HANDLE_TYPE_COM && lpDCB) {
 	    int result = setSerialPortParameters(hFile->commId, lpDCB->BaudRate); //TODO 2 stop bits?
 	    if(result > 0) {
@@ -3105,15 +3149,18 @@ BOOL SetCommState(HANDLE hFile, LPDCB lpDCB) {
     return FALSE;
 }
 BOOL PurgeComm(HANDLE hFile, DWORD dwFlags) {
+	SERIAL_LOGD("SetCommState(hFile: %p, dwFlags: 0x%08X) TODO", hFile, dwFlags);
     //TODO
     return FALSE;
 }
 BOOL SetCommBreak(HANDLE hFile) {
+	SERIAL_LOGD("SetCommBreak(hFile: %p)", hFile);
 	if(hFile && hFile->handleType == HANDLE_TYPE_COM)
 		return serialPortSetBreak(hFile->commId);
 	return FALSE;
 }
 BOOL ClearCommBreak(HANDLE hFile) {
+	SERIAL_LOGD("ClearCommBreak(hFile: %p)", hFile);
 	if(hFile && hFile->handleType == HANDLE_TYPE_COM)
 		return serialPortClearBreak(hFile->commId);
 	return FALSE;
