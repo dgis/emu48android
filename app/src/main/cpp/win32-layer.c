@@ -31,8 +31,8 @@ extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
 extern AndroidBitmapInfo androidBitmapInfo;
 
-HANDLE hWnd;
-LPTSTR szTitle;
+extern HANDLE hWnd;
+extern LPTSTR szTitle;
 LPTSTR szCurrentAssetDirectory = NULL;
 LPTSTR szCurrentContentDirectory = NULL;
 AAssetManager * assetManager;
