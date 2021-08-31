@@ -16,6 +16,9 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.util.Log;
 
+//import org.emulator.calculator.usbserial.BuildConfig;
+import org.emulator.calculator.usbserial.util.MonotonicClock;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -32,7 +35,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             28800, 38400, 57600, 115200, 128000, 134400, 161280, 201600, 230400, 268800,
             403200, 460800, 614400, 806400, 921600, 1228800, 2457600, 3000000, 6000000
     };
-    private enum DeviceType { DEVICE_TYPE_01, DEVICE_TYPE_HX};
+    protected enum DeviceType { DEVICE_TYPE_01, DEVICE_TYPE_T, DEVICE_TYPE_HX, DEVICE_TYPE_HXN}
 
     private final UsbDevice mDevice;
     private final UsbSerialPort mPort;
@@ -59,34 +62,50 @@ public class ProlificSerialDriver implements UsbSerialDriver {
 
         private static final int USB_RECIP_INTERFACE = 0x01;
 
-        private static final int PROLIFIC_VENDOR_READ_REQUEST = 0x01;
-        private static final int PROLIFIC_VENDOR_WRITE_REQUEST = 0x01;
+        private static final int VENDOR_READ_REQUEST = 0x01;
+        private static final int VENDOR_WRITE_REQUEST = 0x01;
+        private static final int VENDOR_READ_HXN_REQUEST = 0x81;
+        private static final int VENDOR_WRITE_HXN_REQUEST = 0x80;
 
-        private static final int PROLIFIC_VENDOR_OUT_REQTYPE = UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_VENDOR;
-        private static final int PROLIFIC_VENDOR_IN_REQTYPE = UsbConstants.USB_DIR_IN | UsbConstants.USB_TYPE_VENDOR;
-        private static final int PROLIFIC_CTRL_OUT_REQTYPE = UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_CLASS | USB_RECIP_INTERFACE;
+        private static final int VENDOR_OUT_REQTYPE = UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_VENDOR;
+        private static final int VENDOR_IN_REQTYPE = UsbConstants.USB_DIR_IN | UsbConstants.USB_TYPE_VENDOR;
+        private static final int CTRL_OUT_REQTYPE = UsbConstants.USB_DIR_OUT | UsbConstants.USB_TYPE_CLASS | USB_RECIP_INTERFACE;
 
         private static final int WRITE_ENDPOINT = 0x02;
         private static final int READ_ENDPOINT = 0x83;
         private static final int INTERRUPT_ENDPOINT = 0x81;
 
-        private static final int FLUSH_RX_REQUEST = 0x08; // RX @ Prolific device = write @ usb-serial-for-android library
+        private static final int RESET_HXN_REQUEST = 0x07;
+        private static final int FLUSH_RX_REQUEST = 0x08;
         private static final int FLUSH_TX_REQUEST = 0x09;
-
         private static final int SET_LINE_REQUEST = 0x20; // same as CDC SET_LINE_CODING
         private static final int SET_CONTROL_REQUEST = 0x22; // same as CDC SET_CONTROL_LINE_STATE
         private static final int SEND_BREAK_REQUEST = 0x23; // same as CDC SEND_BREAK
+        private static final int GET_CONTROL_HXN_REQUEST = 0x80;
         private static final int GET_CONTROL_REQUEST = 0x87;
         private static final int STATUS_NOTIFICATION = 0xa1; // similar to CDC SERIAL_STATE but different length
 
+        /* RESET_HXN_REQUEST */
+        private static final int RESET_HXN_RX_PIPE = 1;
+        private static final int RESET_HXN_TX_PIPE = 2;
+
+        /* SET_CONTROL_REQUEST */
         private static final int CONTROL_DTR = 0x01;
         private static final int CONTROL_RTS = 0x02;
 
+        /* GET_CONTROL_REQUEST */
         private static final int GET_CONTROL_FLAG_CD = 0x02;
         private static final int GET_CONTROL_FLAG_DSR = 0x04;
         private static final int GET_CONTROL_FLAG_RI = 0x01;
         private static final int GET_CONTROL_FLAG_CTS = 0x08;
 
+        /* GET_CONTROL_HXN_REQUEST */
+        private static final int GET_CONTROL_HXN_FLAG_CD = 0x40;
+        private static final int GET_CONTROL_HXN_FLAG_DSR = 0x20;
+        private static final int GET_CONTROL_HXN_FLAG_RI = 0x80;
+        private static final int GET_CONTROL_HXN_FLAG_CTS = 0x08;
+
+        /* interrupt endpoint read */
         private static final int STATUS_FLAG_CD = 0x01;
         private static final int STATUS_FLAG_DSR = 0x02;
         private static final int STATUS_FLAG_RI = 0x08;
@@ -95,7 +114,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         private static final int STATUS_BUFFER_SIZE = 10;
         private static final int STATUS_BYTE_IDX = 8;
 
-        private DeviceType mDeviceType = DeviceType.DEVICE_TYPE_HX;
+        protected DeviceType mDeviceType = DeviceType.DEVICE_TYPE_HX;
         private UsbEndpoint mInterruptEndpoint;
         private int mControlLinesValue = 0;
         private int mBaudRate = -1, mDataBits = -1, mStopBits = -1, mParity = -1;
@@ -134,11 +153,13 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         }
 
         private byte[] vendorIn(int value, int index, int length) throws IOException {
-            return inControlTransfer(PROLIFIC_VENDOR_IN_REQTYPE, PROLIFIC_VENDOR_READ_REQUEST, value, index, length);
+            int request = (mDeviceType == DeviceType.DEVICE_TYPE_HXN) ? VENDOR_READ_HXN_REQUEST : VENDOR_READ_REQUEST;
+            return inControlTransfer(VENDOR_IN_REQTYPE, request, value, index, length);
         }
 
         private void vendorOut(int value, int index, byte[] data) throws IOException {
-            outControlTransfer(PROLIFIC_VENDOR_OUT_REQTYPE, PROLIFIC_VENDOR_WRITE_REQUEST, value, index, data);
+            int request = (mDeviceType == DeviceType.DEVICE_TYPE_HXN) ? VENDOR_WRITE_HXN_REQUEST : VENDOR_WRITE_REQUEST;
+            outControlTransfer(VENDOR_OUT_REQTYPE, request, value, index, data);
         }
 
         private void resetDevice() throws IOException {
@@ -146,10 +167,21 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         }
 
         private void ctrlOut(int request, int value, int index, byte[] data) throws IOException {
-            outControlTransfer(PROLIFIC_CTRL_OUT_REQTYPE, request, value, index, data);
+            outControlTransfer(CTRL_OUT_REQTYPE, request, value, index, data);
+        }
+
+        private boolean testHxStatus() {
+            try {
+                inControlTransfer(VENDOR_IN_REQTYPE, VENDOR_READ_REQUEST, 0x8080, 0, 1);
+                return true;
+            } catch(IOException ignored) {
+                return false;
+            }
         }
 
         private void doBlackMagic() throws IOException {
+            if (mDeviceType == DeviceType.DEVICE_TYPE_HXN)
+                return;
             vendorIn(0x8484, 0, 1);
             vendorOut(0x0404, 0, null);
             vendorIn(0x8484, 0, 1);
@@ -160,7 +192,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             vendorIn(0x8383, 0, 1);
             vendorOut(0, 1, null);
             vendorOut(1, 0, null);
-            vendorOut(2, (mDeviceType == DeviceType.DEVICE_TYPE_HX) ? 0x44 : 0x24, null);
+            vendorOut(2, (mDeviceType == DeviceType.DEVICE_TYPE_01) ? 0x24 : 0x44, null);
         }
 
         private void setControlLines(int newControlLinesValue) throws IOException {
@@ -172,9 +204,9 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             try {
                 while (!mStopReadStatusThread) {
                     byte[] buffer = new byte[STATUS_BUFFER_SIZE];
-                    long endTime = System.currentTimeMillis() + 500;
+                    long endTime = MonotonicClock.millis() + 500;
                     int readBytesCount = mConnection.bulkTransfer(mInterruptEndpoint, buffer, STATUS_BUFFER_SIZE, 500);
-                    if(readBytesCount == -1 && System.currentTimeMillis() < endTime)
+                    if(readBytesCount == -1 && MonotonicClock.millis() < endTime)
                         testConnection();
                     if (readBytesCount > 0) {
                         if (readBytesCount != STATUS_BUFFER_SIZE) {
@@ -196,12 +228,20 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             if ((mReadStatusThread == null) && (mReadStatusException == null)) {
                 synchronized (mReadStatusThreadLock) {
                     if (mReadStatusThread == null) {
-                        byte[] data = vendorIn(GET_CONTROL_REQUEST, 0, 1);
                         mStatus = 0;
-                        if((data[0] & GET_CONTROL_FLAG_CTS) == 0) mStatus |= STATUS_FLAG_CTS;
-                        if((data[0] & GET_CONTROL_FLAG_DSR) == 0) mStatus |= STATUS_FLAG_DSR;
-                        if((data[0] & GET_CONTROL_FLAG_CD) == 0) mStatus |= STATUS_FLAG_CD;
-                        if((data[0] & GET_CONTROL_FLAG_RI) == 0) mStatus |= STATUS_FLAG_RI;
+                        if(mDeviceType == DeviceType.DEVICE_TYPE_HXN) {
+                            byte[] data = vendorIn(GET_CONTROL_HXN_REQUEST, 0, 1);
+                            if ((data[0] & GET_CONTROL_HXN_FLAG_CTS) == 0) mStatus |= STATUS_FLAG_CTS;
+                            if ((data[0] & GET_CONTROL_HXN_FLAG_DSR) == 0) mStatus |= STATUS_FLAG_DSR;
+                            if ((data[0] & GET_CONTROL_HXN_FLAG_CD) == 0) mStatus |= STATUS_FLAG_CD;
+                            if ((data[0] & GET_CONTROL_HXN_FLAG_RI) == 0) mStatus |= STATUS_FLAG_RI;
+                        } else {
+                            byte[] data = vendorIn(GET_CONTROL_REQUEST, 0, 1);
+                            if ((data[0] & GET_CONTROL_FLAG_CTS) == 0) mStatus |= STATUS_FLAG_CTS;
+                            if ((data[0] & GET_CONTROL_FLAG_DSR) == 0) mStatus |= STATUS_FLAG_DSR;
+                            if ((data[0] & GET_CONTROL_FLAG_CD) == 0) mStatus |= STATUS_FLAG_CD;
+                            if ((data[0] & GET_CONTROL_FLAG_RI) == 0) mStatus |= STATUS_FLAG_RI;
+                        }
                         //Log.d(TAG, "start control line status thread " + mStatus);
                         mReadStatusThread = new Thread(this::readStatusThreadFunction);
                         mReadStatusThread.setDaemon(true);
@@ -214,7 +254,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             IOException readStatusException = mReadStatusException;
             if (mReadStatusException != null) {
                 mReadStatusException = null;
-                throw readStatusException;
+                throw new IOException(readStatusException);
             }
 
             return mStatus;
@@ -250,29 +290,27 @@ public class ProlificSerialDriver implements UsbSerialDriver {
                 }
             }
 
-            if (mDevice.getDeviceClass() == 0x02) {
-                mDeviceType = DeviceType.DEVICE_TYPE_01;
-            } else {
-                byte[] rawDescriptors = connection.getRawDescriptors();
-                if(rawDescriptors == null || rawDescriptors.length <8) {
-                    Log.w(TAG, "Could not get device descriptors, Assuming that it is a HX device");
-                    mDeviceType = DeviceType.DEVICE_TYPE_HX;
-                } else {
-                    byte maxPacketSize0 = rawDescriptors[7];
-                    if (maxPacketSize0 == 64) {
-                        mDeviceType = DeviceType.DEVICE_TYPE_HX;
-                    } else if ((mDevice.getDeviceClass() == 0x00)
-                            || (mDevice.getDeviceClass() == 0xff)) {
-                        mDeviceType = DeviceType.DEVICE_TYPE_01;
-                    } else {
-                        Log.w(TAG, "Could not detect PL2303 subtype, Assuming that it is a HX device");
-                        mDeviceType = DeviceType.DEVICE_TYPE_HX;
-                    }
-                }
+            byte[] rawDescriptors = connection.getRawDescriptors();
+            if(rawDescriptors == null || rawDescriptors.length < 14) {
+                throw new IOException("Could not get device descriptors");
             }
-            setControlLines(mControlLinesValue);
+            int usbVersion = (rawDescriptors[3] << 8) + rawDescriptors[2];
+            int deviceVersion = (rawDescriptors[13] << 8) + rawDescriptors[12];
+            byte maxPacketSize0 = rawDescriptors[7];
+            if (mDevice.getDeviceClass() == 0x02 || maxPacketSize0 != 64) {
+                mDeviceType = DeviceType.DEVICE_TYPE_01;
+            } else if(deviceVersion == 0x300 && usbVersion == 0x200) {
+                mDeviceType = DeviceType.DEVICE_TYPE_T; // TA
+            } else if(deviceVersion == 0x500) {
+                mDeviceType = DeviceType.DEVICE_TYPE_T; // TB
+            } else if(usbVersion == 0x200 && !testHxStatus()) {
+                mDeviceType = DeviceType.DEVICE_TYPE_HXN;
+            } else {
+                mDeviceType = DeviceType.DEVICE_TYPE_HX;
+            }
             resetDevice();
             doBlackMagic();
+            setControlLines(mControlLinesValue);
         }
 
         @Override
@@ -305,6 +343,9 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             if (baudRate <= 0) {
                 throw new IllegalArgumentException("Invalid baud rate: " + baudRate);
             }
+            if (mDeviceType == DeviceType.DEVICE_TYPE_HXN) {
+                return baudRate;
+            }
             for(int br : standardBaudRates) {
                 if (br == baudRate) {
                     return baudRate;
@@ -312,34 +353,53 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             }
             /*
              * Formula taken from Linux + FreeBSD.
+             *
+             * For TA+TB devices
+             *   baudrate = baseline / (mantissa * 2^exponent)
+             * where
+             *   mantissa = buf[10:0]
+             *   exponent = buf[15:13 16]
+             *
+             * For other devices
              *   baudrate = baseline / (mantissa * 4^exponent)
              * where
              *   mantissa = buf[8:0]
              *   exponent = buf[11:9]
              *
-             * Note: The formula does not work for all PL2303 variants.
-             *       Ok for PL2303HX. Not ok for PL2303TA. Other variants unknown.
              */
-            int baseline, mantissa, exponent;
+            int baseline, mantissa, exponent, buf, effectiveBaudRate;
             baseline = 12000000 * 32;
             mantissa = baseline / baudRate;
             if (mantissa == 0) { // > unrealistic 384 MBaud
                 throw new UnsupportedOperationException("Baud rate to high");
             }
             exponent = 0;
-            while (mantissa >= 512) {
-                if (exponent < 7) {
-                    mantissa >>= 2;	/* divide by 4 */
-                    exponent++;
-                } else { // < 45.8 baud
-                    throw new UnsupportedOperationException("Baud rate to low");
+            if (mDeviceType == DeviceType.DEVICE_TYPE_T) {
+                while (mantissa >= 2048) {
+                    if (exponent < 15) {
+                        mantissa >>= 1;    /* divide by 2 */
+                        exponent++;
+                    } else { // < 7 baud
+                        throw new UnsupportedOperationException("Baud rate to low");
+                    }
                 }
+                buf = mantissa + ((exponent & ~1) << 12) + ((exponent & 1) << 16) + (1 << 31);
+                effectiveBaudRate = (baseline / mantissa) >> exponent;
+            } else {
+                while (mantissa >= 512) {
+                    if (exponent < 7) {
+                        mantissa >>= 2;    /* divide by 4 */
+                        exponent++;
+                    } else { // < 45.8 baud
+                        throw new UnsupportedOperationException("Baud rate to low");
+                    }
+                }
+                buf = mantissa + (exponent << 9) + (1 << 31);
+                effectiveBaudRate = (baseline / mantissa) >> (exponent << 1);
             }
-            int effectiveBaudRate = (baseline / mantissa) >> (exponent << 1);
             double baudRateError = Math.abs(1.0 - (effectiveBaudRate / (double)baudRate));
             if(baudRateError >= 0.031) // > unrealistic 11.6 Mbaud
                 throw new UnsupportedOperationException(String.format("Baud rate deviation %.1f%% is higher than allowed 3%%", baudRateError*100));
-            int buf = mantissa + (exponent<<9) + (1<<31);
 
             Log.d(TAG, String.format("baud rate=%d, effective=%d, error=%.1f%%, value=0x%08x, mantissa=%d, exponent=%d",
                     baudRate, effectiveBaudRate, baudRateError*100, buf, mantissa, exponent));
@@ -347,7 +407,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         }
 
         @Override
-        public void setParameters(int baudRate, int dataBits, int stopBits, int parity) throws IOException {
+        public void setParameters(int baudRate, int dataBits, int stopBits, @Parity int parity) throws IOException {
             baudRate = filterBaudRate(baudRate);
             if ((mBaudRate == baudRate) && (mDataBits == dataBits)
                     && (mStopBits == stopBits) && (mParity == parity)) {
@@ -483,12 +543,17 @@ public class ProlificSerialDriver implements UsbSerialDriver {
 
         @Override
         public void purgeHwBuffers(boolean purgeWriteBuffers, boolean purgeReadBuffers) throws IOException {
-            if (purgeWriteBuffers) {
-                vendorOut(FLUSH_RX_REQUEST, 0, null);
-            }
-
-            if (purgeReadBuffers) {
-                vendorOut(FLUSH_TX_REQUEST, 0, null);
+            if (mDeviceType == DeviceType.DEVICE_TYPE_HXN) {
+                int index = 0;
+                if(purgeWriteBuffers) index |= RESET_HXN_RX_PIPE;
+                if(purgeReadBuffers) index |= RESET_HXN_TX_PIPE;
+                if(index != 0)
+                    vendorOut(RESET_HXN_REQUEST, index, null);
+            } else {
+                if (purgeWriteBuffers)
+                    vendorOut(FLUSH_RX_REQUEST, 0, null);
+                if (purgeReadBuffers)
+                    vendorOut(FLUSH_TX_REQUEST, 0, null);
             }
         }
 
@@ -499,9 +564,18 @@ public class ProlificSerialDriver implements UsbSerialDriver {
     }
 
     public static Map<Integer, int[]> getSupportedDevices() {
-        final Map<Integer, int[]> supportedDevices = new LinkedHashMap<Integer, int[]>();
+        final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
         supportedDevices.put(UsbId.VENDOR_PROLIFIC,
-                new int[] { UsbId.PROLIFIC_PL2303, });
+                new int[] {
+                        UsbId.PROLIFIC_PL2303,
+                        UsbId.PROLIFIC_PL2303GC,
+                        UsbId.PROLIFIC_PL2303GB,
+                        UsbId.PROLIFIC_PL2303GT,
+		                UsbId.PROLIFIC_PL2303GT3,
+                        UsbId.PROLIFIC_PL2303GL,
+                        UsbId.PROLIFIC_PL2303GE,
+                        UsbId.PROLIFIC_PL2303GS,
+                });
         return supportedDevices;
     }
 }

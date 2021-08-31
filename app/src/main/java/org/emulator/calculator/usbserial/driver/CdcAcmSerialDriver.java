@@ -204,7 +204,7 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
         }
 
         @Override
-        public void setParameters(int baudRate, int dataBits, int stopBits, int parity) throws IOException {
+        public void setParameters(int baudRate, int dataBits, int stopBits, @Parity int parity) throws IOException {
             if(baudRate <= 0) {
                 throw new IllegalArgumentException("Invalid baud rate: " + baudRate);
             }
@@ -287,7 +287,7 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
     }
 
     public static Map<Integer, int[]> getSupportedDevices() {
-        final Map<Integer, int[]> supportedDevices = new LinkedHashMap<Integer, int[]>();
+        final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
         supportedDevices.put(UsbId.VENDOR_ARDUINO,
                 new int[] {
                         UsbId.ARDUINO_UNO,
@@ -316,6 +316,10 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
         supportedDevices.put(UsbId.VENDOR_ARM,
                 new int[] {
                     UsbId.ARM_MBED,
+                });
+        supportedDevices.put(UsbId.VENDOR_ST,
+                new int[] {
+                        UsbId.ST_CDC,
                 });
         return supportedDevices;
     }

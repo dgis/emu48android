@@ -53,7 +53,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -2041,11 +2040,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 	@SuppressWarnings("UnusedDeclaration")
 	int openSerialPort(String serialPort) {
+		// Search if this same serial port is not already opened
+
+
 		Integer serialPortId = serialIndex;
 		Serial serial = new Serial(this, serialPortId);
 		if(serial.connect(serialPort)) {
 			serialsById.put(serialPortId, serial);
 			serialIndex++;
+			runOnUiThread(() -> {
+				int resId = Utils.resId(MainActivity.this, "string", "serial_connection_succeeded");
+				Toast.makeText(MainActivity.this, resId, Toast.LENGTH_SHORT).show();
+			});
 			return serialPortId;
 		} else {
 			runOnUiThread(() -> {
@@ -2069,6 +2075,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		if(serial != null) {
 			serialsById.remove(serialPortIdInt);
 			serial.disconnect();
+			runOnUiThread(() -> {
+				int resId = Utils.resId(MainActivity.this, "string", "serial_disconnection_succeeded");
+				Toast.makeText(MainActivity.this, resId, Toast.LENGTH_SHORT).show();
+			});
 			return 1;
 		}
 		return 0;
@@ -2088,7 +2098,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		Integer serialPortIdInt = serialPortId;
 		Serial serial = serialsById.get(serialPortIdInt);
 		if(serial != null)
-			return serial.receive(nNumberOfBytesToRead);
+			return serial.read(nNumberOfBytesToRead);
 		return new byte[0];
 	}
 
@@ -2097,7 +2107,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		Integer serialPortIdInt = serialPortId;
 		Serial serial = serialsById.get(serialPortIdInt);
 		if(serial != null)
-			return serial.send(buffer);
+			return serial.write(buffer);
+		return 0;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	int serialPortPurgeComm(int serialPortId, int dwFlags) {
+		Integer serialPortIdInt = serialPortId;
+		Serial serial = serialsById.get(serialPortIdInt);
+		if(serial != null)
+			return serial.purgeComm(dwFlags);
 		return 0;
 	}
 

@@ -62,7 +62,8 @@ public class DevicesFragment extends ListFragment {
 	                else
 		                text1.setText(String.format(Locale.US, getString(Utils.resId(DevicesFragment.this, "string", "serial_ports_device_item_title")), deviceName, item.port));
                 }
-                text2.setText(String.format(Locale.US, getString(Utils.resId(DevicesFragment.this, "string", "serial_ports_device_item_description")), item.device.getVendorId(), item.device.getProductId()));
+                if(item.device != null)
+	                text2.setText(String.format(Locale.US, getString(Utils.resId(DevicesFragment.this, "string", "serial_ports_device_item_description")), item.device.getVendorId(), item.device.getProductId()));
                 return view;
             }
         };
@@ -90,6 +91,7 @@ public class DevicesFragment extends ListFragment {
         UsbSerialProber usbDefaultProber = UsbSerialProber.getDefaultProber();
         UsbSerialProber usbCustomProber = CustomProber.getCustomProber();
         listItems.clear();
+	    listItems.add(new ListItem(null, 0, null));
         for(UsbDevice device : usbManager.getDeviceList().values()) {
             UsbSerialDriver driver = usbDefaultProber.probeDevice(device);
             if(driver == null) {
@@ -98,8 +100,6 @@ public class DevicesFragment extends ListFragment {
             if(driver != null) {
                 for(int port = 0; port < driver.getPorts().size(); port++)
                     listItems.add(new ListItem(device, port, driver));
-            } else {
-                listItems.add(new ListItem(device, 0, null));
             }
         }
         listAdapter.notifyDataSetChanged();

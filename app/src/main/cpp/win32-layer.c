@@ -330,14 +330,13 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;
 	} else if(hFile->handleType == HANDLE_TYPE_COM) {
-		Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
 		ssize_t writenByteCount = writeSerialPort(hFile->commId, lpBuffer, nNumberOfBytesToWrite);
 #if defined DEBUG_ANDROID_SERIAL
 		char * hexAsciiDump = dumpToHexAscii(lpBuffer, writenByteCount, 8);
 		SERIAL_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d) -> %d bytes\n%s", hFile, lpBuffer, nNumberOfBytesToWrite, writenByteCount, hexAsciiDump);
 		free(hexAsciiDump);
 #endif
-		commEvent(hFile->commId, EV_TXEMPTY); // Not sure about that (not the same thread)!
+		//Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
 		if(lpNumberOfBytesWritten)
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;
@@ -748,7 +747,7 @@ DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 
 BOOL WINAPI CloseHandle(HANDLE hObject) {
     FILE_LOGD("CloseHandle(hObject: %p)", hObject);
-    if(hObject)
+    if(!hObject)
     	return FALSE;
     //https://msdn.microsoft.com/en-us/9b84891d-62ca-4ddc-97b7-c4c79482abd9
     // Can be a thread/event/file handle!
@@ -3107,6 +3106,7 @@ BOOL WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped) {
 			hFile->commEventMask = 0;
 		}
 		pthread_mutex_unlock(&commsLock);
+		SERIAL_LOGD("WaitCommEvent(hFile: %p, lpEvtMask: %p) -> *lpEvtMask=%d", hFile, lpEvtMask, *lpEvtMask);
 		return TRUE;
 	}
     return FALSE;
@@ -3149,8 +3149,9 @@ BOOL SetCommState(HANDLE hFile, LPDCB lpDCB) {
     return FALSE;
 }
 BOOL PurgeComm(HANDLE hFile, DWORD dwFlags) {
-	SERIAL_LOGD("SetCommState(hFile: %p, dwFlags: 0x%08X) TODO", hFile, dwFlags);
-    //TODO
+	SERIAL_LOGD("PurgeComm(hFile: %p, dwFlags: 0x%08X) TODO", hFile, dwFlags);
+	if(hFile && hFile->handleType == HANDLE_TYPE_COM)
+		return serialPortPurgeComm(hFile->commId, dwFlags);
     return FALSE;
 }
 BOOL SetCommBreak(HANDLE hFile) {

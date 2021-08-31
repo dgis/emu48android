@@ -50,7 +50,14 @@ public final class UsbId {
     public static final int SILABS_CP2108 = 0xea71;
 
     public static final int VENDOR_PROLIFIC = 0x067b;
-    public static final int PROLIFIC_PL2303 = 0x2303;
+    public static final int PROLIFIC_PL2303 = 0x2303;   // device type 01, T, HX
+    public static final int PROLIFIC_PL2303GC = 0x23a3; // device type HXN
+    public static final int PROLIFIC_PL2303GB = 0x23b3; // "
+	public static final int PROLIFIC_PL2303GT = 0x23cd; // "
+	public static final int PROLIFIC_PL2303GT3 = 0x23c3; // "
+    public static final int PROLIFIC_PL2303GL = 0x23e3; // "
+    public static final int PROLIFIC_PL2303GE = 0x23e3; // "
+    public static final int PROLIFIC_PL2303GS = 0x23f3; // "
 
     public static final int VENDOR_QINHENG = 0x1a86;
     public static final int QINHENG_CH340 = 0x7523;
@@ -59,6 +66,9 @@ public final class UsbId {
     // at www.linux-usb.org/usb.ids listed for NXP/LPC1768, but all processors supported by ARM mbed DAPLink firmware report these ids
     public static final int VENDOR_ARM = 0x0d28;
     public static final int ARM_MBED = 0x0204;
+
+    public static final int VENDOR_ST = 0x0483;
+    public static final int ST_CDC = 0x5740;
 
     private UsbId() {
         throw new IllegalAccessError("Non-instantiable class");

@@ -12,6 +12,8 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbRequest;
 import android.util.Log;
 
+import org.emulator.calculator.usbserial.util.MonotonicClock;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
@@ -63,7 +65,13 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
     public int getPortNumber() {
         return mPortNumber;
     }
-    
+
+    @Override
+    public UsbEndpoint getWriteEndpoint() { return mWriteEndpoint; }
+
+    @Override
+    public UsbEndpoint getReadEndpoint() { return mReadEndpoint; }
+
     /**
      * Returns the device serial number
      *  @return serial number
@@ -93,6 +101,9 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
         if (mConnection != null) {
             throw new IOException("Already open");
         }
+        if(connection == null) {
+            throw new IllegalArgumentException("Connection is null");
+        }
         mConnection = connection;
         try {
             openInt(connection);
@@ -102,7 +113,9 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
             mUsbRequest = new UsbRequest();
             mUsbRequest.initialize(mConnection, mReadEndpoint);
         } catch(Exception e) {
-            close();
+            try {
+                close();
+            } catch(Exception ignored) {}
             throw e;
         }
     }
@@ -161,11 +174,12 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
             //     /system/lib64/libusbhost.so (usb_request_wait+192)
             //     /system/lib64/libandroid_runtime.so (android_hardware_UsbDeviceConnection_request_wait(_JNIEnv*, _jobject*, long)+84)
             // data loss / crashes were observed with timeout up to 200 msec
-            long endTime = testConnection ? System.currentTimeMillis() + timeout : 0;
+            long endTime = testConnection ? MonotonicClock.millis() + timeout : 0;
             int readMax = Math.min(dest.length, MAX_READ_SIZE);
             nread = mConnection.bulkTransfer(mReadEndpoint, dest, readMax, timeout);
-            // Android error propagation is improvable, nread == -1 can be: timeout, connection lost, buffer undersized, ...
-            if(nread == -1 && testConnection && System.currentTimeMillis() < endTime)
+            // Android error propagation is improvable:
+            //  nread == -1 can be: timeout, connection lost, buffer to small, ???
+            if(nread == -1 && testConnection && MonotonicClock.millis() < endTime)
                 testConnection();
 
         } else {
@@ -178,47 +192,64 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
                 throw new IOException("Waiting for USB request failed");
             }
             nread = buf.position();
+            // Android error propagation is improvable:
+            //   response != null & nread == 0 can be: connection lost, buffer to small, ???
+            if(nread == 0) {
+                testConnection();
+            }
         }
-        if (nread > 0)
-            return nread;
-        else
-            return 0;
+        return Math.max(nread, 0);
     }
 
     @Override
-    public int write(final byte[] src, final int timeout) throws IOException {
+    public void write(final byte[] src, final int timeout) throws IOException {
         int offset = 0;
+        final long endTime = (timeout == 0) ? 0 : (MonotonicClock.millis() + timeout);
 
         if(mConnection == null) {
             throw new IOException("Connection closed");
         }
         while (offset < src.length) {
-            final int writeLength;
-            final int amtWritten;
+            int requestTimeout;
+            final int requestLength;
+            final int actualLength;
 
             synchronized (mWriteBufferLock) {
                 final byte[] writeBuffer;
 
-                writeLength = Math.min(src.length - offset, mWriteBuffer.length);
+                requestLength = Math.min(src.length - offset, mWriteBuffer.length);
                 if (offset == 0) {
                     writeBuffer = src;
                 } else {
                     // bulkTransfer does not support offsets, make a copy.
-                    System.arraycopy(src, offset, mWriteBuffer, 0, writeLength);
+                    System.arraycopy(src, offset, mWriteBuffer, 0, requestLength);
                     writeBuffer = mWriteBuffer;
                 }
-
-                amtWritten = mConnection.bulkTransfer(mWriteEndpoint, writeBuffer, writeLength, timeout);
+                if (timeout == 0 || offset == 0) {
+                    requestTimeout = timeout;
+                } else {
+                    requestTimeout = (int)(endTime - MonotonicClock.millis());
+                    if(requestTimeout == 0)
+                        requestTimeout = -1;
+                }
+                if (requestTimeout < 0) {
+                    actualLength = -2;
+                } else {
+                    actualLength = mConnection.bulkTransfer(mWriteEndpoint, writeBuffer, requestLength, requestTimeout);
+                }
             }
-            if (amtWritten <= 0) {
-                throw new IOException("Error writing " + writeLength
-                        + " bytes at offset " + offset + " length=" + src.length);
+            Log.d(TAG, "Wrote " + actualLength + "/" + requestLength + " offset " + offset + "/" + src.length + " timeout " + requestTimeout);
+            if (actualLength <= 0) {
+                if (timeout != 0 && MonotonicClock.millis() >= endTime) {
+                    SerialTimeoutException ex = new SerialTimeoutException("Error writing " + requestLength + " bytes at offset " + offset + " of total " + src.length + ", rc=" + actualLength);
+                    ex.bytesTransferred = offset;
+                    throw ex;
+                } else {
+                    throw new IOException("Error writing " + requestLength + " bytes at offset " + offset + " of total " + src.length);
+                }
             }
-
-            Log.d(TAG, "Wrote amt=" + amtWritten + " attempted=" + writeLength);
-            offset += amtWritten;
+            offset += actualLength;
         }
-        return offset;
     }
 
     @Override
@@ -227,7 +258,7 @@ public abstract class CommonUsbSerialPort implements UsbSerialPort {
     }
 
     @Override
-    public abstract void setParameters(int baudRate, int dataBits, int stopBits, int parity) throws IOException;
+    public abstract void setParameters(int baudRate, int dataBits, int stopBits, @Parity int parity) throws IOException;
 
     @Override
     public boolean getCD() throws IOException { throw new UnsupportedOperationException(); }

@@ -22,6 +22,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -615,7 +616,7 @@ public class PanAndScaleView extends View {
 
 
 	boolean osdAllowed = false;
-	Handler osdTimerHandler = new Handler();
+	Handler osdTimerHandler = new Handler(Looper.getMainLooper());
 	Runnable osdTimerRunnable = () -> {
 		// OSD should stop now!
 		osdAllowed = false;

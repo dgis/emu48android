@@ -1277,6 +1277,7 @@ extern int closeSerialPort(int serialPortId);
 extern int setSerialPortParameters(int serialPortId, int baudRate);
 extern int readSerialPort(int serialPortId, LPBYTE buffer, int nNumberOfBytesToRead);
 extern int writeSerialPort(int serialPortId, LPBYTE buffer, int bufferSize);
+extern int serialPortPurgeComm(int serialPortId, int dwFlags);
 extern int serialPortSetBreak(int serialPortId);
 extern int serialPortClearBreak(int serialPortId);
 extern int showAlert(const TCHAR * messageText, int flags);

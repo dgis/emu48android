@@ -9,9 +9,11 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.emulator.calculator.usbserial.CustomProber;
+import org.emulator.calculator.usbserial.driver.SerialTimeoutException;
 import org.emulator.calculator.usbserial.driver.UsbSerialDriver;
 import org.emulator.calculator.usbserial.driver.UsbSerialPort;
 import org.emulator.calculator.usbserial.driver.UsbSerialProber;
@@ -26,12 +28,18 @@ import java.util.regex.Pattern;
 public class Serial {
 
 	private static final String TAG = "Serial";
-	private final boolean debug = false;
+	private final boolean debug = true;
 
 	private final Context context;
 	private final int serialPortId;
 	private static final String INTENT_ACTION_GRANT_USB = "EMU48.GRANT_USB";
 	private static final int WRITE_WAIT_MILLIS = 2000;
+
+	private static final int PURGE_TXABORT = 0x0001;
+	private static final int PURGE_RXABORT = 0x0002;
+	private static final int PURGE_TXCLEAR = 0x0004;
+	private static final int PURGE_RXCLEAR = 0x0008;
+
 
 	private final Handler mainLooper;
 	private SerialInputOutputManager usbIoManager;
@@ -41,7 +49,7 @@ public class Serial {
 	private boolean connected = false;
 	private String connectionStatus = "";
 
-	private final ArrayDeque<Byte> reveivedByteQueue = new ArrayDeque<>();
+	private final ArrayDeque<Byte> readByteQueue = new ArrayDeque<>();
 
 
 	public Serial(Context context, int serialPortId) {
@@ -62,7 +70,7 @@ public class Serial {
 		mainLooper = new Handler(Looper.getMainLooper());
 	}
 
-	public boolean connect(String serialPort) {
+	public synchronized boolean connect(String serialPort) {
 		if(debug) Log.d(TAG, "connect( " + serialPort + ")");
 
 		Pattern patternSerialPort = Pattern.compile("\\\\.\\\\(\\d+),(\\d+)");
@@ -87,11 +95,11 @@ public class Serial {
 		return false;
 	}
 
-	public String getConnectionStatus() {
+	public synchronized String getConnectionStatus() {
 		return connectionStatus;
 	}
 
-	public boolean connect(int deviceId, int portNum) {
+	public synchronized boolean connect(int deviceId, int portNum) {
 		if(debug) Log.d(TAG, "connect(deviceId: " + deviceId + ", portNum" + portNum + ")");
 
 		UsbDevice device = null;
@@ -154,10 +162,10 @@ public class Serial {
 				@Override
 				public void onNewData(byte[] data) {
 					if(debug) Log.d(TAG, "onNewData: " + Utils.bytesToHex(data));
-					boolean wasEmpty = reveivedByteQueue.isEmpty();
-					synchronized (reveivedByteQueue) {
+					boolean wasEmpty = readByteQueue.isEmpty();
+					synchronized (readByteQueue) {
 						for (byte datum : data)
-							reveivedByteQueue.add(datum);
+							readByteQueue.add(datum);
 					}
 					if (wasEmpty)
 						onReceivedByteQueueNotEmpty();
@@ -172,14 +180,15 @@ public class Serial {
 			usbIo.setDaemon(true);
 			usbIo.start();
 			connected = true;
+			connectionStatus = "";
+			if(debug) Log.d(TAG, "connected!");
+			purgeComm(PURGE_TXCLEAR | PURGE_RXCLEAR);
 			return true;
 		} catch (Exception e) {
 			connectionStatus = "serial_connection_failed_open_failed";
 			if(debug) Log.d(TAG, "connectionStatus = " + connectionStatus + ", " + e.getMessage());
 			disconnect();
 		}
-		if(debug) Log.d(TAG, "connected!");
-		connectionStatus = "";
 		return false;
 	}
 
@@ -194,15 +203,16 @@ public class Serial {
 				Log.d(TAG, "onRunError: " + e.getMessage());
 				e.printStackTrace();
 			}
-			disconnect();
+			//disconnect();
 		});
+		//disconnect();
 	}
 
-	public boolean setParameters(int baudRate) {
+	public synchronized boolean setParameters(int baudRate) {
 		return setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
 	}
 
-	public boolean setParameters(int baudRate, int dataBits, int stopBits, int parity) {
+	public synchronized boolean setParameters(int baudRate, int dataBits, int stopBits, int parity) {
 		if(debug) Log.d(TAG, "setParameters(baudRate: " + baudRate + ", dataBits: " + dataBits + ", stopBits: " + stopBits + ", parity: " + parity +")");
 
 		try {
@@ -214,38 +224,84 @@ public class Serial {
 		return false;
 	}
 
-	public byte[] receive(int nNumberOfBytesToRead) {
+	public synchronized byte[] read(int nNumberOfBytesToRead) {
+		if(debug) Log.d(TAG, "read(nNumberOfBytesToRead: " + nNumberOfBytesToRead + ")");
+
+		if(!connected)
+			return new byte[0];
+
 		byte[] result;
-		synchronized (reveivedByteQueue) {
-			int nNumberOfReadBytes = Math.min(nNumberOfBytesToRead, reveivedByteQueue.size());
+		synchronized (readByteQueue) {
+			int nNumberOfReadBytes = Math.min(nNumberOfBytesToRead, readByteQueue.size());
 			result = new byte[nNumberOfReadBytes];
 			for (int i = 0; i < nNumberOfReadBytes; i++) {
-				Byte byteRead = reveivedByteQueue.poll();
+				Byte byteRead = readByteQueue.poll();
 				if(byteRead != null)
 					result[i] = byteRead;
 			}
 		}
-		if(result == null) {
-			result = new byte[0];
-		} else if(reveivedByteQueue.size() > 0) {
+		if(readByteQueue.size() > 0)
 			mainLooper.post(() -> NativeLib.commEvent(serialPortId, NativeLib.EV_RXCHAR));
-		}
 		return result;
 	}
 
-	public int send(byte[] data) {
+	long maxWritePeriod = 4; //ms
+	long lastTime = 0;
+	public synchronized int write(byte[] data) {
 		if(!connected)
 			return 0;
 
+		long currentTime = SystemClock.elapsedRealtime();
+		long writePeriod = currentTime - lastTime;
+
+		if(debug) Log.d(TAG, "write(data: [" + data.length + "]: " + Utils.bytesToHex(data) + ") writePeriod: " + writePeriod + "ms");
+
+		if(lastTime > 0 && writePeriod < maxWritePeriod) {
+			// Wait 1ms - (currentTime - lastTime)ms
+			android.os.SystemClock.sleep(maxWritePeriod - writePeriod);
+		}
+		lastTime = SystemClock.elapsedRealtime();
+
 		try {
-			return usbSerialPort.write(data, WRITE_WAIT_MILLIS);
+			usbSerialPort.write(data, WRITE_WAIT_MILLIS);
+			if(debug) Log.d(TAG, "write() return: " + data.length);
+			// No exception, so, all the data has been sent!
+
+			// Consider that the write buffer is empty?
+			NativeLib.commEvent(serialPortId, NativeLib.EV_TXEMPTY);
+
+			return data.length;
+		} catch (SerialTimeoutException e) {
+			if(debug) Log.d(TAG, "write() Exception: " + e.toString());
+			return data.length - e.bytesTransferred;
 		} catch (Exception e) {
+			if(debug) Log.d(TAG, "write() Exception: " + e.toString());
 			onReceivedError(e);
 		}
 		return 0;
 	}
 
-	public int setBreak() {
+
+	public synchronized int purgeComm(int dwFlags) {
+		if(!connected)
+			return 0;
+
+		if(debug) Log.d(TAG, "purgeComm(" + dwFlags + ")");
+
+		try {
+			boolean purgeWriteBuffers = (dwFlags & PURGE_TXABORT) == PURGE_TXABORT || (dwFlags & PURGE_TXCLEAR) == PURGE_TXCLEAR;
+			boolean purgeReadBuffers = (dwFlags & PURGE_RXABORT) == PURGE_RXABORT || (dwFlags & PURGE_RXCLEAR) == PURGE_RXCLEAR;
+			if(purgeReadBuffers)
+				readByteQueue.clear();
+			usbSerialPort.purgeHwBuffers(purgeWriteBuffers, purgeReadBuffers);
+			return 1;
+		} catch (Exception e) {
+			// Exception mean return 0
+		}
+		return 0;
+	}
+
+	public synchronized int setBreak() {
 		if(!connected)
 			return 0;
 
@@ -258,7 +314,7 @@ public class Serial {
 		return 0;
 	}
 
-	public int clearBreak() {
+	public synchronized int clearBreak() {
 		if(!connected)
 			return 0;
 
@@ -271,7 +327,7 @@ public class Serial {
 		return 0;
 	}
 
-	public void disconnect() {
+	public synchronized void disconnect() {
 		if(debug) Log.d(TAG, "disconnect()");
 
 		connected = false;
@@ -280,7 +336,9 @@ public class Serial {
 		usbIoManager = null;
 		try {
 			usbSerialPort.close();
-		} catch (IOException ignored) {}
+		} catch (IOException ignored) {
+
+		}
 		usbSerialPort = null;
 	}
 }

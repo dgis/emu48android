@@ -58,9 +58,15 @@ CHANGES
 Version 2.3 (2021-02-xx)
 
 - Add the serial port support (via USB OTG).
-	TODO: When stop the app, Serial exception seems to delay the save of the calc state!!!!
-	TODO: Inform if the connection is not possible.
-	TODO: What's happen if I hot unplug?
+	FIX: When stop the app, Serial exception seems to delay the save of the calc state!!!!
+	FIX: Inform if the connection is not possible.
+	BUG: From Windows to Android with HP49G QINHENG CH340 -> all character at once bug
+		No issue with Prolific PL2303GT3
+		Not reproducible!
+	FIX: No 'No driver' on real device
+	BUG: When openIO on real device, 1st OPENIO failed, 2nd OPENIO succeeded
+	BUG: ID change -> replace id by vendor:device ids?
+	TEST: With real HP48SX
 	TODO: Check the self test about UART (http://regis.cosnier.free.fr/private/private.php?journal=HP48&index=-4637&nomenu)
 - Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.

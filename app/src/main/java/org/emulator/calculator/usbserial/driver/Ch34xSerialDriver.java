@@ -220,7 +220,7 @@ public class Ch34xSerialDriver implements UsbSerialDriver {
 		}
 
 		@Override
-		public void setParameters(int baudRate, int dataBits, int stopBits, int parity) throws IOException {
+		public void setParameters(int baudRate, int dataBits, int stopBits, @Parity int parity) throws IOException {
 			if(baudRate <= 0) {
 				throw new IllegalArgumentException("Invalid baud rate: " + baudRate);
 			}
@@ -363,7 +363,7 @@ public class Ch34xSerialDriver implements UsbSerialDriver {
 	}
 
 	public static Map<Integer, int[]> getSupportedDevices() {
-		final Map<Integer, int[]> supportedDevices = new LinkedHashMap<Integer, int[]>();
+		final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
 		supportedDevices.put(UsbId.VENDOR_QINHENG, new int[]{
 				UsbId.QINHENG_CH340,
 				UsbId.QINHENG_CH341A,

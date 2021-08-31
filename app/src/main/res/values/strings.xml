@@ -135,6 +135,8 @@
 	<string name="serial_ports_device_no_driver">No driver</string>
 	<string name="serial_ports_device_item_title">%s, Port %d</string>
 	<string name="serial_ports_device_item_description">Vendor %04X, Product %04X</string>
+	<string name="serial_connection_succeeded">USB serial device connected.</string>
+	<string name="serial_disconnection_succeeded">USB serial device disconnected.</string>
 	<string name="serial_connection_failed_device_not_found">Failed to connect the USB serial device: device not found (check the settings).</string>
 	<string name="serial_connection_failed_no_driver_for_device">Failed to connect the USB serial device: no driver for device (check the settings).</string>
 	<string name="serial_connection_failed_not_enough_ports_at_device">Failed to connect the USB serial device: not enough ports at device (check the settings).</string>
