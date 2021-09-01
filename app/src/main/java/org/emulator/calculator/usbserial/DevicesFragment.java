@@ -106,21 +106,18 @@ public class DevicesFragment extends ListFragment {
     }
 
 	public static class SerialConnectParameters {
-		public int deviceId;
 		public int port;
 		public int vendorId;
 		public int productId;
 		public String modelName;
 
 		public SerialConnectParameters() {
-			this.deviceId = 0;
 			this.port = 0;
 			this.vendorId = 0;
 			this.productId = 0;
 			this.modelName = "";
 		}
-		public SerialConnectParameters(int device, int port, int vendorId, int productId, String modelName) {
-			this.deviceId = device;
+		public SerialConnectParameters(int port, int vendorId, int productId, String modelName) {
 			this.port = port;
 			this.vendorId = vendorId;
 			this.productId = productId;
@@ -128,18 +125,18 @@ public class DevicesFragment extends ListFragment {
 		}
 
 		public String toSettingsString() {
-			return String.format(Locale.US, "%d,%d,%d,%d,%s", deviceId, port, vendorId, productId, modelName);
+			return String.format(Locale.US, "%d,%d,%d,%s", port, vendorId, productId, modelName);
 		}
 
 		public String toWin32String() {
-			return String.format(Locale.US, "%d,%d", deviceId, port);
+			return String.format(Locale.US, "%04X:%04X,%d", vendorId, productId, port);
 		}
 
 		public String toDisplayString(Context context) {
-			if(deviceId == 0 && port == 0)
+			if(vendorId == 0 && productId == 0 && port == 0)
 				return context.getResources().getString(Utils.resId(context, "string", "serial_ports_device_no_driver"));
 			else
-				return String.format(Locale.US, context.getResources().getString(Utils.resId(context, "string", "serial_ports_device")), modelName, vendorId, productId, deviceId, port);
+				return String.format(Locale.US, context.getResources().getString(Utils.resId(context, "string", "serial_ports_device")), modelName, vendorId, productId, port);
 		}
 
 		public static SerialConnectParameters fromSettingsString(String serialPorts) {
@@ -149,19 +146,13 @@ public class DevicesFragment extends ListFragment {
 		}
 
 		private void fromSettingsStringExtractor(String serialPorts) {
-			Pattern patternSerialPort = Pattern.compile("(\\d+),(\\d+),(\\d+),(\\d+),([^,]+)");
+			Pattern patternSerialPort = Pattern.compile("(\\d+),(\\d+),(\\d+),([^,]+)");
 			Matcher m = patternSerialPort.matcher(serialPorts);
 			if (m.find()) {
-				String deviceText = m.group(1);
-				String portText = m.group(2);
-				String vendorIdText = m.group(3);
-				String productIdText = m.group(4);
-				modelName = m.group(5);
-				try {
-					deviceId = Integer.parseInt(deviceText);
-				} catch (NumberFormatException ex) {
-					// Catch bad number format
-				}
+				String portText = m.group(1);
+				String vendorIdText = m.group(2);
+				String productIdText = m.group(3);
+				modelName = m.group(4);
 				try {
 					port = Integer.parseInt(portText);
 				} catch (NumberFormatException ex) {
@@ -207,12 +198,12 @@ public class DevicesFragment extends ListFragment {
         if(item.driver == null) {
             Toast.makeText(getActivity(), getString(Utils.resId(this, "string", "serial_ports_device_no_driver")), Toast.LENGTH_SHORT).show();
 	        if(onSerialDeviceClickedListener != null)
-		        onSerialDeviceClickedListener.onSerialDeviceClicked(new SerialConnectParameters(0, 0,
+		        onSerialDeviceClickedListener.onSerialDeviceClicked(new SerialConnectParameters(0,
 				        0, 0,
 				        ""));
         } else if(item.device != null) {
         	if(onSerialDeviceClickedListener != null)
-		        onSerialDeviceClickedListener.onSerialDeviceClicked(new SerialConnectParameters(item.device.getDeviceId(), item.port,
+		        onSerialDeviceClickedListener.onSerialDeviceClicked(new SerialConnectParameters(item.port,
 				        item.device.getVendorId(), item.device.getProductId(),
 				        item.driver.getClass().getSimpleName().replace("SerialDriver","")));
         }

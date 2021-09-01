@@ -55,14 +55,10 @@ LINKS
 
 CHANGES
 
-Version 2.3 (2021-02-xx)
+Version 2.3 (2021-09-xx)
 
 - Add the serial port support (via USB OTG).
-	TODO: When stop the app, Serial exception seems to delay the save of the calc state!!!!
-	TODO: Inform if the connection is not possible.
-	TODO: What's happen if I hot unplug?
-	TODO: Check the self test about UART (http://regis.cosnier.free.fr/private/private.php?journal=HP48&index=-4637&nomenu)
-- Allows pressing a calculator button with the right button of the mouse but prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
+- Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
 

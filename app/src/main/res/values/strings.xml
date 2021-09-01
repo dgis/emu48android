@@ -131,7 +131,7 @@
 	<string name="serial_fragment_title">USB Devices</string>
 	<string name="serial_device_list_header">USB Devices</string>
 	<string name="serial_no_device">no USB devices found</string>
-	<string name="serial_ports_device">%s (%04X:%04X) [%d,%d]</string>
+	<string name="serial_ports_device">%s (%04X:%04X) [%d]</string>
 	<string name="serial_ports_device_no_driver">No driver</string>
 	<string name="serial_ports_device_item_title">%s, Port %d</string>
 	<string name="serial_ports_device_item_description">Vendor %04X, Product %04X</string>
@@ -218,8 +218,8 @@
     <string name="settings_macro_real_speed_title">Use Real Replay Speed</string>
     <string name="settings_macro_manual_speed_title">Manual Replay Speed</string>
 
-	<string name="settings_category_serial_ports_title">Serial Ports</string>
+	<string name="settings_category_serial_ports_title">Serial Ports (Please allow USB OTG)</string>
 	<string name="settings_serial_ports_wire_title">Wire</string>
-	<string name="settings_serial_ports_ir_title">Infrared (2400 baud)</string>
+	<string name="settings_serial_ports_ir_title">Infrared (2400 baud only)</string>
 
 </resources>

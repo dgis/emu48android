@@ -1297,7 +1297,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
             SwitchToState(nOldState);
         }
     } else if(_tcscmp(_T("settings_serial_ports_wire"), configKey) == 0) {
-	    const char * newSerialWire = _tcscmp(_T("0,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
+	    const char * newSerialWire = _tcscmp(_T("0000:0000,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
 	    BOOL serialWireChanged = _tcscmp(szSerialWire, newSerialWire) != 0;
 	    _tcsncpy(szSerialWire, newSerialWire, sizeof(szSerialWire));
 	    if(bCommInit && serialWireChanged) {
@@ -1305,7 +1305,7 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
 		    bCommInit = CommOpen(szSerialWire, szSerialIr);
 	    }
     } else if(_tcscmp(_T("settings_serial_ports_ir"), configKey) == 0) {
-	    const char * newSerialIr = _tcscmp(_T("0,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
+	    const char * newSerialIr = _tcscmp(_T("0000:0000,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
 	    BOOL serialIrChanged = _tcscmp(szSerialIr, newSerialIr) != 0;
 	    _tcsncpy(szSerialIr, newSerialIr, sizeof(szSerialIr));
 	    if(bCommInit && serialIrChanged) {

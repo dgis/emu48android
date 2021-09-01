@@ -73,24 +73,37 @@ public class Serial {
 	public synchronized boolean connect(String serialPort) {
 		if(debug) Log.d(TAG, "connect( " + serialPort + ")");
 
-		Pattern patternSerialPort = Pattern.compile("\\\\.\\\\(\\d+),(\\d+)");
+		Pattern patternSerialPort = Pattern.compile("\\\\.\\\\([0-9a-fA-F]+):([0-9a-fA-F]+),(\\d+)");
 		Matcher m = patternSerialPort.matcher(serialPort);
 		if (m.find()) {
-			String deviceText = m.group(1);
-			String portText = m.group(2);
-			int deviceId = 0;
-			try {
-				deviceId = Integer.parseInt(deviceText);
-			} catch (NumberFormatException ex) {
-				// Catch bad number format
+			String vendorIdText = m.group(1);
+			String productIdText = m.group(2);
+			String portText = m.group(3);
+			int vendorId = 0;
+			if(vendorIdText != null) {
+				try {
+					vendorId = Integer.parseInt(vendorIdText, 16);
+				} catch (NumberFormatException ex) {
+					// Catch bad number format
+				}
+			}
+			int productId = 0;
+			if(productIdText != null) {
+				try {
+					productId = Integer.parseInt(productIdText, 16);
+				} catch (NumberFormatException ex) {
+					// Catch bad number format
+				}
 			}
 			int portNum = 0;
-			try {
-				portNum = Integer.parseInt(portText);
-			} catch (NumberFormatException ex) {
-				// Catch bad number format
+			if(portText != null) {
+				try {
+					portNum = Integer.parseInt(portText);
+				} catch (NumberFormatException ex) {
+					// Catch bad number format
+				}
 			}
-			return connect(deviceId, portNum);
+			return connect(vendorId, productId, portNum);
 		}
 		return false;
 	}
@@ -99,14 +112,16 @@ public class Serial {
 		return connectionStatus;
 	}
 
-	public synchronized boolean connect(int deviceId, int portNum) {
-		if(debug) Log.d(TAG, "connect(deviceId: " + deviceId + ", portNum" + portNum + ")");
+	public synchronized boolean connect(int vendorId, int productId, int portNum) {
+		if(debug) Log.d(TAG, String.format("connect('%04X:%04X', portNum: %d)", vendorId, productId, portNum));
 
 		UsbDevice device = null;
 		UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 		for(UsbDevice v : usbManager.getDeviceList().values())
-			if(v.getDeviceId() == deviceId)
+			if(v.getVendorId() == vendorId && v.getProductId() == productId) {
 				device = v;
+				break;
+			}
 		if(device == null) {
 			connectionStatus = "serial_connection_failed_device_not_found";
 			if(debug) Log.d(TAG, "connectionStatus = " + connectionStatus);
@@ -127,7 +142,7 @@ public class Serial {
 			return false;
 		}
 		usbSerialPort = driver.getPorts().get(portNum);
-		UsbDeviceConnection usbConnection = null;
+		UsbDeviceConnection usbConnection;
 		try {
 			usbConnection = usbManager.openDevice(driver.getDevice());
 		} catch (SecurityException e) {
