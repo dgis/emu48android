@@ -68,6 +68,7 @@ Version 2.3 (2021-09-xx)
 	BUG: When openIO on real device, 1st OPENIO failed, 2nd OPENIO succeeded
 	TEST: With real HP48SX
 	TODO: Check the self test about UART
+- Show KML log on request.
 - Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
@@ -241,13 +242,11 @@ Portions of this source code (about the usb-serial) were originally created by G
 TODO
 
 - Add a Cancel button to the HP48 memory card creator dialog.
-- Show KML log on request.
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
 - The render pixels are very nice. A solution to obtain uniform pixel size could be a preset (a multiplier, auto) so the user could decide and upscale/downscale (Michael P).
 - Somehow LEFT (Shift on the keyboard) + 7 activates the DIVIDE-key (z-Key)..., but with the NUM-Key it can make it work without problems...
   I think it might have something to do with the "/" sign on the Shifted-7-key.
 - The clock seems not synchronized sometimes (Michael P).
-- Retain a key by right clicking if it is from a mouse.
 - Sometimes, the calculator seems to lag and finally freeze.
 - In Chrome OS, sometimes there is no OK button in the KML Script Compilation Result.
 - Add KML script loading dependencies fallback to the inner ROM (and may be KML include?).

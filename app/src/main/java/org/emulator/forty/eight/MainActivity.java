@@ -378,6 +378,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             OnBackupDelete();
         } else if (id == R.id.nav_change_kml_script) {
             OnViewScript();
+        } else if (id == R.id.nav_show_kml_script_compilation_result) {
+            showKMLLogForce();
         } else if (id == R.id.nav_show_printer) {
             OnViewPrinter();
         } else if (id == R.id.nav_create_ram_card) {
@@ -446,7 +448,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         menu.findItem(R.id.nav_backup_save).setEnabled(uRun);
         menu.findItem(R.id.nav_backup_restore).setEnabled(uRun && isBackup);
         menu.findItem(R.id.nav_backup_delete).setEnabled(uRun && isBackup);
-	    menu.findItem(R.id.nav_change_kml_script).setEnabled(uRun);
+        menu.findItem(R.id.nav_change_kml_script).setEnabled(uRun);
+        menu.findItem(R.id.nav_show_kml_script_compilation_result).setEnabled(uRun);
 	    menu.findItem(R.id.nav_manage_flash_rom).setEnabled(uRun && (cCurrentRomType == 'X' || cCurrentRomType == 'Q'));
         menu.findItem(R.id.nav_macro_record).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);
         menu.findItem(R.id.nav_macro_play).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);

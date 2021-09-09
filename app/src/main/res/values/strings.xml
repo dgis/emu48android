@@ -45,6 +45,7 @@
     <string name="nav_delete_backup">Delete Backup</string>
     <string name="nav_view">View</string>
     <string name="nav_change_kml_script">Change KML Script...</string>
+    <string name="nav_show_kml_script_compilation_result">Show KML Script Compilation Result</string>
     <string name="nav_show_printer">Show the Printer Simulator...</string>
     <string name="nav_tool">Tool</string>
 	<string name="nav_create_ram_card">Create RAM Card (HP48)...</string>

@@ -58,6 +58,7 @@ CHANGES
 Version 2.3 (2021-09-xx)
 
 - Add the serial port support (via USB OTG).
+- Show KML log on request.
 - Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
