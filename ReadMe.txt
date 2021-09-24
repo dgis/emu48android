@@ -72,6 +72,7 @@ Version 2.3 (2021-09-xx)
 - Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
+- Add Real blue 50g faceplate based on Eric KML script.
 
 
 Version 2.2 (2020-12-09)
