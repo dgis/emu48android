@@ -32,10 +32,13 @@ NOTES
   everything that you store in port 2 is lost just because the file "rom.49g" is READONLY.
   Since version 2.0, it is now possible from the menu to manage the Flash ROM file (it will fully replaces the ROM).
 - To speed up printing, set the 'delay' to 0 in the calculator's print options.
-- The serial ports, wire or infrared (infrared limited to 2400 baud) are now supported through the USB port in mode OTG.
-  It uses the library https://github.com/mik3y/usb-serial-for-android, which allows to plug most of the serial USB adapters (only tested with Prolific),
+- The serial ports, wire or infrared (infrared limited to 2400 baud) can now be used through the USB port in mode OTG.
+  It uses the library https://github.com/mik3y/usb-serial-for-android, which allows to plug most of the serial USB adapters (only tested with Prolific and Ch34x),
   without the need to be root. If it is not automatic, please, activate the OTG mode in your Android device, and then,
-  you should be able to see it in the Emu48 settings. If the adapter is unplugged then plugged back in, you may need to set the option again.
+  you should be able to see it in the Emu48 settings.
+  It is still experimental and I see some issues when sending characters from the emulator to a real HP48 or HP49 with the kermit protocol.
+  For the moment, the communication has been artificially slowed down in this direction.
+  If the adapter is unplugged then plugged back in, you may need to call OPENIO/CLOSEIO.
 
 
 NOT WORKING YET
@@ -57,22 +60,12 @@ CHANGES
 
 Version 2.3 (2021-09-xx)
 
-- Add the serial port support (via USB OTG).
-	FIX: When stop the app, Serial exception seems to delay the save of the calc state!!!!
-	FIX: Inform if the connection is not possible.
-	FIX: No 'No driver' on real device
-	FIX: ID change -> replace id by vendor:device ids?
-	BUG: From Windows to Android with HP49G QINHENG CH340 -> all character at once bug
-		No issue with Prolific PL2303GT3
-		Not reproducible!
-	BUG: When openIO on real device, 1st OPENIO failed, 2nd OPENIO succeeded
-	TEST: With real HP48SX
-	TODO: Check the self test about UART
+- Add an experimental serial port support (via USB OTG).
 - Show KML log on request.
 - Allows pressing a calculator button with the right button of the mouse and prevents its release to allow the On+A+F key combination (with Android version >= 5.0).
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
-- Add Real blue 50g faceplate based on Eric KML script.
+- Add Real blue 50g faceplate based on my calculator and on the KML script from Eric Rechlin.
 
 
 Version 2.2 (2020-12-09)

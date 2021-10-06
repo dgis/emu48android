@@ -336,7 +336,7 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 		SERIAL_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d) -> %d bytes\n%s", hFile, lpBuffer, nNumberOfBytesToWrite, writenByteCount, hexAsciiDump);
 		free(hexAsciiDump);
 #endif
-		//Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
+		Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
 		if(lpNumberOfBytesWritten)
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;

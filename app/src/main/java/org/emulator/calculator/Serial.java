@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class Serial {
 
 	private static final String TAG = "Serial";
-	private final boolean debug = true;
+	private final boolean debug = false;
 
 	private final Context context;
 	private final int serialPortId;
@@ -260,22 +260,11 @@ public class Serial {
 		return result;
 	}
 
-	long maxWritePeriod = 4; //ms
-	long lastTime = 0;
 	public synchronized int write(byte[] data) {
 		if(!connected)
 			return 0;
 
-		long currentTime = SystemClock.elapsedRealtime();
-		long writePeriod = currentTime - lastTime;
-
-		if(debug) Log.d(TAG, "write(data: [" + data.length + "]: " + Utils.bytesToHex(data) + ") writePeriod: " + writePeriod + "ms");
-
-		if(lastTime > 0 && writePeriod < maxWritePeriod) {
-			// Wait 1ms - (currentTime - lastTime)ms
-			android.os.SystemClock.sleep(maxWritePeriod - writePeriod);
-		}
-		lastTime = SystemClock.elapsedRealtime();
+		if(debug) Log.d(TAG, "write(data: [" + data.length + "]: " + Utils.bytesToHex(data) + ")");
 
 		try {
 			usbSerialPort.write(data, WRITE_WAIT_MILLIS);
