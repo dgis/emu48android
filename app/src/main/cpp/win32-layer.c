@@ -30,6 +30,7 @@
 extern JavaVM *java_machine;
 extern jobject bitmapMainScreen;
 extern AndroidBitmapInfo androidBitmapInfo;
+//extern RECT mainViewRectangleToUpdate;
 
 extern HANDLE hWnd;
 extern LPTSTR szTitle;
@@ -1737,7 +1738,7 @@ BOOL DeleteMenu(HMENU hMenu, UINT uPosition, UINT uFlags) { return FALSE; }
 BOOL InsertMenu(HMENU hMenu, UINT uPosition, UINT uFlags, UINT_PTR uIDNewItem, LPCTSTR lpNewItem) { return FALSE; }
 
 BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags) { return 0; }
-BOOL IsRectEmpty(CONST RECT *lprc) { return 0; }
+
 BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt) {
     if(lppt) {
         lppt->x = hdc->windowOriginX;
@@ -1757,21 +1758,21 @@ HGDIOBJ SelectObject(HDC hdc, HGDIOBJ h) {
             case HGDIOBJ_TYPE_BRUSH: {
                 HBRUSH oldSelectedBrushColor = hdc->selectedBrushColor;
                 hdc->selectedBrushColor = h;
-                return oldSelectedBrushColor; //h;
+                return oldSelectedBrushColor;
             }
             case HGDIOBJ_TYPE_FONT:
                 break;
             case HGDIOBJ_TYPE_BITMAP: {
-                //HBITMAP oldSelectedBitmap = hdc->selectedBitmap;
+                HBITMAP oldSelectedBitmap = hdc->selectedBitmap;
                 hdc->selectedBitmap = h;
-                return h; //oldSelectedBitmap;
+	            return oldSelectedBitmap;
             }
             case HGDIOBJ_TYPE_REGION:
                 break;
             case HGDIOBJ_TYPE_PALETTE: {
-                //HPALETTE oldSelectedPalette = hdc->selectedPalette;
+                HPALETTE oldSelectedPalette = hdc->selectedPalette;
                 hdc->selectedPalette = h;
-                return h; //oldSelectedPalette;
+	            return oldSelectedPalette;
             }
             default:
                 break;
@@ -1842,6 +1843,13 @@ BOOL DeleteObject(HGDIOBJ ho) {
                 free(ho);
                 return TRUE;
             }
+	        case HGDIOBJ_TYPE_BRUSH: {
+		        PAINT_LOGD("PAINT DeleteObject() HGDIOBJ_TYPE_BRUSH");
+		        ho->handleType = HGDIOBJ_TYPE_INVALID;
+		        ho->brushColor = 0;
+		        free(ho);
+		        return TRUE;
+	        }
             default:
                 break;
         }
@@ -1962,6 +1970,13 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
 
             destinationStride = androidBitmapInfo.stride;
 
+//	        RECT newRectangleToUpdate;
+//	        newRectangleToUpdate.left = x;
+//	        newRectangleToUpdate.top = y;
+//	        newRectangleToUpdate.right = x + w;
+//	        newRectangleToUpdate.bottom = y + h;
+//	        UnionRect(&mainViewRectangleToUpdate, &mainViewRectangleToUpdate, &newRectangleToUpdate);
+
             if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
                 LOGD("AndroidBitmap_lockPixels() failed ! error=%d", ret);
                 return FALSE;
@@ -1972,6 +1987,7 @@ BOOL PatBlt(HDC hdcDest, int x, int y, int w, int h, DWORD rop) {
 
             destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+	        //TODO destinationTopDown = hBitmapDestination->bitmapInfoHeader->biHeight < 0;
 
             destinationStride = (float)(4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32));
         }
@@ -2060,7 +2076,8 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
         void * pixelsDestination = NULL;
         int destinationBitCount = 8;
 
-        BOOL reverseHeight = hBitmapSource->bitmapInfoHeader->biHeight < 0;
+	    BOOL sourceTopDown = hBitmapSource->bitmapInfoHeader->biHeight < 0;
+	    BOOL destinationTopDown = FALSE;
 
         int sourceWidth = hBitmapSource->bitmapInfoHeader->biWidth;
         int sourceHeight = abs(hBitmapSource->bitmapInfoHeader->biHeight); // Can be < 0
@@ -2092,7 +2109,16 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             destinationBitCount = 32;
             destinationStride = androidBitmapInfo.stride;
 
-            if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
+	        destinationTopDown = TRUE;
+
+//	        RECT newRectangleToUpdate;
+//	        newRectangleToUpdate.left = xDest;
+//	        newRectangleToUpdate.top = yDest;
+//	        newRectangleToUpdate.right = xDest + wDest;
+//	        newRectangleToUpdate.bottom = yDest + hDest;
+//	        UnionRect(&mainViewRectangleToUpdate, &mainViewRectangleToUpdate, &newRectangleToUpdate);
+
+	        if ((ret = AndroidBitmap_lockPixels(jniEnv, bitmapMainScreen, &pixelsDestination)) < 0) {
                 LOGD("AndroidBitmap_lockPixels() failed ! error=%d", ret);
                 return FALSE;
             }
@@ -2102,6 +2128,7 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
 
             destinationWidth = hBitmapDestination->bitmapInfoHeader->biWidth;
             destinationHeight = abs(hBitmapDestination->bitmapInfoHeader->biHeight);
+            destinationTopDown = hBitmapDestination->bitmapInfoHeader->biHeight < 0;
             destinationBitCount = hBitmapDestination->bitmapInfoHeader->biBitCount;
             destinationStride = 4 * ((destinationWidth * hBitmapDestination->bitmapInfoHeader->biBitCount + 31) / 32);
         }
@@ -2133,11 +2160,11 @@ BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdc
             backgroundColor = hdcDest->backgroundColor;
         }
 
-        StretchBltInternal(xDest, yDest, wDest, hDest, pixelsDestination, destinationBitCount,
-                           destinationStride, destinationWidth, destinationHeight,
-                           xSrc, ySrc, wSrc, hSrc, pixelsSource, sourceBitCount,
-                           sourceStride, sourceWidth, sourceHeight,
-                           rop, reverseHeight, palPalEntry, brushColor, backgroundColor);
+        StretchBltInternal(xDest, yDest, wDest, hDest,
+                           pixelsDestination, destinationBitCount, destinationStride, destinationWidth, destinationHeight,
+                           xSrc, ySrc, wSrc, hSrc,
+                           pixelsSource, sourceBitCount, sourceStride, sourceWidth, sourceHeight,
+                           rop, sourceTopDown, destinationTopDown, palPalEntry, brushColor, backgroundColor);
 
         if(jniEnv && hdcDest->hdcCompatible == NULL && (ret = AndroidBitmap_unlockPixels(jniEnv, bitmapMainScreen)) < 0) {
             LOGD("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
@@ -2153,7 +2180,7 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                         const void *pixelsDestination, int destinationBitCount, int destinationStride, int destinationWidth, int destinationHeight,
                         int xSrc, int ySrc, int wSrc, int hSrc,
                         const void *pixelsSource, UINT sourceBitCount, int sourceStride, int sourceWidth, int sourceHeight,
-                        DWORD rop, BOOL reverseHeight, const PALETTEENTRY *palPalEntry, COLORREF brushColor, COLORREF backgroundColor) {
+                        DWORD rop, BOOL sourceTopDown, BOOL destinationTopDown, const PALETTEENTRY *palPalEntry, COLORREF brushColor, COLORREF backgroundColor) {
     int dst_maxx = xDest + wDest;
     int dst_maxy = yDest + hDest;
 
@@ -2170,12 +2197,19 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
     if(dst_maxy > destinationHeight)
         dst_maxy = destinationHeight;
 
+    int src_cury, dst_cury;
     for (int y = yDest; y < dst_maxy; y++) {
-        int src_cury = ySrc + (y - yDest) * hSrc / hDest;
-        if(!reverseHeight)
-            src_cury = sourceHeight - 1 - src_cury;
+		if(sourceTopDown)
+			src_cury = ySrc + (y - yDest) * hSrc / hDest; // Source top-down
+		else
+			src_cury = sourceHeight - 1 - (ySrc + (y - yDest) * hSrc / hDest); // Source bottom-up
         if (src_cury < 0 || src_cury >= sourceHeight)
             continue;
+        if(destinationTopDown)
+	        dst_cury = y; // Destination top-down
+	    else
+	        dst_cury = destinationHeight - 1 - y; // Destination bottom-up
+
         BYTE parity = (BYTE) xSrc;
         for (int x = xDest; x < dst_maxx; x++, parity++) {
             int src_curx = xSrc + (x - xDest) * wSrc / wDest;
@@ -2183,7 +2217,7 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                 continue;
 
             BYTE * sourcePixelBase = pixelsSource + sourceStride * src_cury;
-            BYTE * destinationPixelBase = pixelsDestination + destinationStride * y;
+            BYTE * destinationPixelBase = pixelsDestination + destinationStride * dst_cury;
 
             COLORREF sourceColor = 0xFF000000;
             BYTE * sourceColorPointer = (BYTE *) &sourceColor;
@@ -2343,7 +2377,7 @@ HBITMAP CreateBitmap( int nWidth, int nHeight, UINT nPlanes, UINT nBitCount, CON
     newBitmapInfo->bmiHeader.biBitCount = (WORD) nBitCount;
     newBitmapInfo->bmiHeader.biClrUsed = 0;
     newBitmapInfo->bmiHeader.biWidth = nWidth;
-    newBitmapInfo->bmiHeader.biHeight = -nHeight;
+	newBitmapInfo->bmiHeader.biHeight = nHeight;
     newBitmapInfo->bmiHeader.biPlanes = (WORD) nPlanes;
     newHBITMAP->bitmapInfo = newBitmapInfo;
     newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
@@ -2519,8 +2553,12 @@ COLORREF GetPixel(HDC hdc, int x ,int y) {
     return resultColor;
 }
 BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom) {
-    //TODO
-    return 0;
+	if (!lprc) return FALSE;
+	lprc->left   = xLeft;
+	lprc->right  = xRight;
+	lprc->top    = yTop;
+	lprc->bottom = yBottom;
+	return TRUE;
 }
 BOOL SetRectEmpty(LPRECT lprc) {
     if(lprc) {
@@ -2531,6 +2569,38 @@ BOOL SetRectEmpty(LPRECT lprc) {
         return TRUE;
     }
     return FALSE;
+}
+
+BOOL IsRectEmpty(CONST RECT *lprc) {
+	if (!lprc)
+		return TRUE;
+	return lprc->left >= lprc->right || lprc->top >= lprc->bottom;
+}
+
+// This comes from Wine source code
+BOOL UnionRect(LPRECT dest, CONST RECT *src1, CONST RECT *src2) {
+	if (!dest) return FALSE;
+	if (IsRectEmpty(src1))
+	{
+		if (IsRectEmpty(src2))
+		{
+			SetRectEmpty( dest );
+			return FALSE;
+		}
+		else *dest = *src2;
+	}
+	else
+	{
+		if (IsRectEmpty(src2)) *dest = *src1;
+		else
+		{
+			dest->left   = min( src1->left, src2->left );
+			dest->right  = max( src1->right, src2->right );
+			dest->top    = min( src1->top, src2->top );
+			dest->bottom = max( src1->bottom, src2->bottom );
+		}
+	}
+	return TRUE;
 }
 int SetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw) {
     //TODO

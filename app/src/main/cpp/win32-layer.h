@@ -554,46 +554,46 @@ struct _HANDLE {
     enum HANDLE_TYPE handleType;
 	union {
 		struct {
-			// HANDLE_TYPE_FILE*
-		    int fileDescriptor;
-		    BOOL fileOpenFileFromContentResolver;
+    // HANDLE_TYPE_FILE*
+    int fileDescriptor;
+    BOOL fileOpenFileFromContentResolver;
 
-		    AAsset* fileAsset;
+    AAsset* fileAsset;
 
-		    // HANDLE_TYPE_FILE_MAPPING*
-		    off_t fileMappingOffset;
-		    size_t fileMappingSize;
-		    void* fileMappingAddress;
-			DWORD fileMappingProtect;
+    // HANDLE_TYPE_FILE_MAPPING*
+    off_t fileMappingOffset;
+    size_t fileMappingSize;
+    void* fileMappingAddress;
+	DWORD fileMappingProtect;
 		};
 
 		struct {
-			// HANDLE_TYPE_THREAD
-		    pthread_t threadId;
-		    DWORD (*threadStartAddress)(LPVOID);
-		    LPVOID threadParameter;
-		    struct _HANDLE * threadEventMessage;
-		    struct tagMSG threadMessage;
-			int threadIndex;
+	// HANDLE_TYPE_THREAD
+    pthread_t threadId;
+    DWORD (*threadStartAddress)(LPVOID);
+    LPVOID threadParameter;
+    struct _HANDLE * threadEventMessage;
+    struct tagMSG threadMessage;
+	int threadIndex;
 		};
 
 		struct {
-			// HANDLE_TYPE_EVENT
-		    pthread_cond_t eventCVariable;
-		    pthread_mutex_t eventMutex;
-		    BOOL eventAutoReset;
-		    BOOL eventState;
+	// HANDLE_TYPE_EVENT
+    pthread_cond_t eventCVariable;
+    pthread_mutex_t eventMutex;
+    BOOL eventAutoReset;
+    BOOL eventState;
 		};
 
 	    struct {
-		    // HANDLE_TYPE_WINDOW
-	        HDC windowDC;
+    // HANDLE_TYPE_WINDOW
+    HDC windowDC;
 	    };
 
 	    struct {
-		    // HANDLE_TYPE_ICON
-		    HBITMAP icon;
-	    };
+    // HANDLE_TYPE_ICON
+    HBITMAP icon;
+};
 
 	    struct {
 		    // HANDLE_TYPE_COM
@@ -783,12 +783,12 @@ extern BOOL BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, in
 extern int SetStretchBltMode(HDC hdc, int mode);
 extern BOOL StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
 extern void StretchBltInternal(int xDest, int yDest, int wDest, int hDest, const void *pixelsDestination,
-						int destinationBitCount, int destinationStride, int destinationWidth,
-						int destinationHeight, int xSrc, int ySrc, int hSrc, int wSrc,
-						const void *pixelsSource, UINT sourceBitCount, int sourceStride,
-						int sourceWidth, int sourceHeight, DWORD rop, BOOL reverseHeight,
-						const PALETTEENTRY *palPalEntry, COLORREF brushColor,
-						COLORREF backgroundColor);
+                               int destinationBitCount, int destinationStride, int destinationWidth,
+                               int destinationHeight, int xSrc, int ySrc, int hSrc, int wSrc,
+                               const void *pixelsSource, UINT sourceBitCount, int sourceStride,
+                               int sourceWidth, int sourceHeight, DWORD rop, BOOL sourceTopDown, BOOL destinationTopDown,
+                               const PALETTEENTRY *palPalEntry, COLORREF brushColor,
+                               COLORREF backgroundColor);
 extern UINT SetDIBColorTable(HDC  hdc, UINT iStart, UINT cEntries, CONST RGBQUAD *prgbq);
 /* constants for CreateDIBitmap */
 #define CBM_INIT        0x04L   /* initialize bitmap */
@@ -819,6 +819,8 @@ extern COLORREF SetBkColor(HDC hdc, COLORREF color);
 #define RDH_RECTANGLES  1
 extern BOOL SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom);
 extern BOOL SetRectEmpty(LPRECT lprc);
+extern BOOL IsRectEmpty(CONST RECT *lprc);
+extern BOOL UnionRect(LPRECT dest, CONST RECT *src1, CONST RECT *src2);
 
 struct HRGN__ { int unused; };
 typedef struct HRGN__ *HRGN;
@@ -1003,7 +1005,6 @@ extern BOOL InsertMenu(HMENU hMenu, UINT uPosition, UINT uFlags, UINT_PTR uIDNew
 #define SWP_NOMOVE          0x0002
 #define SWP_NOZORDER        0x0004
 extern BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
-extern BOOL IsRectEmpty(CONST RECT *lprc);
 extern BOOL WINAPI SetWindowOrgEx(HDC hdc, int x, int y, LPPOINT lppt);
 
 #define _MAX_PATH   260 // max. length of full pathname
