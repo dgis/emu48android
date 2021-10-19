@@ -60,6 +60,8 @@ static void initTimer();
 #define MAX_FILE_MAPPING_HANDLE 10
 static HANDLE fileMappingHandles[MAX_FILE_MAPPING_HANDLE];
 
+HBITMAP rootBITMAP;
+
 void win32Init() {
     initTimer();
     for (int i = 0; i < MAX_FILE_MAPPING_HANDLE; ++i) {
@@ -70,6 +72,8 @@ void win32Init() {
     contentSchemeLength = _tcslen(contentScheme);
 	documentSchemeLength = _tcslen(documentScheme);
 	comPrefixLength = _tcslen(comPrefix);
+
+	rootBITMAP = CreateCompatibleBitmap(NULL, 0, 0);
 }
 
 int abs (int i) {
@@ -1832,6 +1836,8 @@ BOOL DeleteObject(HGDIOBJ ho) {
             }
             case HGDIOBJ_TYPE_BITMAP: {
                 PAINT_LOGD("PAINT DeleteObject() HGDIOBJ_TYPE_BITMAP");
+                if(ho == rootBITMAP)
+                	return FALSE;
                 ho->handleType = HGDIOBJ_TYPE_INVALID;
                 if(ho->bitmapInfo)
                     free((void *) ho->bitmapInfo);
@@ -1903,6 +1909,7 @@ HDC CreateCompatibleDC(HDC hdc) {
     memset(handle, 0, sizeof(struct _HDC));
     handle->handleType = HDC_TYPE_DC;
     handle->hdcCompatible = hdc;
+	handle->selectedBitmap = rootBITMAP;
     return handle;
 }
 HDC GetDC(HWND hWnd) {

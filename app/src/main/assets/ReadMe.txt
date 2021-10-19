@@ -17,7 +17,7 @@ QUICK START
 
 1. From the left side, slide your finger to open the menu.
 2. Touch the "New..." menu item.
-3. Select a predefined faceplate (or select a custom KML script folder with Android >= 5.0).
+3. Select a default calculator (or with Android >= 5.0, "[Select a Custom KML script folder...]" where you have copied the KML scripts and ROM files (Android 11 cannot use the folder Download)).
 4. And the calculator should now be opened.
 
 
@@ -58,7 +58,7 @@ LINKS
 
 CHANGES
 
-Version 2.3 (2021-09-xx)
+Version 2.3 (2021-10-19)
 
 - Add an experimental serial port support (via USB OTG).
 - Show KML log on request.
@@ -66,6 +66,9 @@ Version 2.3 (2021-09-xx)
 - Update the embedded help file "Emu48.html" to the latest version.
 - Open an external web browser when you click an external links in the Help.
 - Add Real blue 50g faceplate based on my calculator and on the KML script from Eric Rechlin.
+- Display the graphic tab of the printer without antialiasing.
+- Fix a crash about the Most Recently Used state files.
+- Fix an issue with "Copy Screen".
 
 
 Version 2.2 (2020-12-09)

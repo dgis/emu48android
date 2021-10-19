@@ -61,7 +61,8 @@
 
     <string name="load_custom_kml">[Select a Custom KML script folder...]</string>
     <string name="load_default_kml">[Default KML script folder]</string>
-    <string name="pick_calculator">Pick a calculator</string>
+	<string name="pick_default_calculator">Pick a default calculator</string>
+	<string name="pick_custom_calculator">Pick a custom calculator</string>
 
     <string name="dialog_printer_simulator_title">Printer Simulator</string>
     <string name="tab_printer_textual">Text</string>

@@ -22,9 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -113,6 +111,8 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                     Bitmap croppedPaperBitmap = Bitmap.createBitmap(paperBitmap.getWidth(), printerSimulator.getPaperHeight(), Bitmap.Config.ARGB_8888);
                     Canvas canvas = new Canvas(croppedPaperBitmap);
                     Paint paint = new Paint();
+	                paint.setAntiAlias(false);
+	                paint.setFilterBitmap(false);
                     canvas.drawBitmap(paperBitmap, 0, 0, paint);
 
                     Activity activity = getActivity();
@@ -122,13 +122,16 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
                         FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
                         croppedPaperBitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
                         fileOutputStream.close();
-                        String mimeType = "application/png";
-                        Intent intent = new Intent(Intent.ACTION_SEND);
-                        intent.setType(mimeType);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra(Intent.EXTRA_SUBJECT, Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile));
+
+                        String subject = getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"));
+	                    Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+	                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	                    intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+	                    intent.putExtra(Intent.EXTRA_TITLE, subject);
+	                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+	                    intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile));
+	                    intent.setType("image/png");
+//	                    intent.setDataAndType(FileProvider.getUriForFile(getActivity(), getActivity().getPackageName() + ".provider", imageFile), "image/png");
                         startActivity(Intent.createChooser(intent, getString(Utils.resId(PrinterSimulatorFragment.this, "string", "message_printer_share_graphic"))));
                     }
                 } catch (Exception e) {
@@ -243,6 +246,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
             scaleThumbnailColor = Color.GRAY;
 
 	        paintBitmap.setAntiAlias(false);
+	        paintBitmap.setFilterBitmap(false);
         }
 
         public void setBitmap(Bitmap bitmap) {

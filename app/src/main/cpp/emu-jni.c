@@ -28,6 +28,7 @@ extern AAssetManager * assetManager;
 static jobject mainActivity = NULL;
 jobject bitmapMainScreen = NULL;
 AndroidBitmapInfo androidBitmapInfo;
+//RECT mainViewRectangleToUpdate = { 0, 0, 0, 0 };
 enum DialogBoxMode currentDialogBoxMode;
 LPBYTE pbyRomBackup = NULL;
 enum ChooseKmlMode chooseCurrentKmlMode;
@@ -106,7 +107,19 @@ int mainViewCallback(int type, int param1, int param2, const TCHAR * param3, con
 }
 
 void mainViewUpdateCallback() {
-    mainViewCallback(CALLBACK_TYPE_INVALIDATE, 0, 0, NULL, NULL);
+//	if(!IsRectEmpty(&mainViewRectangleToUpdate)) {
+//		int param1 = ((mainViewRectangleToUpdate.left & 0xFFFF) << 16) | (mainViewRectangleToUpdate.top & 0xFFFF);
+//		int param2 = ((mainViewRectangleToUpdate.right & 0xFFFF) << 16) | (mainViewRectangleToUpdate.bottom & 0xFFFF);
+//		mainViewCallback(CALLBACK_TYPE_INVALIDATE,
+//		                 param1,
+//		                 param2,
+//		                 NULL, NULL);
+//		SetRectEmpty(&mainViewRectangleToUpdate);
+//	} else
+		mainViewCallback(CALLBACK_TYPE_INVALIDATE,
+		                 0,
+		                 0,
+		                 NULL, NULL);
 }
 
 void mainViewResizeCallback(int x, int y) {
@@ -975,11 +988,11 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onViewCopy(JNIEnv 
     size_t strideSource = (size_t)(4 * ((hBmp->bitmapInfoHeader->biWidth * hBmp->bitmapInfoHeader->biBitCount + 31) / 32));
     size_t strideDestination = bitmapScreenInfo.stride;
     VOID * bitmapBitsSource = (VOID *)hBmp->bitmapBits;
-    VOID * bitmapBitsDestination = pixelsDestination;
+    VOID * bitmapBitsDestination = pixelsDestination + (hBmp->bitmapInfoHeader->biHeight - 1) * strideDestination;
     for(int y = 0; y < hBmp->bitmapInfoHeader->biHeight; y++) {
         memcpy(bitmapBitsDestination, bitmapBitsSource, strideSource);
         bitmapBitsSource += strideSource;
-        bitmapBitsDestination += strideDestination;
+        bitmapBitsDestination -= strideDestination;
     }
 
 
