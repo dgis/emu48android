@@ -2901,8 +2901,6 @@ static INT_PTR CALLBACK EnterBreakpoint(HWND hDlg, UINT message, WPARAM wParam, 
 {
 	static BP_T *sBp;
 
-	DWORD dwAddr;
-
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -2921,9 +2919,8 @@ static INT_PTR CALLBACK EnterBreakpoint(HWND hDlg, UINT message, WPARAM wParam, 
 		case IDC_BPREAD:   sBp->nType = BP_READ;   return TRUE;
 		case IDC_BPWRITE:  sBp->nType = BP_WRITE;  return TRUE;
 		case IDOK:
-			if (!GetAddr(hDlg,IDC_ENTERADR,&dwAddr,0xFFFFF,disassembler_symb))
+			if (!GetAddr(hDlg,IDC_ENTERADR,&sBp->dwAddr,0xFFFFF,disassembler_symb))
 				return FALSE;
-			sBp->dwAddr = dwAddr;
 			// no break
 		case IDCANCEL:
 			EndDialog(hDlg,wParam);
@@ -2955,42 +2952,35 @@ static __inline BOOL OnDrawBreakWnd(LPDRAWITEMSTRUCT lpdis)
 	COLORREF crBkColor,crTextColor;
 	HDC      hdcMem;
 	HBITMAP  hBmpOld;
-	INT      i;
 
 	if (lpdis->itemID == -1)				// no item in list box
 		return TRUE;
 
+	crBkColor   = GetBkColor(lpdis->hDC);	// save actual color settings
+	crTextColor = GetTextColor(lpdis->hDC);
+
 	if (lpdis->itemState & ODS_SELECTED)	// cursor line
 	{
-		crBkColor   = COLOR_NAVY;
-		crTextColor = COLOR_WHITE;
-	}
-	else
-	{
-		crBkColor   = COLOR_WHITE;
-		crTextColor = COLOR_BLACK;
+		SetBkColor(lpdis->hDC,GetSysColor(COLOR_HIGHLIGHT));
+		SetTextColor(lpdis->hDC,GetSysColor(COLOR_HIGHLIGHTTEXT));
 	}
 
 	// write Text
-	crBkColor   = SetBkColor(lpdis->hDC,crBkColor);
-	crTextColor = SetTextColor(lpdis->hDC,crTextColor);
-
 	SendMessage(lpdis->hwndItem,LB_GETTEXT,lpdis->itemID,(LPARAM) szBuf);
 	ExtTextOut(lpdis->hDC,(int)(lpdis->rcItem.left)+17,(int)(lpdis->rcItem.top),
 			   ETO_OPAQUE,(LPRECT)&lpdis->rcItem,szBuf,lstrlen(szBuf),NULL);
 
-	SetBkColor(lpdis->hDC,crBkColor);
+	SetBkColor(lpdis->hDC,crBkColor);		// restore color settings
 	SetTextColor(lpdis->hDC,crTextColor);
 
 	// draw checkbox
-	i = (INT) SendMessage(lpdis->hwndItem,LB_GETITEMDATA,lpdis->itemID,0);
 	hdcMem = CreateCompatibleDC(lpdis->hDC);
 	_ASSERT(hBmpCheckBox);
 	hBmpOld = (HBITMAP) SelectObject(hdcMem,hBmpCheckBox);
 
 	BitBlt(lpdis->hDC,lpdis->rcItem.left+2,lpdis->rcItem.top+2,
 		   11,lpdis->rcItem.bottom - lpdis->rcItem.top,
-		   hdcMem,sBreakpoint[i].bEnable ? 0 : 10,0,SRCCOPY);
+		   hdcMem,sBreakpoint[lpdis->itemData].bEnable ? 0 : 10,0,SRCCOPY);
 
 	SelectObject(hdcMem,hBmpOld);
 	DeleteDC(hdcMem);

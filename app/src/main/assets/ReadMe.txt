@@ -58,6 +58,11 @@ LINKS
 
 CHANGES
 
+Version 2.4 (2021-12-08)
+
+- Updated source code from Eric Rechlin's Emu48 version 1.63+ that was merged from Christoph Gießelink's Emu48 version 1.64.
+
+
 Version 2.3 (2021-10-19)
 
 - Add an experimental serial port support (via USB OTG).

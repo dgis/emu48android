@@ -114,6 +114,21 @@ h3 { color:red; font-size:1.1em; }
     into the native Emu48 ROM format is not necessary any more. You can
     still use the classic way extracting them from your own calculator.
     </p>
+    <p>The command line <i>Convert</i> utility delivered with the Emu48
+    program package was originally designed to convert HP48 ROM images
+    files from one of the various used ROM image formats of the 90s to
+    the unpacked format originally used by Emu48. The 2nd important
+    task of this tool is updating the I/O register area with zeros.
+    Most images had been created with a ROM upload program where the
+    I/O register area was mapped over the ROM content and so the ROM
+    image file contain a wrong content at this position. Executing the
+    selftest on a HP38 or a HP48 will report an IROM fail then. To fix
+    this the <i>Convert</i> utility overwrites the I/O register area
+    in the destination file with zeros. Final notice, the convert
+    utility shows the CRC result after the file convert and a passed
+    ROM CRC test does <u><b>not</b></u> imply, that the source file
+    is in an Emu48 suitable format!
+    </p>
     <ul>
       <li>HP38
       <p>To upload the ROM of your HP38G, you will need a special aplet
@@ -636,10 +651,7 @@ h3 { color:red; font-size:1.1em; }
     Cyrille de Brebisson of Hewlett-Packard.</p>
   <h1><a name=s15>15. License</a></h1>
     <p>Emu48 - A HP38G/39G/40G/48SX/48GX/49G Emulator<br>
-    Copyright (C) 2020 Christoph Gie&szlig;elink</p>
-    <p>Emu48+ - A 39g+/39gs/40gs/48gII/49g+/50g Emulator<br>
-    Copyright (C) 2020 Cyrille de Brebisson<br>
-    Additional changes by Bill Graves and Eric Rechlin</p>
+    Copyright (C) 2021 Christoph Gie&szlig;elink</p>
     <p>This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
     Software Foundation; either version 2 of the License, or (at your option)

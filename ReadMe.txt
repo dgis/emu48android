@@ -58,6 +58,11 @@ LINKS
 
 CHANGES
 
+Version 2.4 (2021-12-08)
+
+- Updated source code from Eric Rechlin's Emu48 version 1.63+ that was merged from Christoph Gießelink's Emu48 version 1.64.
+
+
 Version 2.3 (2021-10-19)
 
 - Add an experimental serial port support (via USB OTG).
@@ -251,7 +256,7 @@ TODO
 
 BUILD
 
-Emu48 for Android is built with Android Studio 4.1 (2020).
+Emu48 for Android is built with Android Studio 2020.3.1 (2021).
 And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:

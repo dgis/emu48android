@@ -425,8 +425,8 @@ static LPTSTR disasm_1 (DWORD *addr, LPTSTR out)
 			fn = read_nibble (addr);
 			c = (fn < 8);					// flag for operand register
 			fn = (fn & 7);					// get register number
-			if (fn > 4)						// illegal opcode
-				break;						// no output
+			if (fn > 4)						// unsupported opcode
+				fn -= 4;					// map to valid scratch register
 			switch (disassembler_mode)
 			{
 				case HP_MNEMONICS:
@@ -457,8 +457,8 @@ static LPTSTR disasm_1 (DWORD *addr, LPTSTR out)
 			fn = read_nibble (addr);
 			c = (fn < 8);					// flag for operand register
 			fn = (fn & 7);					// get register number
-			if (fn > 4)						// illegal opcode
-				break;						// no output
+			if (fn > 4)						// unsupported opcode
+				fn -= 4;					// map to valid scratch register
 			switch (disassembler_mode)
 			{
 				case HP_MNEMONICS:
@@ -680,6 +680,7 @@ static LPTSTR disasm_8 (DWORD *addr, LPTSTR out)
 {
 	BYTE n;
 	BYTE fn;
+	BYTE rn;
 	LPTSTR p = out;
 	TCHAR c;
 	TCHAR buf[20];
@@ -975,48 +976,49 @@ static LPTSTR disasm_8 (DWORD *addr, LPTSTR out)
 					if (n > 2)				// illegal opcode
 						break;				// no output
 					c = (TCHAR) read_nibble (addr);
-					if (((int) c & 7) > 4)	// illegal opcode
-						break;				// no output
+					rn = (c & 7);			// get register number
+					c = (c < 8);			// flag for operand register
+					if (rn > 4)				// unsupported opcode
+						rn -= 4;			// map to valid scratch register
 					switch (disassembler_mode)
 					{
 						case HP_MNEMONICS:
+							c = (TCHAR) (c ? _T('A') : _T('C'));
 							if (n == 2)
 							{
-								wsprintf (buf, _T("%cR%dEX.F"), ((int) c < 8) ? _T('A') : _T('C'),
-										 (int) c & 7);
+								wsprintf (buf, _T("%cR%dEX.F"), c, rn);
 							}
 							else
 								if (n == 1)
 								{
-									wsprintf (buf, _T("%c=R%d.F"), ((int) c < 8) ? _T('A') : _T('C'),
-											 (int) c & 7);
+									wsprintf (buf, _T("%c=R%d.F"), c, rn);
 								}
 								else
 								{
-									wsprintf (buf, _T("R%d=%c.F"), (int) c & 7,
-											 ((int) c < 8) ? _T('A') : _T('C'));
+									wsprintf (buf, _T("R%d=%c.F"), rn, c);
 								}
 							p = append_str (out, buf);
 							p = append_tab (out);
 							p = append_field (p, fn);
 							break;
 						case CLASS_MNEMONICS:
+							c = (TCHAR) (c ? _T('a') : _T('c'));
 							p = append_str (out, (n == 2) ? _T("exg") : _T("move"));
 							p = append_field (p, fn);
 							p = append_tab (out);
 							if (n == 1)
 							{
-								wsprintf (buf, _T("r%d"), (int) c & 7);
+								wsprintf (buf, _T("r%d"), rn);
 								p = append_str (p, buf);
 							}
 							else
-								p = append_str (p, ((int) c < 8) ? _T("a") : _T("c"));
+								*p++ = c;
 							p = append_str (p, _T(", "));
 							if (n == 1)
-								p = append_str (p, ((int) c < 8) ? _T("a") : _T("c"));
+								*p++ = c;
 							else
 							{
-								wsprintf (buf, _T("r%d"), (int) c & 7);
+								wsprintf (buf, _T("r%d"), rn);
 								p = append_str (p, buf);
 							}
 							break;

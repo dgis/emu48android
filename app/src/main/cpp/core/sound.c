@@ -504,21 +504,13 @@ VOID SoundOut(CHIPSET* w, WORD wOut)
 	}
 
 	// ran out of buffers -> disable CPU slow down
-	EnterCriticalSection(&csSlowLock);
-	{
-		InitAdjustSpeed();					// init variables if necessary
-		bEnableSlow = (GetSoundBufSize() > 1);
-	}
-	LeaveCriticalSection(&csSlowLock);
+	InitAdjustSpeed();						// init variables if necessary
+	bEnableSlow = (GetSoundBufSize() > 1);
 
 	if (bSoundSlow == FALSE)
 	{
-		EnterCriticalSection(&csSlowLock);
-		{
-			InitAdjustSpeed();				// init variables if necessary
-			bSoundSlow = TRUE;				// CPU slow down
-		}
-		LeaveCriticalSection(&csSlowLock);
+		InitAdjustSpeed();					// init variables if necessary
+		bSoundSlow = TRUE;					// CPU slow down
 	}
 	return;
 }

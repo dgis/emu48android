@@ -13,7 +13,7 @@
 #include "kml.h"
 #include "debugger.h"
 
-#define VERSION   "1.62+"
+#define VERSION   "1.63+"
 
 #ifdef _DEBUG
 LPCTSTR szNoTitle = _T("Emu48 ")_T(VERSION)_T(" Debug");
@@ -1753,26 +1753,40 @@ static LRESULT OnAbout(VOID)
 
 static VOID OnContextMenu(LPARAM lParam)
 {
-	HMENU hMenu;
-	POINT pt,ptc;
-
 	if (GetMenu(hWnd) == NULL)				// no main window menu
 	{
+		BOOL  bContextMenu = TRUE;			// call context menu
+		POINT pt;
+
 		POINTSTOPOINT(pt,MAKEPOINTS(lParam)); // mouse position
 
 		if (pt.x == -1 && pt.y == -1)		// VK_APPS
 		{
-			pt.x = 15;						// open context help at client position 15,15
-			pt.y = 15;
-			VERIFY(ClientToScreen(hWnd,&pt));
+			RECT rc;
+
+			GetCursorPos(&pt);				// get current mouse position
+			GetWindowRect(hWnd,&rc);		// get position of active window
+			if (PtInRect(&rc,pt)==FALSE)	// mouse position outside active window
+			{
+				pt.x = 15;					// open context help at client position 15,15
+				pt.y = 15;
+				VERIFY(ClientToScreen(hWnd,&pt));
+			}
+		}
+		else								// got a mouse position
+		{
+			POINT ptc = pt;
+			// convert mouse into client position
+			VERIFY(ScreenToClient(hWnd,&ptc));
+
+			// in client area not over a button
+			bContextMenu = (ptc.y >= 0 && !MouseIsButton(ptc.x,ptc.y));
 		}
 
-		ptc = pt;
-		VERIFY(ScreenToClient(hWnd,&ptc));	// convert mouse into client position
-
-		// in client area not over a button
-		if (ptc.y >= 0 && !MouseIsButton(ptc.x,ptc.y))
+		if (bContextMenu)					// call the context menu
 		{
+			HMENU hMenu;
+
 			// load the popup menu resource
 			if ((hMenu = LoadMenu(hApp,MAKEINTRESOURCE(IDM_MENU))) != NULL)
 			{

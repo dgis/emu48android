@@ -373,10 +373,15 @@ VOID InitAdjustSpeed(VOID)
 	if (!bEnableSlow || (!bCpuSlow && !bKeySlow && !bSoundSlow && nOpcSlow == 0))
 	{
 		LARGE_INTEGER lTime;				// sample timer ticks
-		// save reference cycles
-		dwOldCyc = (DWORD) (Chipset.cycles & 0xFFFFFFFF);
-		QueryPerformanceCounter(&lTime);	// get timer ticks
-		dwSpeedRef = lTime.LowPart;			// save reference time
+
+		EnterCriticalSection(&csSlowLock);
+		{
+			// save reference cycles
+			dwOldCyc = (DWORD) (Chipset.cycles & 0xFFFFFFFF);
+			QueryPerformanceCounter(&lTime);// get timer ticks
+			dwSpeedRef = lTime.LowPart;		// save reference time
+		}
+		LeaveCriticalSection(&csSlowLock);
 	}
 	return;
 }
@@ -390,29 +395,21 @@ VOID AdjKeySpeed(VOID)						// slow down key repeat
 	for (i = 0;i < ARRAYSIZEOF(Chipset.Keyboard_Row) && !bKey;++i)
 		bKey = (Chipset.Keyboard_Row[i] != 0);
 
-	EnterCriticalSection(&csSlowLock);
+	if (bKey)								// key pressed
 	{
-		if (bKey)							// key pressed
-		{
-			InitAdjustSpeed();				// init variables if necessary
-		}
-		bKeySlow = bKey;					// save new state
+		InitAdjustSpeed();					// init variables if necessary
 	}
-	LeaveCriticalSection(&csSlowLock);
+	bKeySlow = bKey;						// save new state
 	return;
 }
 
 VOID SetSpeed(BOOL bAdjust)					// set emulation speed
 {
-	EnterCriticalSection(&csSlowLock);
+	if (bAdjust)							// switch to real speed
 	{
-		if (bAdjust)						// switch to real speed
-		{
-			InitAdjustSpeed();				// init variables if necessary
-		}
-		bCpuSlow = bAdjust;					// save emulation speed
+		InitAdjustSpeed();					// init variables if necessary
 	}
-	LeaveCriticalSection(&csSlowLock);
+	bCpuSlow = bAdjust;						// save emulation speed
 	return;
 }
 
