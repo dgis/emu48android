@@ -725,7 +725,7 @@ JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onFileOpen(JNIEnv 
 		pbyRomBackup = pbyRom;
 		pbyRom = NULL;
 	}
-	BOOL result = OpenDocument(szBufferFilename);
+    BOOL result = OpenDocument(szBufferFilename);
     if(pbyRomBackup) pbyRomBackup = NULL;
     chooseCurrentKmlMode = ChooseKmlMode_UNKNOWN;
     mainViewResizeCallback(nBackgroundW, nBackgroundH);

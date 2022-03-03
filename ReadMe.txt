@@ -58,6 +58,12 @@ LINKS
 
 CHANGES
 
+Version 2.5 (2022-03-03)
+
+- Allow to load RLE4, RLE8 and monochrome BMP images.
+- Optimize the number of draw calls when displaying the LCD pixel borders.
+
+
 Version 2.4 (2021-12-08)
 
 - Updated source code from Eric Rechlin's Emu48 version 1.63+ that was merged from Christoph Gießelink's Emu48 version 1.64.

@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-	    super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         drawer = findViewById(R.id.drawer_layout);
@@ -169,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this);
+	    mainScreenView.setId(R.id.main_screen_view);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             mainScreenView.setStatusBarColor(getWindow().getStatusBarColor());
         mainScreenContainer.addView(mainScreenView, 0, new ViewGroup.LayoutParams(
@@ -437,6 +438,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean bStackCEnable = bObjectEnable;
         boolean bStackPEnable = bObjectEnable;
 
+	    menu.findItem(R.id.nav_manage_flash_rom).setEnabled(uRun && (cCurrentRomType == 'X' || cCurrentRomType == 'Q'));
+
         menu.findItem(R.id.nav_save).setEnabled(uRun);
         menu.findItem(R.id.nav_save_as).setEnabled(uRun);
         menu.findItem(R.id.nav_close).setEnabled(uRun);
@@ -451,7 +454,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         menu.findItem(R.id.nav_backup_delete).setEnabled(uRun && isBackup);
         menu.findItem(R.id.nav_change_kml_script).setEnabled(uRun);
         menu.findItem(R.id.nav_show_kml_script_compilation_result).setEnabled(uRun);
-	    menu.findItem(R.id.nav_manage_flash_rom).setEnabled(uRun && (cCurrentRomType == 'X' || cCurrentRomType == 'Q'));
         menu.findItem(R.id.nav_macro_record).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);
         menu.findItem(R.id.nav_macro_play).setEnabled(uRun && nMacroState == 0 /* MACRO_OFF */);
         menu.findItem(R.id.nav_macro_stop).setEnabled(uRun && nMacroState != 0 /* MACRO_OFF */);
@@ -844,7 +846,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else
             openDocument();
     }
-    private void OnObjectSave() {
+    private void SaveObject() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -852,6 +854,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    saveWhenLaunchingActivity = false;
         startActivityForResult(intent, INTENT_OBJECT_SAVE);
     }
+    private void OnObjectSave() {
+        int model = NativeLib.getCurrentModel();
+        if(model == 'L'     // HP32S    # Leonardo
+		|| model == 'N'     // HP32SII  # Nardo
+        || model == 'D') {  // HP42S    # Davinci
+            final String[] objectsToSave = NativeLib.getObjectsToSave();
+            objectsToSaveItemChecked = new boolean[objectsToSave.length];
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle(getResources().getString(R.string.message_object_save_program))
+                    .setMultiChoiceItems(objectsToSave, null, (dialog, which, isChecked) -> objectsToSaveItemChecked[which] = isChecked).setPositiveButton("OK", (dialog, id) -> {
+                        //NativeLib.onObjectSave(url);
+                        SaveObject();
+                    }).setNegativeButton("Cancel", (dialog, id) -> objectsToSaveItemChecked = null).show();
+        } else
+            SaveObject(); // Others calculators
+    }
+    
     private void OnViewCopyFullscreen() {
         Bitmap bitmapScreen = mainScreenView.getBitmap();
         if(bitmapScreen == null)
@@ -1147,7 +1166,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		}
 	}
 
-	private void OnMacroRecord() {
+    private void OnMacroRecord() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -1220,11 +1239,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         NativeLib.onObjectLoad(url);
                         break;
                     }
-	                case INTENT_OBJECT_SAVE: {
-		                if(debug) Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
-		                NativeLib.onObjectSave(url, null);
-		                break;
-	                }
+                    case INTENT_OBJECT_SAVE: {
+                    	if(debug) Log.d(TAG, "onActivityResult INTENT_OBJECT_SAVE " + url);
+                        NativeLib.onObjectSave(url, objectsToSaveItemChecked);
+                        objectsToSaveItemChecked = null;
+                        break;
+                    }
 	                case INTENT_PORT2LOAD: {
 		                if(debug) Log.d(TAG, "onActivityResult INTENT_PORT2LOAD " + url);
 		                //TODO Duplicate code in SettingsFragment!
@@ -1544,7 +1564,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		    }
 	    }
 
-	    if(settings.getBoolean("settings_port2en", false)) {
+	    if(getPackageName().contains("org.emulator.forty.eight") && settings.getBoolean("settings_port2en", false)) {
 		    // Check if the access to the port2 shared file is still possible.
 		    String port2Url = settings.getString("settings_port2load", "");
 		    if(port2Url != null && port2Url.length() > 0) {
@@ -2201,9 +2221,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     mainScreenView.setRotationMode(rotationMode, isDynamic);
                     break;
                 case "settings_auto_layout":
-					int autoLayoutMode = 1;
+					int autoLayoutMode = getPackageName().contains("org.emulator.forty.eight") ? 1 : 2;
                     try {
-						autoLayoutMode = Integer.parseInt(settings.getString("settings_auto_layout", "1"));
+						autoLayoutMode = Integer.parseInt(settings.getString("settings_auto_layout", String.valueOf(autoLayoutMode)));
                     } catch (NumberFormatException ex) {
                         // Catch bad number format
                     }

@@ -2237,7 +2237,7 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                     // and the color white in the source turns into the destination’s background
                     // color.
                     BYTE * sourcePixel = sourcePixelBase + ((UINT)src_curx >> (UINT)3);
-                    UINT bitNumber = (UINT) (src_curx % 8);
+                    UINT bitNumber = (UINT) (7 - (src_curx % 8));
                     if(*sourcePixel & ((UINT)1 << bitNumber)) {
                         // Monochrome 1=White
                         sourceColorPointer[0] = 255;
@@ -2311,7 +2311,7 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                     // In other words, GDI considers a monochrome bitmap to be
                     // black pixels on a white background.
                     BYTE * destinationPixel = destinationPixelBase + (x >> 3);
-                    UINT bitNumber = x % 8;
+	                UINT bitNumber = (UINT) (7 - (x % 8));
                     if(backgroundColor == sourceColor) {
                         *destinationPixel |= (1 << bitNumber); // 1 White
                     } else {
@@ -2397,29 +2397,237 @@ HBITMAP CreateBitmap( int nWidth, int nHeight, UINT nPlanes, UINT nBitCount, CON
     newHBITMAP->bitmapBits = bitmapBits;
     return newHBITMAP;
 }
+
+// RLE decode from Christoph Giesselink in FILES.C from Emu48forPocketPC v125
+#define WIDTHBYTES(bits) ((((bits) + 31) / 32) * 4)
+
+typedef struct _BmpFile
+{
+	DWORD  dwPos;							// actual reading pos
+	DWORD  dwFileSize;						// file size
+	LPBYTE pbyFile;							// buffer
+} BMPFILE, FAR *LPBMPFILE, *PBMPFILE;
+
+static BOOL ReadRleBmpByte(LPBMPFILE pBmp, BYTE *n)
+{
+	// outside BMP file
+	if (pBmp->dwPos >= pBmp->dwFileSize)
+		return TRUE;
+
+	*n = pBmp->pbyFile[pBmp->dwPos++];
+	return FALSE;
+}
+
+static BOOL DecodeRleBmp(LPBYTE ppvBits,BITMAPINFOHEADER CONST *lpbi, LPBMPFILE pBmp)
+{
+	BYTE  byLength,byColorIndex;
+	DWORD dwPos,dwRow,dwSizeImage,dwPixelPerLine;
+	BOOL  bDecoding;
+
+	_ASSERT(ppvBits != NULL);				// destination
+	_ASSERT(lpbi != NULL);					// BITMAPINFOHEADER
+	_ASSERT(pBmp != NULL);					// bitmap data
+
+	// valid bit count for RLE bitmaps
+	_ASSERT(lpbi->biBitCount == 4 || lpbi->biBitCount == 8);
+
+	// wrong bit count for compressed bitmap or top-down bitmap
+	if ((lpbi->biBitCount != 4 && lpbi->biBitCount != 8) || lpbi->biHeight < 0)
+		return TRUE;
+
+	bDecoding = TRUE;						// RLE decoder running
+	dwPos = dwRow = 0;						// reset absolute position and row counter
+
+	// image size
+	_ASSERT(lpbi->biHeight >= 0);
+	dwSizeImage = WIDTHBYTES((DWORD)lpbi->biWidth * lpbi->biBitCount) * lpbi->biHeight;
+
+	ZeroMemory(ppvBits,dwSizeImage);		// clear bitmap
+
+	// image size in pixel
+	dwSizeImage *= (8 / lpbi->biBitCount);
+
+	// no. of pixels per line
+	dwPixelPerLine = dwSizeImage / lpbi->biHeight;
+
+	do
+	{
+		// length information is WORD aligned
+		_ASSERT(((DWORD) &pBmp->pbyFile[pBmp->dwPos] % sizeof(WORD)) == 0);
+		if (ReadRleBmpByte(pBmp,&byLength))     return TRUE;
+		if (ReadRleBmpByte(pBmp,&byColorIndex)) return TRUE;
+
+		if (byLength)						// length information
+		{
+			// check for buffer overflow
+			if (dwPos + byLength > dwSizeImage)
+			{
+				// write rest of data until buffer full
+				byLength = (dwPos > dwSizeImage) ? 0 : (BYTE) (dwSizeImage - dwPos);
+				bDecoding = FALSE;			// abort
+			}
+
+			if (lpbi->biBitCount == 4)		// RLE4
+			{
+				BYTE byColor[2];
+				UINT s,d;
+
+				// split into upper/lower nibble
+				byColor[0] = byColorIndex >> 4;
+				byColor[1] = byColorIndex & 0x0F;
+
+				s = 0;						// source nibble selector [0/1]
+				d = (~dwPos & 1) * 4;		// destination shift [0/4]
+
+				while (byLength-- > 0)
+				{
+					// write nibble to memory
+					_ASSERT((byColor[s] & 0xF0) == 0);
+					ppvBits[dwPos++/2] |= (byColor[s] << d);
+					s ^= 1;					// next source nibble
+					d ^= 4;					// next destination shift
+				}
+			}
+			else							// RLE8
+			{
+				while (byLength-- > 0)
+					ppvBits[dwPos++] = byColorIndex;
+			}
+		}
+		else								// escape sequence
+		{
+			switch (byColorIndex)
+			{
+				case 0: // End of Line
+					dwPos = ++dwRow * dwPixelPerLine;
+					break;
+				case 1: // End of Bitmap
+					bDecoding = FALSE;
+					break;
+				case 2: // Delta
+					// column offset
+					if (ReadRleBmpByte(pBmp,&byColorIndex)) return TRUE;
+					dwPos += byColorIndex;
+					// row offset
+					if (ReadRleBmpByte(pBmp,&byColorIndex)) return TRUE;
+					dwRow += byColorIndex;
+					dwPos += dwPixelPerLine * byColorIndex;
+					break;
+				default: // absolute mode
+					// check for buffer overflow
+					if (dwPos + byColorIndex > dwSizeImage)
+					{
+						// write rest of data until buffer full
+						byColorIndex = (dwPos > dwSizeImage) ? 0 : (BYTE) (dwSizeImage - dwPos);
+						bDecoding = FALSE;		// abort
+					}
+
+					if (lpbi->biBitCount == 4)	// RLE4
+					{
+						BYTE byColor,byColorPair;
+						UINT s,d;
+
+						d = (~dwPos & 1) * 4;	// destination shift [0/4]
+
+						for (s = 0; s < byColorIndex; ++s)
+						{
+							if ((s & 1) == 0)	// upper nibble
+							{
+								// fetch color pair
+								if (ReadRleBmpByte(pBmp,&byColorPair)) return TRUE;
+
+								// get upper nibble
+								byColor = (byColorPair >> 4);
+							}
+							else				// lower nibble
+							{
+								// get lower nibble
+								byColor = (byColorPair & 0x0F);
+							}
+
+							// write nibble to memory
+							_ASSERT((byColor & 0xF0) == 0);
+							ppvBits[dwPos++/2] |= (byColor << d);
+							d ^= 4;				// next destination shift
+						}
+
+						// for odd byte length detection
+						byColorIndex = (++byColorIndex) >> 1;
+					}
+					else						// RLE8
+					{
+						if (pBmp->dwPos + byColorIndex > pBmp->dwFileSize) return TRUE;
+						CopyMemory(ppvBits+dwPos,&pBmp->pbyFile[pBmp->dwPos],byColorIndex);
+						dwPos += byColorIndex;
+						pBmp->dwPos += byColorIndex;
+					}
+					// word align on odd byte length
+					if (byColorIndex & 1) ++pBmp->dwPos;
+					break;
+			}
+		}
+	}
+	while (bDecoding);
+	return FALSE;
+}
+
 HBITMAP CreateDIBitmap( HDC hdc, CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BITMAPINFO *pbmi, UINT iUsage) {
     PAINT_LOGD("PAINT CreateDIBitmap()");
 
-    HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
-    memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
-    newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
+	HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
+	memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
+	newHBITMAP->handleType = HGDIOBJ_TYPE_BITMAP;
 
-    BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
-    memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
-    newHBITMAP->bitmapInfo = newBitmapInfo;
-    newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
+	BITMAPINFO * newBitmapInfo = malloc(sizeof(BITMAPINFO));
+	memcpy(newBitmapInfo, pbmi, sizeof(BITMAPINFO));
+	newHBITMAP->bitmapInfo = newBitmapInfo;
+	newHBITMAP->bitmapInfoHeader = (BITMAPINFOHEADER *)newBitmapInfo;
 
-    size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
-    size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
-                    newBitmapInfo->bmiHeader.biSizeImage :
-                  abs(newBitmapInfo->bmiHeader.biHeight) * stride;
-    VOID * bitmapBits = malloc(size);
-    memcpy(bitmapBits, pjBits, size);
-    newHBITMAP->bitmapBits = bitmapBits;
-    return newHBITMAP;
+	if(flInit == CBM_INIT && pjBits) {
+		VOID * bitmapBits = NULL;
+		if(iUsage == DIB_RGB_COLORS) {
+			switch (pbmi->bmiHeader.biCompression) {
+				case BI_RLE4:
+				case BI_RLE8: {
+
+					// Destination
+					BOOL bErr;
+					newBitmapInfo->bmiHeader.biCompression = BI_RGB;
+					size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
+					size_t size = abs(newBitmapInfo->bmiHeader.biHeight) * stride;
+					bitmapBits = malloc(size);
+					BMPFILE Bmp;
+					int bitOffset = sizeof(BITMAPINFOHEADER) + (pbmi->bmiHeader.biCompression == BI_BITFIELDS ? 3 * sizeof(DWORD) : DibNumColors(&pbmi->bmiHeader) * sizeof(RGBQUAD));
+
+					Bmp.pbyFile = ((LPBYTE)&pbmi->bmiHeader) + bitOffset;
+					Bmp.dwPos = 0;
+					Bmp.dwFileSize = -1; //size;
+
+					bErr = DecodeRleBmp(
+							/* Destination */ bitmapBits,
+							/* Destination header */ &newBitmapInfo->bmiHeader,
+							/* Source */ &Bmp);
+					break;
+				}
+				case BI_RGB:
+				case BI_BITFIELDS: {
+					// We consider the source and destination dib with the same format
+					size_t stride = (size_t)(4 * ((newBitmapInfo->bmiHeader.biWidth * newBitmapInfo->bmiHeader.biBitCount + 31) / 32));
+					size_t size = newBitmapInfo->bmiHeader.biSizeImage ?
+					              newBitmapInfo->bmiHeader.biSizeImage :
+					              abs(newBitmapInfo->bmiHeader.biHeight) * stride;
+					bitmapBits = malloc(size);
+					memcpy(bitmapBits, pjBits, size);
+					break;
+				}
+			}
+		}
+		newHBITMAP->bitmapBits = bitmapBits;
+	}
+	return newHBITMAP;
 }
 HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset) {
-    PAINT_LOGD("PAINT CreateDIBitmap()");
+    PAINT_LOGD("PAINT CreateDIBSection()");
 
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
@@ -2445,7 +2653,7 @@ HBITMAP CreateDIBSection(HDC hdc, CONST BITMAPINFO *pbmi, UINT usage, VOID **ppv
     return newHBITMAP;
 }
 HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
-    PAINT_LOGD("PAINT CreateDIBitmap()");
+    PAINT_LOGD("PAINT CreateCompatibleBitmap()");
 
     HGDIOBJ newHBITMAP = (HGDIOBJ)malloc(sizeof(_HGDIOBJ));
     memset(newHBITMAP, 0, sizeof(_HGDIOBJ));
@@ -2469,6 +2677,7 @@ HBITMAP CreateCompatibleBitmap( HDC hdc, int cx, int cy) {
     return newHBITMAP;
 }
 int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage) {
+	PAINT_LOGD("PAINT GetDIBits()");
     //TODO Not sure at all for this function
     if(hbm && lpbmi) {
         CONST BITMAPINFO *pbmi = hbm->bitmapInfo;

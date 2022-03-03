@@ -811,6 +811,7 @@ typedef struct _RGNDATA {
     char            Buffer[1];
 } RGNDATA, *PRGNDATA, NEAR *NPRGNDATA, FAR *LPRGNDATA;
 extern int GetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, LPVOID lpvBits, LPBITMAPINFO lpbmi, UINT usage);
+extern int SetDIBits(HDC hdc, HBITMAP hbm, UINT start, UINT cLines, const VOID *lpBits, const BITMAPINFO *lpbmi, UINT ColorUse);
 extern COLORREF GetPixel(HDC hdc, int x ,int y);
 extern HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd);
 extern UINT RealizePalette(HDC hdc);

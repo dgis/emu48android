@@ -256,7 +256,7 @@ public class MainScreenView extends PanAndScaleView {
 	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
-        && (event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
+        && ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == 0) {
         	if(!event.isNumLockOn() && numpadKey.indexOf(keyCode) != -1)
         		return false;
             char pressedKey = (char) event.getUnicodeChar();
@@ -277,7 +277,7 @@ public class MainScreenView extends PanAndScaleView {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
-        && (event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
+        && ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == 0) {
 	        if(!event.isNumLockOn() && numpadKey.indexOf(keyCode) != -1)
 		        return false;
             char pressedKey = (char) event.getUnicodeChar();
@@ -451,20 +451,36 @@ public class MainScreenView extends PanAndScaleView {
         }
     }
 
+
+	static float[] pointsBuffer = new float[0];
 	static void drawPixelBorder(Canvas canvas, int lcdWidthNative, int lcdHeightNative, float screenPositionX, float screenPositionY, float screenWidth, float screenHeight, Paint paintLCD) {
 		// Draw the LCD grid lines without antialiasing to emulate the genuine pixels borders
 		int lcdBackgroundColor = 0xFF000000 | NativeLib.getLCDBackgroundColor();
 		paintLCD.setColor(lcdBackgroundColor);
 		float stepX = screenWidth / lcdWidthNative;
+
+		// Optimized drawcalls
+		int pointBufferLength = (lcdWidthNative + lcdHeightNative) << 2;
+		if(pointsBuffer.length != pointBufferLength)
+			pointsBuffer = new float[pointBufferLength]; // Adjust the buffer of points
+
+		int pointsIndex = 0;
 		for (int x = 0; x < lcdWidthNative; x++) {
 			float screenX = screenPositionX + x * stepX;
-			canvas.drawLine(screenX, screenPositionY, screenX, screenPositionY + screenHeight, paintLCD);
+			pointsBuffer[pointsIndex++] = screenX;
+			pointsBuffer[pointsIndex++] = screenPositionY;
+			pointsBuffer[pointsIndex++] = screenX;
+			pointsBuffer[pointsIndex++] = screenPositionY + screenHeight;
 		}
 		float stepY = screenHeight / lcdHeightNative;
 		for (int y = 0; y < lcdHeightNative; y++) {
 			float screenY = screenPositionY + y * stepY;
-			canvas.drawLine(screenPositionX, screenY, screenPositionX + screenWidth, screenY, paintLCD);
+			pointsBuffer[pointsIndex++] = screenPositionX;
+			pointsBuffer[pointsIndex++] = screenY;
+			pointsBuffer[pointsIndex++] = screenPositionX + screenWidth;
+			pointsBuffer[pointsIndex++] = screenY;
 		}
+		canvas.drawLines(pointsBuffer, paintLCD);
 	}
 
 	public void updateCallback(int type, int param1, int param2, String param3, String param4) {
