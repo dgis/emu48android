@@ -1161,8 +1161,11 @@ VOID ReadIO(BYTE *a, DWORD d, DWORD s, BOOL bUpdate)
 		case 0x15: // RBR MSB
 			if (bUpdate)
 			{
-				Chipset.IORam[RCS] &= ~RBF;
 				*a = Chipset.IORam[d];			// return RBR value
+				if (d==0x15)					// reading RBR MSB
+				{
+					Chipset.IORam[RCS] &= ~RBF;	// clear Receive Buffer Full flag
+				}
 				UpdateUSRQ();					// update USRQ
 				rbr_acc = TRUE;					// search for new RBR value
 				#if defined DEBUG_SERIAL
@@ -1614,13 +1617,13 @@ VOID WriteIO(BYTE *a, DWORD d, DWORD s)
 // 0011A @  IR Control Register [IRI EIRU EIRI IRE] (bit 3 is read-only)
 // 0011A @  IR Input, Enable IR UART mode, Enable IR Interrupt, IR Event
 		case 0x1A:
-			// COM port open and EIRU bit changed
-			if (bCommInit && ((c^Chipset.IORam[d]) & EIRU) != 0)
+			// EIRU bit changed
+			if (((c^Chipset.IORam[d]) & EIRU) != 0)
 			{
 				// save new value for COM open
 				Chipset.IORam[d]=(Chipset.IORam[d]&8)|(c&7);
 				// reopen COM port with new setting
-				bCommInit = CommOpen(szSerialWire,szSerialIr);
+				CommOpen(szSerialWire,szSerialIr);
 			}
 			Chipset.IORam[d]=(Chipset.IORam[d]&8)|(c&7);
 			#if defined DEBUG_SERIAL

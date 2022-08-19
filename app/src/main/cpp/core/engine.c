@@ -22,7 +22,6 @@ BOOL    bRealSpeed = FALSE;
 BOOL    bKeySlow = FALSE;					// slow down for key emulation
 BOOL    bSoundSlow = FALSE;					// slow down for sound emulation
 UINT    nOpcSlow = 0;						// no. of opcodes to slow down
-BOOL    bCommInit = FALSE;					// COM port not open
 
 CHIPSET Chipset;
 
@@ -353,16 +352,15 @@ static __inline VOID SetT2Cycles(VOID)		// set device specific cpu cycles in int
 VOID CheckSerial(VOID)
 {
 	// COM port closed and serial on
-	if (bCommInit == FALSE && (Chipset.IORam[IOC] & SON) != 0)
+	if (CommIsOpen() == FALSE && (Chipset.IORam[IOC] & SON) != 0)
 	{
-		bCommInit = CommOpen(szSerialWire,szSerialIr); // open COM ports
+		CommOpen(szSerialWire,szSerialIr); // open COM ports
 	}
 
 	// COM port opened and serial off
-	if (bCommInit == TRUE && (Chipset.IORam[IOC] & SON) == 0)
+	if (CommIsOpen() == TRUE && (Chipset.IORam[IOC] & SON) == 0)
 	{
 		CommClose();					// close COM port
-		bCommInit = FALSE;
 	}
 	return;
 }
@@ -551,7 +549,6 @@ loop:
 	{
 		OnToolMacroStop();					// close open keyboard macro handler
 		CommClose();						// close COM port
-		bCommInit = FALSE;					// COM port not open
 		nState = SM_INVALID;				// in invalid state
 		WaitForSingleObject(hEventShutdn,INFINITE);
 		if (nNextState == SM_RETURN)		// go into return state

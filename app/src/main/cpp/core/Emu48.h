@@ -133,7 +133,8 @@ extern VOID    MruAdd(LPCTSTR lpszEntry);
 extern VOID    MruRemove(UINT nIndex);
 extern VOID    MruMoveTop(UINT nIndex);
 extern UINT    MruEntries(VOID);
-extern LPCTSTR MruFilename(UINT nIndex);
+extern UINT    MruID(LPCTSTR lpszEntry);
+extern VOID    MruFilename(UINT nIndex, LPTSTR szFilename, UINT nBuffersize);
 extern VOID    MruUpdateMenu(HMENU hMenu);
 extern VOID    MruWriteList(VOID);
 extern VOID    MruReadList(VOID);
@@ -193,7 +194,6 @@ extern BOOL    bRealSpeed;
 extern BOOL    bKeySlow;
 extern BOOL    bSoundSlow;
 extern UINT    nOpcSlow;
-extern BOOL    bCommInit;
 extern CHIPSET Chipset;
 extern TCHAR   szSerialWire[16];
 extern TCHAR   szSerialIr[16];
@@ -412,6 +412,7 @@ extern LPCTSTR RplGetName(DWORD dwAddr);
 extern BOOL    RplGetAddr(LPCTSTR lpszName, DWORD *pdwAddr);
 
 // Serial.c
+extern BOOL CommIsOpen(VOID);
 extern BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort);
 extern VOID CommClose(VOID);
 extern VOID CommSetBaud(VOID);

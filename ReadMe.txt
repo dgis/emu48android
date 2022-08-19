@@ -58,6 +58,11 @@ LINKS
 
 CHANGES
 
+Version 2.6 (2022-08-19)
+
+- Updated source code from Eric Rechlin's Emu48 version 1.64+ that was merged from Christoph Gießelink's Emu48 version 1.65. This new version improve the serial communication.
+
+
 Version 2.5 (2022-03-03)
 
 - Allow to load RLE4, RLE8 and monochrome BMP images.
@@ -262,7 +267,7 @@ TODO
 
 BUILD
 
-Emu48 for Android is built with Android Studio 2020.3.1 (2021).
+Emu48 for Android is built with Android Studio 2021.1.1 (2022).
 And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:

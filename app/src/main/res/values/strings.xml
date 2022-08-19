@@ -35,6 +35,7 @@
     <string name="nav_save_object">Save Object...</string>
     <string name="nav_copy_screen">Copy Screen</string>
     <string name="nav_copy_fullscreen">Copy Fullscreen</string>
+	<string name="nav_copy_stack_visible">Copy Visible Stack</string>
     <string name="nav_copy_stack">Copy Stack</string>
     <string name="nav_recents">Recent</string>
     <string name="nav_edit">Edit</string>
@@ -223,5 +224,6 @@
 	<string name="settings_category_serial_ports_title">Serial Ports (Please allow USB OTG)</string>
 	<string name="settings_serial_ports_wire_title">Wire</string>
 	<string name="settings_serial_ports_ir_title">Infrared (2400 baud only)</string>
+	<string name="settings_serial_slowdown">Slowdown transmission (prevent errors with 9600 baud)</string>
 
 </resources>

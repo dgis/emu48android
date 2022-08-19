@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
+	xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/settings_category_general_title">
@@ -187,6 +188,11 @@
 			android:title="@string/settings_serial_ports_ir_title"
 			android:summary=""
 			/>
+<!--		<SwitchPreference-->
+<!--			android:defaultValue="false"-->
+<!--			android:key="settings_serial_slowdown"-->
+<!--			android:title="@string/settings_serial_slowdown"-->
+<!--			/>-->
 	</PreferenceCategory>
 
 </PreferenceScreen>

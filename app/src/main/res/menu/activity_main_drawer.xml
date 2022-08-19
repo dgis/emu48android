@@ -60,6 +60,10 @@
                 android:id="@+id/nav_copy_screen"
                 android:icon="@drawable/ic_menu_share"
                 android:title="@string/nav_copy_screen" />
+            <!--<item
+		        android:id="@+id/nav_copy_stack_visible"
+		        android:icon="@drawable/ic_filter_none_black_24dp"
+		        android:title="@string/nav_copy_stack_visible" /> -->
             <item
                 android:id="@+id/nav_copy_stack"
                 android:icon="@drawable/ic_filter_none_black_24dp"

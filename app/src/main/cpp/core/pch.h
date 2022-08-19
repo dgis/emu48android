@@ -51,6 +51,7 @@
 #endif
 
 #if _MSC_VER <= 1200 // missing type definition in the MSVC6.0 SDK and earlier
+#define __unaligned
 #define SetWindowLongPtr	SetWindowLong
 #define GetWindowLongPtr	GetWindowLong
 #define SetClassLongPtr		SetClassLong

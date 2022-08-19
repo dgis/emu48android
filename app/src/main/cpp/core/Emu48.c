@@ -13,7 +13,7 @@
 #include "kml.h"
 #include "debugger.h"
 
-#define VERSION   "1.63+"
+#define VERSION   "1.64+"
 
 #ifdef _DEBUG
 LPCTSTR szNoTitle = _T("Emu48 ")_T(VERSION)_T(" Debug");
@@ -681,7 +681,7 @@ static INT_PTR CALLBACK SettingsPeripheralProc(HWND hDlg, UINT uMsg, WPARAM wPar
 
 		// set combobox parameter
 		SetCommList(hDlg,szSerialWire,szSerialIr);
-		if (bCommInit)						// disable when port open
+		if (CommIsOpen())					// disable when port open
 		{
 			EnableWindow(GetDlgItem(hDlg,IDC_WIRE),FALSE);
 			EnableWindow(GetDlgItem(hDlg,IDC_IR),FALSE);
@@ -768,7 +768,10 @@ static UINT SaveChanges(BOOL bAuto)
 		if (GetSaveAsFilename())
 		{
 			if (SaveDocumentAs(szBufferFilename))
+			{
+				MruAdd(szBufferFilename);
 				return IDYES;
+			}
 			else
 				return IDCANCEL;
 		}
@@ -776,6 +779,7 @@ static UINT SaveChanges(BOOL bAuto)
 	}
 
 	SaveDocument();
+	MruAdd(szCurrentFilename);
 	return IDYES;
 }
 
@@ -1056,25 +1060,32 @@ cancel:
 //
 static LRESULT OnFileMruOpen(UINT wID)
 {
-	LPCTSTR lpszFilename;
+	TCHAR szFilename[MAX_PATH];
 
 	wID -= ID_FILE_MRU_FILE1;				// zero based MRU index
-	lpszFilename = MruFilename(wID);		// full filename from MRU list
-	if (lpszFilename == NULL) return 0;		// MRU slot not filled
+
+	// full filename from MRU list
+	MruFilename(wID,szFilename,ARRAYSIZEOF(szFilename));
+	if (*szFilename == 0) return 0;			// MRU slot not filled
 
 	if (bDocumentAvail)
 	{
 		SwitchToState(SM_INVALID);
+		// saving may change MRU index and destroy lpszFilename pointer content
 		if (IDCANCEL == SaveChanges(bAutoSave))
 			goto cancel;
 	}
-	if (!OpenDocument(lpszFilename))		// document loading failed
+	if (!OpenDocument(szFilename))			// document loading failed
 	{
-		MruRemove(wID);						// entry not valid any more
+		wID = MruID(szFilename);			// get actual MRU ID after saving
+		if (wID != (UINT) -1)				// entry still in MRU list
+		{
+			MruRemove(wID);					// entry not valid any more
+		}
 	}
 	else
 	{
-		MruMoveTop(wID);					// move entry to top of MRU list
+		MruAdd(szFilename);					// add entry to top of MRU list
 	}
 cancel:
 	if (pbyRom) SwitchToState(SM_RUN);

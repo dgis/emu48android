@@ -66,6 +66,7 @@ public class NativeLib {
     public static native String[] getObjectsToSave();
     public static native int onObjectSave(String filename, boolean[] objectsToSaveItemChecked);
 	public static native void onViewCopy(Bitmap bitmapScreen);
+	public static native void onStackCopyVisible();
     public static native void onStackCopy();
     public static native void onStackPaste();
     public static native void onViewReset();

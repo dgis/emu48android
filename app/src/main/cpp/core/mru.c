@@ -84,7 +84,7 @@ VOID MruCleanup(VOID)
 	{
 		for (i = 0; i < nEntry; ++i)		// cleanup each entry
 		{
-			if (ppszFiles[i] != NULL)
+			if (ppszFiles[i] != NULL)		// valid entry
 				free(ppszFiles[i]);			// cleanup entry
 		}
 
@@ -111,7 +111,7 @@ VOID MruAdd(LPCTSTR lpszEntry)
 		for (i = 0; i < nEntry; ++i)
 		{
 			// already in table -> quit
-			if (   ppszFiles[i] != NULL
+			if (   ppszFiles[i] != NULL		// valid entry
 				&& lstrcmpi(ppszFiles[i],szFilename) == 0)
 			{
 				MruMoveTop(i);				// move to top and update menu
@@ -120,7 +120,7 @@ VOID MruAdd(LPCTSTR lpszEntry)
 		}
 
 		i = nEntry - 1;						// last index
-		if (ppszFiles[i] != NULL)
+		if (ppszFiles[i] != NULL)			// valid entry
 			free(ppszFiles[i]);				// free oldest entry
 
 		for (; i > 0; --i)					// move old entries 1 line down
@@ -173,16 +173,43 @@ UINT MruEntries(VOID)
 	return nEntry;
 }
 
-LPCTSTR MruFilename(UINT nIndex)
+UINT MruID(LPCTSTR lpszEntry)
 {
-	LPCTSTR lpszName = _T("");
+	TCHAR  szFilename[MAX_PATH];
+	LPTSTR lpFilePart;
+	UINT i;
+
+	if (ppszFiles != NULL)					// MRU initialized
+	{
+		_ASSERT(nEntry > 0);				// must have entries
+
+		// get full path name
+		GetFullPathName(lpszEntry,ARRAYSIZEOF(szFilename),szFilename,&lpFilePart);
+
+		// look if entry is already in table
+		for (i = 0; i < nEntry; ++i)
+		{
+			if (   ppszFiles[i] != NULL		// valid entry
+				&& lstrcmpi(ppszFiles[i],szFilename) == 0)
+			{
+				return i;					// return ID
+			}
+		}
+	}
+	return (UINT) -1;						// not found
+}
+
+VOID MruFilename(UINT nIndex, LPTSTR szFilename, UINT nBuffersize)
+{
+	*szFilename = 0;						// not found
 
 	// MRU initialized and index inside valid range
 	if (ppszFiles != NULL && nIndex < nEntry)
 	{
-		lpszName = ppszFiles[nIndex];
+		_ASSERT(ppszFiles[nIndex] != NULL);	// valid entry
+		lstrcpyn(szFilename,ppszFiles[nIndex],nBuffersize);
 	}
-	return lpszName;
+	return;
 }
 
 VOID MruUpdateMenu(HMENU hMenu)
@@ -312,7 +339,7 @@ VOID MruWriteList(VOID)
 		{
 			_ASSERT(ppszFiles != NULL);		// MRU not initialized
 			wsprintf(szItemname,_T("File%d"),i+1);
-			if (ppszFiles[i] != NULL)
+			if (ppszFiles[i] != NULL)		// valid entry
 			{
 				WriteSettingsString(_T("MRU"),szItemname,ppszFiles[i]);
 			}
@@ -338,7 +365,7 @@ VOID MruReadList(VOID)
 		wsprintf(szItemname,_T("File%d"),i+1);
 		ReadSettingsString(_T("MRU"),szItemname,_T(""),szFilename,ARRAYSIZEOF(szFilename));
 
-		if (ppszFiles[i] != NULL)			// already filled
+		if (ppszFiles[i] != NULL)			// valid entry
 		{
 			free(ppszFiles[i]);				// free entry
 			ppszFiles[i] = NULL;			// clear last line

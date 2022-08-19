@@ -341,7 +341,8 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 		SERIAL_LOGD("WriteFile(hFile: %p, lpBuffer: 0x%08x, nNumberOfBytesToWrite: %d) -> %d bytes\n%s", hFile, lpBuffer, nNumberOfBytesToWrite, writenByteCount, hexAsciiDump);
 		free(hexAsciiDump);
 #endif
-		Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
+		if(serialPortSlowDown)
+			Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
 		if(lpNumberOfBytesWritten)
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;
@@ -3484,3 +3485,9 @@ int win32_select(int __fd_count, fd_set* __read_fds, fd_set* __write_fds, fd_set
     }
     return select(__fd_count, __read_fds, __write_fds, __exception_fds, __timeout);
 }
+
+int win32_ioctlsocket(SOCKET s, long cmd, u_long FAR * argp) {
+	//TODO
+	return 0;
+}
+

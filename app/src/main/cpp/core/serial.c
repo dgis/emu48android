@@ -93,6 +93,11 @@ static DWORD WINAPI EventThread(LPVOID pParam)
 	UNREFERENCED_PARAMETER(pParam);
 }
 
+BOOL CommIsOpen(VOID)
+{
+	return hComm != NULL;					// have COM port handle
+}
+
 BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort)
 {
 	COMMTIMEOUTS CommTimeouts = { MAXDWORD, 0L, 0L, 0L, 0L };
@@ -353,7 +358,7 @@ VOID CommReceive(VOID)
 		// reject reading if com port is closed and not whole operation
 		if (hComm && dwBytesRead == 0L)		// com port open and buffer empty
 		{
-			if (ReadFile(hComm,&cBuffer,sizeof(cBuffer),&dwBytesRead,&os) == FALSE)
+			if (ReadFile(hComm,cBuffer,sizeof(cBuffer),&dwBytesRead,&os) == FALSE)
 				dwBytesRead = 0L;
 			else							// bytes received
 				nRp = 0;					// reset read pointer

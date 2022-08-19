@@ -42,6 +42,7 @@ BOOL settingsPort2en;
 BOOL settingsPort2wr;
 BOOL soundAvailable = FALSE;
 BOOL soundEnabled = FALSE;
+BOOL serialPortSlowDown = FALSE;
 
 
 
@@ -1005,6 +1006,9 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onViewCopy(JNIEnv 
     AndroidBitmap_unlockPixels(env, bitmapScreen);
 }
 
+JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onStackCopyVisible(JNIEnv *env, jobject thisz) {
+}
+
 JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_onStackCopy(JNIEnv *env, jobject thisz) {
     OnStackCopy();
 }
@@ -1297,18 +1301,20 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_setConfiguration(J
 	    const char * newSerialWire = _tcscmp(_T("0000:0000,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
 	    BOOL serialWireChanged = _tcscmp(szSerialWire, newSerialWire) != 0;
 	    _tcsncpy(szSerialWire, newSerialWire, sizeof(szSerialWire));
-	    if(bCommInit && serialWireChanged) {
+	    if(CommIsOpen() && serialWireChanged) {
 	    	// Not the right thread, but it seems to work.
-		    bCommInit = CommOpen(szSerialWire, szSerialIr);
+		    CommOpen(szSerialWire, szSerialIr);
 	    }
     } else if(_tcscmp(_T("settings_serial_ports_ir"), configKey) == 0) {
 	    const char * newSerialIr = _tcscmp(_T("0000:0000,0"), configStringValue) == 0 ? NO_SERIAL : configStringValue;
 	    BOOL serialIrChanged = _tcscmp(szSerialIr, newSerialIr) != 0;
 	    _tcsncpy(szSerialIr, newSerialIr, sizeof(szSerialIr));
-	    if(bCommInit && serialIrChanged) {
+	    if(CommIsOpen() && serialIrChanged) {
 		    // Not the right thread, but it seems to work.
-		    bCommInit = CommOpen(szSerialWire, szSerialIr);
+		    CommOpen(szSerialWire, szSerialIr);
 	    }
+    } else if(_tcscmp(_T("settings_serial_slowdown"), configKey) == 0) {
+	    serialPortSlowDown = (BOOL)intValue1;
     }
 
     if(configKey)

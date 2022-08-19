@@ -34,7 +34,8 @@ h3 { color:red; font-size:1.1em; }
 <div id="navi">
   <p><a class="nav1" href="#s1">1. General</a></p>
   <p><a class="nav1" href="#s2">2. Acknowledgements</a></p>
-  <p><a class="nav1" href="#s3">3. ROM Images</a></p>
+  <p><a class="nav1" href="#s3">3. ROM Images</a><br>
+    <a class="nav2" href="#ss3.1">3.1 Creation examples</a></p>
   <p><a class="nav1" href="#s4">4. Installation</a></p>
   <p><a class="nav1" href="#s5">5. How to Start</a></p>
   <p><a class="nav1" href="#s6">6. Command Line</a></p>
@@ -83,12 +84,11 @@ h3 { color:red; font-size:1.1em; }
     <a href="#ss12.2">12.2 About Emu48...</a>
     </span></p>
   <p><a class="nav1" href="#s13">13. DDE Server</a></p>
-  <p><a class="nav1" href="#s14">14. Emu48+ Changes</a></p>
-  <p><a class="nav1" href="#s15">15. License</a></p>
+  <p><a class="nav1" href="#s14">14. License</a></p>
 </div>
 <div id="main">
   <h1><a name=s1>1. General</a></h1>
-    <p><a href="http://hp.giesselink.com/emu42.htm">Emu48</a> is an
+    <p><a href="https://hp.giesselink.com/emu48.htm">Emu48</a> is an
     emulator for the Hewlett Packard HP38G, HP39G, HP40G, HP48SX, HP48GX
     and HP49G calculator hardware. These calculators are based on the
     1LT8 Clarke (HP48SX) and on the Yorke chip.</p>
@@ -127,73 +127,97 @@ h3 { color:red; font-size:1.1em; }
     in the destination file with zeros. Final notice, the convert
     utility shows the CRC result after the file convert and a passed
     ROM CRC test does <u><b>not</b></u> imply, that the source file
-    is in an Emu48 suitable format!
+    is in an Emu48 suitable format! To create a ROM image in a suitable
+    format, call the convert utility with the 2nd file argument.
     </p>
-    <ul>
-      <li>HP38
-      <p>To upload the ROM of your HP38G, you will need a special aplet
-      called <a href="http://www.hpcalc.org/details.php?id=633">&quot;ROM UPLOAD&quot;</a>.
-      Once you've uploaded the ROM, you have to convert it using the
-      Convert utility.</p>
-      <p>To do that, start a Command Prompt while running Windows, and
-      type:</p>
-      <blockquote>Convert &lt;rom-file&gt; ROM.38G</blockquote>
-      <p>Where &lt;rom-file&gt; is the path to your ROM image. This will
-      create a file named ROM.38G. This tool will also check its validity.
-      </p></li>
-      <li>HP39/40
-      <p>To upload the ROM of your HP39G/HP40G, you will need a special aplet
-      called <a href="http://hp.giesselink.com/emu48.htm">&quot;ROM UPLOAD&quot;</a>.
-      Once you've uploaded the ROM, you have to convert it using the Rom2emu utility.
-      </p>
-      <p>To do that, start a Command Prompt while running Windows, and
-      type:</p>
-      <blockquote>Rom2emu &lt;rom-file&gt; ROM.39G</blockquote>
-      <p>There's also a HP39G/HP40G beta ROM for emulators inside an old
-      <a href="http://www.hpcalc.org/details.php?id=4272">Emu48 package</a>.
-      </p></li>
-      <li>HP48
-      <p>If you have already used another HP48 emulator, you can convert
-      the ROM using the Convert utility.
-      </p>
-      <p>To do that, start a Command Prompt while running Windows, and
-      type:</p>
-      <blockquote>Convert &lt;rom-file&gt; ROM.48G</blockquote>
-      <p>or</p>
-      <blockquote>Convert &lt;rom-file&gt; ROM.48S</blockquote>
-      <p>Where &lt;rom-file&gt; is the path to your old ROM image. This
-      will create a file named ROM.48G or ROM.48S, depending on the version
-      you own. This tool should be able to read any style of ROM image, and
-      will also check its validity. Note that if you run it with only one
-      parameter, no file will be written, but it will still check the
-      validity of the ROM.</p>
-      <p>If you have never used an HP48 emulator, and don't have a ROM
-      dump, you can either use Jean-Yves Avenard's ROMUPL.BIN or the
-      ROMDump Wizard V1.x, which will almost automatically get the ROM from
-      your HP48. After the download you may have to convert your dump with
-      the CONVERT utility into the Emu48 format.</p>
-      <p>You can find the latest version of the ROM dump programs on:</p>
-      <blockquote>
-      ROMUPL.BIN <a href="http://www.hpcalc.org/details.php?id=3686">
-      http://www.hpcalc.org/details.php?id=3686</a><br>
-      ROMDump Wizard
-      <a href="http://hp.giesselink.com/emu48.htm">
-      http://hp.giesselink.com/emu48.htm</a>
-      </blockquote></li>
-      <li>HP49G
-      <p>There's no ROM download program available so far. But you can
-      create a ROM image with the
-      <a href="http://hp.giesselink.com/emu48.htm">UPD49ROM tool</a>
-      and a <a href="http://www.hpcalc.org/hp49/pc/rom/">
-      ROM update file</a> for the HP49G calculator. I suggested to use
-      <a href="http://www.hpcalc.org/details.php?id=3240">version 1.19-6</a>
-      </p>
-      <p>To create a HP49G ROM image file, start a Command Prompt while
-      running Windows, and type:</p>
-      <blockquote>UPD49ROM -f hp49119-6.flash ROM.49G</blockquote>
-      <p>This will create a HP49G ROM image file with an empty User
-      Port 2.</p></li>
-    </ul>
+    <p>The general syntax of the convert utility is:</p>
+    <blockquote>Convert [-p] &lt;old-rom-dump&gt; [&lt;new-rom-dump&gt;]</blockquote>
+    <p>where:</p>
+    <blockquote>Convert &lt;old-rom-dump&gt;</blockquote>
+    <p>check if &lt;old-rom-dump&gt; is in a known source format and
+    report the ROM Model, the ROM Version and the result of the CRC
+    check.
+    </p>
+    <p>where:</p>
+    <blockquote>Convert &lt;old-rom-dump&gt; &lt;new-rom-dump&gt;</blockquote>
+    <p>convert the file &lt;old-rom-dump&gt; into the <u>unpacked</u>
+    ROM image file &lt;new-rom-dump&gt; valid for use in Emu48.
+    </p>
+    <p>where:</p>
+    <blockquote>Convert -p &lt;old-rom-dump&gt; &lt;new-rom-dump&gt;</blockquote>
+    <p>convert the file &lt;old-rom-dump&gt; into the <u>packed</u>
+    ROM image file &lt;new-rom-dump&gt; valid for use in Emu48.
+    </p>
+    <h2><a name=ss3.1>3.1 Creation examples</a></h2>
+      <ul>
+        <li>HP38
+        <p>To upload the ROM of your HP38G, you will need a special aplet
+        called <a href="http://www.hpcalc.org/details.php?id=633">&quot;ROM UPLOAD&quot;</a>.
+        Once you've uploaded the ROM, you have to convert it using the
+        Convert utility.</p>
+        <p>To do that, start a Command Prompt while running Windows, and
+        type:</p>
+        <blockquote>Convert -p &lt;rom-file&gt; ROM.38G</blockquote>
+        <p>Where &lt;rom-file&gt; is the path to your ROM image. This will
+        create a packed file named ROM.38G. This tool will also check its validity.
+        </p></li>
+        <li>HP39/40
+        <p>To upload the ROM of your HP39G/HP40G, you will need a special aplet
+        called <a href="https://hp.giesselink.com/emu48.htm">&quot;ROM UPLOAD&quot;</a>.
+        Once you've uploaded the ROM, you may convert it to the unpacked format
+        using the Rom2emu utility or rename it when you want to keep the packed
+        format.
+        </p>
+        <p>To do that, start a Command Prompt while running Windows, and
+        type:</p>
+        <blockquote>Rom2emu &lt;rom-file&gt; ROM.39G</blockquote>
+        <p>or</p>
+        <blockquote>rename &lt;rom-file&gt; ROM.39G</blockquote>
+        <p>There's also a HP39G/HP40G beta ROM for emulators inside an old
+        <a href="http://www.hpcalc.org/details.php?id=4272">Emu48 package</a>.
+        </p></li>
+        <li>HP48
+        <p>If you have already used another HP48 emulator, you can convert
+        the ROM using the Convert utility.
+        </p>
+        <p>To do that, start a Command Prompt while running Windows, and
+        type:</p>
+        <blockquote>Convert &lt;rom-file&gt; ROM.48G</blockquote>
+        <p>or</p>
+        <blockquote>Convert &lt;rom-file&gt; ROM.48S</blockquote>
+        <p>Where &lt;rom-file&gt; is the path to your old ROM image. This
+        will create a file named ROM.48G or ROM.48S, depending on the
+        version you own. This tool should be able to read any style of
+        ROM image, and will also check its validity. Note that if you run
+        it with only one parameter, no file will be written, but it will
+        still check the validity of the ROM.</p>
+        <p>If you have never used an HP48 emulator, and don't have a ROM
+        dump, you can either use Jean-Yves Avenard's ROMUPL.BIN or the
+        ROMDump Wizard V1.x, which will almost automatically get the ROM
+        from your HP48. After the download you may have to convert your
+        dump with the CONVERT utility into the Emu48 format.</p>
+        <p>You can find the latest version of the ROM dump programs on:</p>
+        <blockquote>
+        ROMUPL.BIN <a href="http://www.hpcalc.org/details.php?id=3686">
+        http://www.hpcalc.org/details.php?id=3686</a><br>
+        ROMDump Wizard
+        <a href="https://hp.giesselink.com/emu48.htm">
+        https://hp.giesselink.com/emu48.htm</a>
+        </blockquote></li>
+        <li>HP49G
+        <p>There's no ROM download program available so far. But you can
+        create a ROM image with the
+        <a href="https://hp.giesselink.com/emu48.htm">UPD49ROM tool</a>
+        and a <a href="http://www.hpcalc.org/hp49/pc/rom/">
+        ROM update file</a> for the HP49G calculator. I suggested to use
+        <a href="http://www.hpcalc.org/details.php?id=3240">version 1.19-6</a>
+        </p>
+        <p>To create a HP49G ROM image file, start a Command Prompt while
+        running Windows, and type:</p>
+        <blockquote>UPD49ROM -f hp49119-6.flash ROM.49G</blockquote>
+        <p>This will create a HP49G ROM image file with an empty User
+        Port 2.</p></li>
+      </ul>
   <h1><a name=s4>4. Installation</a></h1>
     <p>To install Emu48 you may use the installer package which contain,
     among the binaries, some HP48 KML scripts or just unzip the emulator
@@ -239,7 +263,7 @@ h3 { color:red; font-size:1.1em; }
     <p>If you want other great scripts, visit Rechlin's great HP archive
     <a href="http://www.hpcalc.org/"></a></p>
     <p>If you are interested in writing new scripts, get the KML 2.0
-    documentation from <a href="http://hp.giesselink.com/emu48.htm">the
+    documentation from <a href="https://hp.giesselink.com/emu48.htm">the
     authors Emu48 page</a>.</p>
     <p>Having selected a script, press OK to start the emulator. In most
     cases, when Emu48 crash after pressing the OK button, you are using
@@ -462,7 +486,7 @@ h3 { color:red; font-size:1.1em; }
     simulation. The data transfer to the printer simulator is done over UDP.
     In this section you can the define the IPv4 address and the port the
     printer simulator is listening. A suitable HP82240B printer simulation can
-    be found <a href="http://hp.giesselink.com/hp82240b.htm">here</a>.</p>
+    be found <a href="https://hp.giesselink.com/hp82240b.htm">here</a>.</p>
   <h4>8.6.3.3 Section Serial Ports</h4>
     <ul>
       <li><i>Wire</i>
@@ -651,7 +675,7 @@ h3 { color:red; font-size:1.1em; }
     Cyrille de Brebisson of Hewlett-Packard.</p>
   <h1><a name=s15>15. License</a></h1>
     <p>Emu48 - A HP38G/39G/40G/48SX/48GX/49G Emulator<br>
-    Copyright (C) 2021 Christoph Gie&szlig;elink</p>
+    Copyright (C) 2022 Christoph Gie&szlig;elink</p>
     <p>This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
     Software Foundation; either version 2 of the License, or (at your option)

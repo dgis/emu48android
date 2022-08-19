@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <jni.h>
+#include <sys/select.h>
 #include <android/bitmap.h>
 #include <android/asset_manager.h>
 #include <android/log.h>
@@ -66,6 +67,7 @@
 #endif
 
 #define _MSC_VER 1914
+#define __unaligned
 #define GetWindowLongPtr	GetWindowLong
 
 
@@ -1370,6 +1372,7 @@ extern BOOL SetCommState(HANDLE hFile, LPDCB lpDCB);
 extern BOOL PurgeComm(HANDLE hFile, DWORD dwFlags);
 extern BOOL SetCommBreak(HANDLE hFile);
 extern BOOL ClearCommBreak(HANDLE hFile);
+extern BOOL serialPortSlowDown;
 
 // TCP
 
@@ -1378,6 +1381,7 @@ typedef int SOCKET;
 #define SOCKET_ERROR            (-1)
 
 #define WSAEINTR 10004L
+#define WSAEWOULDBLOCK 10035L
 extern int WSAGetLastError();
 
 typedef struct WSAData {
