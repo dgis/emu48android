@@ -10,7 +10,7 @@ Global
 	Hardware "Yorke"
 	Model    "S"
 	Rom      "rom.48s"
-	Patch    "BEEP.48"
+	Patch    "PATCHES.48"
 	Bitmap   "Wombat3 48SX.bmp"
 	Debug    0
 End

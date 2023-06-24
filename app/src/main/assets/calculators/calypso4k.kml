@@ -11,6 +11,7 @@ Global
 	Model  "Q"
 	Class  50
 	Rom    "rom.49g"
+	Patch  "PATCHES.49G"
 	Bitmap "calypso4k.png"
 	Color  0 0 0 0
 	#Scale 3 18

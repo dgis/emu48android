@@ -15,6 +15,7 @@ Global
 	Author "Eric Rechlin"
 	Model  "6" # 6 for 64K RAM, A for 32K RAM
 	Rom    "rom.38g"
+	Patch  "PATCHES.38G"
 	Bitmap "real38g-lc.png"
 	Icon   "38g.ico"
 	Color  0 190 190 190

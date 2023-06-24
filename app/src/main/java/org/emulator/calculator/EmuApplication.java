@@ -27,8 +27,7 @@ public class EmuApplication extends Application {
 
 	@Override
 	public void onCreate() {
-		super.onCreate();
-
 		customPreferenceDataStore = new Settings(PreferenceManager.getDefaultSharedPreferences(this));
+		super.onCreate();
 	}
 }

@@ -15,8 +15,6 @@
 package org.emulator.calculator;
 
 import android.app.Dialog;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.text.util.Linkify;
@@ -64,9 +62,7 @@ public class InfoFragment extends AppCompatDialogFragment {
 		Toolbar toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
 		toolbar.setTitle(title);
 		Utils.colorizeDrawableWithColor(requireContext(), toolbar.getNavigationIcon(), android.R.attr.colorForeground);
-		toolbar.setNavigationOnClickListener(v -> {
-			dismiss();
-		});
+		toolbar.setNavigationOnClickListener(v -> dismiss());
 
 		// Programmatically load text from an asset and place it into the
         // text view.  Note that the text we are loading is ASCII, so we
@@ -92,7 +88,7 @@ public class InfoFragment extends AppCompatDialogFragment {
 	        TextView textViewInfo = view.findViewById(Utils.resId(this, "id", "textViewInfo"));
             textViewInfo.setMovementMethod(new ScrollingMovementMethod());
             textViewInfo.setText(text);
-            Linkify.addLinks(textViewInfo, Linkify.ALL);
+            Linkify.addLinks(textViewInfo, Linkify.WEB_URLS);
         } catch (IOException ignored) { }
         return view;
 	}

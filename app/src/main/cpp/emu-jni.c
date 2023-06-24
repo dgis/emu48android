@@ -521,16 +521,19 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_stop(JNIEnv *env, 
 	hWindowDC = NULL;						// hWindowDC isn't valid any more
 	hWnd = NULL;
 
-    DeleteCriticalSection(&csGDILock);
-	DeleteCriticalSection(&csLcdLock);
-	DeleteCriticalSection(&csKeyLock);
-	DeleteCriticalSection(&csIOLock);
-	DeleteCriticalSection(&csT1Lock);
-	DeleteCriticalSection(&csT2Lock);
-	DeleteCriticalSection(&csTxdLock);
-	DeleteCriticalSection(&csRecvLock);
-	DeleteCriticalSection(&csSlowLock);
-	DeleteCriticalSection(&csDbgLock);
+	// Prevent crash+++
+	// FORTIFY: pthread_mutex_destroy called on a destroyed mutex (0x<sanitized>)
+	//  DeleteCriticalSection(&csGDILock);
+	//	DeleteCriticalSection(&csLcdLock);
+	//	DeleteCriticalSection(&csKeyLock);
+	//	DeleteCriticalSection(&csIOLock);
+	//	DeleteCriticalSection(&csT1Lock);
+	//	DeleteCriticalSection(&csT2Lock);
+	//	DeleteCriticalSection(&csTxdLock);
+	//	DeleteCriticalSection(&csRecvLock);
+	//	DeleteCriticalSection(&csSlowLock);
+	//	DeleteCriticalSection(&csDbgLock);
+	// Prevent crash---
 
     SoundClose();							// close waveform-audio output device
     soundEnabled = FALSE;

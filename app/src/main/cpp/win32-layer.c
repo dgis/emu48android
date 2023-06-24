@@ -1879,6 +1879,8 @@ HPALETTE CreatePalette(CONST LOGPALETTE * plpal) {
     return handle;
 }
 HPALETTE SelectPalette(HDC hdc, HPALETTE hPal, BOOL bForceBkgd) {
+	if(!hdc)
+		return NULL;
     HPALETTE hOldPal = hdc->selectedPalette;
     hdc->selectedPalette = hPal;
     return hOldPal;

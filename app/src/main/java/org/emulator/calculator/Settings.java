@@ -51,7 +51,7 @@ public class Settings extends PreferenceDataStore {
 	private final SharedPreferences androidSettings;
 
 	// Defined the setting keys which are only defined at the application level.
-	private List<String> applicationSettingKeys = Arrays.asList("settings_kml_default", "settings_kml_folder", "lastDocument", "MRU");
+	private final List<String> applicationSettingKeys = Arrays.asList("settings_kml_default", "settings_kml_folder", "lastDocument", "MRU");
 
 	// The settings only defined at the application level.
 	private final HashMap<String, Object> applicationSettings = new HashMap<>();
@@ -68,7 +68,7 @@ public class Settings extends PreferenceDataStore {
 		void onOneKeyChanged(String keyChanged);
 	}
 	private OnOneKeyChangedListener oneKeyChangedListener;
-	private static String magic = "MYHP";
+	private static final String magic = "MYHP";
 
 
 
@@ -307,7 +307,7 @@ public class Settings extends PreferenceDataStore {
 				HashMap<String, Object> settings = fromJSON(json);
 				embeddedStateSettings.putAll(settings);
 			}
-		} catch (IOException e) {
+		} catch (IOException | SecurityException e) {
 			e.printStackTrace();
 		}
 	}
@@ -316,7 +316,7 @@ public class Settings extends PreferenceDataStore {
 		commonSettings.clear();
 		Map<String, ?> keyValuePairs = androidSettings.getAll();
 		for (String key : keyValuePairs.keySet()) {
-			if (applicationSettingKeys.indexOf(key) != -1)
+			if (applicationSettingKeys.contains(key))
 				applicationSettings.put(key, keyValuePairs.get(key));
 			else
 				commonSettings.put(key, keyValuePairs.get(key));

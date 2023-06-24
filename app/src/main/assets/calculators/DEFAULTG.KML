@@ -3,7 +3,7 @@ Global
 	Author "Sebastien Carlier"
 	Model   "G"
 	Rom    "rom.48g"
-	Patch  "BEEP.48"
+	Patch  "PATCHES.48"
 	Debug  0
 	Bitmap "DEFAULTG.BMP"
 End

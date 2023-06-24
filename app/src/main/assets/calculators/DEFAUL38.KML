@@ -9,7 +9,7 @@ Global
 	Author "Christoph Giesselink"
 	Model  "A"
 	Rom    "rom.38g"
-	Patch  "BEEP.38G"
+	Patch  "PATCHES.38G"
 	Debug  0
 	Bitmap "DEFAUL38.BMP"
 End

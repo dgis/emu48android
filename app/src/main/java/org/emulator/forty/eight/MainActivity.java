@@ -1393,7 +1393,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 	private String extractROMFilename(InputStream inputStream) {
 	    String romFilename = null;
-    	if(inputStream != null) {
+	    if(inputStream != null) {
 		    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 			    // do reading, usually loop until end of file reading
 			    Pattern patternGlobalROM = Pattern.compile("\\s*Rom\\s+\"(.*)\"");
@@ -1620,7 +1620,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	        setPort1Settings(NativeLib.getPort1Plugged(), NativeLib.getPort1Writable());
 			// State file successfully opened.
 			String currentKml = NativeLib.getCurrentKml();
-		    if(kmlScriptFolder == null || currentKml.startsWith("document:")) {
+			if(kmlScriptFolder == null || currentKml.startsWith("document:")) {
 			    // Needed for compatibility:
 			    // The KML folder is not in the JSON settings embedded in the state file,
 			    // so, we need to extract it and change the variable szCurrentKml.
@@ -2014,7 +2014,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return 1;
             }
         }
-	    showAlert(getString(R.string.message_open_kml_not_found_alert), true);
+        showAlert(getString(R.string.message_open_kml_not_found_alert), true);
         return 0;
     }
 

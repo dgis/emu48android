@@ -91,7 +91,7 @@ public class PrinterSimulatorFragment extends AppCompatDialogFragment {
         // Toolbar
 
         Toolbar toolbar = view.findViewById(Utils.resId(this, "id", "my_toolbar"));
-        toolbar.setTitle(title);
+	    toolbar.setTitle(title);
 	    Utils.colorizeDrawableWithColor(requireContext(), toolbar.getNavigationIcon(), android.R.attr.colorForeground);
         toolbar.setNavigationOnClickListener(
                 v -> dismiss()

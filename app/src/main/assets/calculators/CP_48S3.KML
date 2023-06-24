@@ -13,7 +13,7 @@ Global
 	Author "Casey Patterson"
 	Model   "S"
 	Rom    "rom.48s"
-	Patch  "BEEP.48"
+	Patch  "PATCHES.48"
 	Bitmap "cp_48s3.bmp"
 	Debug  0
 End

@@ -28,22 +28,16 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 32
+    namespace 'org.emulator.forty.eight'
+    compileSdk 33
     defaultConfig {
         applicationId "org.emulator.forty.eight"
-        minSdkVersion 19
-        targetSdkVersion 32
-        versionCode 25
-        versionName "2.6"
+        minSdk 19
+        targetSdk 33
+        versionCode 26
+        versionName "2.7"
         setProperty("archivesBaseName", "Emu48-v$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            cmake {
-                //abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
-                //abiFilters 'x86_64'
-                //version "3.10.2"
-            }
-        }
     }
 
     if (canSign) {
@@ -71,25 +65,26 @@ android {
             }
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
     externalNativeBuild {
         cmake {
-            path "CMakeLists.txt"
+            path file('CMakeLists.txt')
+            //version '3.18.1'
         }
-    }
-    compileOptions {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
     }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.preference:preference:1.2.0'
-    implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.documentfile:documentfile:1.0.1'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test:runner:1.4.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
