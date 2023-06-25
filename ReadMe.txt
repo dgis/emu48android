@@ -58,8 +58,9 @@ LINKS
 
 CHANGES
 
-Version 2.7 (2022-09-XX)
+Version 2.7 (2023-07-XX)
 
+- Updated source code with Emu48 version 1.65+. This new version improve the serial communication.
 - Attempt to fix haptic feedback with Android 13 (API deprecation).
 - Patch the ROM files to prevent the calculator to sleep for HP38G, HP39G, HP40G, HP48SX and HP48GX.
 	There is an issue with this patch and the Flashcard for the HP49/50 because an already existing Flashcard embed the non patched ROM file,

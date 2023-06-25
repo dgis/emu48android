@@ -16,8 +16,6 @@
 
 #define w Chipset
 
-#define _KB(s)	((s) * 1024 * 2)
-
 #pragma intrinsic(memset,memcpy)
 
 #include "Ops.h"
@@ -55,7 +53,7 @@ static CONST LPBYTE ppReg[] = { w.A, w.B, w.C, w.D };
 static QWORD DecodeReg64(LPBYTE R, BYTE byNF)
 {
 	QWORD qwVal = Npack64(R,16);			// generate 64bit number from register
-		
+
 	switch (byNF)							// field selector
 	{
 	case  0: return (qwVal >> (w.P*4)) & 0xf;			// P
@@ -324,7 +322,7 @@ _ASSERT(FALSE);								// not tested so far
 
 	// clear bank
 	EraseBlock(dwStart,dwStop-dwStart);
-		
+
 	w.carry = FALSE;						// no error
 	return;
 }
@@ -396,7 +394,7 @@ VOID o80BExt(LPBYTE I) // Saturnator extentions
 	case 0x0A: break; // KEYDN not implemented
 	case 0x0B: break; // no doslow implemented
 	case 0x10: // simulate off function
-		{					
+		{
 			BOOL bShutdn = TRUE;			// shut down
 
 			// only shut down when no timer wake up

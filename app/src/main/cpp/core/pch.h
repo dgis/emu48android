@@ -61,6 +61,24 @@ typedef ULONG  ULONG_PTR, *PULONG_PTR;
 typedef LONG   LONG_PTR,  *PLONG_PTR;
 #endif
 
+#if !defined PROCESS_POWER_THROTTLING_CURRENT_VERSION
+#define PROCESS_POWER_THROTTLING_CURRENT_VERSION 1
+#endif
+
+#if !defined PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION
+#define PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION 0x04
+#endif
+
+#if _MSC_VER <= 1900  // add until VS2015 from processthreadsapi.h
+enum { ProcessPowerThrottling = 4 };
+
+typedef struct _PROCESS_POWER_THROTTLING_STATE {
+    ULONG Version;
+    ULONG ControlMask;
+    ULONG StateMask;
+} PROCESS_POWER_THROTTLING_STATE, * PPROCESS_POWER_THROTTLING_STATE;
+#endif
+
 #if _MSC_VER >= 1400 // valid for VS2005 and later
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\" \

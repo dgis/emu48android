@@ -3,7 +3,7 @@ Global
 	Author "Sebastien Carlier"
 	Model   "S"
 	Rom    "rom.48s"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Debug  0
 	Bitmap "DEFAULTS.BMP"
 End

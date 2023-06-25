@@ -13,7 +13,7 @@ Global
 	Author "Casey Patterson"
 	Model   "G"
 	Rom    "rom.48g"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Debug  0
 	Bitmap "float_gx.bmp"
 End

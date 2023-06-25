@@ -10,27 +10,27 @@
 #include "Emu48.h"
 
 TCHAR szUdpServer[1024] = _T("localhost");
-WORD  wUdpPort = 5025;						// scpi-raw  
+WORD  wUdpPort = 5025;						// scpi-raw
 
-static IN_ADDR ip_addr = { 255, 255, 255, 255 };
+static SOCKADDR_IN sServer = { AF_INET, 0, { 255, 255, 255, 255 } };
 
 VOID ResetUdp(VOID)
 {
-	ip_addr.s_addr = INADDR_NONE;			// invalidate saved UDP address
+	sServer.sin_addr.s_addr = INADDR_NONE;	// invalidate saved UDP address
 	return;
 }
 
 BOOL SendByteUdp(BYTE byData)
 {
-	WSADATA     wsd;
-	SOCKET      sClient;
-	SOCKADDR_IN sServer;
+	WSADATA wsd;
+	SOCKET  sClient;
 
 	BOOL bErr = TRUE;
 
 	VERIFY(WSAStartup(MAKEWORD(1,1),&wsd) == 0);
 
-	if (ip_addr.s_addr == INADDR_NONE)		// IP address not specified
+	// IP address not specified
+	if (sServer.sin_addr.s_addr == INADDR_NONE)
 	{
 		LPSTR lpszIpAddr;
 
@@ -38,7 +38,7 @@ BOOL SendByteUdp(BYTE byData)
 			DWORD dwLength = lstrlen(szUdpServer) + 1;
 
 			if ((lpszIpAddr = (LPSTR) _alloca(dwLength)) == NULL)
-				return TRUE;				// server not found
+				return TRUE;				// server ip address not found
 
 			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK,
 								szUdpServer, dwLength,
@@ -47,27 +47,26 @@ BOOL SendByteUdp(BYTE byData)
 			lpszIpAddr = szUdpServer;
 		#endif
 
-		ip_addr.s_addr = inet_addr(lpszIpAddr);
+		// try to interpret string as IPv4 address
+		sServer.sin_addr.s_addr = inet_addr(lpszIpAddr);
 
 		// not a valid ip address -> try to get ip address from name server
-		if (ip_addr.s_addr == INADDR_NONE)
+		if (sServer.sin_addr.s_addr == INADDR_NONE)
 		{
 			PHOSTENT host = gethostbyname(lpszIpAddr);
 			if (host == NULL)
 			{
-				return TRUE;				// server not found
+				return TRUE;				// server ip address not found
 			}
 
-			ip_addr.s_addr = ((PIN_ADDR) host->h_addr_list[0])->s_addr;
+			sServer.sin_addr.s_addr = ((PIN_ADDR) host->h_addr_list[0])->s_addr;
 		}
 	}
 
 	// create UDP socket
 	if ((sClient = socket(AF_INET, SOCK_DGRAM, 0)) != INVALID_SOCKET)
 	{
-		sServer.sin_family = AF_INET;
 		sServer.sin_port = htons(wUdpPort);
-		sServer.sin_addr.s_addr = ip_addr.s_addr;
 
 		// transmit data byte
 		bErr = sendto(sClient, (LPCCH) &byData, sizeof(byData), 0, (LPSOCKADDR) &sServer, sizeof(sServer)) == SOCKET_ERROR;

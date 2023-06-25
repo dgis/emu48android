@@ -3,7 +3,7 @@ Global
 	Author "Jeffery L. McMahan"
 	Model  "G"
 	Rom    "rom.48g"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Bitmap "jemac.bmp"
 	Debug  0
 End

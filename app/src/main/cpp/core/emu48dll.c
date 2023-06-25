@@ -78,14 +78,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved)
 //
 BOOL DLLCreateWnd(LPCTSTR lpszFilename, LPCTSTR lpszPort2Name)
 {
-	typedef DWORD (WINAPI *LPFN_STIP)(HANDLE hThread,DWORD dwIdealProcessor);
-
 	RECT rectWindow;
 	DWORD dwThreadId;
-	LPFN_STIP fnSetThreadIdealProcessor;
 	DWORD dwProcessor;
 
 	BOOL bFileExist = FALSE;				// state file don't exist
+
+	// module handle to kernel32
+	const HMODULE hmKernel32 = GetModuleHandle(_T("kernel32"));
 
 	hApp = GetModuleHandle(_T("EMU48.DLL"));
 	if (hApp == NULL) return TRUE;
@@ -112,6 +112,26 @@ BOOL DLLCreateWnd(LPCTSTR lpszFilename, LPCTSTR lpszPort2Name)
 	// read emulator settings
 	GetCurrentDirectory(ARRAYSIZEOF(szCurrentDirectory),szCurrentDirectory);
 	ReadSettings();
+
+	// disable TIMER_RESOLUTION throttling for Windows 11 and later
+	{
+		typedef const BOOL(WINAPI* LPFN_SPI)(HANDLE hProcess,INT ProcessInformationClass,LPVOID ProcessInformation,DWORD ProcessInformationSize);
+
+		// SetProcessInformation() is available since Windows 8, PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION since Windows 11
+		LPFN_SPI fnSetProcessInformation = (LPFN_SPI)GetProcAddress(hmKernel32, "SetProcessInformation");
+
+		if (fnSetProcessInformation != NULL)			// running on Windows 8 or later 
+		{
+			PROCESS_POWER_THROTTLING_STATE Ppts;
+
+			ZeroMemory(&Ppts,sizeof(Ppts));
+			Ppts.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+			Ppts.ControlMask = PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
+
+			// don't check for success, success only on Windoes 11 and later
+			fnSetProcessInformation(GetCurrentProcess(),ProcessPowerThrottling,&Ppts,sizeof(Ppts));
+		}
+	}
 
 	// Create window
 	rectWindow.left   = 0;
@@ -174,15 +194,29 @@ BOOL DLLCreateWnd(LPCTSTR lpszFilename, LPCTSTR lpszPort2Name)
 		return TRUE;
 	}
 
-	// SetThreadIdealProcessor() is available since Windows NT4.0
-	fnSetThreadIdealProcessor = (LPFN_STIP) GetProcAddress(GetModuleHandle(_T("kernel32")),
-														   "SetThreadIdealProcessor");
+	// get processor for Saturn CPU thread
+	{
+		// GetCurrentProcessorNumber() is available since Windows Vista
+		typedef const DWORD (WINAPI *LPFN_GCPN)(VOID);
+		LPFN_GCPN fnGetCurrentProcessorNumber = (LPFN_GCPN) GetProcAddress(hmKernel32,"GetCurrentProcessorNumber");
 
-	// bind Saturn CPU emulation thread to current ideal processor
-	dwProcessor = (fnSetThreadIdealProcessor != NULL)					// running on NT4.0 or later
-				? fnSetThreadIdealProcessor(hThread,MAXIMUM_PROCESSORS)	// get ideal processor no.
-				: 0;													// select 1st processor
+		if (fnGetCurrentProcessorNumber != NULL)								// running on Vista or later
+		{
+			dwProcessor = fnGetCurrentProcessorNumber();						// get current processor number
+		}
+		else
+		{
+			// SetThreadIdealProcessor() is available since Windows NT4.0
+			typedef const DWORD (WINAPI *LPFN_STIP)(HANDLE hThread,DWORD dwIdealProcessor);
+			LPFN_STIP fnSetThreadIdealProcessor = (LPFN_STIP) GetProcAddress(hmKernel32,"SetThreadIdealProcessor");
 
+			dwProcessor = (fnSetThreadIdealProcessor != NULL)					// running on NT4.0 or later
+						? fnSetThreadIdealProcessor(hThread,MAXIMUM_PROCESSORS)	// get ideal processor no.
+						: 0;													// select 1st processor
+		}
+	}
+
+	// bind Saturn CPU emulation thread to selected processor
 	// on multiprocessor machines for QueryPerformanceCounter()
 	VERIFY(SetThreadAffinityMask(hThread,(DWORD_PTR) (1 << dwProcessor)));
 	ResumeThread(hThread);					// start thread

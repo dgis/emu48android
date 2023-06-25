@@ -42,6 +42,7 @@ DWORD  dwRomSize = 0;
 LPBYTE pbyRomDirtyPage = NULL;
 DWORD  dwRomDirtyPageSize = 0;
 WORD   wRomCrc = 0;							// fingerprint of patched ROM
+BOOL   bRomCrcCorrection = FALSE;			// ROM CRC correction disabled
 
 LPBYTE pbyPort2 = NULL;
 BOOL   bPort2Writeable = FALSE;
@@ -53,17 +54,20 @@ WORD   wPort2Crc = 0;						// fingerprint of port2
 BOOL   bBackup = FALSE;
 
 static HANDLE hRomFile = NULL;
-static HANDLE hRomMap = NULL;
 static HANDLE hPort2File = NULL;
 static HANDLE hPort2Map = NULL;
-
-// document signatures
-static BYTE pbySignatureA[16] = "Emu38 Document\xFE";
-static BYTE pbySignatureB[16] = "Emu39 Document\xFE";
-static BYTE pbySignatureE[16] = "Emu48 Document\xFE";
-static BYTE pbySignatureW[16] = "Win48 Document\xFE";
-static BYTE pbySignatureV[16] = "Emu49 Document\xFE";
 static HANDLE hCurrentFile = NULL;
+
+// valid document signatures
+static CONST LPBYTE bySignature[] =
+{
+	(CONST LPBYTE) "Emu48 Document\xFE",
+	(CONST LPBYTE) "Emu38 Document\xFE",
+	(CONST LPBYTE) "Emu39 Document\xFE",
+	(CONST LPBYTE) "Emu49 Document\xFE",
+	(CONST LPBYTE) "Win48 Document\xFE",
+	(CONST LPBYTE) "Win48 Document\xFF"
+};
 
 static CHIPSET BackupChipset;
 static LPBYTE  BackupPort0;
@@ -102,11 +106,11 @@ VOID SetWindowLocation(HWND hWnd,INT nPosX,INT nPosY)
 
 DWORD GetCutPathName(LPCTSTR szFileName, LPTSTR szBuffer, DWORD dwBufferLength, INT nCutLength)
 {
-	TCHAR  cPath[_MAX_PATH];				// full filename
-	TCHAR  cDrive[_MAX_DRIVE];
-	TCHAR  cDir[_MAX_DIR];
-	TCHAR  cFname[_MAX_FNAME];
-	TCHAR  cExt[_MAX_EXT];
+	TCHAR cPath[_MAX_PATH];					// full filename
+	TCHAR cDrive[_MAX_DRIVE];
+	TCHAR cDir[_MAX_DIR];
+	TCHAR cFname[_MAX_FNAME];
+	TCHAR cExt[_MAX_EXT];
 
 	_ASSERT(nCutLength >= 0);				// 0 = only drive and name
 
@@ -209,7 +213,7 @@ BOOL CheckForBeepPatch(VOID)
 	} BEEPPATCH, *PBEEPPATCH;
 
 	// known beep patches
-	const BEEPPATCH s38[] =	{ { 0x017D0, { 0x8, 0x1, 0xB, 0x1 } } };
+	const BEEPPATCH s38[] = { { 0x017D0, { 0x8, 0x1, 0xB, 0x1 } } };
 	const BEEPPATCH s39[] = { { 0x017BC, { 0x8, 0x1, 0xB, 0x1 } } };
 	const BEEPPATCH s48[] = { { 0x017A6, { 0x8, 0x1, 0xB, 0x1 } } };
 	const BEEPPATCH s49[] = { { 0x4157A, { 0x8, 0x1, 0xB, 0x1 } },		// 1.18/1.19-5/1.19-6
@@ -289,7 +293,7 @@ typedef struct tnode
 
 static TREENODE *nodePatch = NULL;
 
-static BOOL PatchNibble(DWORD dwAddress, BYTE byPatch)
+BOOL PatchNibble(DWORD dwAddress, BYTE byPatch)
 {
 	PTREENODE p;
 
@@ -446,6 +450,7 @@ BOOL PatchRom(LPCTSTR szFilename)
 				{
 					// patch ROM and save original nibble
 					PatchNibble(dwAddress, Asc2Nib(lpBuf[nPos]));
+					bRomCrcCorrection = TRUE;
 				}
 				++dwAddress;
 			}
@@ -480,7 +485,7 @@ BOOL CrcRom(WORD *pwChk)					// calculate fingerprint of ROM
 	// use checksum, because it's faster
 	while (dwSize-- > 0)
 	{
-		DWORD dwData = *pdwData++;
+		CONST DWORD dwData = *pdwData++;
 		if ((dwData & 0xF0F0F0F0) != 0)		// data packed?
 			return FALSE;
 		dwChk += dwData;
@@ -501,6 +506,7 @@ BOOL MapRom(LPCTSTR szFilename)
 	{
 		return FALSE;
 	}
+	bRomCrcCorrection = FALSE;				// ROM CRC correction disabled
 	SetCurrentDirectory((*szRomDirectory == 0) ? szEmuDirectory : szRomDirectory);
 	if (bRomRW)								// ROM writeable
 	{
@@ -597,12 +603,13 @@ BOOL MapRom(LPCTSTR szFilename)
 
 	if (bRomPacked)							// packed ROM image
 	{
-		dwSize = dwRomSize;					// destination start address
-		while (dwFileSize > 0)				// unpack source
+		LPBYTE pbySrc = pbyRom+dwFileSize;	// source start address
+		LPBYTE pbyDest = pbyRom+dwRomSize;	// destination start address
+		while (pbySrc != pbyDest)			// unpack source
 		{
-			BYTE byValue = pbyRom[--dwFileSize];
-			pbyRom[--dwSize] = byValue >> 4;
-			pbyRom[--dwSize] = byValue & 0xF;
+			CONST BYTE byValue = *(--pbySrc);
+			*(--pbyDest) = byValue >> 4;
+			*(--pbyDest) = byValue & 0xF;
 		}
 	}
 	return TRUE;
@@ -638,19 +645,19 @@ VOID UnmapRom(VOID)
 
 				if (bRomPacked)				// repack data
 				{
-					LPBYTE pbySrc,pbyDest;
-					DWORD  j;
+					LPBYTE pbySrc,pbyDest,pbyEnd;
 
 					dwSize /= 2;			// adjust no. of bytes to write
 					dwFilePos /= 2;			// linear pos in packed file
 
 					// pack data in page
 					pbySrc = pbyDest = &pbyRom[dwLinPos];
-					for (j = 0; j < dwSize; j++)
+					pbyEnd = pbyDest + dwSize;
+					while (pbyDest < pbyEnd)
 					{
 						*pbyDest =  *pbySrc++;
 						*pbyDest |= *pbySrc++ << 4;
-						pbyDest++;
+						++pbyDest;
 					}
 				}
 
@@ -670,6 +677,7 @@ VOID UnmapRom(VOID)
 	pbyRom = NULL;
 	dwRomSize = 0;
 	wRomCrc = 0;
+	bRomCrcCorrection = FALSE;				// ROM CRC correction disabled
 	return;
 }
 
@@ -681,25 +689,24 @@ VOID UnmapRom(VOID)
 //#
 //################
 
-BOOL CrcPort2(WORD *pwCrc)					// calculate fingerprint of port2
+static BOOL CrcPort2(WORD *pwCrc)			// calculate fingerprint of port2
 {
-	DWORD dwCount;
-	DWORD dwFileSize;
-
 	*pwCrc = 0;
 
-	// port2 CRC isn't available
-	if (pbyPort2 == NULL) return TRUE;
-
-	dwFileSize = GetFileSize(hPort2File, &dwCount); // get real filesize
-	_ASSERT(dwCount == 0);					// isn't created by MapPort2()
-
-	for (dwCount = 0;dwCount < dwFileSize; ++dwCount)
+	if (pbyPort2 != NULL)					// port2 CRC available
 	{
-		if ((pbyPort2[dwCount] & 0xF0) != 0) // data packed?
-			return FALSE;
+		LPBYTE pbyMem;
 
-		*pwCrc = (*pwCrc >> 4) ^ (((*pwCrc ^ ((WORD) pbyPort2[dwCount])) & 0xf) * 0x1081);
+		// get real filesize
+		DWORD dwFileSize = GetFileSize(hPort2File, NULL);
+
+		for (pbyMem = pbyPort2; dwFileSize > 0; --dwFileSize)
+		{
+			if ((*pbyMem & 0xF0) != 0)		// data packed?
+				return FALSE;
+
+			*pwCrc = UpCRC(*pwCrc,*pbyMem++);
+		}
 	}
 	return TRUE;
 }
@@ -836,7 +843,7 @@ VOID ResetDocument(VOID)
 		hCurrentFile = NULL;
 	}
 	szCurrentKml[0] = 0;
-	szCurrentFilename[0]=0;
+	szCurrentFilename[0] = 0;
 	if (Port0) { free(Port0); Port0 = NULL; }
 	if (Port1) { free(Port1); Port1 = NULL; }
 	if (Port2) { free(Port2); Port2 = NULL; } else UnmapPort2();
@@ -919,17 +926,17 @@ BOOL NewDocument(VOID)
 	if (Chipset.Port0Size)
 	{
 		Port0 = (LPBYTE) calloc(Chipset.Port0Size*2048,sizeof(*Port0));
-		_ASSERT(Port0 != NULL);
+		if (Port0 == NULL) goto restore;
 	}
 	if (Chipset.Port1Size)
 	{
 		Port1 = (LPBYTE) calloc(Chipset.Port1Size*2048,sizeof(*Port1));
-		_ASSERT(Port1 != NULL);
+		if (Port1 == NULL) goto restore;
 	}
 	if (Chipset.Port2Size)
 	{
-		Port2 = (LPBYTE) calloc(Chipset.Port2Size*2048,sizeof(*Port1));
-		_ASSERT(Port2 != NULL);
+		Port2 = (LPBYTE) calloc(Chipset.Port2Size*2048,sizeof(*Port2));
+		if (Port2 == NULL) goto restore;
 	}
 	LoadBreakpointList(NULL);				// clear debugger breakpoint list
 	RomSwitch(0);							// boot ROM view of HP49G and map memory
@@ -958,10 +965,9 @@ BOOL OpenDocument(LPCTSTR szFilename)
 
 	HANDLE  hFile = INVALID_HANDLE_VALUE;
 	DWORD   lBytesRead,lSizeofChipset;
-	BYTE    pbyFileSignature[16];
-	LPBYTE  pbySig;
-	UINT    ctBytesCompared;
-	UINT    nLength;
+	BYTE    byFileSignature[16];
+	BOOL    bMatch;
+	UINT    i,nLength;
 
 	// Open file
 	if (lstrcmpi(szCurrentFilename,szFilename) == 0)
@@ -981,38 +987,19 @@ BOOL OpenDocument(LPCTSTR szFilename)
 	}
 
 	// Read and Compare signature
-	ReadFile(hFile, pbyFileSignature, 16, &lBytesRead, NULL);
-	switch (pbyFileSignature[0])
+	ReadFile(hFile, byFileSignature, sizeof(byFileSignature), &lBytesRead, NULL);
+	// go through all valid document signatures
+	for (bMatch = FALSE, i = 0; !bMatch && i < ARRAYSIZEOF(bySignature); ++i)
 	{
-	case 'E':
-		pbySig = (pbyFileSignature[3] == '3')
-			   ? ((pbyFileSignature[4] == '8') ? pbySignatureA : pbySignatureB)
-			   : ((pbyFileSignature[4] == '8') ? pbySignatureE : pbySignatureV);
-		for (ctBytesCompared=0; ctBytesCompared<14; ctBytesCompared++)
-		{
-			if (pbyFileSignature[ctBytesCompared]!=pbySig[ctBytesCompared])
-			{
-				AbortMessage(_T("This file is not a valid Emu48 document."));
-				goto restore;
-			}
-		}
-		break;
-	case 'W':
-		for (ctBytesCompared=0; ctBytesCompared<14; ctBytesCompared++)
-		{
-			if (pbyFileSignature[ctBytesCompared]!=pbySignatureW[ctBytesCompared])
-			{
-				AbortMessage(_T("This file is not a valid Win48 document."));
-				goto restore;
-			}
-		}
-		break;
-	default:
-		AbortMessage(_T("This file is not a valid document."));
+		bMatch = (memcmp(byFileSignature, bySignature[i], sizeof(byFileSignature)) == 0);
+	}
+	if (!bMatch)							// no valid document signature found
+	{
+		AbortMessage(_T("This file is not a valid Emu48 document."));
 		goto restore;
 	}
 
-	switch (pbyFileSignature[14])
+	switch (byFileSignature[14])
 	{
 	case 0xFE: // Win48 2.1 / Emu4x 0.99.x format
 		// read length of KML script name
@@ -1051,8 +1038,7 @@ BOOL OpenDocument(LPCTSTR szFilename)
 	case 0xFF: // Win48 2.05 format
 		break;
 	default:
-		AbortMessage(_T("This file is for an unknown version of Emu48."));
-		goto restore;
+		_ASSERT(FALSE);
 	}
 
 	// read chipset size inside file
@@ -1087,9 +1073,7 @@ BOOL OpenDocument(LPCTSTR szFilename)
 	{
 		if (szCurrentKml[0])				// KML file name
 		{
-			BOOL bOK;
-
-			bOK = InitKML(szCurrentKml,FALSE);
+			BOOL bOK = InitKML(szCurrentKml,FALSE);
 			bOK = bOK && (cCurrentRomType == Chipset.type);
 			if (bOK) break;
 
@@ -1228,9 +1212,10 @@ BOOL SaveDocument(VOID)
 
 	SetFilePointer(hCurrentFile,0,NULL,FILE_BEGIN);
 
-	if (!WriteFile(hCurrentFile, pbySignatureE, sizeof(pbySignatureE), &lBytesWritten, NULL))
+	// write default "Emu48 Document\xFE" signature
+	if (!WriteFile(hCurrentFile, bySignature[0], 16, &lBytesWritten, NULL))
 	{
-		AbortMessage(_T("Could not write into file !"));
+		AbortMessage(_T("Could not write into document file!"));
 		return FALSE;
 	}
 
@@ -1304,6 +1289,8 @@ BOOL SaveBackup(VOID)
 {
 	WINDOWPLACEMENT wndpl;
 
+	BOOL bSucc = TRUE;
+
 	if (!bDocumentAvail) return FALSE;
 
 	_ASSERT(nState != SM_RUN);				// emulation engine is running
@@ -1324,26 +1311,40 @@ BOOL SaveBackup(VOID)
 	if (Port0 && Chipset.Port0Size)
 	{
 		BackupPort0 = (LPBYTE) malloc(Chipset.Port0Size*2048);
-		CopyMemory(BackupPort0,Port0,Chipset.Port0Size*2048);
+		if (BackupPort0)
+		{
+			CopyMemory(BackupPort0,Port0,Chipset.Port0Size*2048);
+		}
+		bSucc = bSucc && (BackupPort0 != NULL);
 	}
 	if (Port1 && Chipset.Port1Size)
 	{
 		BackupPort1 = (LPBYTE) malloc(Chipset.Port1Size*2048);
-		CopyMemory(BackupPort1,Port1,Chipset.Port1Size*2048);
+		if (BackupPort1)
+		{
+			CopyMemory(BackupPort1,Port1,Chipset.Port1Size*2048);
+		}
+		bSucc = bSucc && (BackupPort1 != NULL);
 	}
 	if (Port2 && Chipset.Port2Size)			// internal port2
 	{
 		BackupPort2 = (LPBYTE) malloc(Chipset.Port2Size*2048);
-		CopyMemory(BackupPort2,Port2,Chipset.Port2Size*2048);
+		if (BackupPort2)
+		{
+			CopyMemory(BackupPort2,Port2,Chipset.Port2Size*2048);
+		}
+		bSucc = bSucc && (BackupPort2 != NULL);
 	}
 	CreateBackupBreakpointList();
-	bBackup = TRUE;
-	return TRUE;
+	bBackup = bSucc;
+	return bSucc;
 }
 
 BOOL RestoreBackup(VOID)
 {
 	BOOL bDbgOpen;
+
+	BOOL bSucc = TRUE;
 
 	if (!bBackup) return FALSE;
 
@@ -1371,17 +1372,29 @@ BOOL RestoreBackup(VOID)
 	if (BackupPort0 && Chipset.Port0Size)
 	{
 		Port0 = (LPBYTE) malloc(Chipset.Port0Size*2048);
-		CopyMemory(Port0,BackupPort0,Chipset.Port0Size*2048);
+		if (Port0)
+		{
+			CopyMemory(Port0,BackupPort0,Chipset.Port0Size*2048);
+		}
+		bSucc = bSucc && (Port0 != NULL);
 	}
 	if (BackupPort1 && Chipset.Port1Size)
 	{
 		Port1 = (LPBYTE) malloc(Chipset.Port1Size*2048);
-		CopyMemory(Port1,BackupPort1,Chipset.Port1Size*2048);
+		if (Port1)
+		{
+			CopyMemory(Port1,BackupPort1,Chipset.Port1Size*2048);
+		}
+		bSucc = bSucc && (Port1 != NULL);
 	}
 	if (BackupPort2 && Chipset.Port2Size)	// internal port2
 	{
 		Port2 = (LPBYTE) malloc(Chipset.Port2Size*2048);
-		CopyMemory(Port2,BackupPort2,Chipset.Port2Size*2048);
+		if (Port2)
+		{
+			CopyMemory(Port2,BackupPort2,Chipset.Port2Size*2048);
+		}
+		bSucc = bSucc && (Port2 != NULL);
 	}
 	// map port2
 	else
@@ -1397,8 +1410,12 @@ BOOL RestoreBackup(VOID)
 	SetWindowLocation(hWnd,Chipset.nPosX,Chipset.nPosY);
 	RestoreBackupBreakpointList();			// restore the debugger breakpoint list
 	if (bDbgOpen) OnToolDebug();			// reopen the debugger
-	bDocumentAvail = TRUE;					// document available
-	return TRUE;
+	if (!bSucc)								// restore not successful (memory allocation errors)
+	{
+		ResetDocument();					// cleanup remainders
+	}
+	bDocumentAvail = bSucc;					// document available
+	return bSucc;
 }
 
 BOOL ResetBackup(VOID)
@@ -2610,7 +2627,6 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 	BOOL (*fnColorCmp)(DWORD dwColor1,DWORD dwColor2,DWORD dwTol);
 
 	DWORD dwRed,dwGreen,dwBlue;
-	HRGN hRgn;
 	LPRGNDATA pRgnData;
 	LPBITMAPINFO bi;
 	LPBYTE pbyBits;
@@ -2621,6 +2637,8 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 	LONG x,y,xleft;
 	BOOL bFoundLeft;
 	BOOL bIsMask;
+
+	HRGN hRgn = NULL;						// no region defined
 
 	if (dwTol >= 1000)						// use CIE L*a*b compare
 	{
@@ -2633,7 +2651,10 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 	}
 
 	// allocate memory for extended image information incl. RGBQUAD color table
-	bi = (LPBITMAPINFO) calloc(1,sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+	if ((bi = (LPBITMAPINFO) calloc(1,sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD))) == NULL)
+	{
+		return hRgn;						// no region
+	}
 	bi->bmiHeader.biSize = sizeof(bi->bmiHeader);
 	_ASSERT(bi->bmiHeader.biBitCount == 0); // for query without color table
 
@@ -2652,7 +2673,11 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 	}
 
 	// allocate memory for image data (colors)
-	pbyBits = (LPBYTE) malloc(bi->bmiHeader.biSizeImage);
+	if ((pbyBits = (LPBYTE) malloc(bi->bmiHeader.biSizeImage)) == NULL)
+	{
+		free(bi);							// free bitmap info
+		return hRgn;						// no region
+	}
 
 	// fill bits buffer
 	GetDIBits(hWindowDC,hBmp,0,bi->bmiHeader.biHeight,pbyBits,bi,DIB_RGB_COLORS);
@@ -2697,18 +2722,20 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 
 	// allocate memory for region data
 	pRgnData = (PRGNDATA) malloc(sizeof(RGNDATAHEADER) + dwRectsCount * sizeof(RECT));
+	if (pRgnData)
+	{
+		// fill it by default
+		ZeroMemory(&pRgnData->rdh,sizeof(pRgnData->rdh));
+		pRgnData->rdh.dwSize = sizeof(pRgnData->rdh);
+		pRgnData->rdh.iType = RDH_RECTANGLES;
+		SetRect(&pRgnData->rdh.rcBound,MAXLONG,MAXLONG,0,0);
+	}
 
-	// fill it by default
-	ZeroMemory(&pRgnData->rdh,sizeof(pRgnData->rdh));
-	pRgnData->rdh.dwSize = sizeof(pRgnData->rdh);
-	pRgnData->rdh.iType	 = RDH_RECTANGLES;
-	SetRect(&pRgnData->rdh.rcBound,MAXLONG,MAXLONG,0,0);
-
-	for (y = 0; y < bi->bmiHeader.biHeight; ++y)
+	for (y = 0; pRgnData && y < bi->bmiHeader.biHeight; ++y)
 	{
 		LPBYTE pbyLineStart = pbyColor;
 
-		for (x = 0; x < bi->bmiHeader.biWidth; ++x)
+		for (x = 0; pRgnData && x < bi->bmiHeader.biWidth; ++x)
 		{
 			// get color
 			switch (bi->bmiHeader.biBitCount)
@@ -2765,9 +2792,19 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 					// if buffer full reallocate it with more room
 					if (pRgnData->rdh.nCount >= dwRectsCount)
 					{
-						dwRectsCount += ADD_RECTS_COUNT;
+						LPRGNDATA pNewRgnData;
 
-						pRgnData = (LPRGNDATA) realloc(pRgnData,sizeof(RGNDATAHEADER) + dwRectsCount * sizeof(RECT));
+						dwRectsCount += ADD_RECTS_COUNT;
+						pNewRgnData = (LPRGNDATA) realloc(pRgnData,sizeof(RGNDATAHEADER) + dwRectsCount * sizeof(RECT));
+						if (pNewRgnData)
+						{
+							pRgnData = pNewRgnData;
+						}
+						else
+						{
+							free(pRgnData);
+							pRgnData = NULL;
+						}
 					}
 
 					bFoundLeft = FALSE;
@@ -2782,10 +2819,11 @@ HRGN CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol)
 	free(pbyBits);
 	free(bi);
 
-	// create region
-	hRgn = ExtCreateRegion(NULL,sizeof(RGNDATAHEADER) + pRgnData->rdh.nCount * sizeof(RECT),pRgnData);
-
-	free(pRgnData);
+	if (pRgnData)							// has region data, create region
+	{
+		hRgn = ExtCreateRegion(NULL,sizeof(RGNDATAHEADER) + pRgnData->rdh.nCount * sizeof(RECT),pRgnData);
+		free(pRgnData);
+	}
 	return hRgn;
 	#undef ADD_RECTS_COUNT
 }

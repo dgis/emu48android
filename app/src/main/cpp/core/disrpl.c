@@ -29,31 +29,36 @@ typedef struct
 
 static VOID PutSn(String *str, LPCTSTR szVal, DWORD dwLen)
 {
-	if (str != NULL)						// with output
+	if (str != NULL && dwLen > 0)			// with output and actual string length
 	{
-		if (str->dwSize == 0)				// no buffer allocated
+		// string buffer to small
+		if (str->dwPos + dwLen > str->dwSize)
 		{
-			str->dwSize = ALLOCSIZE;		// buffer size
-			VERIFY(str->szBuffer = (LPTSTR) malloc(str->dwSize * sizeof(TCHAR)));
-			str->dwPos = 0;
+			LPTSTR szNewBuffer;
+
+			DWORD dwMinSize;
+			dwMinSize = dwLen + str->dwSize - str->dwPos;
+			dwMinSize = (dwMinSize + ALLOCSIZE - 1) / ALLOCSIZE;
+			dwMinSize *= ALLOCSIZE;
+
+			str->dwSize += dwMinSize;		// new buffer size
+			VERIFY(szNewBuffer = (LPTSTR) realloc(str->szBuffer,str->dwSize * sizeof(TCHAR)));
+
+			if (szNewBuffer)				// new buffer allocated
+			{
+				str->szBuffer = szNewBuffer;
+			}
+			else							// allocation failed
+			{
+				str->dwSize = 0;			// size of buffer
+				free(str->szBuffer);		// buffer memory
+				str->szBuffer = NULL;
+				str->dwPos = 0;				// position inside buffer
+			}
 		}
 
-		_ASSERT(str->szBuffer != NULL);
-
-		if (dwLen > 0)						// actual string length
+		if (str->szBuffer)
 		{
-			// string buffer to small
-			if (str->dwPos + dwLen > str->dwSize)
-			{
-				DWORD dwMinSize;
-				dwMinSize = dwLen + str->dwSize - str->dwPos;
-				dwMinSize = (dwMinSize + ALLOCSIZE - 1) / ALLOCSIZE;
-				dwMinSize *= ALLOCSIZE;
-
-				str->dwSize += dwMinSize;	// new buffer size
-				VERIFY(str->szBuffer = (LPTSTR) realloc(str->szBuffer,str->dwSize * sizeof(TCHAR)));
-			}
-
 			CopyMemory(&str->szBuffer[str->dwPos],szVal,dwLen * sizeof(TCHAR));
 			str->dwPos += dwLen;
 		}
@@ -212,23 +217,24 @@ static BOOL BCDx(BYTE CONST *pbyNum,INT nMantLen,INT nExpLen,String *str)
 
 static BOOL BINx(DWORD *pdwAddr,INT nBinLen,String *str)
 {
-	LPBYTE pbyNumber;
-	INT    i;
-
-	VERIFY(pbyNumber = (LPBYTE) malloc(nBinLen));
-
-	for (i = 0; i < nBinLen; ++i)			// read data
-		pbyNumber[i] = RplReadNibble(pdwAddr);
-
-	// strip leading zeros
-	for (i = nBinLen - 1; pbyNumber[i] == 0 && i > 0; --i) { }
-
-	for (; i >= 0; --i)						// write rest of bin
+	LPBYTE pbyNumber = (LPBYTE) malloc(nBinLen);
+	if (pbyNumber != NULL)
 	{
-		PutC(str,cHex[pbyNumber[i]]);
-	}
+		INT i;
 
-	free(pbyNumber);
+		for (i = 0; i < nBinLen; ++i)		// read data
+			pbyNumber[i] = RplReadNibble(pdwAddr);
+
+		// strip leading zeros
+		for (i = nBinLen - 1; pbyNumber[i] == 0 && i > 0; --i) { }
+
+		for (; i >= 0; --i)					// write rest of bin
+		{
+			PutC(str,cHex[pbyNumber[i]]);
+		}
+
+		free(pbyNumber);
+	}
 	return FALSE;
 }
 
@@ -327,29 +333,31 @@ static BOOL DoIntStream(DWORD *pdwAddr,String *str,UINT *pnLevel)
 
 	dwLength -= 5;							// object length
 
-	VERIFY(pbyData = (LPBYTE) malloc(dwLength));
-
-	for (i = 0; i < dwLength; ++i)			// read data
-		pbyData[i] = RplReadNibble(pdwAddr);
-
-	if (dwLength <= 1)						// special implementation for zero
+	pbyData = (LPBYTE) malloc(dwLength);
+	if (pbyData != NULL)
 	{
-		_ASSERT(dwLength == 0 || (dwLength == 1 && pbyData[0] == 0));
-		PutC(str,_T('0'));
-	}
-	else
-	{
-		if (pbyData[--dwLength] == 9)		// negative number
-			PutC(str,_T('-'));
+		for (i = 0; i < dwLength; ++i)		// read data
+			pbyData[i] = RplReadNibble(pdwAddr);
 
-		while (dwLength > 0)				// write rest of zint
+		if (dwLength <= 1)					// special implementation for zero
 		{
-			// use only decimal part for translation
-			PutC(str,cHex[pbyData[--dwLength]]);
+			_ASSERT(dwLength == 0 || (dwLength == 1 && pbyData[0] == 0));
+			PutC(str,_T('0'));
 		}
-	}
+		else
+		{
+			if (pbyData[--dwLength] == 9)	// negative number
+				PutC(str,_T('-'));
 
-	free(pbyData);
+			while (dwLength > 0)			// write rest of zint
+			{
+				// use only decimal part for translation
+				PutC(str,cHex[pbyData[--dwLength]]);
+			}
+		}
+
+		free(pbyData);
+	}
 	return FALSE;
 	UNREFERENCED_PARAMETER(pnLevel);
 }
@@ -1291,9 +1299,9 @@ DWORD RplSkipObject(DWORD dwAddr)
 
 LPTSTR RplDecodeObject(DWORD dwAddr, DWORD *pdwNxtAddr)
 {
-	String	str = { 0 };
-	DWORD   dwNxtAddr;
-	UINT    nLevel = 0;						// don't nest DOCOL objects
+	String str = { 0, NULL, 0 };
+	DWORD  dwNxtAddr;
+	UINT   nLevel = 0;						// don't nest DOCOL objects
 
 	dwNxtAddr = dwAddr;						// init next address
 
@@ -1302,7 +1310,7 @@ LPTSTR RplDecodeObject(DWORD dwAddr, DWORD *pdwNxtAddr)
 
 	PutC(&str,0);							// set EOS
 
-	// release unnecessary allocated buffer memory
+	// release unnecessary allocated buffer memory (shrinking)
 	VERIFY(str.szBuffer = (LPTSTR) realloc(str.szBuffer,str.dwPos * sizeof(str.szBuffer[0])));
 
 	// return address of next object
@@ -1472,7 +1480,7 @@ static DWORD AssemblyOutput(DWORD dwAddr, DWORD dwEndAddr, DWORD dwLevel, String
 
 LPTSTR RplCreateObjView(DWORD dwStartAddr, DWORD dwEndAddr, BOOL bSingleObj)
 {
-	String	str = { 0 };
+	String  str = { 0, NULL, 0 };
 	LPCTSTR lpszName;
 	LPTSTR  lpszObject;
 	DWORD   dwLevel,dwAddr,dwNxtAddr;
@@ -1486,6 +1494,10 @@ LPTSTR RplCreateObjView(DWORD dwStartAddr, DWORD dwEndAddr, BOOL bSingleObj)
 	for (dwAddr = dwStartAddr;dwAddr < dwEndAddr; dwAddr = dwNxtAddr)
 	{
 		lpszObject = RplDecodeObject(dwAddr,&dwNxtAddr);
+		if (lpszObject == NULL)				// no memory
+		{
+			break;							// break decoding
+		}
 
 		if (dwLevel > 0 && lstrcmp(lpszObject,_T(";")) == 0)
 			--dwLevel;
@@ -1586,7 +1598,7 @@ LPTSTR RplCreateObjView(DWORD dwStartAddr, DWORD dwEndAddr, BOOL bSingleObj)
 
 	PutC(&str,0);							// set EOS
 
-	// release unnecessary allocated buffer memory
+	// release unnecessary allocated buffer memory (shrinking)
 	VERIFY(str.szBuffer = (LPTSTR) realloc(str.szBuffer,str.dwPos * sizeof(str.szBuffer[0])));
 	return str.szBuffer;
 }

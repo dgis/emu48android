@@ -14,7 +14,7 @@ Global
 	Author "Eric Rechlin"
 	Model  "G"
 	Rom    "rom.48g"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Bitmap "real48gx-l.png"
 	Icon   "48gx.ico"
 	Color  0 190 190 190

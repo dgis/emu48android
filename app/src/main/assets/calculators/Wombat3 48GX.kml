@@ -10,7 +10,7 @@ Global
 	Hardware "Yorke"
 	Model    "G"
 	Rom      "rom.48g"
-	Patch    "PATCHES.48"
+	Patch    "patch.48"
 	Bitmap   "Wombat3 48GX.bmp"
 	Debug    0
 End

@@ -33,17 +33,6 @@ BYTE disp = 0;								// flag for update display area
 
 static LPBYTE pbyRomView[2] = {NULL, NULL};	// HP49G ROM views
 
-// CRC calculation
-static WORD crc_table[] =
-{
-	0x0000, 0x1081, 0x2102, 0x3183, 0x4204, 0x5285, 0x6306, 0x7387,
-	0x8408, 0x9489, 0xA50A, 0xB58B, 0xC60C, 0xD68D, 0xE70E, 0xF78F
-};
-static __inline VOID UpCRC(BYTE nib)
-{
-	Chipset.crc = (WORD)((Chipset.crc>>4)^crc_table[(Chipset.crc^nib)&0xf]);
-}
-
 static __inline UINT MIN(UINT a, UINT b)
 {
 	return (a<b)?a:b;
@@ -783,7 +772,11 @@ VOID Nread(BYTE *a, DWORD d, UINT s)
 			ReadIO(a,v,c,TRUE);
 
 			// reading MSB of timer2 update the CRC register
-			if (v+c == 0x40) UpCRC(a[c-1]);	// timer2 MSB touched, update the CRC register
+			if (v+c == 0x40)				// timer2 MSB touched
+			{
+				// update the CRC register
+				Chipset.crc = UpCRC(Chipset.crc,a[c-1]);
+			}
 		}
 		else
 		{
@@ -849,7 +842,7 @@ VOID Nread(BYTE *a, DWORD d, UINT s)
 			}
 
 			for (u=0; u<c; u++)				// update CRC
-				UpCRC(a[u]);
+				Chipset.crc = UpCRC(Chipset.crc,a[u]);
 		}
 		a+=c;
 		d=(d+c)&0xFFFFF;
@@ -1145,6 +1138,22 @@ VOID ReadIO(BYTE *a, DWORD d, DWORD s, BOOL bUpdate)
 			break;
 		case 0x12: // TCS
 			*a = Chipset.IORam[d];			// return TCS value
+
+			if ((*a & TBF))					// Transmit buffer full
+			{
+				// the G-series XModem implementation has a timeout loop counter
+				// waiting for transmit buffer empty, so on fast hosts with
+				// CPU running with max. speed we may get a timeout overflow
+				// -> to avoid this slow down CPU speed on transmit buffer full
+
+				InitAdjustSpeed();			// init variables if necessary
+				EnterCriticalSection(&csSlowLock);
+				{
+					nOpcSlow = 10;			// slow down next 10 opcodes
+				}
+				LeaveCriticalSection(&csSlowLock);
+			}
+
 			#if defined DEBUG_SERIAL
 			if (bUpdate)
 			{

@@ -165,30 +165,23 @@ static VOID ClearLog()
 
 static VOID AddToLog(LPCTSTR szString)
 {
+	LPTSTR szLogTmp;
+
 	UINT nLength = lstrlen(szString) + 2;	// CR+LF
-	if (szLog == NULL)
+	if (szLog == NULL)						// no log
 	{
-		nLogLength = nLength + 1;			// \0
-		szLog = (LPTSTR) malloc(nLogLength*sizeof(szLog[0]));
-		if (szLog==NULL)
-		{
-			nLogLength = 0;
-			return;
-		}
-		lstrcpy(szLog,szString);
+		nLogLength = 1;						// room for \0
 	}
-	else
+
+	szLogTmp = (LPTSTR) realloc(szLog,(nLogLength+nLength)*sizeof(szLog[0]));
+	if (szLogTmp == NULL)
 	{
-		LPTSTR szLogTmp = (LPTSTR) realloc(szLog,(nLogLength+nLength)*sizeof(szLog[0]));
-		if (szLogTmp == NULL)
-		{
-			ClearLog();
-			return;
-		}
-		szLog = szLogTmp;
-		lstrcpy(&szLog[nLogLength-1],szString);
-		nLogLength += nLength;
+		ClearLog();
+		return;
 	}
+	szLog = szLogTmp;
+	lstrcpy(&szLog[nLogLength-1],szString);
+	nLogLength += nLength;
 	szLog[nLogLength-3] = _T('\r');
 	szLog[nLogLength-2] = _T('\n');
 	szLog[nLogLength-1] = 0;
@@ -274,11 +267,9 @@ static CHAR cKmlType;
 
 static VOID DestroyKmlList(VOID)
 {
-	KmlScript* pList;
-
 	while (pKmlList)
 	{
-		pList = pKmlList->pNext;
+		KmlScript* pList = pKmlList->pNext;
 		free(pKmlList->szFilename);
 		free(pKmlList->szTitle);
 		free(pKmlList);
@@ -304,36 +295,45 @@ static VOID CreateKmlList(VOID)
 		KmlScript* pScript;
 		KmlBlock*  pBlock;
 		LPCTSTR szTitle;
+		BOOL bInvalidPlatform;
 
 		pBlock = LoadKMLGlobal(pFindFileData.cFileName);
 		if (pBlock == NULL) continue;
 		// check for correct KML script platform
 		szTitle = GetStringParam(pBlock,TOK_GLOBAL,TOK_HARDWARE,0);
-		if (szTitle && lstrcmpi(_T(HARDWARE),szTitle) != 0)
-		{
-			FreeBlocks(pBlock);
-			continue;
-		}
+		bInvalidPlatform = (szTitle && lstrcmpi(_T(HARDWARE),szTitle) != 0);
 		// check for supported Model
 		szTitle = GetStringParam(pBlock,TOK_GLOBAL,TOK_MODEL,0);
-		// skip all scripts with invalid or different Model statement
-		if (   (szTitle == NULL)
+		// skip all scripts with invalid platform and invalid or different Model statement
+		if (   bInvalidPlatform
+			|| (szTitle == NULL)
 			|| (cKmlType && szTitle[0] != cKmlType)
 			|| !isModelValid(szTitle[0]))
 		{
 			FreeBlocks(pBlock);
 			continue;
 		}
-		VERIFY(pScript = (KmlScript*) malloc(sizeof(KmlScript)));
-		pScript->szFilename = DuplicateString(pFindFileData.cFileName);
-		szTitle = GetStringParam(pBlock,TOK_GLOBAL,TOK_TITLE,0);
-		if (szTitle == NULL) szTitle = pScript->szFilename;
-		pScript->szTitle = DuplicateString(szTitle);
+		pScript = (KmlScript*) malloc(sizeof(KmlScript));
+		if (pScript)						// script node allocated
+		{
+			pScript->szFilename = DuplicateString(pFindFileData.cFileName);
+			szTitle = GetStringParam(pBlock,TOK_GLOBAL,TOK_TITLE,0);
+			if (szTitle == NULL) szTitle = pScript->szFilename;
+			pScript->szTitle = DuplicateString(szTitle);
+			if (pScript->szFilename == NULL || pScript->szTitle == NULL)
+			{
+				free(pScript->szFilename);
+				free(pScript->szTitle);
+				free(pScript);
+				FreeBlocks(pBlock);
+				continue;
+			}
+			pScript->nId = nKmlFiles;
+			pScript->pNext = pKmlList;
+			pKmlList = pScript;
+			nKmlFiles++;
+		}
 		FreeBlocks(pBlock);
-		pScript->nId = nKmlFiles;
-		pScript->pNext = pKmlList;
-		pKmlList = pScript;
-		nKmlFiles++;
 	} while (FindNextFile(hFindFile,&pFindFileData));
 	FindClose(hFindFile);
 	return;
@@ -677,20 +677,29 @@ static DWORD ParseInteger(VOID)
 
 static LPTSTR ParseString(VOID)
 {
-	LPTSTR lpszString;
-	UINT   nLength;
-	UINT   nBlock;
+	LPTSTR lpszString = NULL;				// no mem allocated
+	UINT   nBlock = 0;
+	UINT   nLength = 0;
+
+	LPTSTR lpszAllocString;
 
 	szText++;								// skip leading '"'
-	nLength = 0;
-	nBlock = 256;
-	lpszString = (LPTSTR) malloc(nBlock * sizeof(lpszString[0]));
+
 	while (*szText != _T('"'))
 	{
-		if (nLength == nBlock - 1)			// ran out of buffer space
+		if (nLength >= nBlock)				// ran out of buffer space
 		{
 			nBlock += 256;
-			lpszString = (LPTSTR) realloc(lpszString,nBlock * sizeof(lpszString[0]));
+			lpszAllocString = (LPTSTR) realloc(lpszString,nBlock * sizeof(lpszString[0]));
+			if (lpszAllocString)
+			{
+				lpszString = lpszAllocString;
+			}
+			else
+			{
+				free(lpszString);			// cleanup allocation failture
+				return NULL;
+			}
 		}
 
 		if (*szText == _T('\\'))			// escape char
@@ -716,10 +725,17 @@ static LPTSTR ParseString(VOID)
 		lpszString[nLength++] = *szText++;	// save char
 	}
 	szText++;								// skip ending '"'
-	lpszString[nLength] = 0;				// set EOS
 
-	// release unnecessary allocated bytes
-	return (LPTSTR) realloc(lpszString,(nLength+1) * sizeof(lpszString[0]));
+	// release unnecessary allocated bytes or allocate byte for EOS
+	if ((lpszAllocString = (LPTSTR) realloc(lpszString,(nLength+1) * sizeof(lpszString[0]))))
+	{
+		lpszAllocString[nLength] = 0;		// set EOS
+	}
+	else
+	{
+		free(lpszString);					// cleanup allocation failture
+	}
+	return lpszAllocString;
 }
 
 static TokenId Lex(UINT nMode)
@@ -767,7 +783,9 @@ static KmlLine* ParseLine(TokenId eCommand)
 	}
 	if (pLexToken[i].nLen == 0) return NULL;
 
-	pLine = (KmlLine*) calloc(1,sizeof(KmlLine));
+	if ((pLine = (KmlLine*) calloc(1,sizeof(KmlLine))) == NULL)
+		return NULL;
+
 	pLine->eCommand = eCommand;
 
 	for (j = 0, nParams = pLexToken[i].nParams; TRUE; nParams >>= 3)
@@ -946,7 +964,10 @@ static KmlLine* ParseLines(BOOL bInclude)
 				if (pFirst == NULL)			// regular exit with empty block
 				{
 					// create an empty line
-					pLine = pFirst = (KmlLine*) calloc(1,sizeof(KmlLine));
+					if ((pFirst = (KmlLine*) calloc(1,sizeof(KmlLine))) == NULL)
+						goto abort;
+
+					pLine = pFirst;
 					pLine->eCommand = TOK_NONE;
 				}
 				if (pLine) pLine->pNext = NULL;
@@ -985,7 +1006,9 @@ static KmlBlock* ParseBlock(BOOL bInclude, TokenId eType)
 
 	nLinesIncludeLevel = 0;
 
-	VERIFY(pBlock = (KmlBlock *) calloc(1,sizeof(KmlBlock)));
+	if ((pBlock = (KmlBlock *) calloc(1,sizeof(KmlBlock))) == NULL)
+		return NULL;
+
 	pBlock->eType = eType;
 
 	for (i = 0; pLexToken[i].nLen; ++i)		// search for token
@@ -1829,7 +1852,7 @@ static VOID AdjustPixel(LPBYTE pbyPixel, BYTE byOffset)
 {
 	INT i = 3;								// BGR colors
 
-	while (--i >= 0)					
+	while (--i >= 0)
 	{
 		WORD wColor = (WORD) *pbyPixel + byOffset;
 		// jumpless saturation to 0xFF
@@ -2617,6 +2640,11 @@ BOOL InitKML(LPCTSTR szFilename, BOOL bNoLog)
 	{
 		AddToLog(_T("This KML Script doesn't specify the ROM to use, or the ROM could not be loaded."));
 		goto quit;
+	}
+	if (bRomCrcCorrection)					// ROM CRC correction enabled
+	{
+		AddToLog(_T("Rebuild the ROM CRC."));
+		RebuildRomCrc();					// rebuild the ROM CRC's
 	}
 	if (hMainDC == NULL)
 	{

@@ -21,7 +21,7 @@ Global
 	Author "Casey Patterson && Sebastien Carlier"
 	Model  "G"
 	Rom    "rom.48g"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Bitmap "cp_48g3.bmp"
 	Debug  0
 End

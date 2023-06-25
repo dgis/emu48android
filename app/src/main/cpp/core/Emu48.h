@@ -8,6 +8,8 @@
  */
 #include "types.h"
 
+#define	_KB(a)			((a)*2*1024)
+
 #define HARDWARE		"Yorke"				// emulator hardware
 #define MODELS			"26AEGPQSX"			// valid calculator models
 #define APPLEHARD		"2PQ"				// Apple platform calculator models
@@ -71,6 +73,9 @@ enum MMUMAP { M_IO, M_ROM, M_RAM, M_P1, M_P2, M_BS };
 
 // values for disassembler memory mapping modes
 enum MEM_MAPPING { MEM_MMU, MEM_NCE1, MEM_NCE2, MEM_CE1, MEM_CE2, MEM_NCE3 };
+
+// Kermit CRC calculation
+static __inline WORD UpCRC(WORD wCRC, BYTE nib) { return (wCRC >> 4) ^ (((wCRC ^ nib) & 0xf) * 0x1081); }
 
 // Emu48.c
 extern HPALETTE			hPalette;
@@ -254,6 +259,7 @@ extern DWORD   dwRomSize;
 extern LPBYTE  pbyRomDirtyPage;
 extern DWORD   dwRomDirtyPageSize;
 extern WORD    wRomCrc;
+extern BOOL    bRomCrcCorrection;
 extern LPBYTE  pbyPort2;
 extern BOOL    bPort2Writeable;
 extern BOOL    bPort2IsShared;
@@ -265,12 +271,12 @@ extern VOID    SetWindowLocation(HWND hWnd,INT nPosX,INT nPosY);
 extern DWORD   GetCutPathName(LPCTSTR szFileName,LPTSTR szBuffer,DWORD dwBufferLength,INT nCutLength);
 extern VOID    SetWindowPathTitle(LPCTSTR szFileName);
 extern BOOL    CheckForBeepPatch(VOID);
+extern BOOL    PatchNibble(DWORD dwAddress, BYTE byPatch);
 extern VOID    UpdatePatches(BOOL bPatch);
 extern BOOL    PatchRom(LPCTSTR szFilename);
 extern BOOL    CrcRom(WORD *pwChk);
 extern BOOL    MapRom(LPCTSTR szFilename);
 extern VOID    UnmapRom(VOID);
-extern BOOL    CrcPort2(WORD *pwCrc);
 extern BOOL    MapPort2(LPCTSTR szFilename);
 extern VOID    UnmapPort2(VOID);
 extern VOID    ResetDocument(VOID);
@@ -292,6 +298,9 @@ extern BOOL    LoadIconFromFile(LPCTSTR szFilename);
 extern VOID    LoadIconDefault(VOID);
 extern HBITMAP LoadBitmapFile(LPCTSTR szFilename,BOOL bPalette);
 extern HRGN    CreateRgnFromBitmap(HBITMAP hBmp,COLORREF color,DWORD dwTol);
+
+// Romcrc.c
+extern VOID RebuildRomCrc(VOID);
 
 // Timer.c
 extern VOID  SetHP48Time(VOID);

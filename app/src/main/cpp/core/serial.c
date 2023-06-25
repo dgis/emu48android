@@ -107,6 +107,8 @@ BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort)
 	_ASSERT(Chipset.IORam[IOC] & SON);		// UART on
 	CommClose();							// close port if already open
 
+	dwBytesRead = 0L;						// no bytes received
+
 	if (lstrcmp(strPort, _T(NO_SERIAL)))	// port defined
 	{
 		TCHAR szDevice[256] = _T("\\\\.\\");
@@ -130,7 +132,6 @@ BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort)
 			DWORD dwThreadId;
 
 			nRp = 0;						// reset receiver state
-			dwBytesRead = 0L;
 
 			SetCommTimeouts(hComm,&CommTimeouts);
 			CommSetBaud();
@@ -157,7 +158,9 @@ BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort)
 			while (!bReading) Sleep(0);		// wait for SerialThread started
 		}
 		else
+		{
 			hComm = NULL;
+		}
 	}
 
 	#if defined DEBUG_SERIAL
@@ -356,12 +359,23 @@ VOID CommReceive(VOID)
 			break;
 
 		// reject reading if com port is closed and not whole operation
-		if (hComm && dwBytesRead == 0L)		// com port open and buffer empty
+		if (hComm)							// com port open
 		{
-			if (ReadFile(hComm,cBuffer,sizeof(cBuffer),&dwBytesRead,&os) == FALSE)
-				dwBytesRead = 0L;
-			else							// bytes received
-				nRp = 0;					// reset read pointer
+			UINT uCnt = 0;					// retry counter
+
+			while (dwBytesRead == 0L)		// buffer empty
+			{
+				if (ReadFile(hComm,cBuffer,sizeof(cBuffer),&dwBytesRead,&os) == FALSE)
+					dwBytesRead = 0L;
+				else						// bytes received
+					nRp = 0;				// reset read pointer
+
+				// something received or passed 1st retry
+				if (dwBytesRead != 0L || ++uCnt > 1)
+					break;					// quit
+
+				Sleep(1);					// workaround, retry 1ms later
+			}
 		}
 
 		if (dwBytesRead == 0L)				// receive buffer empty

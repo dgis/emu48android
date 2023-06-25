@@ -14,6 +14,7 @@ Global
 	Author "Eric Rechlin"
 	Model  "Q"
 	Rom    "rom.49g"
+	Patch  "patch.49g"
 	Bitmap "real49gp-l.png"
 	Icon   "49gp.ico"
 	Color  0 190 190 190

@@ -14,7 +14,7 @@ Global
 	Author "Eric Rechlin"
 	Model  "S"
 	Rom    "rom.48s"
-	Patch  "PATCHES.48"
+	Patch  "patch.48"
 	Bitmap "real48sx-l.png"
 	Icon   "48sx.ico"
 	Color  0 190 190 190

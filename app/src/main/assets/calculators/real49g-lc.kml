@@ -14,6 +14,7 @@ Global
 	Author "Eric Rechlin"
 	Model  "X"
 	Rom    "rom.49g"
+	Patch  "patch.49g"
 	Bitmap "real49g-lc.png"
 	Icon   "49g.ico"
 	Color  0 190 190 190

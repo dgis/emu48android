@@ -14,7 +14,7 @@ Global
 	Model  "E"
 	Class  40
 	Rom    "rom.39g"
-	Patch  "PATCHES.39G"
+	Patch  "patch.39g"
 	Bitmap "real40g-l.png"
 	Icon   "39g.ico"
 	Color  0 190 190 190
