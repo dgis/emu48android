@@ -342,7 +342,7 @@ BOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,LPDWO
 		free(hexAsciiDump);
 #endif
 		if(serialPortSlowDown)
-			Sleep(4); // Seems to be needed else the kermit packet does not fully reach the genuine calculator.
+			Sleep(4); // Seems to be needed else kermit/XSend packets do not fully reach the genuine calculator.
 		if(lpNumberOfBytesWritten)
 			*lpNumberOfBytesWritten = (DWORD) writenByteCount;
 		return writenByteCount >= 0;

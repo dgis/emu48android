@@ -29,11 +29,11 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace 'org.emulator.forty.eight'
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
         applicationId "org.emulator.forty.eight"
-        minSdk 19
-        targetSdk 33
+        minSdk 21
+        //targetSdk 33
         versionCode 26
         versionName "2.7"
         setProperty("archivesBaseName", "Emu48-v$versionName")
@@ -79,10 +79,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.preference:preference:1.2.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.documentfile:documentfile:1.0.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test:runner:1.5.2'

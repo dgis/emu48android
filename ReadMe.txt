@@ -17,7 +17,7 @@ QUICK START
 
 1. From the left side, slide your finger to open the menu.
 2. Touch the "New..." menu item.
-3. Select a default calculator (or with Android >= 5.0, "[Select a Custom KML script folder...]" where you have copied the KML scripts and ROM files (Android 11 cannot use the folder Download)).
+3. Select a default calculator (or "[Select a Custom KML script folder...]" where you have copied the KML scripts and ROM files (Android 11 may not be able to use the Download folder)).
 4. And the calculator should now be opened.
 
 
@@ -37,7 +37,7 @@ NOTES
   without the need to be root. If it is not automatic, please, activate the OTG mode in your Android device, and then,
   you should be able to see it in the Emu48 settings.
   It is still experimental and I see some issues when sending characters from the emulator to a real HP48 or HP49 with the kermit protocol.
-  For the moment, the communication has been artificially slowed down in this direction.
+  The communication can be artificially slowed down in this direction using an option.
   If the adapter is unplugged then plugged back in, you may need to call OPENIO/CLOSEIO.
 
 
@@ -58,12 +58,14 @@ LINKS
 
 CHANGES
 
-Version 2.7 (2023-07-XX)
+Version 2.7 (2024-06-XX)
 
 - Updated source code with Emu48 version 1.65+. This new version improve the serial communication.
 - Attempt to fix haptic feedback with Android 13 (API deprecation).
 - Patch the ROM files to prevent the calculator to sleep (Fix #22).
 - Fix a potential crash about the permission to access the files.
+- Require at least Android 5.0 (4.4 previously).
+BUG: In Emu48 with HP49 FlashCard, click on Android RECENT button, and comes back in the APP -> we lost the FlashCard!
 
 
 Version 2.6 (2022-08-19)

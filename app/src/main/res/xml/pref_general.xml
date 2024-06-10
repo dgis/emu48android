@@ -188,11 +188,11 @@
 			android:title="@string/settings_serial_ports_ir_title"
 			android:summary=""
 			/>
-<!--		<SwitchPreference-->
-<!--			android:defaultValue="false"-->
-<!--			android:key="settings_serial_slowdown"-->
-<!--			android:title="@string/settings_serial_slowdown"-->
-<!--			/>-->
+		<SwitchPreference
+			android:defaultValue="false"
+			android:key="settings_serial_slowdown"
+			android:title="@string/settings_serial_slowdown"
+			/>
 	</PreferenceCategory>
 
 </PreferenceScreen>

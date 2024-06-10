@@ -20,6 +20,7 @@ import org.emulator.calculator.usbserial.driver.UsbSerialProber;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,14 +44,14 @@ public class DevicesFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-        listAdapter = new ArrayAdapter<ListItem>(getActivity(), 0, listItems) {
+        //setHasOptionsMenu(true);
+        listAdapter = new ArrayAdapter<ListItem>(requireActivity(), 0, listItems) {
             @NonNull
             @Override
             public View getView(int position, View view, @NonNull ViewGroup parent) {
                 ListItem item = listItems.get(position);
                 if (view == null)
-                    view = getActivity().getLayoutInflater().inflate(Utils.resId(DevicesFragment.this, "layout", "device_list_item"), parent, false);
+                    view = requireActivity().getLayoutInflater().inflate(Utils.resId(DevicesFragment.this, "layout", "device_list_item"), parent, false);
                 TextView text1 = view.findViewById(Utils.resId(DevicesFragment.this, "id", "text1"));
                 TextView text2 = view.findViewById(Utils.resId(DevicesFragment.this, "id", "text2"));
                 if(item.driver == null)
@@ -73,7 +74,7 @@ public class DevicesFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         setListAdapter(null);
-        View header = getActivity().getLayoutInflater().inflate(Utils.resId(DevicesFragment.this, "layout", "device_list_header"), null, false);
+        View header = requireActivity().getLayoutInflater().inflate(Utils.resId(DevicesFragment.this, "layout", "device_list_header"), null, false);
         getListView().addHeaderView(header, null, false);
         setEmptyText(getString(Utils.resId(this, "string", "serial_no_device")));
         ((TextView) getListView().getEmptyView()).setTextSize(18);
