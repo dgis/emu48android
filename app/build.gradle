@@ -33,11 +33,24 @@ android {
     defaultConfig {
         applicationId "org.emulator.forty.eight"
         minSdk 21
-        //targetSdk 33
+        targetSdk 34
         versionCode 26
         versionName "2.7"
         setProperty("archivesBaseName", "Emu48-v$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+//                cppFlags '-std=c++11'
+//                cppFlags '-std=gnu99'
+//                cppFlags '-std=c99'
+//                cppFlags '-std=c++11 -std=gnu99'
+
+//                cppFlags '-std=c++11 -Wno-error=implicit-function-declaration'
+//                add_compile_options(-fpermissive)
+                cppFlags '-std=c++11 -fpermissive -Wno-error=incompatible-pointer-types'
+
+            }
+        }
     }
 
     if (canSign) {
@@ -75,6 +88,7 @@ android {
             //version '3.18.1'
         }
     }
+    ndkVersion '25.1.8937393'
 }
 
 dependencies {

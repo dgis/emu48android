@@ -58,11 +58,11 @@ LINKS
 
 CHANGES
 
-Version 2.7 (2024-06-09)
+Version 2.7 (2024-06-12)
 
 - Updated source code with Emu48 version 1.65+. This new version improve the serial communication.
 - Attempt to fix haptic feedback with Android 13 (API deprecation).
-- Patch the ROM files to prevent the calculator to sleep (Fix #22).
+- Patch the ROM files to prevent the calculator to sleep, but not for HP 48gII/49G/50g (Fix #22).
 - Fix a potential crash about the permission to access the files.
 - Require at least Android 5.0 (4.4 previously).
 

@@ -58,14 +58,13 @@ LINKS
 
 CHANGES
 
-Version 2.7 (2024-06-XX)
+Version 2.7 (2024-06-12)
 
 - Updated source code with Emu48 version 1.65+. This new version improve the serial communication.
-- Attempt to fix haptic feedback with Android 13 (API deprecation).
-- Patch the ROM files to prevent the calculator to sleep (Fix #22).
+- Fix haptic feedback with Android 12 (API deprecation).
+- Patch the ROM files to prevent the calculator to sleep, but not for HP 48gII/49G/50g (Fix #22).
 - Fix a potential crash about the permission to access the files.
 - Require at least Android 5.0 (4.4 previously).
-BUG: In Emu48 with HP49 FlashCard, click on Android RECENT button, and comes back in the APP -> we lost the FlashCard!
 
 
 Version 2.6 (2022-08-19)
@@ -269,8 +268,8 @@ FAQ
 
 TODO
 
-- Test XSEND.
-- Haptic feedback does not seems to work on Android 13, should check (J. Majors).
+- NDK 26 does not compile
+- Patching 49G to disable 10 min auto off causes a reset when touching the Recent button and coming back to the app.
 - Add an "haptic" feedback with a sound instead of a vibration (F. Giampietro).
 - Add a Cancel button to the HP48 memory card creator dialog.
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
@@ -285,7 +284,7 @@ TODO
 
 BUILD
 
-Emu48 for Android is built with Android Studio 2021.1.1 (2022).
+Emu48 for Android is built with Android Studio 2023.3.1 (2024).
 And to generate an installable APK file with a real Android device, it MUST be signed.
 
 Either use Android Studio:

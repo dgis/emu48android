@@ -220,14 +220,11 @@ public class Utils {
 
 	public static void vibrate(Vibrator vibrator, int durationInMilliSecond) {
 		if(vibrator != null && durationInMilliSecond > 0) {
-			if (Build.VERSION.SDK_INT >= 33)
-				// https://developer.android.com/reference/android/os/Vibrator#vibrate(android.os.VibrationEffect,%20android.os.VibrationAttributes)
-				vibrator.vibrate(VibrationEffect.createOneShot(durationInMilliSecond, VibrationAttributes.USAGE_TOUCH));
-			else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-				// https://developer.android.com/reference/android/os/Vibrator#vibrate(android.os.VibrationEffect,%20android.media.AudioAttributes)
-				vibrator.vibrate(VibrationEffect.createOneShot(durationInMilliSecond, VibrationEffect.DEFAULT_AMPLITUDE));
+			long[] vibratePattern = { 0, durationInMilliSecond, 1000 };
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+				vibrator.vibrate(VibrationEffect.createWaveform(vibratePattern, -1));
 			else
-				//deprecated in API 26
+				// Deprecated in API 26
 				vibrator.vibrate(durationInMilliSecond);
 		}
 	}

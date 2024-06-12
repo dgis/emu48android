@@ -3,7 +3,7 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.6.0)
 
 #add_compile_options(-DDEBUG_DISPLAY)
 #add_compile_options(-DDEBUG_SOUND)
@@ -30,6 +30,10 @@ add_compile_options(-DLODEPNG_NO_COMPILE_CPP)
 # add_compile_options(-DLODEPNG_NO_COMPILE_CRC) # Disabled to use new CRC function from lodepng.
 
 add_compile_options(-DEMUXX=48)
+
+#add_compile_options(-Wno-error=implicit-function-declaration)
+add_compile_options(-fpermissive)
+add_compile_options(-Wno-error=incompatible-pointer-types)
 
 if(CMAKE_BUILD_TYPE STREQUAL Release)
 	message("RELEASE BUILD")

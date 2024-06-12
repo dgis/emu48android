@@ -20,8 +20,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -214,7 +216,13 @@ public class SettingsFragment extends AppCompatDialogFragment {
 
 			// Haptic feedback settings
 
-			Vibrator vibrator = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+			Vibrator vibrator;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+				vibrator = ((VibratorManager)requireContext().getSystemService(Context.VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator();
+			} else {
+				vibrator = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+			}
+
 			SeekBarPreference preferenceHapticFeedbackDuration = findPreference("settings_haptic_feedback_duration");
 			if(preferenceHapticFeedbackDuration != null) {
 				preferenceHapticFeedbackDuration.setOnPreferenceChangeListener((preference, newValue) -> {

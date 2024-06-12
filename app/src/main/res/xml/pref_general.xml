@@ -88,7 +88,7 @@
 	        android:summary="@string/settings_haptic_feedback_summary"
 	        android:defaultValue="25"
 	        android:min="0"
-	        android:max="50"
+	        android:max="100"
 	        app:showSeekBarValue="true" />
     </PreferenceCategory>
 

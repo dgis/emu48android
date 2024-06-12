@@ -15,7 +15,6 @@ Global
 	Model  "Q"
 	Class  50
 	Rom    "rom.49g"
-	Patch  "patch.49g"
 	Bitmap "real50g-lc.png"
 	Icon   "50g.ico"
 	Color  0 190 190 190

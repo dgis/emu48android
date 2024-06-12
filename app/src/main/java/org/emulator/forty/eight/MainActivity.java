@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -165,7 +166,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	    settings = EmuApplication.getSettings();
 	    settings.setIsDefaultSettings(true);
 
-	    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+		    vibrator = ((VibratorManager)getSystemService(Context.VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator();
+	    } else {
+		    // Deprecated in API 31
+		    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+	    }
 
         ViewGroup mainScreenContainer = findViewById(R.id.main_screen_container);
         mainScreenView = new MainScreenView(this);
