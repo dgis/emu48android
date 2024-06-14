@@ -58,12 +58,13 @@ LINKS
 
 CHANGES
 
-Version 2.7 (2024-06-12)
+Version 2.7 (2024-06-14)
 
 - Updated source code with Emu48 version 1.65+. This new version improve the serial communication.
 - Fix haptic feedback with Android 12 (API deprecation).
 - Patch the ROM files to prevent the calculator to sleep, but not for HP 48gII/49G/50g (Fix #22).
 - Fix a potential crash about the permission to access the files.
+- Fix an issue when creating a new Flash ROM file from a custom KML file.
 - Require at least Android 5.0 (4.4 previously).
 
 
@@ -261,15 +262,17 @@ The Eric's Real scripts ("real*.kml" and "real*.bmp/png") are embedded in this a
 
 Portions of this source code (about the usb-serial) were originally created by Google Inc. in 2011-2013 and Mike Wakerly in 2013.
 
+
 FAQ
 
 * Can you do something about Android removing access permissions to the state file? I can't run the app for more than a week before the OS takes it away and then I have to create a new state file.
   > It should be possible to prevent Android from forgetting the permissions in Google Play Store app, Account/Play Protect/App permissions removed/See apps/All apps/Emu48/"Remove permissions if app isn't used" uncheck.
 
+
 TODO
 
 - NDK 26 does not compile
-- Patching 49G to disable 10 min auto off causes a reset when touching the Recent button and coming back to the app.
+- Patching 49G to disable 10 min auto off causes a reset when touching the Recent button and coming back to the app (with a Flashcard loaded).
 - Add an "haptic" feedback with a sound instead of a vibration (F. Giampietro).
 - Add a Cancel button to the HP48 memory card creator dialog.
 - Manage the HP 48 port 2 with the same kind of interface for the memory card.
