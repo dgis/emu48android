@@ -9,7 +9,6 @@ package org.emulator.calculator.usbserial.driver;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
 import android.util.Log;
 
 import org.emulator.calculator.usbserial.util.MonotonicClock;
@@ -99,8 +98,8 @@ public class FtdiSerialDriver implements UsbSerialDriver {
 
 
         @Override
-        protected void openInt(UsbDeviceConnection connection) throws IOException {
-            if (!connection.claimInterface(mDevice.getInterface(mPortNumber), true)) {
+        protected void openInt() throws IOException {
+            if (!mConnection.claimInterface(mDevice.getInterface(mPortNumber), true)) {
                 throw new IOException("Could not claim interface " + mPortNumber);
             }
             if (mDevice.getInterface(mPortNumber).getEndpointCount() < 2) {
@@ -123,12 +122,13 @@ public class FtdiSerialDriver implements UsbSerialDriver {
             }
 
             // mDevice.getVersion() would require API 23
-            byte[] rawDescriptors = connection.getRawDescriptors();
+            byte[] rawDescriptors = mConnection.getRawDescriptors();
             if(rawDescriptors == null || rawDescriptors.length < 14) {
                 throw new IOException("Could not get device descriptors");
             }
             int deviceType = rawDescriptors[13];
-            baudRateWithPort = deviceType == 7 || deviceType == 8 || deviceType == 9; // ...H devices
+            baudRateWithPort = deviceType == 7 || deviceType == 8 || deviceType == 9 // ...H devices
+                    || mDevice.getInterfaceCount() > 1; // FT2232C
         }
 
         @Override
@@ -139,24 +139,37 @@ public class FtdiSerialDriver implements UsbSerialDriver {
         }
 
         @Override
-        public int read(final byte[] dest, final int timeout) throws IOException {
+        public int read(final byte[] dest, final int timeout) throws IOException
+        {
             if(dest.length <= READ_HEADER_LENGTH) {
-                throw new IllegalArgumentException("Read buffer to small");
+                throw new IllegalArgumentException("Read buffer too small");
                 // could allocate larger buffer, including space for 2 header bytes, but this would
                 // result in buffers not being 64 byte aligned any more, causing data loss at continuous
                 // data transfer at high baud rates when buffers are fully filled.
             }
+            return read(dest, dest.length, timeout);
+        }
+
+        @Override
+        public int read(final byte[] dest, int length, final int timeout) throws IOException {
+            if(length <= READ_HEADER_LENGTH) {
+                throw new IllegalArgumentException("Read length too small");
+                // could allocate larger buffer, including space for 2 header bytes, but this would
+                // result in buffers not being 64 byte aligned any more, causing data loss at continuous
+                // data transfer at high baud rates when buffers are fully filled.
+            }
+            length = Math.min(length, dest.length);
             int nread;
             if (timeout != 0) {
                 long endTime = MonotonicClock.millis() + timeout;
                 do {
-                    nread = super.read(dest, Math.max(1, (int)(endTime - MonotonicClock.millis())), false);
+                    nread = super.read(dest, length, Math.max(1, (int)(endTime - MonotonicClock.millis())), false);
                 } while (nread == READ_HEADER_LENGTH && MonotonicClock.millis() < endTime);
-                if(nread <= 0 && MonotonicClock.millis() < endTime)
-                    testConnection();
+                if(nread <= 0)
+                    testConnection(MonotonicClock.millis() < endTime);
             } else {
                 do {
-                    nread = super.read(dest, timeout, false);
+                    nread = super.read(dest, length, timeout);
                 } while (nread == READ_HEADER_LENGTH);
             }
             return readFilter(dest, nread);
@@ -290,7 +303,7 @@ public class FtdiSerialDriver implements UsbSerialDriver {
             byte[] data = new byte[2];
             int result = mConnection.controlTransfer(REQTYPE_DEVICE_TO_HOST, GET_MODEM_STATUS_REQUEST,
                     0, mPortNumber+1, data, data.length, USB_WRITE_TIMEOUT_MILLIS);
-            if (result != 2) {
+            if (result != data.length) {
                 throw new IOException("Get modem status failed: result=" + result);
             }
             return data[0];
@@ -406,7 +419,7 @@ public class FtdiSerialDriver implements UsbSerialDriver {
             byte[] data = new byte[1];
             int result = mConnection.controlTransfer(REQTYPE_DEVICE_TO_HOST, GET_LATENCY_TIMER_REQUEST,
                     0, mPortNumber+1, data, data.length, USB_WRITE_TIMEOUT_MILLIS);
-            if (result != 1) {
+            if (result != data.length) {
                 throw new IOException("Get latency timer failed: result=" + result);
             }
             return data[0];
@@ -414,6 +427,7 @@ public class FtdiSerialDriver implements UsbSerialDriver {
 
     }
 
+    @SuppressWarnings({"unused"})
     public static Map<Integer, int[]> getSupportedDevices() {
         final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
         supportedDevices.put(UsbId.VENDOR_FTDI,

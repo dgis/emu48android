@@ -8,10 +8,12 @@ package org.emulator.calculator.usbserial.driver;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.util.Log;
+
+import org.emulator.calculator.usbserial.util.HexDump;
+import org.emulator.calculator.usbserial.util.UsbUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ import java.util.Map;
  */
 public class CdcAcmSerialDriver implements UsbSerialDriver {
 
+    public static final int USB_SUBCLASS_ACM = 2;
+
     private final String TAG = CdcAcmSerialDriver.class.getSimpleName();
 
     private final UsbDevice mDevice;
@@ -38,21 +42,31 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
     public CdcAcmSerialDriver(UsbDevice device) {
         mDevice = device;
         mPorts = new ArrayList<>();
-
-        int controlInterfaceCount = 0;
-        int dataInterfaceCount = 0;
-        for( int i = 0; i < device.getInterfaceCount(); i++) {
-            if(device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_COMM)
-                controlInterfaceCount++;
-            if(device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
-                dataInterfaceCount++;
-        }
-        for( int port = 0; port < Math.min(controlInterfaceCount, dataInterfaceCount); port++) {
+        int ports = countPorts(device);
+        for (int port = 0; port < ports; port++) {
             mPorts.add(new CdcAcmSerialPort(mDevice, port));
         }
-        if(mPorts.size() == 0) {
+        if (mPorts.size() == 0) {
             mPorts.add(new CdcAcmSerialPort(mDevice, -1));
         }
+    }
+
+    @SuppressWarnings({"unused"})
+    public static boolean probe(UsbDevice device) {
+        return countPorts(device) > 0;
+    }
+
+    private static int countPorts(UsbDevice device) {
+        int controlInterfaceCount = 0;
+        int dataInterfaceCount = 0;
+        for (int i = 0; i < device.getInterfaceCount(); i++) {
+            if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_COMM &&
+                    device.getInterface(i).getInterfaceSubclass() == USB_SUBCLASS_ACM)
+                controlInterfaceCount++;
+            if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
+                dataInterfaceCount++;
+        }
+        return Math.min(controlInterfaceCount, dataInterfaceCount);
     }
 
     @Override
@@ -95,7 +109,11 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
         }
 
         @Override
-        protected void openInt(UsbDeviceConnection connection) throws IOException {
+        protected void openInt() throws IOException {
+            Log.d(TAG, "interfaces:");
+            for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
+                Log.d(TAG, mDevice.getInterface(i).toString());
+            }
             if (mPortNumber == -1) {
                 Log.d(TAG,"device might be castrated ACM device, trying single interface logic");
                 openSingleInterface();
@@ -131,38 +149,57 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
         }
 
         private void openInterface() throws IOException {
-            Log.d(TAG, "claiming interfaces, count=" + mDevice.getInterfaceCount());
 
-            int controlInterfaceCount = 0;
-            int dataInterfaceCount = 0;
             mControlInterface = null;
             mDataInterface = null;
-            for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
-                UsbInterface usbInterface = mDevice.getInterface(i);
-                if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_COMM) {
-                    if(controlInterfaceCount == mPortNumber) {
-                        mControlIndex = i;
-                        mControlInterface = usbInterface;
+            int j = getInterfaceIdFromDescriptors();
+            Log.d(TAG, "interface count=" + mDevice.getInterfaceCount() + ", IAD=" + j);
+            if (j >= 0) {
+                for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
+                    UsbInterface usbInterface = mDevice.getInterface(i);
+                    if (usbInterface.getId() == j || usbInterface.getId() == j+1) {
+                        if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_COMM &&
+                                usbInterface.getInterfaceSubclass() == USB_SUBCLASS_ACM) {
+                            mControlIndex = usbInterface.getId();
+                            mControlInterface = usbInterface;
+                        }
+                        if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
+                            mDataInterface = usbInterface;
+                        }
                     }
-                    controlInterfaceCount++;
                 }
-                if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
-                    if(dataInterfaceCount == mPortNumber) {
-                        mDataInterface = usbInterface;
+            }
+            if (mControlInterface == null || mDataInterface == null) {
+                Log.d(TAG, "no IAD fallback");
+                int controlInterfaceCount = 0;
+                int dataInterfaceCount = 0;
+                for (int i = 0; i < mDevice.getInterfaceCount(); i++) {
+                    UsbInterface usbInterface = mDevice.getInterface(i);
+                    if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_COMM &&
+                            usbInterface.getInterfaceSubclass() == USB_SUBCLASS_ACM) {
+                        if (controlInterfaceCount == mPortNumber) {
+                            mControlIndex = usbInterface.getId();
+                            mControlInterface = usbInterface;
+                        }
+                        controlInterfaceCount++;
                     }
-                    dataInterfaceCount++;
+                    if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA) {
+                        if (dataInterfaceCount == mPortNumber) {
+                            mDataInterface = usbInterface;
+                        }
+                        dataInterfaceCount++;
+                    }
                 }
             }
 
             if(mControlInterface == null) {
                 throw new IOException("No control interface");
             }
-            Log.d(TAG, "Control iface=" + mControlInterface);
+            Log.d(TAG, "Control interface id " + mControlInterface.getId());
 
             if (!mConnection.claimInterface(mControlInterface, true)) {
                 throw new IOException("Could not claim control interface");
             }
-
             mControlEndpoint = mControlInterface.getEndpoint(0);
             if (mControlEndpoint.getDirection() != UsbConstants.USB_DIR_IN || mControlEndpoint.getType() != UsbConstants.USB_ENDPOINT_XFER_INT) {
                 throw new IOException("Invalid control endpoint");
@@ -171,12 +208,10 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
             if(mDataInterface == null) {
                 throw new IOException("No data interface");
             }
-            Log.d(TAG, "data iface=" + mDataInterface);
-
+            Log.d(TAG, "data interface id " + mDataInterface.getId());
             if (!mConnection.claimInterface(mDataInterface, true)) {
                 throw new IOException("Could not claim data interface");
             }
-
             for (int i = 0; i < mDataInterface.getEndpointCount(); i++) {
                 UsbEndpoint ep = mDataInterface.getEndpoint(i);
                 if (ep.getDirection() == UsbConstants.USB_DIR_IN && ep.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK)
@@ -184,6 +219,36 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
                 if (ep.getDirection() == UsbConstants.USB_DIR_OUT && ep.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK)
                     mWriteEndpoint = ep;
             }
+        }
+
+        private int getInterfaceIdFromDescriptors() {
+            ArrayList<byte[]> descriptors = UsbUtils.getDescriptors(mConnection);
+            Log.d(TAG, "USB descriptor:");
+            for(byte[] descriptor : descriptors)
+                Log.d(TAG, HexDump.toHexString(descriptor));
+
+            if (descriptors.size() > 0 &&
+                    descriptors.get(0).length == 18 &&
+                    descriptors.get(0)[1] == 1 && // bDescriptorType
+                    descriptors.get(0)[4] == (byte)(UsbConstants.USB_CLASS_MISC) && //bDeviceClass
+                    descriptors.get(0)[5] == 2 && // bDeviceSubClass
+                    descriptors.get(0)[6] == 1) { // bDeviceProtocol
+                // is IAD device, see https://www.usb.org/sites/default/files/iadclasscode_r10.pdf
+                int port = -1;
+                for (int d = 1; d < descriptors.size(); d++) {
+                    if (descriptors.get(d).length == 8 &&
+                            descriptors.get(d)[1] == 0x0b && // bDescriptorType == IAD
+                            descriptors.get(d)[4] == UsbConstants.USB_CLASS_COMM && // bFunctionClass == CDC
+                            descriptors.get(d)[5] == USB_SUBCLASS_ACM) { // bFunctionSubClass == ACM
+                        port++;
+                        if (port == mPortNumber &&
+                                descriptors.get(d)[3] == 2) { // bInterfaceCount
+                            return descriptors.get(d)[2]; // bFirstInterface
+                        }
+                    }
+                }
+            }
+            return -1;
         }
 
         private int sendAcmControlMessage(int request, int value, byte[] buf) throws IOException {
@@ -286,42 +351,9 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
 
     }
 
+    @SuppressWarnings({"unused"})
     public static Map<Integer, int[]> getSupportedDevices() {
-        final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
-        supportedDevices.put(UsbId.VENDOR_ARDUINO,
-                new int[] {
-                        UsbId.ARDUINO_UNO,
-                        UsbId.ARDUINO_UNO_R3,
-                        UsbId.ARDUINO_MEGA_2560,
-                        UsbId.ARDUINO_MEGA_2560_R3,
-                        UsbId.ARDUINO_SERIAL_ADAPTER,
-                        UsbId.ARDUINO_SERIAL_ADAPTER_R3,
-                        UsbId.ARDUINO_MEGA_ADK,
-                        UsbId.ARDUINO_MEGA_ADK_R3,
-                        UsbId.ARDUINO_LEONARDO,
-                        UsbId.ARDUINO_MICRO,
-                });
-        supportedDevices.put(UsbId.VENDOR_VAN_OOIJEN_TECH,
-                new int[] {
-                    UsbId.VAN_OOIJEN_TECH_TEENSYDUINO_SERIAL,
-                });
-        supportedDevices.put(UsbId.VENDOR_ATMEL,
-                new int[] {
-                    UsbId.ATMEL_LUFA_CDC_DEMO_APP,
-                });
-        supportedDevices.put(UsbId.VENDOR_LEAFLABS,
-                new int[] {
-                    UsbId.LEAFLABS_MAPLE,
-                });
-        supportedDevices.put(UsbId.VENDOR_ARM,
-                new int[] {
-                    UsbId.ARM_MBED,
-                });
-        supportedDevices.put(UsbId.VENDOR_ST,
-                new int[] {
-                        UsbId.ST_CDC,
-                });
-        return supportedDevices;
+        return new LinkedHashMap<>();
     }
 
 }
