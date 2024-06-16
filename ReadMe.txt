@@ -15,7 +15,7 @@ https://github.com/dgis/emu48android
 
 QUICK START
 
-1. From the left side, slide your finger to open the menu.
+1. Click on the 3 dots button at the top left (or from the left side, slide your finger to open the menu).
 2. Touch the "New..." menu item.
 3. Select a default calculator (or "[Select a Custom KML script folder...]" where you have copied the KML scripts and ROM files (Android 11 may not be able to use the Download folder)).
 4. And the calculator should now be opened.
@@ -304,7 +304,7 @@ Either use Android Studio:
 Or in the command line, build the signed APK:
 * In the root folder, create a keystore.jks file with:
 ** keytool -genkey -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0
-** keytool -genkeypair -v -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0
+** (or keytool -genkeypair -v -keystore ./keystore.jks -keyalg RSA -validity 9125 -alias key0)
 * create the file ./keystore.properties , with the following properties:
     storeFile=../keystore.jks
     storePassword=myPassword

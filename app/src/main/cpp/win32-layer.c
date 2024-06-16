@@ -2315,7 +2315,7 @@ void StretchBltInternal(int xDest, int yDest, int wDest, int hDest,
                     // black pixels on a white background.
                     BYTE * destinationPixel = destinationPixelBase + (x >> 3);
 	                UINT bitNumber = (UINT) (7 - (x % 8));
-                    if(backgroundColor == sourceColor) {
+                    if((backgroundColor & 0xFFFFFF) == (sourceColor & 0xFFFFFF)) {
                         *destinationPixel |= (1 << bitNumber); // 1 White
                     } else {
                         *destinationPixel &= ~(1 << bitNumber); // 0 Black

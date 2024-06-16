@@ -40,15 +40,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-//                cppFlags '-std=c++11'
-//                cppFlags '-std=gnu99'
-//                cppFlags '-std=c99'
-//                cppFlags '-std=c++11 -std=gnu99'
-
-//                cppFlags '-std=c++11 -Wno-error=implicit-function-declaration'
-//                add_compile_options(-fpermissive)
                 cppFlags '-std=c++11 -fpermissive -Wno-error=incompatible-pointer-types'
-
             }
         }
     }
@@ -85,7 +77,6 @@ android {
     externalNativeBuild {
         cmake {
             path file('CMakeLists.txt')
-            //version '3.18.1'
         }
     }
     ndkVersion '25.1.8937393'

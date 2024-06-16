@@ -1439,7 +1439,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			String romFilename = null;
 			for (DocumentFile file : kmlFolderDocumentFile.listFiles()) {
 				String name = file.getName();
-				//if (name != null && name.compareTo(kmlFilename) == 0) {
 				if (name != null && kmlFilename.contains(name)) {
 					try {
 						DocumentFile documentFile = DocumentFile.fromSingleUri(this, file.getUri());

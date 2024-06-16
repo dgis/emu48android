@@ -15,7 +15,7 @@ https://github.com/dgis/emu48android
 
 QUICK START
 
-1. From the left side, slide your finger to open the menu.
+1. Click on the 3 dots button at the top left (or from the left side, slide your finger to open the menu).
 2. Touch the "New..." menu item.
 3. Select a default calculator (or "[Select a Custom KML script folder...]" where you have copied the KML scripts and ROM files (Android 11 may not be able to use the Download folder)).
 4. And the calculator should now be opened.
