@@ -11,6 +11,7 @@ package org.emulator.calculator.usbserial.driver;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.util.Log;
@@ -34,7 +35,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             28800, 38400, 57600, 115200, 128000, 134400, 161280, 201600, 230400, 268800,
             403200, 460800, 614400, 806400, 921600, 1228800, 2457600, 3000000, 6000000
     };
-    protected enum DeviceType { DEVICE_TYPE_01, DEVICE_TYPE_T, DEVICE_TYPE_HX, DEVICE_TYPE_HXN }
+    protected enum DeviceType { DEVICE_TYPE_01, DEVICE_TYPE_T, DEVICE_TYPE_HX, DEVICE_TYPE_HXN}
 
     private final UsbDevice mDevice;
     private final UsbSerialPort mPort;
@@ -122,7 +123,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         private volatile Thread mReadStatusThread = null;
         private final Object mReadStatusThreadLock = new Object();
         private boolean mStopReadStatusThread = false;
-        private Exception mReadStatusException = null;
+        private IOException mReadStatusException = null;
 
 
         public ProlificSerialPort(UsbDevice device, int portNumber) {
@@ -138,7 +139,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             byte[] buffer = new byte[length];
             int result = mConnection.controlTransfer(requestType, request, value, index, buffer, length, USB_READ_TIMEOUT_MILLIS);
             if (result != length) {
-                throw new IOException(String.format("ControlTransfer %s 0x%x failed: %d",mDeviceType.name(), value, result));
+                throw new IOException(String.format("ControlTransfer 0x%x failed: %d",value, result));
             }
             return buffer;
         }
@@ -147,7 +148,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             int length = (data == null) ? 0 : data.length;
             int result = mConnection.controlTransfer(requestType, request, value, index, data, length, USB_WRITE_TIMEOUT_MILLIS);
             if (result != length) {
-                throw new IOException( String.format("ControlTransfer %s 0x%x failed: %d", mDeviceType.name(), value, result));
+                throw new IOException( String.format("ControlTransfer 0x%x failed: %d", value, result));
             }
         }
 
@@ -201,12 +202,12 @@ public class ProlificSerialDriver implements UsbSerialDriver {
 
         private void readStatusThreadFunction() {
             try {
-                byte[] buffer = new byte[STATUS_BUFFER_SIZE];
                 while (!mStopReadStatusThread) {
+                    byte[] buffer = new byte[STATUS_BUFFER_SIZE];
                     long endTime = MonotonicClock.millis() + 500;
                     int readBytesCount = mConnection.bulkTransfer(mInterruptEndpoint, buffer, STATUS_BUFFER_SIZE, 500);
-                    if(readBytesCount == -1)
-                        testConnection(MonotonicClock.millis() < endTime);
+                    if(readBytesCount == -1 && MonotonicClock.millis() < endTime)
+                        testConnection();
                     if (readBytesCount > 0) {
                         if (readBytesCount != STATUS_BUFFER_SIZE) {
                             throw new IOException("Invalid status notification, expected " + STATUS_BUFFER_SIZE + " bytes, got " + readBytesCount);
@@ -217,9 +218,8 @@ public class ProlificSerialDriver implements UsbSerialDriver {
                         }
                     }
                 }
-            } catch (Exception e) {
-                if (isOpen())
-                    mReadStatusException = e;
+            } catch (IOException e) {
+                mReadStatusException = e;
             }
             //Log.d(TAG, "end control line status thread " + mStopReadStatusThread + " " + (mReadStatusException == null ? "-" : mReadStatusException.getMessage()));
         }
@@ -250,8 +250,8 @@ public class ProlificSerialDriver implements UsbSerialDriver {
                 }
             }
 
-            /* throw and clear an exception which occurred in the status read thread */
-            Exception readStatusException = mReadStatusException;
+            /* throw and clear an exception which occured in the status read thread */
+            IOException readStatusException = mReadStatusException;
             if (mReadStatusException != null) {
                 mReadStatusException = null;
                 throw new IOException(readStatusException);
@@ -265,10 +265,10 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         }
 
         @Override
-        public void openInt() throws IOException {
+        public void openInt(UsbDeviceConnection connection) throws IOException {
             UsbInterface usbInterface = mDevice.getInterface(0);
 
-            if (!mConnection.claimInterface(usbInterface, true)) {
+            if (!connection.claimInterface(usbInterface, true)) {
                 throw new IOException("Error claiming Prolific interface 0");
             }
 
@@ -290,7 +290,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
                 }
             }
 
-            byte[] rawDescriptors = mConnection.getRawDescriptors();
+            byte[] rawDescriptors = connection.getRawDescriptors();
             if(rawDescriptors == null || rawDescriptors.length < 14) {
                 throw new IOException("Could not get device descriptors");
             }
@@ -299,19 +299,15 @@ public class ProlificSerialDriver implements UsbSerialDriver {
             byte maxPacketSize0 = rawDescriptors[7];
             if (mDevice.getDeviceClass() == 0x02 || maxPacketSize0 != 64) {
                 mDeviceType = DeviceType.DEVICE_TYPE_01;
-            } else if(usbVersion == 0x200) {
-                if(deviceVersion == 0x300 && testHxStatus()) {
-                    mDeviceType = DeviceType.DEVICE_TYPE_T; // TA
-                } else if(deviceVersion == 0x500 && testHxStatus()) {
-                    mDeviceType = DeviceType.DEVICE_TYPE_T; // TB
-                } else {
-                    mDeviceType = DeviceType.DEVICE_TYPE_HXN;
-                }
+            } else if(deviceVersion == 0x300 && usbVersion == 0x200) {
+                mDeviceType = DeviceType.DEVICE_TYPE_T; // TA
+            } else if(deviceVersion == 0x500) {
+                mDeviceType = DeviceType.DEVICE_TYPE_T; // TB
+            } else if(usbVersion == 0x200 && !testHxStatus()) {
+                mDeviceType = DeviceType.DEVICE_TYPE_HXN;
             } else {
                 mDeviceType = DeviceType.DEVICE_TYPE_HX;
             }
-            Log.d(TAG, String.format("usbVersion=%x, deviceVersion=%x, deviceClass=%d, packetSize=%d => deviceType=%s",
-                    usbVersion, deviceVersion, mDevice.getDeviceClass(), maxPacketSize0, mDeviceType.name()));
             resetDevice();
             doBlackMagic();
             setControlLines(mControlLinesValue);
@@ -567,7 +563,6 @@ public class ProlificSerialDriver implements UsbSerialDriver {
         }
     }
 
-    @SuppressWarnings({"unused"})
     public static Map<Integer, int[]> getSupportedDevices() {
         final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
         supportedDevices.put(UsbId.VENDOR_PROLIFIC,
@@ -576,6 +571,7 @@ public class ProlificSerialDriver implements UsbSerialDriver {
                         UsbId.PROLIFIC_PL2303GC,
                         UsbId.PROLIFIC_PL2303GB,
                         UsbId.PROLIFIC_PL2303GT,
+		                UsbId.PROLIFIC_PL2303GT3,
                         UsbId.PROLIFIC_PL2303GL,
                         UsbId.PROLIFIC_PL2303GE,
                         UsbId.PROLIFIC_PL2303GS,

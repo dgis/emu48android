@@ -104,7 +104,6 @@ BOOL CommOpen(LPTSTR strWirePort,LPTSTR strIrPort)
 
 	LPCTSTR strPort = (Chipset.IORam[IR_CTRL] & EIRU) ? strIrPort : strWirePort;
 
-	_ASSERT(Chipset.IORam[IOC] & SON);		// UART on
 	CommClose();							// close port if already open
 
 	dwBytesRead = 0L;						// no bytes received

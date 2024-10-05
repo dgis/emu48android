@@ -241,8 +241,8 @@ VOID RebuildRomCrc(VOID)
 	{
 		// has no Crc
 	}
-	// HP49G
-	if (cCurrentRomType == 'X' && dwRomSize == _KB(2048))
+	// HP48GII/49G+/50G/49G
+	if ((strchr("2QX",cCurrentRomType)) && dwRomSize == _KB(2048))
 	{
 		CorrectAllFlashPages();				// go through all pages
 	}

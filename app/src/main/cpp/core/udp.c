@@ -22,12 +22,9 @@ VOID ResetUdp(VOID)
 
 BOOL SendByteUdp(BYTE byData)
 {
-	WSADATA wsd;
 	SOCKET  sClient;
 
 	BOOL bErr = TRUE;
-
-	VERIFY(WSAStartup(MAKEWORD(1,1),&wsd) == 0);
 
 	// IP address not specified
 	if (sServer.sin_addr.s_addr == INADDR_NONE)
@@ -72,7 +69,5 @@ BOOL SendByteUdp(BYTE byData)
 		bErr = sendto(sClient, (LPCCH) &byData, sizeof(byData), 0, (LPSOCKADDR) &sServer, sizeof(sServer)) == SOCKET_ERROR;
 		closesocket(sClient);
 	}
-
-	WSACleanup();							// cleanup network stack
 	return bErr;
 }

@@ -13,7 +13,7 @@
 #include "kml.h"
 #include "debugger.h"
 
-#define VERSION   "1.65+"
+#define VERSION   "1.66+"
 
 #ifdef _DEBUG
 LPCTSTR szNoTitle = _T("Emu48 ")_T(VERSION)_T(" Debug");
@@ -2045,6 +2045,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 	MSG msg;
 	WNDCLASS wc;
 	ATOM classAtom;
+	WSADATA wsd;
 	RECT rectWindow;
 	HACCEL hAccel;
 	DWORD dwThreadId;
@@ -2059,16 +2060,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	hApp = hInst;
-	#if defined _UNICODE
-	{
-		ppArgv = (LPCTSTR*) CommandLineToArgvW(GetCommandLine(),&nArgc);
-	}
-	#else
-	{
-		nArgc = __argc;						// no. of command line arguments
-		ppArgv = (LPCTSTR*) __argv;			// command line arguments
-	}
-	#endif
+	nArgc = __argc;							// no. of command line arguments
+	ppArgv = __targv;						// command line arguments
 
 	wc.style = CS_BYTEALIGNCLIENT;
 	wc.lpfnWndProc = (WNDPROC)MainWndProc;
@@ -2298,6 +2291,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 	if (NewDocument()) SetWindowTitle(_T("Untitled"));
 
 start:
+	VERIFY(WSAStartup(MAKEWORD(1,1),&wsd) == 0);
 	if (bStartupBackup) SaveBackup();		// make a RAM backup at startup
 	if (pbyRom) SwitchToState(SM_RUN);
 
@@ -2313,6 +2307,7 @@ start:
 			DispatchMessage(&msg);
 		}
 	}
+	WSACleanup();							// cleanup network stack
 
 	// clean up DDE server
 	DdeNameService(idDdeInst, hszService, NULL, DNS_UNREGISTER);

@@ -1199,9 +1199,12 @@ typedef struct tagCOPYDATASTRUCT {
     PVOID lpData;
 } COPYDATASTRUCT, *PCOPYDATASTRUCT;
 
-
-
-
+// Locale info
+#define LOCALE_USER_DEFAULT            1024
+#define LOCALE_SDECIMAL               0x0000000E   // decimal separator, eg "." for 1,234.00
+typedef DWORD LCID;
+typedef DWORD LCTYPE;
+extern int GetLocaleInfo(LCID Locale, LCTYPE LCType, LPSTR lpLCData, int cchData);
 
 
 #ifdef UNICODE

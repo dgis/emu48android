@@ -65,7 +65,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/core/disrpl.c
 #        src/main/cpp/core/Emu48.c #-> To rewrite
         src/main/cpp/core/engine.c
-        src/main/cpp/core/external.c
+#        src/main/cpp/core/external.c # Removed 167/166+
         src/main/cpp/core/fetch.c
         src/main/cpp/core/files.c
         src/main/cpp/core/i28f160.c

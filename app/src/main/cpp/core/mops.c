@@ -1002,9 +1002,9 @@ static DWORD ReadT2Acc(VOID)
 	// maybe CPU speed measurement, slow down the next 10 CPU opcodes
 	if (dwCycDif < 150)
 	{
-		InitAdjustSpeed();					// init variables if necessary
 		EnterCriticalSection(&csSlowLock);
 		{
+			InitAdjustSpeed();				// init variables if necessary
 			nOpcSlow = 10;					// slow down next 10 opcodes
 		}
 		LeaveCriticalSection(&csSlowLock);
@@ -1146,9 +1146,9 @@ VOID ReadIO(BYTE *a, DWORD d, DWORD s, BOOL bUpdate)
 				// CPU running with max. speed we may get a timeout overflow
 				// -> to avoid this slow down CPU speed on transmit buffer full
 
-				InitAdjustSpeed();			// init variables if necessary
 				EnterCriticalSection(&csSlowLock);
 				{
+					InitAdjustSpeed();		// init variables if necessary
 					nOpcSlow = 10;			// slow down next 10 opcodes
 				}
 				LeaveCriticalSection(&csSlowLock);

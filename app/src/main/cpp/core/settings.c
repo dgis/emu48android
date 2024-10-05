@@ -182,23 +182,24 @@ VOID ReadSettings(VOID)
 	disassembler_mode = ReadInt(_T("Disassembler"),_T("Mnemonics"),disassembler_mode);
 	disassembler_symb = ReadInt(_T("Disassembler"),_T("Symbolic"),disassembler_symb);
 	// Emulator
-	bShowTitle       = ReadInt(_T("Emulator"),_T("ShowTitle"),bShowTitle);
-	bShowMenu        = ReadInt(_T("Emulator"),_T("ShowMenu"),bShowMenu);
-	bAlwaysOnTop     = ReadInt(_T("Emulator"),_T("AlwaysOnTop"),bAlwaysOnTop);
-	bActFollowsMouse = ReadInt(_T("Emulator"),_T("ActivationFollowsMouse"),bActFollowsMouse);
-	bClientWinMove   = ReadInt(_T("Emulator"),_T("ClientWinMove"),bClientWinMove);
-	bSingleInstance  = ReadInt(_T("Emulator"),_T("SingleInstance"),bSingleInstance);
-	bRealSpeed       = ReadInt(_T("Emulator"),_T("RealSpeed"),bRealSpeed);
-	dwSXCycles       = ReadInt(_T("Emulator"),_T("SXCycles"),dwSXCycles);
-	dwGXCycles       = ReadInt(_T("Emulator"),_T("GXCycles"),dwGXCycles);
-	dwGPCycles       = ReadInt(_T("Emulator"),_T("GPCycles"),dwGPCycles);   // CdB for HP: add apples
-	dwG2Cycles       = ReadInt(_T("Emulator"),_T("G2Cycles"),dwG2Cycles);   // CdB for HP: add apples
-	dwKeyMinDelay    = ReadInt(_T("Emulator"),_T("KeyMinDelay"),dwKeyMinDelay);
-	dwWakeupDelay    = ReadInt(_T("Emulator"),_T("WakeupDelay"),dwWakeupDelay);
-	bGrayscale       = ReadInt(_T("Emulator"),_T("Grayscale"),bGrayscale);
-	uWaveDevId       = ReadInt(_T("Emulator"),_T("WaveDeviceId"),uWaveDevId);
-	dwWaveVol        = ReadInt(_T("Emulator"),_T("WaveVolume"),dwWaveVol);
-	dwWaveTime       = ReadInt(_T("Emulator"),_T("WaveTime"),dwWaveTime);
+	bShowTitle          = ReadInt(_T("Emulator"),_T("ShowTitle"),bShowTitle);
+	bShowMenu           = ReadInt(_T("Emulator"),_T("ShowMenu"),bShowMenu);
+	bAlwaysOnTop        = ReadInt(_T("Emulator"),_T("AlwaysOnTop"),bAlwaysOnTop);
+	bActFollowsMouse    = ReadInt(_T("Emulator"),_T("ActivationFollowsMouse"),bActFollowsMouse);
+	bClientWinMove      = ReadInt(_T("Emulator"),_T("ClientWinMove"),bClientWinMove);
+	bSingleInstance     = ReadInt(_T("Emulator"),_T("SingleInstance"),bSingleInstance);
+	bRealSpeed          = ReadInt(_T("Emulator"),_T("RealSpeed"),bRealSpeed);
+	dwSXCycles          = ReadInt(_T("Emulator"),_T("SXCycles"),dwSXCycles);
+	dwGXCycles          = ReadInt(_T("Emulator"),_T("GXCycles"),dwGXCycles);
+	dwGPCycles          = ReadInt(_T("Emulator"),_T("GPCycles"),dwGPCycles);   // CdB for HP: add apples
+	dwG2Cycles          = ReadInt(_T("Emulator"),_T("G2Cycles"),dwG2Cycles);   // CdB for HP: add apples
+	dwKeyMinDelay       = ReadInt(_T("Emulator"),_T("KeyMinDelay"),dwKeyMinDelay);
+	dwWakeupDelay       = ReadInt(_T("Emulator"),_T("WakeupDelay"),dwWakeupDelay);
+	bGrayscale          = ReadInt(_T("Emulator"),_T("Grayscale"),bGrayscale);
+	uWaveDevId          = ReadInt(_T("Emulator"),_T("WaveDeviceId"),uWaveDevId);
+	dwWaveVol           = ReadInt(_T("Emulator"),_T("WaveVolume"),dwWaveVol);
+	dwWaveTime          = ReadInt(_T("Emulator"),_T("WaveTime"),dwWaveTime);
+	bLocaleDecimalPoint = ReadInt(_T("Emulator"),_T("LocaleDecimalPoint"),bLocaleDecimalPoint);
 	// LowBat
 	bLowBatDisable = ReadInt(_T("LowBat"),_T("Disable"),bLowBatDisable);
 	// Macro
@@ -254,6 +255,7 @@ VOID WriteSettings(VOID)
 	WriteInt(_T("Emulator"),_T("WaveDeviceId"),uWaveDevId);
 	WriteInt(_T("Emulator"),_T("WaveVolume"),dwWaveVol);
 	WriteInt(_T("Emulator"),_T("WaveTime"),dwWaveTime);
+	WriteInt(_T("Emulator"),_T("LocaleDecimalPoint"),bLocaleDecimalPoint);
 	// LowBat
 	WriteInt(_T("LowBat"),_T("Disable"),bLowBatDisable);
 	// Macro

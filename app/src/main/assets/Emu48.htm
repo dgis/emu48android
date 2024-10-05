@@ -526,10 +526,10 @@ h3 { color:red; font-size:1.1em; }
     &quot;String&quot; object in stack level 1 to the clipboard. On all
     other objects, the command will be ignored. This prevents sending
     binary objects to the clipboard.</p>
-    <p>The decimal point (radix mark) of &quot;Real Numbers&quot; in the
-    clipboard is equal to the calculator setting. This is important when
-    you try to paste the numbers into a program using the locale settings
-    of the host operating system.</p>
+    <p>The decimal point of &quot;Real Numbers&quot; in the clipboard is
+    equal to the calculator setting. This is important when you try to
+    paste the numbers into a program using the locale settings of the host
+    operating system.</p>
   <h2><a name=ss9.5>9.5 Paste Stack</a></h2>
     <p>This menu item is enabled for the HP48SX, HP48GX and the HP49G
     emulation.</p>
@@ -539,14 +539,18 @@ h3 { color:red; font-size:1.1em; }
     object. Is the content a complex number object, the number will be
     saved as &quot;Complex Number&quot; object, otherwise cases as
     &quot;String&quot; object.</p>
-    <p>To import &quot;Real or Complex Numbers&quot; from the clipboard, the
-    decimal point (radix mark) of the clipboard and calculator <u>must</u>
-    match. A real or complex number is only detected in the case of valid
-    real number characters in the clipboard. Especially heading and tailing
-    white spaces aren't valid number characters also.</p>
-    <p>Complex numbers must be in the form <i>(a,b)</i> when using the point
-    radix mark or in the form <i>(a;b)</i> when using the comma radix mark.
-    The Cartesian or algebraic form <i>a+bi</i> is not supported.</p>
+    <p>To import &quot;Real Numbers&quot; from the clipboard, the decimal
+    point character of the clipboard and calculator <u>must not match</u> any
+    more. There's an auto detection for decoding the thousands separator and
+    decimal point character. The thousands separator is removed at decoding.
+    A real number is detected in the case of valid real number characters in
+    the clipboard.</p>
+    <p>&quot;Complex Numbers&quot; must be in the form <i>(a,b)</i> when
+    using the decimal point or in the form <i>(a;b)</i> when using the decimal
+    comma. Using a thousands separator is not allowed in complex number
+    strings because in decimal point mode, the comma is used as separator
+    between real and imaginary part of the number. The Cartesian or algebraic
+    form <i>a+bi</i> is not supported.</p>
  <h2><a name=ss9.6>9.6 Reset Calculator</a></h2>
     <p>This emulates the Reset pin of the internal CPU.</p>
   <h2><a name=ss9.7>9.7 Backup</a></h2>
@@ -675,7 +679,7 @@ h3 { color:red; font-size:1.1em; }
     Cyrille de Brebisson of Hewlett-Packard.</p>
   <h1><a name=s15>15. License</a></h1>
     <p>Emu48 - A HP38G/39G/40G/48SX/48GX/49G Emulator<br>
-    Copyright (C) 2022 Christoph Gie&szlig;elink</p>
+    Copyright (C) 2024 Christoph Gie&szlig;elink</p>
     <p>This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the Free
     Software Foundation; either version 2 of the License, or (at your option)

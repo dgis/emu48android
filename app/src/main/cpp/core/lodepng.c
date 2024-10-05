@@ -664,7 +664,7 @@ which is possible in case of only 0 or 1 present symbols. */
 static unsigned HuffmanTree_makeTable(HuffmanTree* tree) {
   static const unsigned headsize = 1u << FIRSTBITS; /*size of the first table*/
   static const unsigned mask = (1u << FIRSTBITS) /*headsize*/ - 1u;
-  unsigned i, numpresent, pointer, size; /*total table size*/
+  size_t i, numpresent, pointer, size; /*total table size*/
   unsigned* maxlens = (unsigned*)lodepng_malloc(headsize * sizeof(unsigned));
   if(!maxlens) return 83; /*alloc fail*/
 
@@ -683,7 +683,7 @@ static unsigned HuffmanTree_makeTable(HuffmanTree* tree) {
   size = headsize;
   for(i = 0; i < headsize; ++i) {
     unsigned l = maxlens[i];
-    if(l > FIRSTBITS) size += (1u << (l - FIRSTBITS));
+    if(l > FIRSTBITS) size += (((size_t)1) << (l - FIRSTBITS));
   }
   tree->table_len = (unsigned char*)lodepng_malloc(size * sizeof(*tree->table_len));
   tree->table_value = (unsigned short*)lodepng_malloc(size * sizeof(*tree->table_value));
@@ -701,8 +701,8 @@ static unsigned HuffmanTree_makeTable(HuffmanTree* tree) {
     unsigned l = maxlens[i];
     if(l <= FIRSTBITS) continue;
     tree->table_len[i] = l;
-    tree->table_value[i] = pointer;
-    pointer += (1u << (l - FIRSTBITS));
+    tree->table_value[i] = (unsigned short)pointer;
+    pointer += (((size_t)1) << (l - FIRSTBITS));
   }
   lodepng_free(maxlens);
 
@@ -726,7 +726,7 @@ static unsigned HuffmanTree_makeTable(HuffmanTree* tree) {
         unsigned index = reverse | (j << l);
         if(tree->table_len[index] != 16) return 55; /*invalid tree: long symbol shares prefix with short symbol*/
         tree->table_len[index] = l;
-        tree->table_value[index] = i;
+        tree->table_value[index] = (unsigned short)i;
       }
     } else {
       /*long symbol, shares prefix with other long symbols in first lookup table, needs second lookup*/
@@ -743,7 +743,7 @@ static unsigned HuffmanTree_makeTable(HuffmanTree* tree) {
         unsigned reverse2 = reverse >> FIRSTBITS; /* l - FIRSTBITS bits */
         unsigned index2 = start + (reverse2 | (j << (l - FIRSTBITS)));
         tree->table_len[index2] = l;
-        tree->table_value[index2] = i;
+        tree->table_value[index2] = (unsigned short)i;
       }
     }
   }
@@ -2886,7 +2886,7 @@ static unsigned lodepng_chunk_createv(ucvector* out,
 }
 
 unsigned lodepng_chunk_create(unsigned char** out, size_t* outsize,
-                              unsigned length, const char* type, const unsigned char* data) {
+                              size_t length, const char* type, const unsigned char* data) {
   ucvector v = ucvector_init(*out, *outsize);
   unsigned error = lodepng_chunk_createv(&v, length, type, data);
   *out = v.data;
@@ -3363,7 +3363,7 @@ unsigned lodepng_info_copy(LodePNGInfo* dest, const LodePNGInfo* source) {
 static void addColorBits(unsigned char* out, size_t index, unsigned bits, unsigned in) {
   unsigned m = bits == 1 ? 7 : bits == 2 ? 3 : 1; /*8 / bits - 1*/
   /*p = the partial index in the byte, e.g. with 4 palettebits it is 0 for first half or 1 for second half*/
-  unsigned p = (unsigned)index & m;
+  unsigned p = (unsigned) index & m;
   in &= (1u << bits) - 1u; /*filter out any other bits of the input value*/
   in = in << (bits * (m - p));
   if(p == 0) out[index * bits / 8u] = in;
@@ -5889,7 +5889,7 @@ static size_t ilog2i(size_t i) {
   l = ilog2(i);
   /* approximate i*log2(i): l is integer logarithm, ((i - (1u << l)) << 1u)
   linearly approximates the missing fractional part multiplied by i */
-  return i * l + ((i - ((size_t) 1u << l)) << 1u);
+  return i * l + ((i - (((size_t)1) << l)) << 1u);
 }
 
 static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, unsigned h,

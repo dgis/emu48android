@@ -65,8 +65,8 @@ static CONST TCHAR cHex[] = { _T('0'),_T('1'),_T('2'),_T('3'),
 							  _T('8'),_T('9'),_T('A'),_T('B'),
 							  _T('C'),_T('D'),_T('E'),_T('F') };
 
-static INT    nDbgPosX = 0;					// position of debugger window
-static INT    nDbgPosY = 0;
+static INT    nDbgPosX = CW_USEDEFAULT;		// position of debugger window
+static INT    nDbgPosY = CW_USEDEFAULT;
 
 static WORD   wBreakpointCount = 0;			// number of breakpoints
 static BP_T   sBreakpoint[MAXBREAKPOINTS];	// breakpoint table
@@ -1885,7 +1885,10 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 	switch (message)
 	{
 	case WM_INITDIALOG:
+		if (nDbgPosX != CW_USEDEFAULT)		// not default window position
+		{
 		SetWindowLocation(hDlg,nDbgPosX,nDbgPosY);
+		}
 		if (bAlwaysOnTop) SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE);
 		SendMessage(hDlg,WM_SETICON,ICON_BIG,(LPARAM) LoadIcon(hApp,MAKEINTRESOURCE(IDI_EMU48)));
 
@@ -2201,7 +2204,7 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 
 LRESULT OnToolDebug(VOID)					// debugger dialogbox call
 {
-	if ((hDlgDebug = CreateDialog(hApp,MAKEINTRESOURCE(IDD_DEBUG),NULL,
+	if ((hDlgDebug = CreateDialog(hApp,MAKEINTRESOURCE(IDD_DEBUG),hWnd,
 		(DLGPROC)Debugger)) == NULL)
 		AbortMessage(_T("Debugger Dialog Box Creation Error !"));
 	return 0;
@@ -3501,46 +3504,79 @@ static BOOL OnBrowseSaveMem(HWND hDlg)
 //
 // write file to memory
 //
-static BOOL LoadMemData(LPCTSTR lpszFilename,DWORD dwStartAddr)
+static BOOL LoadMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,UINT uBitMode)
 {
 	HANDLE hFile;
-	DWORD  dwRead;
-	BYTE   byData;
+	DWORD  dwFileSize,dwRead;
+	LPBYTE pbyData;
 
 	hFile = CreateFile(lpszFilename,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
 	if (hFile == INVALID_HANDLE_VALUE)		// error, couldn't create a new file
 		return FALSE;
 
-	while (dwStartAddr <= 0xFFFFF)			// read until EOF or end of Saturn address space
+	dwFileSize = GetFileSize(hFile, NULL);
+	if ((pbyData = (LPBYTE) malloc(dwFileSize)) != NULL)
 	{
-		ReadFile(hFile,&byData,sizeof(byData),&dwRead,NULL);
-		if (dwRead == 0) break;				// EOF
-
-		if (dwStartAddr < 0xFFFFF)
+		ReadFile(hFile,pbyData,dwFileSize,&dwRead,NULL);
+		if (uBitMode == 2)					// auto mode (0=8-bit, 1=4-bit, 2=auto)
 		{
-			Write2(dwStartAddr,byData);		// write byte in map mode
-			dwStartAddr += 2;
+			BOOL bPacked = FALSE;			// data not packed
+			DWORD dwIndex;
+			for (dwIndex = 0; !bPacked && dwIndex < dwFileSize; ++dwIndex)
+			{
+				bPacked = ((pbyData[dwIndex] & 0xF0) != 0);
+			}
+			uBitMode = bPacked ? 0 : 1;		// 0=8-bit, 1=4-bit
 		}
+
+		if (uBitMode == 0)					// 0=8-bit
+		{
+			LPBYTE pbyDataNew = (LPBYTE) realloc(pbyData,2*dwFileSize);
+			if (pbyDataNew)
+			{
+				LPBYTE pbySrc,pbyDest;
+				pbyData = pbyDataNew;
+				pbySrc = pbyData + dwFileSize;
+				dwFileSize *= 2;			// new filesize
+				pbyDest = pbyData + dwFileSize;
+				while (pbySrc != pbyDest)	// unpack source
+				{
+					CONST BYTE byValue = *(--pbySrc);
+					*(--pbyDest) = byValue >> 4;
+					*(--pbyDest) = byValue & 0xF;
+		}
+				_ASSERT(pbySrc == pbyData);
+				_ASSERT(pbyDest == pbyData);
+			}
 		else								// special handling to avoid address wrap around
 		{
-			byData &= 0xF;
-			Nwrite(&byData,dwStartAddr,1);	// write nibble in map mode
-			++dwStartAddr;
+				free(pbyData);
+				pbyData = NULL;
+			}
+		}
+		if (pbyData)						// have data to save
+		{
+			LPBYTE p = pbyData;
+			while (dwFileSize > 0 && dwStartAddr <= 0xFFFFF)
+			{
+				Nwrite(p++,dwStartAddr++,1);
+				--dwFileSize;
 		}
 	}
-
+		free(pbyData);
+	}
 	CloseHandle(hFile);
-	return TRUE;
+	return pbyData != NULL;
 }
 
 //
 // write memory data to file
 //
-static BOOL SaveMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,DWORD dwEndAddr)
+static BOOL SaveMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,DWORD dwEndAddr,UINT uBitMode)
 {
 	HANDLE hFile;
-	DWORD  dwAddr,dwWritten;
-	BYTE   byData;
+	DWORD  dwAddr,dwSend,dwWritten;
+	BYTE   byData[2];
 
 	hFile = CreateFile(lpszFilename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)		// error, couldn't create a new file
@@ -3549,8 +3585,14 @@ static BOOL SaveMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,DWORD dwEndAddr)
 	for (dwAddr = dwStartAddr; dwAddr <= dwEndAddr; dwAddr += 2)
 	{
 		_ASSERT(dwAddr <= 0xFFFFF);
-		byData = Read2(dwAddr);				// read byte in map mode
-		WriteFile(hFile,&byData,sizeof(byData),&dwWritten,NULL);
+		Npeek(byData,dwAddr,2);				// read two nibble in map mode
+		dwSend = 2;							// send 2 nibble
+		if (uBitMode == 0)					// (0=8-bit, 1=4-bit)
+		{
+			byData[0] = byData[0]|(byData[1]<<4);
+			dwSend = 1;						// send 1 byte
+		}
+		WriteFile(hFile,&byData,dwSend,&dwWritten,NULL);
 	}
 
 	CloseHandle(hFile);
@@ -3564,9 +3606,14 @@ static INT_PTR CALLBACK DebugMemLoad(HWND hDlg, UINT message, WPARAM wParam, LPA
 {
 	TCHAR szFilename[MAX_PATH];
 	DWORD dwStartAddr;
+	int   nButton;
+	UINT  uBitMode;
 
 	switch (message)
 	{
+	case WM_INITDIALOG:
+		CheckDlgButton(hDlg,IDC_DEBUG_DATA_LOAD_ABIT,BST_CHECKED);
+		return TRUE;
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
@@ -3586,8 +3633,14 @@ static INT_PTR CALLBACK DebugMemLoad(HWND hDlg, UINT message, WPARAM wParam, LPA
 
 			_ASSERT(dwStartAddr <= 0xFFFFF);
 
+			for (nButton = IDC_DEBUG_DATA_LOAD_8BIT; nButton <= IDC_DEBUG_DATA_LOAD_ABIT; ++nButton)
+			{
+				if (IsDlgButtonChecked(hDlg,nButton) == BST_CHECKED)
+					break;
+			}
+			uBitMode = (UINT) (nButton - IDC_DEBUG_DATA_LOAD_8BIT);
 			// load memory dump file
-			if (!LoadMemData(szFilename,dwStartAddr))
+			if (!LoadMemData(szFilename,dwStartAddr,uBitMode))
 				return FALSE;
 
 			// update memory window
@@ -3617,9 +3670,13 @@ static INT_PTR CALLBACK DebugMemSave(HWND hDlg, UINT message, WPARAM wParam, LPA
 {
 	TCHAR szFilename[MAX_PATH];
 	DWORD dwStartAddr,dwEndAddr;
+	UINT  uBitMode;
 
 	switch (message)
 	{
+	case WM_INITDIALOG:
+		CheckDlgButton(hDlg,IDC_DEBUG_DATA_SAVE_8BIT,BST_CHECKED);
+		return TRUE;
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
@@ -3643,8 +3700,9 @@ static INT_PTR CALLBACK DebugMemSave(HWND hDlg, UINT message, WPARAM wParam, LPA
 			_ASSERT(dwStartAddr <= 0xFFFFF);
 			_ASSERT(dwEndAddr   <= 0xFFFFF);
 
+			uBitMode = IsDlgButtonChecked(hDlg,IDC_DEBUG_DATA_SAVE_4BIT);
 			// save memory dump file
-			if (!SaveMemData(szFilename,dwStartAddr,dwEndAddr))
+			if (!SaveMemData(szFilename,dwStartAddr,dwEndAddr,uBitMode))
 				return FALSE;
 
 			// no break

@@ -58,11 +58,6 @@ LINKS
 
 CHANGES
 
-Version 2.8 (2024-xx-xx)
-
-- Update the usb serial drivers usb-serial-for-android to version 3.7.3
-
-
 Version 2.7 (2024-06-14)
 
 - Updated source code with Emu48 version 1.65+. This new version improve the serial communication.

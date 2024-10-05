@@ -247,7 +247,7 @@ VOID SetHP48Time(VOID)						// set date and time
 	ULONGLONG  ticks, time;
 	DWORD      dw;
 	WORD       crc, i;
-	BYTE       p[4];
+	LPBYTE     pbyTime;
 
 	_ASSERT(sizeof(ULONGLONG) == 8);		// check size of datatype
 
@@ -282,29 +282,23 @@ VOID SetHP48Time(VOID)						// set date and time
 	time = ticks;							// save for calc. timeout
 	time += OFF_TIME;						// add 10 min for auto off
 
-	dw = RPLTIME;							// HP addresses for clock in port0
+	pbyTime = Port0 + RPLTIME;				// HP addresses for clock in port0
 
 	crc = 0x0;								// reset crc value
-	for (i = 0; i < 13; ++i, ++dw)			// write date and time
+	for (i = 0; i < 13; ++i)				// write date and time
 	{
-		*p = (BYTE) ticks & 0xf;
-		crc = (crc >> 4) ^ (((crc ^ ((WORD) *p)) & 0xf) * 0x1081);
-		Port0[dw] = *p;						// always store in port0
+		*pbyTime = (BYTE) ticks & 0xf;		// time
+		crc = UpCRC(crc,*pbyTime);
 		ticks >>= 4;
-	}
 
-	Nunpack(p,crc,4);						// write crc
-	memcpy(Port0+dw,p,4);					// always store in port0
-
-	dw += 4;								// HP addresses for timeout
-
-	for (i = 0; i < 13; ++i, ++dw)			// write time for auto off
-	{
-		Port0[dw] = (BYTE) time & 0xf;		// always store in port0
+		pbyTime[13+4] = (BYTE) time & 0xf;	// auto off
 		time >>= 4;
+		++pbyTime;
 	}
 
-	Port0[dw] = 0xf;						// always store in port0
+	Nunpack(pbyTime,crc,4);					// write crc
+
+	pbyTime[13+4] = 0xf;
 	return;
 }
 

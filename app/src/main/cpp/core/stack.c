@@ -19,12 +19,107 @@
 #define DOCSTR		0x02A2C					// String
 
 BOOL bDetectClpObject = TRUE;				// try to detect clipboard object
+BOOL bLocaleDecimalPoint = FALSE;			// use decimal point character from calculator
 
 //################
 //#
 //#    Low level subroutines
 //#
 //################
+
+//
+// check if cGroup character is thousands separator
+//
+static BOOL CheckThousandGroup(LPCTSTR cp,TCHAR cGroup)
+{
+	UINT uLastPos;
+	UINT i;
+
+	// get decimal point
+	CONST TCHAR cDecimalPoint = cGroup ^ (_T('.') ^ _T(','));
+
+	BOOL bFound = FALSE;					// 1st separator not found
+	BOOL bPosOK = TRUE;
+
+	for (i = 0; bPosOK && cp[i] != cDecimalPoint && cp[i] != 0; ++i)
+	{
+		if (cp[i] == cGroup)				// found separator
+		{
+			if (bFound)
+			{
+				// verify separator position
+				bPosOK = (uLastPos + 4 == i);
+			}
+
+			uLastPos = i;					// last position of separator
+			bFound = TRUE;					// separator found
+		}
+	}
+
+	// check last grouping
+	return bPosOK && bFound && (uLastPos + 4 == i);
+}
+
+//
+// get decimal point from clipboard
+//
+static TCHAR GetClpbrdDecimalPoint(LPCTSTR cp)
+{
+	TCHAR cDec = 0;							// default for invalid decimal point detection
+
+	TCHAR cLast = 0;						// last decimal point
+	UINT uPoint = 0;						// no. of points
+	UINT uComma = 0;						// no. of commas
+
+	LPCTSTR p;
+	for (p = cp; *p; ++p)					// count '.' and ',' characters
+	{
+		if (*p == _T('.'))
+		{
+			cLast = *p;						// last occurance
+			++uPoint;
+		}
+		if (*p == _T(','))
+		{
+			cLast = *p;						// last occurance
+			++uComma;
+		}
+	}
+
+	if (uComma == 0 && uPoint == 0)			// none of both
+	{
+		cDec = _T('.');
+	}
+	else if (uComma == 1 && uPoint == 0)	// one single ','
+	{
+		cDec = _T(',');
+	}
+	else if (uComma == 0 && uPoint == 1)	// one single '.'
+	{
+		cDec = _T('.');
+	}
+	else if (uComma == 1 && uPoint == 1)	// one single ',' and '.'
+	{
+		// change from ',' to '.' or vice versa
+		const TCHAR cFirst = cLast ^ (_T('.') ^ _T(','));
+
+		if (CheckThousandGroup(cp,cFirst))	// check if 1st character is grouped
+		{
+			cDec = cLast;
+		}
+	}
+	// multiple grouped ',' and single '.'
+	else if (uComma > 1 && uPoint == 1 && CheckThousandGroup(cp,_T(',')))
+	{
+		cDec = _T('.');
+	}
+	// multiple grouped '.' and single ','
+	else if (uComma == 1 && uPoint > 1 && CheckThousandGroup(cp,_T('.')))
+	{
+		cDec = _T(',');
+	}
+	return cDec;
+}
 
 static LPTSTR Trim(LPCTSTR cp)
 {
@@ -238,22 +333,23 @@ static INT RPL_GetBcd(BYTE CONST *pbyNum,INT nMantLen,INT nExpLen,CONST TCHAR cD
 
 static __inline INT SetBcd(LPCTSTR cp,INT nMantLen,INT nExpLen,CONST TCHAR cDec,LPBYTE pbyNum,INT nSize)
 {
-	TCHAR cVc[] = _T(".0123456789eE+-");
+	TCHAR cVc[] = _T(",.0123456789eE+-");
 
 	BYTE byNum[80];
 	INT  i,nIp,nDp,nMaxExp;
 	LONG lExp;
 
-	cVc[0] = cDec;							// replace decimal char
+	// get thousand separator
+	const TCHAR cThousand = cDec ^ (_T('.') ^ _T(','));
 
 	if (   nMantLen + nExpLen >= nSize		// destination buffer too small
 		|| !*cp								// empty string
-		|| _tcsspn(cp,cVc) != (SIZE_T) lstrlen(cp) // real contain only these numbers
+		|| _tcsspn(cp,cVc) != (SIZE_T) lstrlen(cp) // real doesn't contain only these numbers
 		|| (SIZE_T) lstrlen(cp) >= ARRAYSIZEOF(byNum)) // ignore too long reals
 		return 0;
 
 	byNum[0] = (*cp != _T('-')) ? 0 : 9;	// set sign nibble
-	if (*cp == _T('-') || *cp == _T('+'))	// skip sign character
+	if (*cp == _T('-') || *cp == _T('+'))	// skip sign nibble
 		cp++;
 
 	// only '.', '0' .. '9' are valid here
@@ -264,8 +360,13 @@ static __inline INT SetBcd(LPCTSTR cp,INT nMantLen,INT nExpLen,CONST TCHAR cDec,
 	if (*cp != cDec)						// no decimal point
 	{
 		// count integer part
-		while (*cp >= _T('0') && *cp <= _T('9'))
-			byNum[++nIp] = *cp++ - _T('0');
+		for (; (*cp >= _T('0') && *cp <= _T('9')) || *cp == cThousand; ++cp)
+		{
+			if (*cp != cThousand)			// not thousand separator
+			{
+				byNum[++nIp] = *cp - _T('0');
+			}
+		}
 		if (!nIp) return 0;
 	}
 
@@ -376,8 +477,8 @@ static INT RPL_GetComplex(BYTE CONST *pbyNum,INT nMantLen,INT nExpLen,CONST TCHA
 	TCHAR cSep;
 
 	cSep = (cDec == _T('.'))				// current separator
-		 ? _T(',')							// radix mark '.' -> ',' separator
-		 : _T(';');							// radix mark ',' -> ';' separator
+		 ? _T(',')							// decimal point '.' -> ',' separator
+		 : _T(';');							// decimal comma ',' -> ';' separator
 
 	nPos = 0;								// write buffer position
 
@@ -420,8 +521,8 @@ static INT RPL_SetComplex(LPCTSTR cp,INT nMantLen,INT nExpLen,CONST TCHAR cDec,L
 	nLen = 0;								// read data length
 
 	cSep = (cDec == _T('.'))				// current separator
-		 ? _T(',')							// radix mark '.' -> ',' separator
-		 : _T(';');							// radix mark ',' -> ';' separator
+		 ? _T(',')							// decimal point '.' -> ',' separator
+		 : _T(';');							// decimal comma ',' -> ';' separator
 
 	if ((pszData = Trim(cp)) != NULL)		// create a trimmed working copy of the string
 	{
@@ -468,8 +569,14 @@ static INT RPL_SetComplex(LPCTSTR cp,INT nMantLen,INT nExpLen,CONST TCHAR cDec,L
 
 static TCHAR GetRadix(VOID)
 {
-	// get locale decimal point
-	// GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_SDECIMAL,&cDecimal,1);
+	if (bLocaleDecimalPoint)				// use Windows Locale decimal point character
+	{
+		TCHAR cDecimal[2];
+
+		// get locale decimal point with zero terminator
+		GetLocaleInfo(LOCALE_USER_DEFAULT,LOCALE_SDECIMAL,cDecimal,2);
+		return cDecimal[0];
+	}
 
 	return RPL_GetSystemFlag(fnRadix) ? _T(',') : _T('.');
 }
@@ -683,9 +790,11 @@ LRESULT OnStackPaste(VOID)					// paste data to stack
 
 			if ((lpstrClipdata = (LPCTSTR) GlobalLock(hClipObj)))
 			{
+				TCHAR cDec;
 				BYTE  byNumber[128];
 				DWORD dwAddress;
-				INT   s;
+
+				INT s = 0;					// no valid object
 
 				do
 				{
@@ -715,9 +824,14 @@ LRESULT OnStackPaste(VOID)					// paste data to stack
 							}
 						}
 
-						// try to convert string to real format
-						_ASSERT(16 <= ARRAYSIZEOF(byNumber));
-						s = RPL_SetBcd(lpstrClipdata,12,3,GetRadix(),byNumber,sizeof(byNumber));
+						cDec = GetClpbrdDecimalPoint(lpstrClipdata);
+
+						if (cDec)			// valid decimal point
+						{
+							// try to convert string to real format
+							_ASSERT(16 <= ARRAYSIZEOF(byNumber));
+							s = RPL_SetBcd(lpstrClipdata,12,3,cDec,byNumber,sizeof(byNumber));
+						}
 
 						if (s > 0)			// is a real number
 						{
@@ -736,9 +850,14 @@ LRESULT OnStackPaste(VOID)					// paste data to stack
 							break;
 						}
 
+						// search for ';' as separator
+						cDec = (_tcschr(lpstrClipdata,_T(';')) != NULL)
+							 ? _T(',')							// decimal comma
+							 : _T('.');							// decimal point
+
 						// try to convert string to complex format
 						_ASSERT(32 <= ARRAYSIZEOF(byNumber));
-						s = RPL_SetComplex(lpstrClipdata,12,3,GetRadix(),byNumber,sizeof(byNumber));
+						s = RPL_SetComplex(lpstrClipdata,12,3,cDec,byNumber,sizeof(byNumber));
 
 						if (s > 0)			// is a real complex
 						{

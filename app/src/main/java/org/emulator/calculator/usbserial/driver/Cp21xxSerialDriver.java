@@ -8,6 +8,7 @@ package org.emulator.calculator.usbserial.driver;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 
@@ -118,14 +119,14 @@ public class Cp21xxSerialDriver implements UsbSerialDriver {
             byte[] buffer = new byte[1];
             int result = mConnection.controlTransfer(REQTYPE_DEVICE_TO_HOST, SILABSER_GET_MDMSTS_REQUEST_CODE, 0,
                     mPortNumber, buffer, buffer.length, USB_WRITE_TIMEOUT_MILLIS);
-            if (result != buffer.length) {
+            if (result != 1) {
                 throw new IOException("Control transfer failed: " + SILABSER_GET_MDMSTS_REQUEST_CODE + " / " + 0 + " -> " + result);
             }
             return buffer[0];
         }
 
         @Override
-        protected void openInt() throws IOException {
+        protected void openInt(UsbDeviceConnection connection) throws IOException {
             mIsRestrictedPort = mDevice.getInterfaceCount() == 2 && mPortNumber == 1;
             if(mPortNumber >= mDevice.getInterfaceCount()) {
                 throw new IOException("Unknown port number");
@@ -320,7 +321,6 @@ public class Cp21xxSerialDriver implements UsbSerialDriver {
         }
     }
 
-    @SuppressWarnings({"unused"})
     public static Map<Integer, int[]> getSupportedDevices() {
         final Map<Integer, int[]> supportedDevices = new LinkedHashMap<>();
         supportedDevices.put(UsbId.VENDOR_SILABS,

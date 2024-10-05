@@ -9,7 +9,6 @@ package org.emulator.calculator.usbserial.util;
 import android.os.Process;
 import android.util.Log;
 
-import org.emulator.calculator.usbserial.driver.SerialTimeoutException;
 import org.emulator.calculator.usbserial.driver.UsbSerialPort;
 
 import java.io.IOException;
@@ -22,15 +21,8 @@ import java.nio.ByteBuffer;
  */
 public class SerialInputOutputManager implements Runnable {
 
-    public enum State {
-        STOPPED,
-        RUNNING,
-        STOPPING
-    }
-
-    public static boolean DEBUG = false;
-
     private static final String TAG = SerialInputOutputManager.class.getSimpleName();
+    public static boolean DEBUG = false;
     private static final int BUFSIZ = 4096;
 
     /**
@@ -44,6 +36,12 @@ public class SerialInputOutputManager implements Runnable {
 
     private ByteBuffer mReadBuffer; // default size = getReadEndpoint().getMaxPacketSize()
     private ByteBuffer mWriteBuffer = ByteBuffer.allocate(BUFSIZ);
+
+    public enum State {
+        STOPPED,
+        RUNNING,
+        STOPPING
+    }
 
     private int mThreadPriority = Process.THREAD_PRIORITY_URGENT_AUDIO;
     private State mState = State.STOPPED; // Synchronized by 'this'
@@ -204,11 +202,7 @@ public class SerialInputOutputManager implements Runnable {
                 step();
             }
         } catch (Exception e) {
-            if(mSerialPort.isOpen()) {
-                Log.w(TAG, "Run ending due to exception: " + e.getMessage(), e);
-            } else {
-                Log.i(TAG, "Socket closed");
-            }
+            Log.w(TAG, "Run ending due to exception: " + e.getMessage(), e);
             final Listener listener = getListener();
             if (listener != null) {
               listener.onRunError(e);
@@ -229,9 +223,7 @@ public class SerialInputOutputManager implements Runnable {
         }
         int len = mSerialPort.read(buffer, mReadTimeout);
         if (len > 0) {
-            if (DEBUG) {
-                Log.d(TAG, "Read data len=" + len);
-            }
+            if (DEBUG) Log.d(TAG, "Read data len=" + len);
             final Listener listener = getListener();
             if (listener != null) {
                 final byte[] data = new byte[len];
@@ -255,23 +247,7 @@ public class SerialInputOutputManager implements Runnable {
             if (DEBUG) {
                 Log.d(TAG, "Writing data len=" + len);
             }
-            try {
-                mSerialPort.write(buffer, mWriteTimeout);
-            } catch (SerialTimeoutException ex) {
-                synchronized (mWriteBufferLock) {
-                    byte[] buffer2 = null;
-                    int len2 = mWriteBuffer.position();
-                    if (len2 > 0) {
-                        buffer2 = new byte[len2];
-                        mWriteBuffer.rewind();
-                        mWriteBuffer.get(buffer2, 0, len2);
-                        mWriteBuffer.clear();
-                    }
-                    mWriteBuffer.put(buffer, ex.bytesTransferred, buffer.length - ex.bytesTransferred);
-                    if (buffer2 != null)
-                        mWriteBuffer.put(buffer2);
-                }
-            }
+            mSerialPort.write(buffer, mWriteTimeout);
         }
     }
 
