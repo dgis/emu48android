@@ -1,0 +1,1 @@
+Emu48 can emulate a HP38G, HP39G, HP40G, HP48SX, HP48GX, HP49G and more.

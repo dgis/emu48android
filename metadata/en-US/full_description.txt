@@ -1,0 +1,11 @@
+This project ports the Windows application Emu48 written in C to Android.
+It uses the Android NDK. The former Emu48 source code (written by Sébastien Carlier and Christoph Giesselink) remains untouched because of a thin win32 emulation layer above Linux/NDK!
+This win32 layer will allow to easily update from the original Emu48 source code.
+It can open or save the exact same state files (state.e48/e49) than the original Windows application!
+
+Some KML files with theirs faceplates are embedded in the application but it is still possible to open a KML file and its dependencies by selecting a folder.
+
+The application does not request any permission (because it opens the files or the KML folders using the content:// scheme).
+
+The application is distributed with the same license under GPL and you can find the source code here:
+https://github.com/dgis/emu48android
