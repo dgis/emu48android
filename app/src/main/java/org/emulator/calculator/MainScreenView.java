@@ -483,7 +483,7 @@ public class MainScreenView extends PanAndScaleView {
 		canvas.drawLines(pointsBuffer, paintLCD);
 	}
 
-	public void updateCallback(int type, int param1, int param2, String param3, String param4) {
+	public void updateCallback(int type, int param1, int param2) {
 		try {
 			switch (type) {
 				case NativeLib.CALLBACK_TYPE_INVALIDATE:

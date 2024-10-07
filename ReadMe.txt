@@ -61,6 +61,7 @@ CHANGES
 Version 2.8 (2024-xx-xx)
 
 - Updated source code with Emu48 version 1.66+.
+- Fix an USB serial issue with Android 13+ (fix #23).
 
 
 Version 2.7 (2024-06-14)

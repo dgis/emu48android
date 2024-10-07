@@ -1783,12 +1783,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Method used from JNI!
 
 	@SuppressWarnings("UnusedDeclaration")
-    public int updateCallback(int type, int param1, int param2, String param3, String param4) {
+	public int updateCallback(int type, int param1, int param2) {
 
-        mainScreenView.updateCallback(type, param1, param2, param3, param4);
-        return -1;
-    }
-
+		mainScreenView.updateCallback(type, param1, param2);
+		return -1;
+	}
 
     final int GENERIC_READ   = 1;
     final int GENERIC_WRITE  = 2;
