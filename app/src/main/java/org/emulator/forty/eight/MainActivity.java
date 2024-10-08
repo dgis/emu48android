@@ -1984,6 +1984,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case 26: // TOOL_MACRO_SETTINGS
                 break;
+	        case 201: // Custom: CUSTOM_PIXEL_BORDER_ON
+		        settings.putBoolean("settings_lcd_pixel_borders", true);
+		        updateFromPreferences("settings_lcd_pixel_borders", true);
+		        break;
+	        case 202: // Custom: CUSTOM_PIXEL_BORDER_OFF
+		        settings.putBoolean("settings_lcd_pixel_borders", false);
+		        updateFromPreferences("settings_lcd_pixel_borders", true);
+		        break;
+	        case 203: // Custom: CUSTOM_PIXEL_BORDER_TOGGLE
+		        boolean usePixelBorders = settings.getBoolean("settings_lcd_pixel_borders", false);
+				settings.putBoolean("settings_lcd_pixel_borders", !usePixelBorders);
+		        updateFromPreferences("settings_lcd_pixel_borders", true);
+		        break;
             default:
                 break;
         }

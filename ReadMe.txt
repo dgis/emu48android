@@ -62,6 +62,7 @@ Version 2.8 (2024-xx-xx)
 
 - Updated source code with Emu48 version 1.66+.
 - Fix an USB serial issue with Android 13+ (fix #23).
+- Extend the KML MenuItem commands for Android only with: 201 (CUSTOM_PIXEL_BORDER_ON), 202 (CUSTOM_PIXEL_BORDER_OFF), 203 (CUSTOM_PIXEL_BORDER_TOGGLE) (fix #28).
 
 
 Version 2.7 (2024-06-14)
@@ -278,7 +279,6 @@ FAQ
 TODO
 
 - NDK 26 does not compile
-- Adding a new KML command for Android only: CUSTOM_PIXEL_BORDER_ON  10001 / CUSTOM_PIXEL_BORDER_OFF 10002 / CUSTOM_PIXEL_BORDER_TOGGLE 10003
 - Patching 49G to disable 10 min auto off causes a reset when touching the Recent button and coming back to the app (with a Flashcard loaded).
 - Add an "haptic" feedback with a sound instead of a vibration (F. Giampietro).
 - Add a Cancel button to the HP48 memory card creator dialog.

@@ -62,6 +62,7 @@ Version 2.8 (2024-xx-xx)
 
 - Updated source code with Emu48 version 1.66+.
 - Fix an USB serial issue with Android 13+ (fix #23).
+- Extend the KML MenuItem commands for Android only with: 201 (CUSTOM_PIXEL_BORDER_ON), 202 (CUSTOM_PIXEL_BORDER_OFF), 203 (CUSTOM_PIXEL_BORDER_TOGGLE) (fix #28).
 
 
 Version 2.7 (2024-06-14)
