@@ -1,0 +1,305 @@
+Scancode 112 # F1
+	Map 112 11 # A
+End
+
+Scancode 113 # F2
+	Map 113 12 # A
+End
+
+Scancode 114 # F3
+	Map 114 13 # A
+End
+
+Scancode 115 # F4
+	Map 115 14 # A
+End
+
+Scancode 116 # F5
+	Map 116 15 # A
+End
+
+Scancode 117 # F6
+	Map 117 16 # F
+End
+
+Scancode 65 # A
+	Map 65 11 # A
+End
+
+Scancode 66 # B
+	Map 66 12 # B
+End
+
+Scancode 67 # C
+	Map 67 13 # C
+End
+
+Scancode 68 # D
+	Map 68 14 # D
+End
+
+Scancode 69 # E
+	Map 69 15 # E
+End
+
+Scancode 70 # F
+	Map 70 16 # F
+End
+
+Scancode 71 # G
+	Map 71 21 # G
+End
+
+Scancode 72 # H
+	Map 72 22 # H
+End
+
+Scancode 73 # I
+	Map 73 23 # I
+End
+
+Scancode 37 # LEFT
+	Map 37 24 # LEFT
+End
+
+Scancode 39 # RIGHT
+	Map 39 25 # RIGHT
+End
+
+Scancode 74 # J
+	Map 74 31 # J
+End
+
+Scancode 75 # K
+	Map 75 32 # K
+End
+
+Scancode 76 # L
+	Map 76 33 # L
+End
+
+Scancode 40 # DOWN
+	Map 40 34 # DOWN
+End
+
+Scancode 38 # DOWN
+	Map 38 35 # DOWN
+End
+
+Scancode 77 # M
+	Map 77 41 # M
+End
+
+Scancode 78 # N
+	Map 78 42 # N
+End
+
+Scancode 79 # O
+	Map 79 43 # O
+End
+
+Scancode 222 # '
+	Map 222 43 # O
+End
+
+Scancode 80 # P
+	Map 80 44 # P
+End
+
+Scancode 8 # BACKSPACE
+	Map 8 45 # DELETE
+End
+
+Scancode 81 # Q
+	Map 81 51 # Q
+End
+
+Scancode 82 # R
+	Map 82 52 # R
+End
+
+Scancode 83 # S
+	Map 83 53 # S
+End
+
+Scancode 84 # T
+	Map 84 54 # T
+End
+
+Scancode 85 # U
+	Map 85 55 # U
+End
+
+Scancode 86 # V
+	Map 86 61 # V
+End
+
+Scancode 87 # W
+	Map 87 62 # W
+End
+
+Scancode 88 # X
+	Map 88 63 # X
+End
+
+Scancode 89 # Y
+	Map 89 64 # Y
+End
+
+Scancode 90 # Z
+	Map 90 65 # Z
+End
+
+Scancode 191 # SLASH
+	Map 191 65 # Z
+End
+
+Scancode 111 # NUM-SLASH
+	Map 111 65 # Z
+End
+
+Scancode 9 # TAB
+	Map 9 71 # ALPHA
+End
+
+Scancode 55 # 7
+	Map 55 72 # 7
+End
+
+Scancode 103 # NUM7
+	Map 103 72 # 7
+End
+
+Scancode 56 # 8
+	Map 56 73 # 8
+End
+
+Scancode 104 # NUM8
+	Map 104 73 # 8
+End
+
+Scancode 57 # 9
+	Map 57 74 # 9
+End
+
+Scancode 105 # NUM9
+	Map 105 74 # 9
+End
+
+Scancode 192 # BACKTICK 
+	Map 192 75 # *
+End
+
+Scancode 106 # NUM*
+	Map 106 75 # *
+End
+
+Scancode 16 # LSHIFT
+	Map 16 81 # LEFT-SHIFT
+End
+
+Scancode 52 # 4
+	Map 52 82 # 4
+End
+
+Scancode 100 # NUM4
+	Map 100 82 # 4
+End
+
+Scancode 53 # 5
+	Map 53 83 # 5
+End
+
+Scancode 101 # NUM5
+	Map 101 83 # 5
+End
+
+Scancode 54 # 6
+	Map 54 84 # 6
+End
+
+Scancode 102 # NUM6
+	Map 102 84 # 6
+End
+
+Scancode 189 # MINUS
+	Map 189 85 # MINUS
+End
+
+Scancode 109 # NUM-MINUS
+	Map 109 85 # MINUS
+End
+
+Scancode 17 # CTRL
+	Map 17 91 # RIGHT-SHIFT
+End
+
+Scancode 49 # 1
+	Map 49 92 # 1
+End
+
+Scancode 97 # NUM1
+	Map 97 92 # 1
+End
+
+Scancode 50 # 2
+	Map 50 93 # 2
+End
+
+Scancode 98 # NUM2
+	Map 98 93 # 2
+End
+
+Scancode 51 # 3
+	Map 51 94 # 3
+End
+
+Scancode 99 # NUM3
+	Map 99 94 # 3
+End
+
+Scancode 187 # PLUS
+	Map 187 95 # PLUS
+End
+
+Scancode 107 # NUM-PLUS
+	Map 107 95 # PLUS
+End
+
+Scancode 27 # ESC
+	Map 27 101 # ON
+End
+
+Scancode 48 # 0
+	Map 48 102 # ON
+End
+
+Scancode 96 # NUM0
+	Map 96 102 # ON
+End
+
+Scancode 190 # .
+	Map 190 103 # DECIMAL-POINT
+End
+
+Scancode 110 # NUM-POINT
+	Map 110 103 # DECIMAL-POINT
+End
+
+Scancode 32 # SPACE
+	Map 32 104 # SPC
+End
+
+Scancode 188 # COMMA
+	IfPressed 188 # COMMA
+		Press 91 # RIGHT-SHIFT
+		Release 91 # RIGHT-SHIFT
+	Else # COMMA
+		Press 104 # SPC (RIGHT-SHIFT COMMA)
+		Release 104 # SPC (RIGHT-SHIFT COMMA)
+	End
+End
+
+Scancode 13 # ENTER
+	Map 13 105 # ENTER
+End

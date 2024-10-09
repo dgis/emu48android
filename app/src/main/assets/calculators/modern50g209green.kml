@@ -1,0 +1,568 @@
+# "Modern"
+# 2024 github.com/esesur
+
+Global
+	Title "Modern 50g Green (20:9)"
+	Author "esesur"
+	# Hardware "Yorke"
+	Model "Q"
+	Class 50
+	Rom "rom.49g"
+	# Patch STRING
+	Bitmap "modern50g209green.png"
+	# Icon STRING
+	# Color INTEGER INTEGER INTEGER INTEGER
+	# Scale 1 2
+	# Print STRING
+	Debug 0
+End
+
+Background
+	# Vga INTEGER
+	# Topbar INTEGER
+	# Menubar INTEGER
+	Offset 0 0
+	Size 532 1176
+End
+
+Lcd
+	Zoom 4
+	# Zoomxy 4 4
+	# Vertical INTEGER
+	Offset 4 28
+	# Bitmap STRING
+	
+	# Foreground
+	Color  0   0   0   0
+	Color  1   0   0   0
+	Color  2   0   0   0
+	Color  3   0   0   0
+	Color  4   0   0   0
+	Color  5   0   0   0
+	Color  6   0   0   0
+	Color  7   0   0   0
+	Color  8   0   0   0
+	Color  9   0   0   0
+	Color 10   0   0   0
+	Color 11   0   0   0
+	Color 12   0   0   0
+	Color 13   0   0   0
+	Color 14   0   0   0
+	Color 15   0   0   0
+	Color 16   0   0   0
+	Color 17   0   0   0
+	Color 18   0   0   0
+	Color 19   0   0   0
+	Color 20   0   0   0
+	Color 21   0   0   0
+	Color 22   0   0   0
+	Color 23   0   0   0
+	Color 24   0   0   0
+	Color 25   0   0   0
+	Color 26   0   0   0
+	Color 27   0   0   0
+	Color 28   0   0   0
+	Color 29   0   0   0
+	Color 30   0   0   0
+	Color 31   0   0   0
+	
+	# Background
+	Color 32 186 222 198
+	Color 33 186 222 198
+	Color 34 186 222 198
+	Color 35 186 222 198
+	Color 36 186 222 198
+	Color 37 186 222 198
+	Color 38 186 222 198
+	Color 39 186 222 198
+	Color 40 186 222 198
+	Color 41 186 222 198
+	Color 42 186 222 198
+	Color 43 186 222 198
+	Color 44 186 222 198
+	Color 45 186 222 198
+	Color 46 186 222 198
+	Color 47 186 222 198
+	Color 48 186 222 198
+	Color 49 186 222 198
+	Color 50 186 222 198
+	Color 51 186 222 198
+	Color 52 186 222 198
+	Color 53 186 222 198
+	Color 54 186 222 198
+	Color 55 186 222 198
+	Color 56 186 222 198
+	Color 57 186 222 198
+	Color 58 186 222 198
+	Color 59 186 222 198
+	Color 60 186 222 198
+	Color 61 186 222 198
+	Color 62 186 222 198
+	Color 63 186 222 198
+End
+
+Annunciator 1
+	Size 20 20
+	Offset 388 4
+	Down 532 4
+End
+
+Annunciator 2
+	Size 20 20
+	Offset 412 4
+	Down 532 28
+End
+
+Annunciator 3
+	Size 20 20
+	Offset 436 4
+	Down 532 52
+End
+
+Annunciator 4
+	Size 20 20
+	Offset 460 4
+	Down 532 76
+End
+
+Annunciator 5
+	Size 20 20
+	Offset 484 4
+	Down 532 100
+End
+
+Annunciator 6
+	Size 20 20
+	Offset 508 4
+	Down 532 124
+End
+
+###############################################################################
+
+Button 11 # A
+	Type 0
+	Size 84 78
+	Offset 4 356
+	Down 532 356
+	OutIn 5 1
+End
+
+Button 12 # B
+	Type 0
+	Size 84 78
+	Offset 92 356
+	Down 620 356
+	OutIn 5 2
+End
+
+Button 13 # C
+	Type 0
+	Size 84 78
+	Offset 180 356
+	Down 708 356
+	OutIn 5 4
+End
+
+Button 14 # D
+	Type 0
+	Size 84 78
+	Offset 268 356
+	Down 796 356
+	OutIn 5 8
+End
+
+Button 15 # E
+	Type 0
+	Size 84 78
+	Offset 356 356
+	Down 884 356
+	OutIn 5 16
+End
+
+Button 16 # F
+	Type 0
+	Size 84 78
+	Offset 444 356
+	Down 972 356
+	OutIn 5 32
+End
+
+###############################################################################
+
+Button 21 # G
+	Type 0
+	Size 102 78
+	Offset 4 438
+	Down 532 438
+	OutIn 5 128
+End
+
+Button 22 # H
+	Type 0
+	Size 102 78
+	Offset 110 438
+	Down 638 438
+	OutIn 4 128
+End
+
+Button 23 # I
+	Type 0
+	Size 100 78
+	Offset 216 438
+	Down 744 438
+	OutIn 3 128
+End
+
+Button 24 # LEFT
+	Type 0
+	Size 102 78
+	Offset 320 438
+	Down 848 438
+	OutIn 6 4
+End
+
+Button 25 # RIGHT
+	Type 0
+	Size 102 78
+	Offset 426 438
+	Down 954 438
+	OutIn 6 1
+End
+
+###############################################################################
+
+Button 31 # J
+	Type 0
+	Size 102 78
+	Offset 4 520
+	Down 532 520
+	OutIn 2 128
+End
+
+Button 32 # K
+	Type 0
+	Size 102 78
+	Offset 110 520
+	Down 638 520
+	OutIn 1 128
+End
+
+Button 33 # L
+	Type 0
+	Size 100 78
+	Offset 216 520
+	Down 744 520
+	OutIn 0 128
+End
+
+Button 34 # DOWN
+	Type 0
+	Size 102 78
+	Offset 320 520
+	Down 848 520
+	OutIn 6 2
+End
+
+Button 35 # UP
+	Type 0
+	Size 102 78
+	Offset 426 520
+	Down 954 520
+	OutIn 6 8
+End
+
+###############################################################################
+
+Button 41 # M
+	Type 0
+	Size 102 78
+	Offset 4 602
+	Down 532 602
+	OutIn 4 64
+End
+
+Button 42 # N
+	Type 0
+	Size 102 78
+	Offset 110 602
+	Down 638 602
+	OutIn 3 64
+End
+
+Button 43 # O
+	Type 0
+	Size 100 78
+	Offset 216 602
+	Down 744 602
+	OutIn 2 64
+End
+
+Button 44 # P
+	Type 0
+	Size 102 78
+	Offset 320 602
+	Down 848 602
+	OutIn 1 64
+End
+
+Button 45 # DELETE
+	Type 0
+	Size 102 78
+	Offset 426 602
+	Down 954 602
+	OutIn 0 64
+End
+
+###############################################################################
+
+Button 51 # Q
+	Type 0
+	Size 102 78
+	Offset 4 684
+	Down 532 684
+	OutIn 4 32
+End
+
+Button 52 # R
+	Type 0
+	Size 102 78
+	Offset 110 684
+	Down 638 684
+	OutIn 3 32
+End
+
+Button 53 # S
+	Type 0
+	Size 100 78
+	Offset 216 684
+	Down 744 684
+	OutIn 2 32
+End
+
+Button 54 # T
+	Type 0
+	Size 102 78
+	Offset 320 684
+	Down 848 684
+	OutIn 1 32
+End
+
+Button 55 # U
+	Type 0
+	Size 102 78
+	Offset 426 684
+	Down 954 684
+	OutIn 0 32
+End
+
+###############################################################################
+
+Button 61 # V
+	Type 0
+	Size 102 78
+	Offset 4 766
+	Down 532 766
+	OutIn 4 16
+End
+
+Button 62 # W
+	Type 0
+	Size 102 78
+	Offset 110 766
+	Down 638 766
+	OutIn 3 16
+End
+
+Button 63 # X
+	Type 0
+	Size 100 78
+	Offset 216 766
+	Down 744 766
+	OutIn 2 16
+End
+
+Button 64 # Y
+	Type 0
+	Size 102 78
+	Offset 320 766
+	Down 848 766
+	OutIn 1 16
+End
+
+Button 65 # Z
+	Type 0
+	Size 102 78
+	Offset 426 766
+	Down 954 766
+	OutIn 0 16
+End
+
+###############################################################################
+
+Button 71 # ALPHA
+	Type 0
+	Size 102 78
+	Offset 4 848
+	Down 532 848
+	OutIn 7 8
+End
+
+Button 72 # 7
+	Type 0
+	Size 102 78
+	Offset 110 848
+	Down 638 848
+	OutIn 3 8
+End
+
+Button 73 # 8
+	Type 0
+	Size 100 78
+	Offset 216 848
+	Down 744 848
+	OutIn 2 8
+End
+
+Button 74 # 9
+	Type 0
+	Size 102 78
+	Offset 320 848
+	Down 848 848
+	OutIn 1 8
+End
+
+Button 75 # MULTIPLY
+	Type 0
+	Size 102 78
+	Offset 426 848
+	Down 954 848
+	OutIn 0 8
+End
+
+###############################################################################
+
+Button 81 # LEFT-SHIFT
+	Type 0
+	Size 102 78
+	Offset 4 930
+	Down 532 930
+	OutIn 7 4
+End
+
+Button 82 # 4
+	Type 0
+	Size 101 78
+	Offset 110 930
+	Down 638 930
+	OutIn 3 4
+End
+
+Button 83 # 5
+	Type 0
+	Size 100 78
+	Offset 216 930
+	Down 744 930
+	OutIn 2 4
+End
+
+Button 84 # 6
+	Type 0
+	Size 102 78
+	Offset 320 930
+	Down 848 930
+	OutIn 1 4
+End
+
+Button 85 # MINUS
+	Type 0
+	Size 102 78
+	Offset 426 930
+	Down 954 930
+	OutIn 0 4
+End
+
+###############################################################################
+
+Button 91 # RIGHT-SHIFT
+	Type 0
+	Size 102 78
+	Offset 4 1012
+	Down 532 1012
+	OutIn 7 2
+End
+
+Button 92 # 1
+	Type 0
+	Size 102 78
+	Offset 110 1012
+	Down 638 1012
+	OutIn 3 2
+End
+
+Button 93 # 2
+	Type 0
+	Size 100 78
+	Offset 216 1012
+	Down 744 1012
+	OutIn 2 2
+End
+
+Button 94 # 3
+	Type 0
+	Size 102 78
+	Offset 320 1012
+	Down 848 1012
+	OutIn 1 2
+End
+
+Button 95 # PLUS
+	Type 0
+	Size 102 78
+	Offset 426 1012
+	Down 954 1012
+	OutIn 0 2
+End
+
+###############################################################################
+
+Button 101 # ON
+	Type 0
+	Size 102 78
+	Offset 4 1094
+	Down 532 1094
+	OutIn 0 32768
+End
+
+Button 102 # 0
+	Type 0
+	Size 102 78
+	Offset 110 1094
+	Down 638 1094
+	OutIn 3 1
+End
+
+Button 103 # DECIMAL-POINT
+	Type 0
+	Size 100 78
+	Offset 216 1094
+	Down 744 1094
+	OutIn 2 1
+End
+
+Button 104 # SPC
+	Type 0
+	Size 102 78
+	Offset 320 1094
+	Down 848 1094
+	OutIn 1 1
+End
+
+Button 105 # ENTER
+	Type 0
+	Size 102 78
+	Offset 426 1094
+	Down 954 1094
+	OutIn 0 1
+End
+
+Include "modern50g.kmi"
