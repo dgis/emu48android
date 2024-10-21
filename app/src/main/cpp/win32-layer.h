@@ -1401,3 +1401,40 @@ typedef struct addrinfo ADDRINFO;
 
 extern int closesocket(SOCKET s);
 
+/* DDE */
+
+#define DDE_FACK                0x8000
+#define DDE_FNOTPROCESSED       0x0000
+
+#define     XTYPF_NOBLOCK            0x0002
+
+#define     XCLASS_BOOL              0x1000
+#define     XCLASS_DATA              0x2000
+#define     XCLASS_FLAGS             0x4000
+
+#define     XTYP_CONNECT            (0x0060 | XCLASS_BOOL | XTYPF_NOBLOCK)
+#define     XTYP_POKE               (0x0090 | XCLASS_FLAGS         )
+#define     XTYP_REQUEST            (0x00B0 | XCLASS_DATA          )
+
+DWORD DdeQueryString(DWORD idInst, HSZ hsz, LPSTR psz, DWORD cchMax, int iCodePage);
+LPBYTE DdeAccessData(HDDEDATA hData, LPDWORD pcbDataSize);
+BOOL DdeUnaccessData(HDDEDATA hData);
+HDDEDATA DdeCreateDataHandle(DWORD idInst, LPBYTE pSrc, DWORD cb, DWORD cbOff, HSZ hszItem, UINT wFmt, UINT afCmd);
+
+typedef HDDEDATA (CALLBACK *PFNCALLBACK)(UINT wType, UINT wFmt, HCONV hConv,
+                                         HSZ hsz1, HSZ hsz2, HDDEDATA hData, ULONG_PTR dwData1, ULONG_PTR dwData2);
+#define     APPCLASS_STANDARD            0x00000000L
+
+#define     CBF_FAIL_ADVISES             0x00004000
+#define     CBF_FAIL_EXECUTES            0x00008000
+
+#define     CBF_SKIP_REGISTRATIONS       0x00080000
+#define     CBF_SKIP_UNREGISTRATIONS     0x00100000
+
+#define DNS_REGISTER        0x0001
+#define DNS_UNREGISTER      0x0002
+
+UINT DdeInitialize(LPDWORD pidInst, PFNCALLBACK pfnCallback, DWORD afCmd, DWORD ulRes);
+UINT RegisterClipboardFormat(LPCSTR lpszFormat);
+HSZ DdeCreateStringHandle(DWORD idInst, LPCSTR psz, int iCodePage);
+HDDEDATA DdeNameService(DWORD idInst, HSZ hsz1, HSZ hsz2, UINT afCmd);

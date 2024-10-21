@@ -20,6 +20,8 @@
 #include "core/debugger.h"
 #include "win32-layer.h"
 
+LPTSTR szAppName = _T("Emu48");				// application name for DDE server
+LPTSTR szTopic   = _T("Stack");				// topic for DDE server
 LPTSTR szTitle   = NULL;
 
 CRITICAL_SECTION csGDILock;					// critical section for hWindowDC
@@ -36,6 +38,8 @@ INT              nArgc;						// no. of command line arguments
 LPCTSTR          *ppArgv;					// command line arguments
 LARGE_INTEGER    lFreq;						// high performance counter frequency
 LARGE_INTEGER    lAppStart;					// high performance counter value at Appl. start
+DWORD            idDdeInst;					// DDE server id
+UINT             uCF_HpObj;					// DDE clipboard format
 HANDLE           hThread;
 HANDLE           hEventShutdn;				// event handle to stop cpu thread
 

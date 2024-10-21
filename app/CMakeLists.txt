@@ -5,6 +5,9 @@
 
 cmake_minimum_required(VERSION 3.6.0)
 
+project("org.emulator.calculator.EmuApplication")
+
+
 #add_compile_options(-DDEBUG_DISPLAY)
 #add_compile_options(-DDEBUG_SOUND)
 #add_compile_options(-DDEBUG_DEBUGGER)
@@ -34,6 +37,16 @@ add_compile_options(-DEMUXX=48)
 #add_compile_options(-Wno-error=implicit-function-declaration)
 add_compile_options(-fpermissive)
 add_compile_options(-Wno-error=incompatible-pointer-types)
+add_compile_options(-Wno-absolute-value)
+add_compile_options(-Wno-ignored-pragmas)
+add_compile_options(-Wno-incompatible-pointer-types)
+add_compile_options(-Wno-int-conversion)
+add_compile_options(-Wno-nonportable-include-path)
+add_compile_options(-Wno-pointer-bool-conversion)
+add_compile_options(-Wno-pointer-integer-compare)
+add_compile_options(-Wno-pointer-sign)
+add_compile_options(-Wno-return-type)
+add_compile_options(-Wno-unsequenced)
 
 if(CMAKE_BUILD_TYPE STREQUAL Release)
 	message("RELEASE BUILD")
@@ -57,7 +70,7 @@ add_library( # Sets the name of the library.
 
         src/main/cpp/core/apple.c
 #        src/main/cpp/core/cursor.c
-#        src/main/cpp/core/ddeserv.c
+        src/main/cpp/core/ddeserv.c
 #        src/main/cpp/core/debugger.c
         src/main/cpp/core/disasm.c
         src/main/cpp/core/dismem.c

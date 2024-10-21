@@ -501,7 +501,28 @@ JNIEXPORT void JNICALL Java_org_emulator_calculator_NativeLib_start(JNIEnv *env,
         return;
     }
 
-    soundEnabled = soundAvailable = SoundOpen(uWaveDevId);					// open waveform-audio output device
+	idDdeInst = 0;							// initialize DDE server
+	if (DdeInitialize(&idDdeInst,(PFNCALLBACK) &DdeCallback,
+	                  APPCLASS_STANDARD |
+	                  CBF_FAIL_EXECUTES | CBF_FAIL_ADVISES |
+	                  CBF_SKIP_REGISTRATIONS | CBF_SKIP_UNREGISTRATIONS,0))
+	{
+		// TerminateThread(hThread, 0);		// kill emulation thread
+		CloseHandle(hEventShutdn);			// close event handle
+		AbortMessage(_T("Could not initialize server!"));
+		//DestroyWindow(hWnd);
+		return; // FALSE;
+	}
+
+	// init clipboard format and name service
+	HSZ hszService, hszTopic;				// variables for DDE server
+	uCF_HpObj = RegisterClipboardFormat(_T(CF_HPOBJ));
+	hszService = DdeCreateStringHandle(idDdeInst,szAppName,0);
+	hszTopic   = DdeCreateStringHandle(idDdeInst,szTopic,0);
+	DdeNameService(idDdeInst,hszService,NULL,DNS_REGISTER);
+
+
+	soundEnabled = soundAvailable = SoundOpen(uWaveDevId);					// open waveform-audio output device
 
     ResumeThread(hThread);					// start thread
     while (nState!=nNextState) Sleep(0);	// wait for thread initialized

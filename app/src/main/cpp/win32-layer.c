@@ -3645,3 +3645,46 @@ int GetLocaleInfo(LCID Locale, LCTYPE LCType, LPSTR lpLCData, int cchData) {
 		return 0;
 	}
 
+
+/* DDE */
+
+DWORD DdeQueryString(DWORD idInst, HSZ hsz, LPSTR psz, DWORD cchMax, int iCodePage) {
+	//TODO
+	return 0;
+}
+
+LPBYTE DdeAccessData(HDDEDATA hData, LPDWORD pcbDataSize) {
+	//TODO
+	return 0;
+}
+
+BOOL DdeUnaccessData(HDDEDATA hData) {
+	//TODO
+	return 0;
+}
+
+HDDEDATA DdeCreateDataHandle(DWORD idInst, LPBYTE pSrc, DWORD cb, DWORD cbOff, HSZ hszItem, UINT wFmt, UINT afCmd) {
+	//TODO
+	return 0;
+}
+
+UINT DdeInitialize(LPDWORD pidInst, PFNCALLBACK pfnCallback, DWORD afCmd, DWORD ulRes) {
+	//TODO
+	return 0;
+}
+
+UINT RegisterClipboardFormat(LPCSTR lpszFormat) {
+	//TODO
+	return 0;
+}
+
+HSZ DdeCreateStringHandle(DWORD idInst, LPCSTR psz, int iCodePage) {
+	//TODO
+	return 0;
+}
+
+HDDEDATA DdeNameService(DWORD idInst, HSZ hsz1, HSZ hsz2, UINT afCmd) {
+	//TODO
+	return 0;
+}
+

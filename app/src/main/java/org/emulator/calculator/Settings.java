@@ -157,7 +157,6 @@ public class Settings extends PreferenceDataStore {
 		return json.toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	private static String toJSON(Map<String, Object> map) {
 		StringBuilder json = new StringBuilder();
 		json.append("{");
