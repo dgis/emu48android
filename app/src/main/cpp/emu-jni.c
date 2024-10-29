@@ -88,7 +88,7 @@ enum CALLBACK_TYPE {
 };
 
 // https://stackoverflow.com/questions/9630134/jni-how-to-callback-from-c-or-c-to-java
-int mainViewCallback(int type, int param1, int param2/*, const TCHAR * param3, const TCHAR * param4*/) {
+int mainViewCallback(int type, int param1, int param2) {
     if (mainActivity) {
         JNIEnv *jniEnv = getJNIEnvironment();
         if(jniEnv) {
@@ -895,7 +895,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_emulator_calculator_NativeLib_getObjects
 
 JNIEXPORT jint JNICALL Java_org_emulator_calculator_NativeLib_onObjectSave(JNIEnv *env, jobject thisz, jstring filename, jbooleanArray objectsToSaveItemChecked) {
 
-    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL) ;
+    const char *filenameUTF8 = (*env)->GetStringUTFChars(env, filename , NULL);
 
     if (nState != SM_RUN)
     {

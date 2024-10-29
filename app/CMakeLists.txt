@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.6.0)
 
 project("org.emulator.calculator.EmuApplication")
 
-
 #add_compile_options(-DDEBUG_DISPLAY)
 #add_compile_options(-DDEBUG_SOUND)
 #add_compile_options(-DDEBUG_DEBUGGER)
