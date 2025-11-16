@@ -58,6 +58,13 @@ LINKS
 
 CHANGES
 
+Version 2.9 (2025-11-15)
+
+- Updated source code with Emu48 version 1.67+.
+- Fix new UI constraints with Android 15.
+- Increase Haptic feedback max duration.
+
+
 Version 2.8 (2024-10-29)
 
 - Updated source code with Emu48 version 1.66+.

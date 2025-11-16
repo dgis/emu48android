@@ -83,9 +83,10 @@ public class SettingsFragment extends AppCompatDialogFragment {
 	@NonNull
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		Dialog dialog = new AppCompatDialog(getContext(), getTheme()) {
+		Dialog dialog = new AppCompatDialog(requireContext(), getTheme()) {
 			@Override
 			public void onBackPressed() {
+				super.onBackPressed();
 				dialogResult();
 				dismiss();
 			}

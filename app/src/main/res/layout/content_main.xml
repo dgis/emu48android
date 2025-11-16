@@ -7,10 +7,10 @@
 
     <ImageButton
         android:id="@+id/button_menu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_more_vert_black_24dp"
         android:contentDescription="@string/button_main_menu_content_description" />

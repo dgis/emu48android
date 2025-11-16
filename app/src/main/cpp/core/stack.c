@@ -108,13 +108,13 @@ static TCHAR GetClpbrdDecimalPoint(LPCTSTR cp)
 			cDec = cLast;
 		}
 	}
-	// multiple grouped ',' and single '.'
-	else if (uComma > 1 && uPoint == 1 && CheckThousandGroup(cp,_T(',')))
+	// multiple grouped ',' and single or none '.'
+	else if (uComma > 1 && uPoint <= 1 && CheckThousandGroup(cp,_T(',')))
 	{
 		cDec = _T('.');
 	}
-	// multiple grouped '.' and single ','
-	else if (uComma == 1 && uPoint > 1 && CheckThousandGroup(cp,_T('.')))
+	// multiple grouped '.' and single or none ','
+	else if (uComma <= 1 && uPoint > 1 && CheckThousandGroup(cp,_T('.')))
 	{
 		cDec = _T(',');
 	}

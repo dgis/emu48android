@@ -667,7 +667,7 @@ static TokenId ParseToken(UINT nMode)
 static DWORD ParseInteger(VOID)
 {
 	DWORD nNum = 0;
-	while (_istdigit(*szText))
+	while (_istdigit((_TUCHAR) *szText))
 	{
 		nNum = nNum * 10 + ((*szText) - _T('0'));
 		szText++;
@@ -744,7 +744,7 @@ static TokenId Lex(UINT nMode)
 	_ASSERT(nMode >= 0 && nMode < ARRAYSIZEOF(szLexDelim));
 
 	SkipWhite(nMode);
-	if (_istdigit(*szText))
+	if (_istdigit((_TUCHAR) *szText))
 	{
 		nLexInteger = ParseInteger();
 		return TOK_INTEGER;

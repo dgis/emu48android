@@ -191,8 +191,10 @@ typedef const char *LPCSTR;
 typedef const char *LPCTSTR;
 #ifdef UNICODE
 typedef wchar_t TCHAR;
+typedef wchar_t _TUCHAR;
 #else
 typedef char TCHAR;
+typedef unsigned char _TUCHAR;
 #endif // !UNICODE
 
 

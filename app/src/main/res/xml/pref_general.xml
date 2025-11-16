@@ -86,9 +86,9 @@
 	        android:key="settings_haptic_feedback_duration"
 	        android:title="@string/settings_haptic_feedback_title"
 	        android:summary="@string/settings_haptic_feedback_summary"
-	        android:defaultValue="25"
+	        android:defaultValue="80"
 	        android:min="0"
-	        android:max="100"
+	        android:max="200"
 	        app:showSeekBarValue="true" />
     </PreferenceCategory>
 

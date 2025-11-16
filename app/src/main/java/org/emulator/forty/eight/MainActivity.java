@@ -161,9 +161,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer = findViewById(R.id.drawer_layout);
 
         navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+		navigationView.setNavigationItemSelectedListener(this);
 
-	    settings = EmuApplication.getSettings();
+		settings = EmuApplication.getSettings();
 	    settings.setIsDefaultSettings(true);
 
 	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

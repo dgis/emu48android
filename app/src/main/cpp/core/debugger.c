@@ -195,7 +195,7 @@ static BOOL GetAddr(HWND hDlg,INT nID,DWORD *pdwAddr,DWORD dwMaxAddr,BOOL bSymbE
 			// test if valid hex address
 			for (i = 0; bSucc && i < (LONG) lstrlen(szBuffer); ++i)
 			{
-				bSucc = (_istxdigit(szBuffer[i]) != 0);
+				bSucc = (_istxdigit((_TUCHAR) szBuffer[i]) != 0);
 			}
 
 			if (bSucc)						// valid characters
@@ -1887,7 +1887,7 @@ static INT_PTR CALLBACK Debugger(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 	case WM_INITDIALOG:
 		if (nDbgPosX != CW_USEDEFAULT)		// not default window position
 		{
-		SetWindowLocation(hDlg,nDbgPosX,nDbgPosY);
+			SetWindowLocation(hDlg,nDbgPosX,nDbgPosY);
 		}
 		if (bAlwaysOnTop) SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE);
 		SendMessage(hDlg,WM_SETICON,ICON_BIG,(LPARAM) LoadIcon(hApp,MAKEINTRESOURCE(IDI_EMU48)));
@@ -2235,15 +2235,22 @@ static __inline BOOL OnFindOK(HWND hDlg,BOOL bASCII,DWORD *pdwAddrLast,INT nSear
 	i = GetWindowTextLength(hWnd) + 1;		// text length incl. EOS
 	j = bASCII ? 2 : sizeof(*(LPTSTR)0);	// buffer width
 
-	// allocate search buffer
-	if ((lpbySearch = (LPBYTE) malloc(i * j)) != NULL)
+	// allocate search buffer (min 5 bytes for symbolic entry address)
+	if ((lpbySearch = (LPBYTE)malloc(__max(5, i) * j)) != NULL)
 	{
+		BOOL bSymbolic;
+
 		// get search text and real length
 		i = GetWindowText(hWnd,(LPTSTR) lpbySearch,i);
 
 		// add string to combo box
 		if (SendMessage(hWnd,CB_FINDSTRINGEXACT,0,(LPARAM) lpbySearch) == CB_ERR)
 			SendMessage(hWnd,CB_ADDSTRING,0,(LPARAM) lpbySearch);
+
+		// is symbolic entry address
+		bSymbolic = !bASCII && disassembler_symb
+			&& i > 0 && *(LPCTSTR)lpbySearch == _T('=')
+			&& !RplGetAddr(((LPCTSTR)lpbySearch)+1,&dwAddr);
 
 		#if defined _UNICODE
 		{
@@ -2271,25 +2278,33 @@ static __inline BOOL OnFindOK(HWND hDlg,BOOL bASCII,DWORD *pdwAddrLast,INT nSear
 			}
 			i *= 2;							// no. of nibbles
 		}
-		else								// hex number input
+		else								// symbolic entry or hex number input
 		{
-			// convert HEX to number
-			for (i = 0, j = 0; lpbySearch[j] != 0; ++j)
+			if (bSymbolic)
 			{
-				if (lpbySearch[j] == ' ')	// skip space
-					continue;
+				i = 5;						// 5 nibbles to compare
+				Nunpack(lpbySearch,dwAddr,i);
+			}
+			else
+			{
+				// convert HEX to number
+				for (i = 0, j = 0; lpbySearch[j] != 0; ++j)
+				{
+					if (lpbySearch[j] == ' ') // skip space
+						continue;
 
-				if (isxdigit(lpbySearch[j]))
-				{
-					lpbySearch[i] = toupper(lpbySearch[j]) - '0';
-					if (lpbySearch[i] > 9) lpbySearch[i] -= 'A' - '9' - 1;
+					if (isxdigit(lpbySearch[j]))
+					{
+						lpbySearch[i] = toupper(lpbySearch[j]) - '0';
+						if (lpbySearch[i] > 9) lpbySearch[i] -= 'A' - '9' - 1;
+					}
+					else
+					{
+						i = 0;				// wrong format, no match
+						break;
+					}
+					++i;					// inc, no. of nibbles
 				}
-				else
-				{
-					i = 0;					// wrong format, no match
-					break;
-				}
-				++i;						// inc, no. of nibbles
 			}
 		}
 
@@ -2816,7 +2831,7 @@ static INT_PTR CALLBACK NewValue(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			// test if valid hex address
 			for (i = 0; i < (LONG) lstrlen(szBuffer); ++i)
 			{
-				if (_istxdigit(szBuffer[i]) == 0)
+				if (_istxdigit((_TUCHAR) szBuffer[i]) == 0)
 				{
 					SendMessage(hWnd,EM_SETSEL,0,-1);
 					SetFocus(hWnd);			// focus to edit control
@@ -3515,13 +3530,16 @@ static BOOL LoadMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,UINT uBitMode)
 		return FALSE;
 
 	dwFileSize = GetFileSize(hFile, NULL);
+
 	if ((pbyData = (LPBYTE) malloc(dwFileSize)) != NULL)
 	{
 		ReadFile(hFile,pbyData,dwFileSize,&dwRead,NULL);
+
 		if (uBitMode == 2)					// auto mode (0=8-bit, 1=4-bit, 2=auto)
 		{
 			BOOL bPacked = FALSE;			// data not packed
 			DWORD dwIndex;
+
 			for (dwIndex = 0; !bPacked && dwIndex < dwFileSize; ++dwIndex)
 			{
 				bPacked = ((pbyData[dwIndex] & 0xF0) != 0);
@@ -3536,33 +3554,43 @@ static BOOL LoadMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,UINT uBitMode)
 			{
 				LPBYTE pbySrc,pbyDest;
 				pbyData = pbyDataNew;
+
+				// source start address
 				pbySrc = pbyData + dwFileSize;
+
 				dwFileSize *= 2;			// new filesize
+
+				// destination start address
 				pbyDest = pbyData + dwFileSize;
+
 				while (pbySrc != pbyDest)	// unpack source
 				{
 					CONST BYTE byValue = *(--pbySrc);
 					*(--pbyDest) = byValue >> 4;
 					*(--pbyDest) = byValue & 0xF;
-		}
+				}
 				_ASSERT(pbySrc == pbyData);
 				_ASSERT(pbyDest == pbyData);
 			}
-		else								// special handling to avoid address wrap around
-		{
+			else
+			{
 				free(pbyData);
 				pbyData = NULL;
 			}
 		}
+
 		if (pbyData)						// have data to save
 		{
 			LPBYTE p = pbyData;
+
+			// read data size or end of Saturn address space
 			while (dwFileSize > 0 && dwStartAddr <= 0xFFFFF)
 			{
+				// write nibble in map mode
 				Nwrite(p++,dwStartAddr++,1);
 				--dwFileSize;
+			}
 		}
-	}
 		free(pbyData);
 	}
 	CloseHandle(hFile);
@@ -3586,12 +3614,14 @@ static BOOL SaveMemData(LPCTSTR lpszFilename,DWORD dwStartAddr,DWORD dwEndAddr,U
 	{
 		_ASSERT(dwAddr <= 0xFFFFF);
 		Npeek(byData,dwAddr,2);				// read two nibble in map mode
+
 		dwSend = 2;							// send 2 nibble
 		if (uBitMode == 0)					// (0=8-bit, 1=4-bit)
 		{
 			byData[0] = byData[0]|(byData[1]<<4);
 			dwSend = 1;						// send 1 byte
 		}
+
 		WriteFile(hFile,&byData,dwSend,&dwWritten,NULL);
 	}
 
@@ -3633,12 +3663,14 @@ static INT_PTR CALLBACK DebugMemLoad(HWND hDlg, UINT message, WPARAM wParam, LPA
 
 			_ASSERT(dwStartAddr <= 0xFFFFF);
 
+			// load as 8-bit or 4-bit data (0=8-bit, 1=4-bit, 2=auto)
 			for (nButton = IDC_DEBUG_DATA_LOAD_8BIT; nButton <= IDC_DEBUG_DATA_LOAD_ABIT; ++nButton)
 			{
 				if (IsDlgButtonChecked(hDlg,nButton) == BST_CHECKED)
 					break;
 			}
 			uBitMode = (UINT) (nButton - IDC_DEBUG_DATA_LOAD_8BIT);
+
 			// load memory dump file
 			if (!LoadMemData(szFilename,dwStartAddr,uBitMode))
 				return FALSE;
@@ -3700,7 +3732,9 @@ static INT_PTR CALLBACK DebugMemSave(HWND hDlg, UINT message, WPARAM wParam, LPA
 			_ASSERT(dwStartAddr <= 0xFFFFF);
 			_ASSERT(dwEndAddr   <= 0xFFFFF);
 
+			// save as 8-bit or 4-bit data (0=8-bit, 1=4-bit)
 			uBitMode = IsDlgButtonChecked(hDlg,IDC_DEBUG_DATA_SAVE_4BIT);
+
 			// save memory dump file
 			if (!SaveMemData(szFilename,dwStartAddr,dwEndAddr,uBitMode))
 				return FALSE;

@@ -187,8 +187,8 @@
     <string name="settings_sound_volume_title">Sound Volume</string>
     <string name="settings_sound_volume_dialog_title">Sound Volume (0-255)</string>
 	<string name="settings_haptic_feedback_title">Haptic feedback</string>
-	<string name="settings_haptic_feedback_summary">Duration of vibration when a key is touched. Between 1ms and 50ms. 0ms for no vibration.</string>
-	<string name="settings_haptic_feedback_dialog_title">Duration of Vibration (0-50ms)</string>
+	<string name="settings_haptic_feedback_summary">Duration of vibration when a key is touched. Between 1ms and 200ms. 0ms for no vibration.</string>
+	<string name="settings_haptic_feedback_dialog_title">Duration of Vibration (0-200ms)</string>
 
     <string name="settings_category_background_title">Background Color</string>
     <string name="settings_background_kml_color_title">Use KML color</string>
