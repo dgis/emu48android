@@ -58,6 +58,11 @@ LINKS
 
 CHANGES
 
+Version 3.0 (2025-11-21)
+
+- Fix the settings "Hide the status/navigations bar".
+
+
 Version 2.9 (2025-11-15)
 
 - Updated source code with Emu48 version 1.67+.

@@ -51,7 +51,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.Insets;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -156,9 +161,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        drawer = findViewById(R.id.drawer_layout);
+        setContentView(R.layout.activity_main);
+		drawer = findViewById(R.id.drawer_layout);
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+		    ViewCompat.setOnApplyWindowInsetsListener(drawer, (v, windowInsets) -> {
+			    Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+			    ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+			    mlp.topMargin = insets.top;
+			    mlp.leftMargin = insets.left;
+			    mlp.bottomMargin = insets.bottom;
+			    mlp.rightMargin = insets.right;
+			    v.setLayoutParams(mlp);
+			    return WindowInsetsCompat.CONSUMED;
+		    });
+	    }
 
         navigationView = findViewById(R.id.nav_view);
 		navigationView.setNavigationItemSelectedListener(this);
@@ -2279,11 +2296,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "settings_hide_bar":
                 case "settings_hide_bar_status":
                 case "settings_hide_bar_nav":
-					if (settings.getBoolean("settings_hide_bar_status", false)
-							|| settings.getBoolean("settings_hide_bar_nav", false))
-                        hideSystemUI();
-                    else
-                        showSystemUI();
+	                updateSystemUI();
                     break;
                 case "settings_hide_button_menu":
 					imageButtonMenu.setVisibility(settings.getBoolean("settings_hide_button_menu", false) ? View.GONE : View.VISIBLE);
@@ -2365,28 +2378,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && (
-            settings.getBoolean("settings_hide_bar_status", false)
-            || settings.getBoolean("settings_hide_bar_nav", false)
-        )) {
-            hideSystemUI();
-        }
-    }
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (hasFocus) {
+			updateSystemUI();
+		}
+	}
 
-    private void hideSystemUI() {
-        int flags = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        if(settings.getBoolean("settings_hide_bar_status", false))
-            flags |= View.SYSTEM_UI_FLAG_FULLSCREEN;
-        if(settings.getBoolean("settings_hide_bar_nav", false))
-            flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-
-        getWindow().getDecorView().setSystemUiVisibility(flags);
-    }
-
-    private void showSystemUI() {
-        getWindow().getDecorView().setSystemUiVisibility(0);
-    }
+	private void updateSystemUI() {
+		boolean hideBarStatus = settings.getBoolean("settings_hide_bar_status", false);
+		boolean hideBarNav = settings.getBoolean("settings_hide_bar_nav", false);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+			if(hideBarStatus && hideBarNav) {
+				windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+			} else if(hideBarStatus) {
+				windowInsetsController.show(WindowInsetsCompat.Type.navigationBars());
+				windowInsetsController.hide(WindowInsetsCompat.Type.statusBars());
+			} else if(hideBarNav) {
+				windowInsetsController.show(WindowInsetsCompat.Type.statusBars());
+				windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars());
+			} else {
+				windowInsetsController.show(WindowInsetsCompat.Type.systemBars());
+			}
+		} else {
+			int flags = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+			if(hideBarStatus && hideBarNav) {
+				flags |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+				flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+			} else if(hideBarStatus) {
+				flags |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+			} else if(hideBarNav) {
+				flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+			} else {
+				flags = 0;
+			}
+			getWindow().getDecorView().setSystemUiVisibility(flags);
+		}
+	}
 }
