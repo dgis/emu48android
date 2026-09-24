@@ -30,9 +30,11 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace 'org.emulator.forty.eight'
     compileSdkVersion 37
+    buildToolsVersion '36.1.0'
+    ndkVersion '29.0.14033849 rc4'
     defaultConfig {
         applicationId "org.emulator.forty.eight"
-        minSdk 21
+        minSdk 23
         targetSdk 37
         versionCode 30
         versionName "3.1"
@@ -70,16 +72,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     externalNativeBuild {
         cmake {
             path file('CMakeLists.txt')
         }
     }
-    ndkVersion '29.0.14033849 rc4'
-    buildToolsVersion '36.1.0'
 }
 
 base {
