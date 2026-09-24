@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+	<style name="AppTheme" parent="AppBaseTheme">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+		<item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+		<item name="android:windowLightStatusBar">false</item>
+		<item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+
+	</style>
+
+</resources>

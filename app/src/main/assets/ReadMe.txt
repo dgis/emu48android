@@ -58,6 +58,11 @@ LINKS
 
 CHANGES
 
+Version 3.2 (2026-09-XX)
+
+- Fix status bar and navigation bar colors (white on white) issue in light mode.
+
+
 Version 3.1 (2026-07-01)
 
 - Fix pixel "borders" color when contrast is not the default.

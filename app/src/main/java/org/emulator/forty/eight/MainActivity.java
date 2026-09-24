@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -2389,8 +2390,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	private void updateSystemUI() {
 		boolean hideBarStatus = settings.getBoolean("settings_hide_bar_status", false);
 		boolean hideBarNav = settings.getBoolean("settings_hide_bar_nav", false);
+		WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+		boolean isNightMode = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+		windowInsetsController.setAppearanceLightStatusBars(!isNightMode);
+		windowInsetsController.setAppearanceLightNavigationBars(!isNightMode);
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
 			if(hideBarStatus && hideBarNav) {
 				windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
 			} else if(hideBarStatus) {
