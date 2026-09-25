@@ -1407,6 +1407,9 @@ extern int WSACleanup();
 typedef struct addrinfo ADDRINFO;
 
 extern int closesocket(SOCKET s);
+int win32_select(int __fd_count, fd_set *__read_fds, fd_set *__write_fds, fd_set *__exception_fds, struct timeval *__timeout);
+extern int win32_ioctlsocket(SOCKET s, long cmd, u_long FAR *argp);
+
 
 /* DDE */
 
