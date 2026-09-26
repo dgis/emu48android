@@ -58,9 +58,10 @@ LINKS
 
 CHANGES
 
-Version 3.2 (2026-09-XX)
+Version 3.2 (2026-09-26)
 
 - Fix status bar and navigation bar colors (white on white) issue in light mode.
+- Add the possibility to use the Android virtual keyboard (#32).
 
 
 Version 3.1 (2026-07-01)

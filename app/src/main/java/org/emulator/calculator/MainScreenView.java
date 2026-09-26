@@ -23,12 +23,26 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Build;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
+
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -201,7 +215,7 @@ public class MainScreenView extends PanAndScaleView {
     public boolean onTouchEvent(MotionEvent event) {
 	    if(event.getSource() == InputDevice.SOURCE_MOUSE) {
 	    	// Support the right mouse button click effect with Android version >= 5.0
-		    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			    boolean rightMouseButtonStateDown = event.isButtonPressed(MotionEvent.BUTTON_SECONDARY);
 			    if(rightMouseButtonStateDown != previousRightMouseButtonStateDown) {
 				    // Right button pressed or released.
@@ -219,6 +233,7 @@ public class MainScreenView extends PanAndScaleView {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
+                requestFocus();
                 currentButtonTouched.remove(actionIndex);
                 if(actionIndex == 0 && event.getPointerCount() == 1)
                     currentButtonTouched.clear();
@@ -256,7 +271,7 @@ public class MainScreenView extends PanAndScaleView {
 	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
-        && ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == 0) {
+        && (((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == InputDevice.SOURCE_UNKNOWN || event.getSource() == 0)) {
         	if(!event.isNumLockOn() && numpadKey.indexOf(keyCode) != -1)
         		return false;
             char pressedKey = (char) event.getUnicodeChar();
@@ -277,7 +292,7 @@ public class MainScreenView extends PanAndScaleView {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) == 0
-        && ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == 0) {
+        && (((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) || event.getSource() == InputDevice.SOURCE_UNKNOWN || event.getSource() == 0)) {
 	        if(!event.isNumLockOn() && numpadKey.indexOf(keyCode) != -1)
 		        return false;
             char pressedKey = (char) event.getUnicodeChar();
@@ -293,6 +308,129 @@ public class MainScreenView extends PanAndScaleView {
                 return true;
         }
         return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public boolean onCheckIsTextEditor() {
+        return true;
+    }
+
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        outAttrs.inputType = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
+
+        return new BaseInputConnection(this, false) {
+            @Override
+            public boolean sendKeyEvent(KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    onKeyDown(event.getKeyCode(), event);
+                } else if (event.getAction() == KeyEvent.ACTION_UP) {
+                    onKeyUp(event.getKeyCode(), event);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean commitText(CharSequence text, int newCursorPosition) {
+                if (text != null) {
+                    for (int i = 0; i < text.length(); i++) {
+                        processCharInput(text.charAt(i));
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+                for (int i = 0; i < beforeLength; i++) {
+                    processKeyCodeInput(KeyEvent.KEYCODE_DEL);
+                }
+                return super.deleteSurroundingText(beforeLength, afterLength);
+            }
+        };
+    }
+
+    public int getWindowsKeycodeForChar(char c) {
+        Integer windowsKeycode = charmap.get(c);
+        if (windowsKeycode != null) return windowsKeycode;
+        windowsKeycode = charmap.get(Character.toUpperCase(c));
+        if (windowsKeycode != null) return windowsKeycode;
+
+        char upper = Character.toUpperCase(c);
+        if (upper >= 'A' && upper <= 'Z') {
+            return 0x41 + (upper - 'A');
+        }
+        if (c >= '0' && c <= '9') {
+            return 0x30 + (c - '0');
+        }
+        if (c == ' ') return 0x20;
+        if (c == '\n' || c == '\r') return 0x0D;
+        if (c == '.') return 0xBE;
+        if (c == ',') return 0xBC;
+        if (c == ';') return 0xBA;
+        if (c == '\'') return 0xDE;
+        if (c == '\\') return 0xDC;
+        return 0;
+    }
+
+    public void processCharInput(char c) {
+        int windowsKeycode = getWindowsKeycodeForChar(c);
+        if (windowsKeycode != 0) {
+            NativeLib.keyDown(windowsKeycode);
+            NativeLib.keyUp(windowsKeycode);
+        } else if (debug) {
+            Log.e(TAG, String.format("Unknown char input: '%c' (0x%x)", c, (int) c));
+        }
+    }
+
+    public void processKeyCodeInput(int keyCode) {
+        int windowsKeycode = vkmap.get(keyCode);
+        if (windowsKeycode != 0) {
+            NativeLib.keyDown(windowsKeycode);
+            NativeLib.keyUp(windowsKeycode);
+        } else if (debug) {
+            Log.e(TAG, String.format("Unknown keyCode input: %d", keyCode));
+        }
+    }
+
+    public void showSoftKeyboard() {
+        requestFocus();
+        if (getContext() instanceof Activity) {
+            Activity activity = (Activity) getContext();
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(activity.getWindow(), this);
+            if (controller != null) {
+                controller.show(WindowInsetsCompat.Type.ime());
+            }
+        }
+    }
+
+    public void hideSoftKeyboard() {
+        if (getContext() instanceof Activity) {
+            Activity activity = (Activity) getContext();
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(activity.getWindow(), this);
+            if (controller != null) {
+                controller.hide(WindowInsetsCompat.Type.ime());
+            }
+        }
+    }
+
+    public void toggleSoftKeyboard() {
+        requestFocus();
+        if (getContext() instanceof Activity) {
+            Activity activity = (Activity) getContext();
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(activity.getWindow(), this);
+            if (controller != null) {
+                View decorView = activity.getWindow().getDecorView();
+                WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+                boolean isImeVisible = insets != null && insets.isVisible(WindowInsetsCompat.Type.ime());
+                if (isImeVisible) {
+                    controller.hide(WindowInsetsCompat.Type.ime());
+                } else {
+                    controller.show(WindowInsetsCompat.Type.ime());
+                }
+            }
+        }
     }
 
     @Override
